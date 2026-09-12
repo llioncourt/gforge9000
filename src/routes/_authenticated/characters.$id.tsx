@@ -368,9 +368,19 @@ function CharacterPage() {
               ))}
             </div>
             <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
-              Basic damage (generic formula): thrust{" "}
-              <span className="stat-value text-foreground">{sheet.damage.thrust}</span>, swing{" "}
-              <span className="stat-value text-foreground">{sheet.damage.swing}</span>
+              {sheet.damage.status === "configured" ? (
+                <>
+                  Basic damage ({sheet.damage.source}): thrust{" "}
+                  <span className="stat-value text-foreground">{sheet.damage.thrust}</span>, swing{" "}
+                  <span className="stat-value text-foreground">{sheet.damage.swing}</span>
+                </>
+              ) : (
+                <>
+                  Basic damage: <span className="text-foreground">not configured</span>. No damage
+                  progression is installed, so thrust and swing are unavailable for this ST. Add a
+                  progression through a content pack or campaign house rules.
+                </>
+              )}
             </div>
           </section>
         </TabsContent>

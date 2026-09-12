@@ -135,15 +135,6 @@ function PacksPage() {
         }
       />
 
-      <div className="panel mb-4 p-4 text-sm text-muted-foreground">
-        <p>
-          This app ships no published rulebook content: there is no SRD for GURPS and nothing
-          proprietary is preloaded. You can bring content in by writing your own packs, importing
-          pack JSON you are allowed to use, installing licensed packs when they become available, or
-          using adapters for data you are authorised to export from other tools. Never paste text,
-          tables or artwork you do not have the right to reproduce.
-        </p>
-      </div>
 
       <div className="mb-4 grid gap-3 lg:grid-cols-[1fr_320px]">
         <Input

@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import {
@@ -476,10 +477,16 @@ function Row({
   children: React.ReactNode;
   className?: string;
 }) {
+  const id = React.useId();
+  const child = React.isValidElement(children)
+    ? React.cloneElement(children as React.ReactElement<{ id?: string }>, { id })
+    : children;
   return (
     <div className={`space-y-1.5 ${className ?? ""}`}>
-      <Label className="text-xs uppercase tracking-wide text-muted-foreground">{label}</Label>
-      {children}
+      <Label htmlFor={id} className="text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </Label>
+      {child}
     </div>
   );
 }

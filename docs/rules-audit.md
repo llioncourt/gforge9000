@@ -31,11 +31,16 @@ default and the UI reports it as unavailable.
 | skills | Defaults | CONFIGURABLE | `skills.ts:parseDefaults`, `bestDefault` |
 | skills | Techniques | CONFIGURABLE | `skills.ts:techniqueLevel` |
 | equipment | Encumbrance thresholds, Move/Dodge | CONFIGURABLE | `equipment.ts:computeEncumbrance` |
-| equipment | DR by hit location | EXACT | `equipment.ts:drByLocation` |
+| equipment | DR by hit location | CONFIGURABLE | `equipment.ts:drByLocation` — stacking policy `additive` (default) or `highest` |
 | combat | Dodge / Parry / Block | CONFIGURABLE | `defenses.ts` |
 | combat | Basic damage by ST | CONFIGURABLE (no data bundled) | `damage.ts:basicDamage` |
 | combat | Current HP/FP thresholds | CONFIGURABLE | `health.ts` |
-| combat | Weapon fields: reach, Acc, range, RoF, shots, bulk, recoil, ammo | MISSING | `types.ts:WeaponMode` (storage only) |
+| combat | Weapon field parsing (reach, parry, Acc, bulk, range, RoF, shots, recoil) | CONFIGURABLE | `weapons.ts:normalizeWeaponMode` |
+| combat | Weapon damage expression resolution | CONFIGURABLE | `weapons.ts:resolveDamageExpression` |
+| combat | Shots / ammunition state | CONFIGURABLE | `weapons.ts:createAmmoState`, `consumeShots`, `reloadAmmo` |
+| combat | Persisted ammunition between sessions | MISSING | none — needs a schema change, out of scope |
+| combat | Rapid fire: RoF, recoil, additional hits | CONFIGURABLE | `weapons.ts:additionalHits` |
+| combat | Accuracy / Aim and Bulk modifier hooks | CONFIGURABLE | `weapons.ts:accuracyModifier`, `bulkModifier` |
 | dice | Generic dice expressions | EXACT | `dice.ts:parseDice` |
 | dice | 3d6 success rolls and criticals | CONFIGURABLE | `dice.ts:resolveSuccess` |
 | campaign | House-rule overrides and limits | CONFIGURABLE | `ruleset.ts:mergeRuleset`, `points.ts:checkLimits` |
@@ -65,10 +70,34 @@ default and the UI reports it as unavailable.
    ruleset; `checkLimits()` reports budget, disadvantage, quirk and TL
    violations instead of silently ignoring them.
 
+## Phase B changes (weapons)
+
+8. **Weapon fields are parsed, not guessed.** `weapons.ts` turns unambiguous
+   numeric forms (RoF, recoil, shots, range, reach, parry, Acc, bulk) into typed
+   values. Anything ambiguous is returned as `unresolved` with the raw text kept
+   so the sheet still shows what the user typed.
+9. **Damage expressions resolve through the damage progression.** `thr`/`sw`
+   expressions are only rollable when a progression is installed; otherwise the
+   result is `unavailable` and the sheet shows "Damage: not configured" with no
+   roll button. Damage type labels (`cr`, `imp`, …) are parsed out, not
+   interpreted.
+10. **Ammunition state is pure and session-local.** Shots are tracked separately
+    from the weapon definition; consumption rejects non-positive, fractional and
+    over-capacity amounts, and reload is capped at capacity. Persisting current
+    shots would require a schema change and is recorded as MISSING.
+11. **Rapid fire.** `additionalHits()` derives extra hits from the margin of
+    success and recoil, capped by shots fired, ammunition on hand and an optional
+    ruleset cap; it is explicitly unavailable without both recoil and RoF.
+12. **DR stacking reclassified.** Additive layering is a policy, not a universal
+    rule, so `drStacking` is now ruleset-driven and the audit entry is
+    CONFIGURABLE rather than EXACT.
+
 ## Known gaps (do not paper over)
 
-- Weapon mechanics (RoF, recoil, Acc, bulk, shots, ammo tracking) are stored
-  and displayed but no rule consumes them: **MISSING**.
+- Current ammunition is not persisted across sessions (no schema change in this
+  phase): **MISSING**.
+- Aiming time, bracing, shock, hit-location targeting and other maneuvers are
+  not modelled; Accuracy and Bulk are exposed as hooks only.
 - No damage progression, skill list, default table or trait catalogue is
   bundled. All such data must come from the user or a licensed pack.
 - Free-text conditions on a character have no mechanical effect.

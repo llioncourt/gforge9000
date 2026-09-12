@@ -98,7 +98,7 @@ export function PrintSheet({
 
         {/* Reserved portrait box — kept even when no image exists. */}
         <div className="print-portrait">
-          <PortraitFrame url={portraitUrl} name={character.name || "Character"} />
+          <PortraitFrame url={portraitUrl} name={character.name || "Character"} eager />
           <p className="print-portrait-caption">Portrait</p>
         </div>
       </header>

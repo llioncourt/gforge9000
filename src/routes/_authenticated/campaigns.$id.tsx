@@ -83,6 +83,32 @@ function CampaignPage() {
     return byChar;
   }, [roster.data, entries.data]);
 
+  const createNpc = useMutation({
+    mutationFn: () =>
+      createCharacter({
+        name: "New NPC",
+        campaign_id: id,
+        is_npc: true,
+        approved: true,
+        point_budget: Number((campaign.data?.settings as Record<string, unknown>)?.["point_limit"] ?? 150),
+      } as never),
+    onSuccess: (row) => {
+      queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
+      toast.success("NPC created.");
+      navigate({ to: "/characters/$id", params: { id: row.id } });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const cloneCharacter = useMutation({
+    mutationFn: (cid: string) => duplicateCharacter(cid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
+      toast.success("Copy created.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const approve = useMutation({
     mutationFn: ({ cid, value }: { cid: string; value: boolean }) =>
       updateCharacter(cid, { approved: value }),

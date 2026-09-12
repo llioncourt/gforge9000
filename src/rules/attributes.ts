@@ -31,7 +31,7 @@ export function deriveStats(c: CharacterRecord, rules: Ruleset = defaultRuleset)
     fp: c.ht + c.fp_delta,
     basicSpeed,
     basicMove,
-    basicLift: Math.round((c.st * c.st) / rules.basicLiftDivisor),
+    basicLift: basicLift(c.st, rules),
     dodge: Math.floor(basicSpeed) + rules.dodgeBase,
   };
 }

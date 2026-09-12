@@ -249,14 +249,36 @@ function CharacterPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Hand-typed entries are explicitly custom content, never pack content.
   function openNew(kind: EntryKind) {
-    setDraft(emptyDraft(kind));
+    setDraft({
+      ...emptyDraft(kind),
+      source: { label: "Custom", edition: "", page: "", type: "custom" },
+    });
     setDialogOpen(true);
   }
   function openEdit(entry: CharacterEntry) {
     setDraft(toDraft(entry));
     setDialogOpen(true);
   }
+
+  const [pickerKinds, setPickerKinds] = useState<EntryKind[] | null>(null);
+  const linkedPacks = form?.packs ?? [];
+
+  const addFromPack = useMutation({
+    mutationFn: async (entry: LibraryRow) => {
+      const draftRow = libraryEntryToCharacterDraft({
+        ...entry,
+        data: (entry.data ?? {}) as Record<string, unknown>,
+      });
+      return addEntry({ ...draftRow, character_id: id } as never);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entries", id] });
+      toast.success("Added from pack.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   if (!form || !sheet) {
     return (

@@ -55,21 +55,7 @@ export function attributePoints(c: CharacterRecord, rules: Ruleset = defaultRule
 }
 
 /**
- * Generic, configurable basic-damage formula. This is an original monotonic
- * approximation, not a reproduction of any published damage table.
+ * Basic damage moved to ./damage.ts and is now data-driven (CONFIGURABLE).
+ * The previous formula here was an invented approximation and was removed.
  */
-export function basicDamage(st: number): { thrust: string; swing: string } {
-  const norm = (pips: number) => {
-    let dice = 1;
-    let mod = pips;
-    while (mod >= 4) {
-      dice += 1;
-      mod -= 4;
-    }
-    return `${dice}d${mod === 0 ? "" : mod > 0 ? `+${mod}` : mod}`;
-  };
-  const clamped = Math.max(1, st);
-  const thrPips = clamped <= 10 ? Math.floor((clamped - 1) / 2) - 6 : clamped - 12;
-  const swPips = clamped <= 10 ? Math.floor((clamped - 1) / 2) - 5 : (clamped - 10) * 2 - 1;
-  return { thrust: norm(thrPips), swing: norm(swPips) };
-}
+export { basicDamage } from "./damage";

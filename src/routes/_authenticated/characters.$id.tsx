@@ -80,7 +80,19 @@ import {
   toDraft,
   type EntryDraft,
 } from "@/components/character/entry-dialog";
-import { download, entriesToCsv, slugify, toPortable } from "@/lib/portable";
+import {
+  download,
+  entriesToCsv,
+  libraryEntryToCharacterDraft,
+  slugify,
+  toPortable,
+} from "@/lib/portable";
+import {
+  CharacterPacksPanel,
+  PackPickerDialog,
+  isCustomEntry,
+} from "@/components/character/pack-content";
+import type { LibraryRow } from "@/lib/api";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
 import { PrintSheet } from "@/components/character/print-sheet";
 

@@ -148,10 +148,16 @@ function CampaignPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [noteFilter, setNoteFilter] = useState("all");
   const [noteTitle, setNoteTitle] = useState("");
   const [noteBody, setNoteBody] = useState("");
   const [noteKind, setNoteKind] = useState("note");
   const [gmOnly, setGmOnly] = useState(false);
+
+  const visibleNotes = useMemo(
+    () => (notes.data ?? []).filter((n) => noteFilter === "all" || n.kind === noteFilter),
+    [notes.data, noteFilter],
+  );
 
   const createNote = useMutation({
     mutationFn: () =>
@@ -334,10 +340,25 @@ function CampaignPage() {
 
         <TabsContent value="notes" className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
           <div className="space-y-3">
+            <div className="w-full sm:w-60">
+              <Select value={noteFilter} onValueChange={setNoteFilter}>
+                <SelectTrigger aria-label="Filter entries">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All entries</SelectItem>
+                  <SelectItem value="note">Notes</SelectItem>
+                  <SelectItem value="handout">Handouts</SelectItem>
+                  <SelectItem value="session">Session log</SelectItem>
+                  <SelectItem value="npc">NPCs</SelectItem>
+                  <SelectItem value="party-inventory">Party inventory</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {notes.isLoading ? (
               [0, 1].map((i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)
-            ) : notes.data?.length ? (
-              notes.data.map((n) => (
+            ) : visibleNotes.length ? (
+              visibleNotes.map((n) => (
                 <article key={n.id} className="panel p-4">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="font-medium">{n.title}</h3>
@@ -360,7 +381,7 @@ function CampaignPage() {
                 </article>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No notes yet.</p>
+              <p className="text-sm text-muted-foreground">No entries here yet.</p>
             )}
           </div>
 

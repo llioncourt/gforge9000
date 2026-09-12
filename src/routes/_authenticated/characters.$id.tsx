@@ -527,6 +527,11 @@ function CharacterPage() {
 
         {/* Traits */}
         <TabsContent forceMount value="traits" className="mt-6 space-y-6">
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => setPickerKinds([...TRAIT_KINDS, ...LORE_KINDS])}>
+              <Plus className="mr-1 h-4 w-4" /> Add from packs
+            </Button>
+          </div>
           {[...TRAIT_KINDS, ...LORE_KINDS].map((kind) => (
             <EntryGroup
               key={kind}
@@ -543,14 +548,17 @@ function CharacterPage() {
         {/* Skills */}
         <TabsContent forceMount value="skills" className="mt-6 space-y-6">
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={() => openNew("skill")}>
-              <Plus className="mr-1 h-4 w-4" /> Skill
+            <Button size="sm" onClick={() => setPickerKinds(["skill", "technique", "spell"])}>
+              <Plus className="mr-1 h-4 w-4" /> Add from packs
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => openNew("skill")}>
+              <Plus className="mr-1 h-4 w-4" /> Custom skill
             </Button>
             <Button size="sm" variant="outline" onClick={() => openNew("technique")}>
-              <Plus className="mr-1 h-4 w-4" /> Technique
+              <Plus className="mr-1 h-4 w-4" /> Custom technique
             </Button>
             <Button size="sm" variant="outline" onClick={() => openNew("spell")}>
-              <Plus className="mr-1 h-4 w-4" /> Spell / ability
+              <Plus className="mr-1 h-4 w-4" /> Custom spell / ability
             </Button>
           </div>
           <div className="panel overflow-hidden">

@@ -300,7 +300,7 @@ function CharacterPage() {
             >
               {save.isPending ? "Saving…" : saveError ? "Not saved" : "All changes saved"}
             </span>
-          </>
+          </div>
         }
       />
 

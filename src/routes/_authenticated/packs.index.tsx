@@ -185,7 +185,13 @@ function PacksPage() {
                       {g.total} entr{g.total === 1 ? "y" : "ies"}
                     </p>
                   </div>
+                  {meta && user?.id && meta.owner_id !== user.id ? (
+                    <Badge variant="secondary" className="ml-auto text-[10px]">
+                      Shared
+                    </Badge>
+                  ) : null}
                 </div>
+
                 {meta?.description ? (
                   <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
                     {meta.description}

@@ -22,7 +22,10 @@ export async function hasDemoContent(): Promise<boolean> {
  * Guarded: calling it twice will not duplicate the demo set.
  */
 export async function seedDemoContent(userId: string) {
-  if (await hasDemoContent()) return { skipped: true as const };
+  if (await hasDemoContent()) {
+    await seedDemoLibrary(userId);
+    return { skipped: true as const };
+  }
   const campaign = await createCampaign({
 
     name: "Ashfall Expedition",
@@ -227,6 +230,37 @@ export async function seedDemoContent(userId: string) {
   const { error } = await supabase.from("character_entries").insert(entries);
   if (error) throw new Error(error.message);
 
+  await seedDemoLibrary(userId);
+
+
+  await supabase.from("campaign_notes").insert([
+    {
+      campaign_id: campaign.id,
+      author_id: userId,
+      kind: "session",
+      title: "Session 0 — Contract briefing",
+      body: "The crew signs on for a three-week salvage window. Establish debts, contacts and one complication each.",
+    },
+    {
+      campaign_id: campaign.id,
+      author_id: userId,
+      kind: "rule",
+      title: "House rule: recovery",
+      body: "Recovery between contracts is abstracted. Adjust in campaign settings at any time.",
+    },
+  ]);
+
+  return { skipped: false as const, campaignId: campaign.id, characterId: character.id };
+}
+
+/** Seeds the demo content pack once. Safe to call repeatedly. */
+export async function seedDemoLibrary(userId: string) {
+  const { count, error: countError } = await supabase
+    .from("library_entries")
+    .select("id", { count: "exact", head: true })
+    .eq("pack", DEMO_PACK);
+  if (countError) throw new Error(countError.message);
+  if ((count ?? 0) > 0) return;
   const library: TablesInsert<"library_entries">[] = [
     {
       owner_id: userId,
@@ -298,24 +332,6 @@ export async function seedDemoContent(userId: string) {
       source_type: "user",
     },
   ];
-  await supabase.from("library_entries").insert(library);
-
-  await supabase.from("campaign_notes").insert([
-    {
-      campaign_id: campaign.id,
-      author_id: userId,
-      kind: "session",
-      title: "Session 0 — Contract briefing",
-      body: "The crew signs on for a three-week salvage window. Establish debts, contacts and one complication each.",
-    },
-    {
-      campaign_id: campaign.id,
-      author_id: userId,
-      kind: "rule",
-      title: "House rule: recovery",
-      body: "Recovery between contracts is abstracted. Adjust in campaign settings at any time.",
-    },
-  ]);
-
-  return { skipped: false as const, campaignId: campaign.id, characterId: character.id };
+  const { error: libError } = await supabase.from("library_entries").insert(library);
+  if (libError) throw new Error(libError.message);
 }

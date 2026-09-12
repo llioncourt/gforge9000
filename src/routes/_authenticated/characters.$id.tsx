@@ -98,6 +98,16 @@ export const Route = createFileRoute("/_authenticated/characters/$id")({
 
 const TRAIT_KINDS: EntryKind[] = ["advantage", "disadvantage", "perk", "quirk", "custom"];
 const LORE_KINDS: EntryKind[] = ["language", "culture"];
+const APPEARANCE_FIELDS: [string, string][] = [
+  ["age", "Age"],
+  ["height", "Height"],
+  ["weight", "Weight"],
+  ["build", "Build"],
+  ["hair", "Hair"],
+  ["eyes", "Eyes"],
+  ["handedness", "Handedness"],
+  ["languages_note", "Cultural / language note"],
+];
 
 function CharacterPage() {
   const { id } = Route.useParams();
@@ -239,6 +249,7 @@ function CharacterPage() {
     );
   }
 
+  const appearance = (form.appearance ?? {}) as Record<string, unknown>;
   const gear = entries.filter((e) => e.kind === "equipment");
   const weaponEntries = gear.filter(
     (e) => ((e.data["weapons"] as unknown[] | undefined) ?? []).length > 0,
@@ -378,6 +389,21 @@ function CharacterPage() {
                 <p className="text-xs text-muted-foreground">NPCs appear separately on GM tools.</p>
               </div>
               <Switch checked={form.is_npc} onCheckedChange={(v) => patch({ is_npc: v })} />
+            </div>
+            <div className="space-y-3 border-t border-border pt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Appearance &amp; background
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {APPEARANCE_FIELDS.map(([key, label]) => (
+                  <Field key={key} label={label}>
+                    <Input
+                      value={String(appearance[key] ?? "")}
+                      onChange={(e) => patch({ appearance: { ...appearance, [key]: e.target.value } })}
+                    />
+                  </Field>
+                ))}
+              </div>
             </div>
           </section>
 

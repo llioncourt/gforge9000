@@ -9,7 +9,7 @@ Order agreed with the user: lore first, battle grid after.
 - [x] World browser tab inside the campaign page (group/kind filters, search, create)
 - [x] Entity detail page: generated fields, GM-only fields, visibility, save on blur, per-player reveals
 - [x] Relationships (link/unlink, both directions)
-- [ ] Backlinks/mentions in prose, revision history UI (entity_revisions table exists)
+- [x] Backlinks/mentions in prose, revision history UI with restore
 
 ## Phase 2 — Story & play
 - [ ] Story tab (arcs/adventures/chapters/scenes/quests/mysteries)

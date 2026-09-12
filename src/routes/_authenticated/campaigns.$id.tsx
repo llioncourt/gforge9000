@@ -54,6 +54,7 @@ import { allowedPacksOf } from "@/lib/packs";
 import { buildSheet } from "@/rules";
 import { useSession } from "@/hooks/use-session";
 import { LorePanel } from "@/components/lore/lore-panel";
+import { StoryPanel } from "@/components/lore/story-panel";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   head: () => ({
@@ -244,6 +245,7 @@ function CampaignPage() {
         <TabsList>
           <TabsTrigger value="roster">Roster</TabsTrigger>
           <TabsTrigger value="lore">World &amp; lore</TabsTrigger>
+          <TabsTrigger value="story">Story</TabsTrigger>
           <TabsTrigger value="notes">Notes &amp; handouts</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="rules">House rules</TabsTrigger>
@@ -364,6 +366,10 @@ function CampaignPage() {
 
         <TabsContent value="lore" className="mt-6">
           <LorePanel campaignId={id} isGm={isGm} />
+        </TabsContent>
+
+        <TabsContent value="story" className="mt-6">
+          <StoryPanel campaignId={id} isGm={isGm} />
         </TabsContent>
 
         <TabsContent value="notes" className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">

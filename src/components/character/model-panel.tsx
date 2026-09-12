@@ -251,7 +251,14 @@ export function ModelPanel({
       </div>
 
       {signed ? (
-        <ModelStageDialog url={signed} name={name} open={stageOpen} onOpenChange={setStageOpen} />
+        <ModelStageDialog
+          url={signed}
+          name={name}
+          open={stageOpen}
+          onOpenChange={setStageOpen}
+          transform={transform}
+          onTransformChange={readOnly ? undefined : onTransformChange}
+        />
       ) : null}
 
       {readOnly ? null : (

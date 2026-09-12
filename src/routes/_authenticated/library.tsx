@@ -38,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FileDropzone } from "@/components/ui/FileDropzone";
+import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 import {
   addEntry,
   createLibraryEntry,
@@ -321,16 +322,19 @@ function LibraryPage() {
             </SelectContent>
           </Select>
         </div>
-        <FileDropzone
-          accept="application/json"
-          compact
-          label="Import a library export"
-          hint="Drop a Universal Character Forge library JSON file"
-          onFiles={(files) => {
-            const file = files[0];
-            if (file) importJson.mutate(file);
-          }}
-        />
+        <div className="grid gap-2">
+          <FileDropzone
+            accept="application/json"
+            compact
+            label="Import a library export"
+            hint="Drop a Universal Character Forge library JSON file"
+            onFiles={(files) => {
+              const file = files[0];
+              if (file) importJson.mutate(file);
+            }}
+          />
+          <AiConversionGuideButton kind="library" />
+        </div>
       </div>
 
       {isLoading ? (

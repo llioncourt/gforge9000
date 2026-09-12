@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FileDropzone } from "@/components/ui/FileDropzone";
+import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 import {
   createContentPack,
   importLibraryEntries,
@@ -151,16 +152,19 @@ function PacksPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <FileDropzone
-          accept="application/json"
-          compact
-          label="Import a pack"
-          hint="Drop a Universal Character Forge pack JSON file"
-          onFiles={(files) => {
-            const file = files[0];
-            if (file) importPack.mutate(file);
-          }}
-        />
+        <div className="grid gap-2">
+          <FileDropzone
+            accept="application/json"
+            compact
+            label="Import a pack"
+            hint="Drop a Universal Character Forge pack JSON file"
+            onFiles={(files) => {
+              const file = files[0];
+              if (file) importPack.mutate(file);
+            }}
+          />
+          <AiConversionGuideButton kind="pack" />
+        </div>
       </div>
 
       {library.isLoading ? (

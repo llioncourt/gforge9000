@@ -310,3 +310,57 @@ export async function upsertProfile(userId: string, patch: TablesUpdate<"profile
       .single(),
   );
 }
+
+/* ---------- duplication ---------- */
+
+/**
+ * Copies a character and all of its entries for the current user. Transient
+ * combat state (current HP/FP, conditions, ammo) is intentionally not copied.
+ */
+export async function duplicateCharacter(id: string, nameSuffix = "copy") {
+  const source = await getCharacter(id);
+  const entries = await listEntries(id);
+  const {
+    id: _id,
+    created_at: _c,
+    updated_at: _u,
+    owner_id: _o,
+    current_hp: _hp,
+    current_fp: _fp,
+    conditions: _cond,
+    ...rest
+  } = source;
+  const copy = await createCharacter({
+    ...rest,
+    name: `${source.name} (${nameSuffix})`,
+    approved: false,
+  } as TablesInsert<"characters">);
+  if (entries.length) {
+    const rows = entries.map((e) => {
+      const { id: _eid, created_at: _ec, updated_at: _eu, ...entry } = e;
+      return { ...entry, character_id: copy.id };
+    });
+    const { error } = await supabase.from("character_entries").insert(rows);
+    if (error) throw new Error(error.message);
+  }
+  return copy;
+}
+
+/* ---------- library extras ---------- */
+
+export async function updateLibraryEntry(id: string, patch: TablesUpdate<"library_entries">) {
+  return unwrap(
+    await supabase.from("library_entries").update(patch).eq("id", id).select().single(),
+  );
+}
+
+export async function importLibraryEntries(rows: Omit<TablesInsert<"library_entries">, "owner_id">[]) {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!rows.length) return [] as LibraryRow[];
+  return unwrap(
+    await supabase
+      .from("library_entries")
+      .insert(rows.map((r) => ({ ...r, owner_id: auth.user!.id })) as TablesInsert<"library_entries">[])
+      .select(),
+  );
+}

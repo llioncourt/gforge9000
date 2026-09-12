@@ -35,7 +35,7 @@ export function ModelStageDialog({
   onOpenChange,
 }: {
   url: string;
-  name?: string;
+  name?: string | undefined;
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
@@ -89,7 +89,7 @@ export function ModelPanel({
   onChange,
 }: {
   characterId: string;
-  name?: string;
+  name?: string | undefined;
   path: string | null;
   readOnly?: boolean;
   onChange: (path: string | null) => void;

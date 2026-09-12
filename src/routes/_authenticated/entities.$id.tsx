@@ -278,6 +278,7 @@ function EntityPage() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="links">Relationships</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
           {isGm ? <TabsTrigger value="reveals">Reveals</TabsTrigger> : null}
         </TabsList>
 

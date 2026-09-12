@@ -139,7 +139,7 @@ function PackDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
-      toast.success("Pack removed. Its entries are kept as personal content.");
+      toast.success("Pack deleted. Anything already on a sheet is now custom.");
       navigate({ to: "/packs" });
     },
     onError: (e: Error) => toast.error(e.message),

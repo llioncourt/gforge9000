@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { ContactShadows, Environment, OrbitControls, Grid } from "@react-three/drei";
+import { ContactShadows, OrbitControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
@@ -87,12 +87,12 @@ export default function ModelViewer({
       dpr={[1, 2]}
       gl={{ antialias: true, preserveDrawingBuffer: false }}
     >
-      <ambientLight intensity={0.55} />
+      <hemisphereLight args={["#dfe6f2", "#20242c", 1.0]} />
+      <ambientLight intensity={0.35} />
       <directionalLight position={[4, 6, 3]} intensity={1.4} castShadow />
       <directionalLight position={[-4, 2, -3]} intensity={0.5} />
       <Suspense fallback={null}>
         {scene ? <primitive object={scene} /> : null}
-        <Environment preset="city" />
       </Suspense>
       {stage ? (
         <>

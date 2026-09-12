@@ -410,9 +410,44 @@ export async function renameContentPack(id: string, oldName: string, newName: st
 export async function deleteContentPack(id: string, name: string) {
   const { data: auth } = await supabase.auth.getUser();
   if (auth.user) {
+    // Entries already copied onto characters lose their pack provenance and
+    // become plain custom entries, so nothing on a sheet is destroyed.
+    const { data: mine } = await supabase
+      .from("characters")
+      .select("id, packs")
+      .eq("owner_id", auth.user.id);
+    const ids = (mine ?? []).map((c) => c.id);
+    if (ids.length) {
+      const { data: entries } = await supabase
+        .from("character_entries")
+        .select("id, source")
+        .in("character_id", ids);
+      const affected = (entries ?? []).filter((e) => {
+        const s = (e.source ?? {}) as Record<string, unknown>;
+        return typeof s["pack"] === "string" && s["pack"].toLowerCase() === name.toLowerCase();
+      });
+      for (const e of affected) {
+        const { error } = await supabase
+          .from("character_entries")
+          .update({ source: { type: "custom" } })
+          .eq("id", e.id);
+        if (error) throw new Error(error.message);
+      }
+      for (const c of mine ?? []) {
+        const packs = (c.packs ?? []) as string[];
+        if (packs.some((p) => p.toLowerCase() === name.toLowerCase())) {
+          const { error } = await supabase
+            .from("characters")
+            .update({ packs: packs.filter((p) => p.toLowerCase() !== name.toLowerCase()) })
+            .eq("id", c.id);
+          if (error) throw new Error(error.message);
+        }
+      }
+    }
+    // The pack's own library entries go away with it.
     const { error } = await supabase
       .from("library_entries")
-      .update({ pack: null })
+      .delete()
       .eq("owner_id", auth.user.id)
       .eq("pack", name);
     if (error) throw new Error(error.message);
@@ -420,6 +455,7 @@ export async function deleteContentPack(id: string, name: string) {
   const { error } = await supabase.from("content_packs").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
+
 
 /** Moves a single library entry into (or out of) a pack. */
 export async function setLibraryEntryPack(entryId: string, pack: string | null) {

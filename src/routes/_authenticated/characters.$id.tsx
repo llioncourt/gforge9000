@@ -6,6 +6,7 @@ import {
   Download,
   Dices,
   History,
+  Info,
   Pencil,
   Plus,
   Printer,

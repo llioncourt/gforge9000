@@ -597,7 +597,12 @@ function CharacterPage() {
                           </span>
                         ) : null}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{entry.kind}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {entry.kind}
+                        {isCustomEntry(entry.source) ? (
+                          <Badge variant="outline" className="ml-1">custom</Badge>
+                        ) : null}
+                      </TableCell>
                       <TableCell className="text-right font-mono">{level.label}</TableCell>
                       <TableCell className="text-right font-mono">
                         {Number(entry.data["points"] ?? 0)}
@@ -653,8 +658,11 @@ function CharacterPage() {
         {/* Equipment */}
         <TabsContent forceMount value="equipment" className="mt-6 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <Button size="sm" onClick={() => openNew("equipment")}>
-              <Plus className="mr-1 h-4 w-4" /> Add item
+            <Button size="sm" onClick={() => setPickerKinds(["equipment"])}>
+              <Plus className="mr-1 h-4 w-4" /> Add from packs
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => openNew("equipment")}>
+              <Plus className="mr-1 h-4 w-4" /> Custom item
             </Button>
             <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
               <span>
@@ -994,6 +1002,15 @@ function CharacterPage() {
         draft={draft}
         onChange={setDraft}
         onSubmit={() => upsertEntry.mutate(draft)}
+      />
+
+      <PackPickerDialog
+        open={pickerKinds !== null}
+        onOpenChange={(v) => !v && setPickerKinds(null)}
+        kinds={pickerKinds ?? []}
+        packs={linkedPacks}
+        pending={addFromPack.isPending}
+        onAdd={(entry) => addFromPack.mutate(entry)}
       />
       </div>
 

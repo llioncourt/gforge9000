@@ -133,9 +133,7 @@ function PackDetailPage() {
     mutationFn: async () => {
       if (!packName) throw new Error("Personal content cannot be deleted.");
       if (meta) await deleteContentPack(meta.id, packName);
-      else {
-        for (const row of rows) await setLibraryEntryPack(row.id, null);
-      }
+      else await deletePackContents(packName);
     },
     onSuccess: () => {
       queryClient.invalidateQueries();

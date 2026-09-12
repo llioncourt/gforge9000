@@ -8,7 +8,7 @@ import {
   toWeaponStateMap,
   type WeaponStateRow,
 } from "@/lib/weapon-state";
-import { AUDIT, consumeShots, normalizeWeaponMode, reloadAmmo } from "@/rules";
+import { RULES_AUDIT as AUDIT, consumeShots, normalizeWeaponMode, reloadAmmo } from "@/rules";
 
 function row(entryId: string, modeKey: string, shots: number): WeaponStateRow {
   return {

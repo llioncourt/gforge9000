@@ -116,6 +116,18 @@ export function skillLevel(
   const fallback = bestDefault(defaults, stats, ctx);
 
   if (rel === null) {
+    // Imported/licensed content may state a final level directly instead of points.
+    // EXACT: the stated level is authoritative when no point purchase exists.
+    const stated = entry.data['level'];
+    if (stated !== undefined && stated !== null && Number.isFinite(Number(stated))) {
+      return {
+        relative: null,
+        effective: Number(stated) + bonus,
+        label: `${attr} (stated)`,
+        fromDefault: false,
+        defaultFrom: null,
+      };
+    }
     if (fallback) {
       return {
         relative: null,

@@ -587,6 +587,10 @@ export type Database = {
     }
     Functions: {
       join_campaign: { Args: { _code: string }; Returns: string }
+      transfer_campaign_gm: {
+        Args: { _campaign: string; _new_gm: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

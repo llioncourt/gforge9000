@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -36,6 +37,8 @@ import {
   createCharacter,
   duplicateCharacter,
 } from "@/lib/api";
+import { listLibrary } from "@/lib/api";
+import { allowedPacksOf } from "@/lib/packs";
 import { buildSheet } from "@/rules";
 import { useSession } from "@/hooks/use-session";
 
@@ -73,6 +76,13 @@ function CampaignPage() {
     queryFn: () => listEntriesForCharacters((roster.data ?? []).map((c) => c.id)),
     enabled: (roster.data?.length ?? 0) > 0,
   });
+
+  const library = useQuery({ queryKey: ["library"], queryFn: listLibrary });
+  const knownPacks = useMemo(() => {
+    const set = new Set<string>();
+    for (const row of library.data ?? []) if (row.pack) set.add(row.pack);
+    return [...set];
+  }, [library.data]);
 
   const isGm = campaign.data?.gm_id === user?.id;
   const settings = (campaign.data?.settings ?? {}) as Record<string, unknown>;
@@ -138,10 +148,16 @@ function CampaignPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [noteFilter, setNoteFilter] = useState("all");
   const [noteTitle, setNoteTitle] = useState("");
   const [noteBody, setNoteBody] = useState("");
   const [noteKind, setNoteKind] = useState("note");
   const [gmOnly, setGmOnly] = useState(false);
+
+  const visibleNotes = useMemo(
+    () => (notes.data ?? []).filter((n) => noteFilter === "all" || n.kind === noteFilter),
+    [notes.data, noteFilter],
+  );
 
   const createNote = useMutation({
     mutationFn: () =>
@@ -324,10 +340,25 @@ function CampaignPage() {
 
         <TabsContent value="notes" className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
           <div className="space-y-3">
+            <div className="w-full sm:w-60">
+              <Select value={noteFilter} onValueChange={setNoteFilter}>
+                <SelectTrigger aria-label="Filter entries">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All entries</SelectItem>
+                  <SelectItem value="note">Notes</SelectItem>
+                  <SelectItem value="handout">Handouts</SelectItem>
+                  <SelectItem value="session">Session log</SelectItem>
+                  <SelectItem value="npc">NPCs</SelectItem>
+                  <SelectItem value="party-inventory">Party inventory</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {notes.isLoading ? (
               [0, 1].map((i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)
-            ) : notes.data?.length ? (
-              notes.data.map((n) => (
+            ) : visibleNotes.length ? (
+              visibleNotes.map((n) => (
                 <article key={n.id} className="panel p-4">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="font-medium">{n.title}</h3>
@@ -350,7 +381,7 @@ function CampaignPage() {
                 </article>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No notes yet.</p>
+              <p className="text-sm text-muted-foreground">No entries here yet.</p>
             )}
           </div>
 
@@ -410,6 +441,7 @@ function CampaignPage() {
           <HouseRules
             settings={settings}
             disabled={!isGm}
+            knownPacks={knownPacks}
             onSave={(patch) => saveSettings.mutate(patch)}
           />
         </TabsContent>
@@ -430,19 +462,26 @@ function Mini({ label, value }: { label: string; value: string | number }) {
 function HouseRules({
   settings,
   disabled,
+  knownPacks,
   onSave,
 }: {
   settings: Record<string, unknown>;
   disabled: boolean;
+  knownPacks: string[];
   onSave: (patch: Record<string, unknown>) => void;
 }) {
   const [pointLimit, setPointLimit] = useState(String(settings["point_limit"] ?? 150));
   const [disadvLimit, setDisadvLimit] = useState(String(settings["disadvantage_limit"] ?? -50));
   const [tl, setTl] = useState(String(settings["tech_level"] ?? 8));
   const [houseRules, setHouseRules] = useState(String(settings["house_rules"] ?? ""));
-  const [packs, setPacks] = useState(
-    (Array.isArray(settings["allowed_packs"]) ? (settings["allowed_packs"] as string[]) : []).join(", "),
+  const [packs, setPacks] = useState<string[]>(allowedPacksOf(settings));
+  const [newPack, setNewPack] = useState("");
+  const packOptions = useMemo(
+    () => Array.from(new Set([...knownPacks, ...packs])).sort((a, b) => a.localeCompare(b)),
+    [knownPacks, packs],
   );
+  const togglePack = (name: string, on: boolean) =>
+    setPacks((prev) => (on ? [...new Set([...prev, name])] : prev.filter((p) => p !== name)));
 
   return (
     <div className="panel max-w-2xl space-y-4 p-6">
@@ -460,16 +499,51 @@ function HouseRules({
           <Input value={tl} onChange={(e) => setTl(e.target.value)} disabled={disabled} />
         </div>
       </div>
-      <div className="space-y-1.5">
-        <Label>Allowed content packs</Label>
-        <Input
-          value={packs}
-          onChange={(e) => setPacks(e.target.value)}
-          disabled={disabled}
-          placeholder="Comma separated pack names, e.g. Core Generic Pack"
-        />
+      <div className="space-y-2">
+        <Label>Enabled content packs</Label>
+        {packOptions.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            No content packs found yet. Tag library entries with a pack name to manage them here.
+          </p>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {packOptions.map((p) => (
+              <label key={p} className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  checked={packs.includes(p)}
+                  disabled={disabled}
+                  onCheckedChange={(v) => togglePack(p, v === true)}
+                  aria-label={`Enable pack ${p}`}
+                />
+                <span>{p}</span>
+              </label>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Input
+            value={newPack}
+            onChange={(e) => setNewPack(e.target.value)}
+            disabled={disabled}
+            placeholder="Add another pack name"
+            aria-label="Add another pack name"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            disabled={disabled || !newPack.trim()}
+            onClick={() => {
+              togglePack(newPack.trim(), true);
+              setNewPack("");
+            }}
+          >
+            Add
+          </Button>
+        </div>
         <p className="text-xs text-muted-foreground">
-          Library entries are grouped by pack. Leave empty to allow every pack.
+          With nothing enabled every pack is allowed. When at least one pack is enabled, library
+          entries from other packs cannot be added to characters in this campaign. Entries with no
+          pack are personal content and stay available.
         </p>
       </div>
       <div className="space-y-1.5">
@@ -490,10 +564,7 @@ function HouseRules({
             disadvantage_limit: Number(disadvLimit) || 0,
             tech_level: Number(tl) || 0,
             house_rules: houseRules,
-            allowed_packs: packs
-              .split(",")
-              .map((p) => p.trim())
-              .filter(Boolean),
+            allowed_packs: packs.map((p) => p.trim()).filter(Boolean),
           })
         }
       >

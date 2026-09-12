@@ -207,6 +207,16 @@
     padding-left: 0 !important;
     font-weight: 600 !important;
   }
+  [role="tablist"],
+  button:not([role="switch"]) {
+    display: none !important;
+  }
+  [role="tabpanel"][hidden] {
+    display: block !important;
+  }
+  [role="tabpanel"] {
+    margin-top: 1rem !important;
+  }
   .panel,
   .print-plain {
     border: 1px solid #999 !important;

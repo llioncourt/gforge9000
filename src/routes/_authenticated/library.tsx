@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { allowedPacksOf, packGateReason } from "@/lib/packs";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,7 @@ import {
   deleteLibraryEntry,
   importLibraryEntries,
   listCharacters,
+  listCampaigns,
   listLibrary,
   updateLibraryEntry,
   type LibraryRow,
@@ -140,6 +142,7 @@ function LibraryPage() {
   const { user } = useSession();
   const { data, isLoading } = useQuery({ queryKey: ["library"], queryFn: listLibrary });
   const characters = useQuery({ queryKey: ["characters"], queryFn: listCharacters });
+  const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: listCampaigns });
   const [search, setSearch] = useState("");
   const [kindFilter, setKindFilter] = useState("all");
   const [packFilter, setPackFilter] = useState("all");
@@ -209,8 +212,18 @@ function LibraryPage() {
     onError: (e: Error) => toast.error(`Import failed: ${e.message}`),
   });
 
+  const gateFor = (characterId: string, pack: string | null) => {
+    const character = (characters.data ?? []).find((c) => c.id === characterId);
+    if (!character?.campaign_id) return null;
+    const campaign = (campaigns.data ?? []).find((c) => c.id === character.campaign_id);
+    if (!campaign) return null;
+    return packGateReason(pack, allowedPacksOf(campaign.settings));
+  };
+
   const addToCharacter = useMutation({
     mutationFn: async ({ entry, characterId }: { entry: LibraryRow; characterId: string }) => {
+      const blocked = gateFor(characterId, entry.pack ?? null);
+      if (blocked) throw new Error(blocked);
       const draft = libraryEntryToCharacterDraft({
         ...entry,
         data: (entry.data ?? {}) as Record<string, unknown>,
@@ -524,13 +537,18 @@ function LibraryPage() {
                   key={c.id}
                   variant="outline"
                   className="w-full justify-between"
-                  disabled={addToCharacter.isPending}
+                  disabled={
+                    addToCharacter.isPending ||
+                    !!gateFor(c.id, addTarget?.pack ?? null)
+                  }
                   onClick={() =>
                     addTarget && addToCharacter.mutate({ entry: addTarget, characterId: c.id })
                   }
                 >
                   <span>{c.name}</span>
-                  <span className="text-xs text-muted-foreground">{c.is_npc ? "NPC" : "PC"}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {gateFor(c.id, addTarget?.pack ?? null) ?? (c.is_npc ? "NPC" : "PC")}
+                  </span>
                 </Button>
               ))
             )}

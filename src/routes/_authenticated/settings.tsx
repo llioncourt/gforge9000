@@ -53,6 +53,51 @@ function SettingsPage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [light, setLight] = useState(false);
+  const [wipeOpen, setWipeOpen] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
+  // A full-page Google redirect returns here: restore the pending intent.
+  useEffect(() => {
+    const raw = sessionStorage.getItem(WIPE_INTENT_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(WIPE_INTENT_KEY);
+    if (Date.now() - Number(raw) > WIPE_INTENT_TTL) return;
+    setVerified(true);
+    setWipeOpen(true);
+  }, []);
+
+  async function confirmWithGoogle() {
+    setVerifying(true);
+    sessionStorage.setItem(WIPE_INTENT_KEY, String(Date.now()));
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: `${window.location.origin}/settings`,
+      });
+      if ("redirected" in result && result.redirected) return;
+      if (result.error) throw result.error;
+      sessionStorage.removeItem(WIPE_INTENT_KEY);
+      setVerified(true);
+      toast.success("Identity confirmed.");
+    } catch (e) {
+      sessionStorage.removeItem(WIPE_INTENT_KEY);
+      toast.error(e instanceof Error ? e.message : "Could not confirm your identity.");
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  const wipe = useMutation({
+    mutationFn: wipeAllMyData,
+    onSuccess: () => {
+      queryClient.clear();
+      setWipeOpen(false);
+      setVerified(false);
+      toast.success("Everything was deleted. Your account is still here.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
 
   useEffect(() => {
     if (data) {

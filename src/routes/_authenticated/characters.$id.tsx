@@ -597,19 +597,50 @@ function CharacterPage() {
                   />
                 </Field>
               </div>
-              <Field label="Conditions (comma separated)">
-                <Input
-                  value={form.conditions.join(", ")}
-                  onChange={(e) =>
-                    patch({
-                      conditions: e.target.value
-                        .split(",")
-                        .map((c) => c.trim())
-                        .filter(Boolean),
-                    })
-                  }
-                />
-              </Field>
+              <div className="space-y-2">
+                <Label>Conditions</Label>
+                <div className="flex flex-wrap gap-1">
+                  {form.conditions.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">None active.</p>
+                  ) : (
+                    form.conditions.map((c) => (
+                      <Badge key={c} variant="outline" className="gap-1">
+                        {c}
+                        <button
+                          type="button"
+                          aria-label={`Remove ${c}`}
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() =>
+                            patch({ conditions: form.conditions.filter((x) => x !== c) })
+                          }
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))
+                  )}
+                </div>
+                <form
+                  className="flex gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const value = conditionInput.trim();
+                    if (!value || form.conditions.includes(value)) return;
+                    patch({ conditions: [...form.conditions, value] });
+                    setConditionInput("");
+                  }}
+                >
+                  <Input
+                    value={conditionInput}
+                    placeholder="Add a condition…"
+                    onChange={(e) => setConditionInput(e.target.value)}
+                  />
+                  <Button type="submit" variant="outline" size="sm">
+                    Add
+                  </Button>
+                </form>
+              </div>
+
               <div className="grid grid-cols-3 gap-2 text-center">
                 <Mini label="Move" value={sheet.encumbrance.effectiveMove} />
                 <Mini label="Dodge" value={sheet.encumbrance.effectiveDodge} />

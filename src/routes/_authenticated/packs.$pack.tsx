@@ -37,6 +37,7 @@ import {
 import {
   createContentPack,
   deleteContentPack,
+  deletePackContents,
   listCampaigns,
   listContentPacks,
   listLibrary,
@@ -133,13 +134,11 @@ function PackDetailPage() {
     mutationFn: async () => {
       if (!packName) throw new Error("Personal content cannot be deleted.");
       if (meta) await deleteContentPack(meta.id, packName);
-      else {
-        for (const row of rows) await setLibraryEntryPack(row.id, null);
-      }
+      else await deletePackContents(packName);
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
-      toast.success("Pack removed. Its entries are kept as personal content.");
+      toast.success("Pack deleted. Anything already on a sheet is now custom.");
       navigate({ to: "/packs" });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -422,8 +421,8 @@ function PackDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this pack?</AlertDialogTitle>
             <AlertDialogDescription>
-              Only the grouping is deleted. Every library entry is kept and moves to{" "}
-              {UNPACKED_LABEL}, and entries already copied onto characters are untouched.
+              Every entry inside this pack is deleted with it. Anything already added to a
+              character stays on the sheet and becomes a custom entry.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

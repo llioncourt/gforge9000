@@ -38,7 +38,7 @@ default and the UI reports it as unavailable.
 | combat | Weapon field parsing (reach, parry, Acc, bulk, range, RoF, shots, recoil) | CONFIGURABLE | `weapons.ts:normalizeWeaponMode` |
 | combat | Weapon damage expression resolution | CONFIGURABLE | `weapons.ts:resolveDamageExpression` |
 | combat | Shots / ammunition state | CONFIGURABLE | `weapons.ts:createAmmoState`, `consumeShots`, `reloadAmmo` |
-| combat | Persisted ammunition between sessions | MISSING | none — needs a schema change, out of scope |
+| combat | Persisted ammunition between sessions | CONFIGURABLE | `src/lib/weapon-state.ts` + `public.character_weapon_state` |
 | combat | Rapid fire: RoF, recoil, additional hits | CONFIGURABLE | `weapons.ts:additionalHits` |
 | combat | Accuracy / Aim and Bulk modifier hooks | CONFIGURABLE | `weapons.ts:accuracyModifier`, `bulkModifier` |
 | dice | Generic dice expressions | EXACT | `dice.ts:parseDice` |
@@ -81,10 +81,13 @@ default and the UI reports it as unavailable.
    result is `unavailable` and the sheet shows "Damage: not configured" with no
    roll button. Damage type labels (`cr`, `imp`, …) are parsed out, not
    interpreted.
-10. **Ammunition state is pure and session-local.** Shots are tracked separately
-    from the weapon definition; consumption rejects non-positive, fractional and
-    over-capacity amounts, and reload is capped at capacity. Persisting current
-    shots would require a schema change and is recorded as MISSING.
+10. **Ammunition state is pure, and persisted separately.** Shots are tracked
+    separately from the weapon definition; consumption rejects non-positive,
+    fractional and over-capacity amounts, and reload is capped at capacity.
+    Current shots persist in `public.character_weapon_state` (character +
+    equipment entry + attack-mode key), under the same ownership rules as the
+    character: the owner may read and write, a campaign GM who can already view
+    the character may read only. The weapon definition is never mutated.
 11. **Rapid fire.** `additionalHits()` derives extra hits from the margin of
     success and recoil, capped by shots fired, ammunition on hand and an optional
     ruleset cap; it is explicitly unavailable without both recoil and RoF.
@@ -94,8 +97,9 @@ default and the UI reports it as unavailable.
 
 ## Known gaps (do not paper over)
 
-- Current ammunition is not persisted across sessions (no schema change in this
-  phase): **MISSING**.
+- Attack modes have no stable identifier, so persisted ammunition is keyed by
+  the mode's index inside its equipment entry. Reordering attack modes remaps
+  stored shots. Adding per-mode ids is a content migration, out of scope here.
 - Aiming time, bracing, shock, hit-location targeting and other maneuvers are
   not modelled; Accuracy and Bulk are exposed as hooks only.
 - No damage progression, skill list, default table or trait catalogue is

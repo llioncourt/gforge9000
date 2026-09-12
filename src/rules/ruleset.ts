@@ -1,3 +1,4 @@
+import type { DamageProgression } from "./damage";
 import type { Difficulty } from "./types";
 
 /**
@@ -17,6 +18,39 @@ export interface Ruleset {
   criticalFailureMin: number;
   /** Margin at which a roll automatically fails regardless of target. */
   autoFailMargin: number;
+  /** Rounding applied after enhancements/limitations. */
+  modifierRounding: "nearest" | "up" | "down";
+  /** Largest total limitation percentage honoured. */
+  modifierFloorPercent: number;
+  activeDefense: {
+    parryDivisor: number;
+    parryBase: number;
+    blockDivisor: number;
+    blockBase: number;
+    retreatBonus: number;
+  };
+  technique: {
+    /** Cost of the first level bought above the default. */
+    firstLevelCost: Record<Difficulty, number>;
+    /** Cost of each further level. */
+    additionalLevelCost: Record<Difficulty, number>;
+  };
+  health: {
+    hpThresholds: { atOrBelow: number; label: string; moveFactor: number }[];
+    fpThresholds: { atOrBelow: number; label: string; moveFactor: number }[];
+  };
+  /** Campaign caps. `null` means no cap is enforced. */
+  limits: {
+    pointBudget: number | null;
+    disadvantageLimit: number | null;
+    quirkLimit: number | null;
+    techLevel: number | null;
+  };
+  /**
+   * Basic damage table. Intentionally empty: no published progression is
+   * bundled. Install one from a user/licensed content pack.
+   */
+  damageProgression: DamageProgression | null;
 }
 
 export const defaultRuleset: Ruleset = {
@@ -35,7 +69,46 @@ export const defaultRuleset: Ruleset = {
   criticalSuccessMax: 4,
   criticalFailureMin: 17,
   autoFailMargin: 10,
+  modifierRounding: "nearest",
+  modifierFloorPercent: -80,
+  activeDefense: { parryDivisor: 2, parryBase: 3, blockDivisor: 2, blockBase: 3, retreatBonus: 3 },
+  technique: {
+    firstLevelCost: { E: 1, A: 1, H: 2, VH: 2 },
+    additionalLevelCost: { E: 1, A: 1, H: 1, VH: 1 },
+  },
+  health: {
+    hpThresholds: [
+      { atOrBelow: 1 / 3, label: "Reeling", moveFactor: 0.5 },
+      { atOrBelow: 0, label: "Collapse risk", moveFactor: 0 },
+      { atOrBelow: -1, label: "Death risk", moveFactor: 0 },
+    ],
+    fpThresholds: [
+      { atOrBelow: 1 / 3, label: "Tired", moveFactor: 0.5 },
+      { atOrBelow: 0, label: "Collapse risk", moveFactor: 0 },
+    ],
+  },
+  limits: { pointBudget: null, disadvantageLimit: null, quirkLimit: null, techLevel: null },
+  damageProgression: null,
 };
+
+type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> | T[K] : T[K] };
+
+/** Campaign house rules: shallow-merges each section over the base ruleset. */
+export function mergeRuleset(base: Ruleset, overrides?: DeepPartial<Ruleset> | null): Ruleset {
+  if (!overrides) return base;
+  const out = { ...base } as Ruleset;
+  for (const key of Object.keys(overrides) as (keyof Ruleset)[]) {
+    const value = overrides[key];
+    if (value === undefined) continue;
+    const current = base[key];
+    if (Array.isArray(value) || value === null || typeof value !== "object") {
+      (out as Record<string, unknown>)[key] = value;
+    } else {
+      (out as Record<string, unknown>)[key] = { ...(current as object), ...(value as object) };
+    }
+  }
+  return out;
+}
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   E: "Easy",

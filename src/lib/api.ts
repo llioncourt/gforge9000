@@ -487,3 +487,45 @@ export async function deleteContentPack(id: string, name: string) {
 export async function setLibraryEntryPack(entryId: string, pack: string | null) {
   return updateLibraryEntry(entryId, { pack });
 }
+
+/* ---------- danger zone ---------- */
+
+/**
+ * Deletes every record this account owns: characters and their entries,
+ * versions and weapon state, campaigns, notes, memberships, library entries,
+ * packs and roll history. The account itself is kept.
+ */
+export async function wipeAllMyData() {
+  const { data: auth } = await supabase.auth.getUser();
+  const uid = auth.user?.id;
+  if (!uid) throw new Error("You must be signed in.");
+
+  const { data: mine } = await supabase.from("characters").select("id").eq("owner_id", uid);
+  const ids = (mine ?? []).map((c) => c.id);
+
+  const fail = (error: { message: string } | null) => {
+    if (error) throw new Error(error.message);
+  };
+
+  if (ids.length) {
+    fail((await supabase.from("character_weapon_state").delete().in("character_id", ids)).error);
+    fail((await supabase.from("character_versions").delete().in("character_id", ids)).error);
+    fail((await supabase.from("character_entries").delete().in("character_id", ids)).error);
+  }
+  fail((await supabase.from("characters").delete().eq("owner_id", uid)).error);
+
+  const { data: myCampaigns } = await supabase.from("campaigns").select("id").eq("gm_id", uid);
+  const campaignIds = (myCampaigns ?? []).map((c) => c.id);
+  if (campaignIds.length) {
+    fail((await supabase.from("campaign_notes").delete().in("campaign_id", campaignIds)).error);
+    fail((await supabase.from("campaign_members").delete().in("campaign_id", campaignIds)).error);
+  }
+  fail((await supabase.from("campaign_notes").delete().eq("author_id", uid)).error);
+  fail((await supabase.from("campaign_members").delete().eq("user_id", uid)).error);
+  fail((await supabase.from("campaigns").delete().eq("gm_id", uid)).error);
+
+  fail((await supabase.from("roll_history").delete().eq("user_id", uid)).error);
+  fail((await supabase.from("library_entries").delete().eq("owner_id", uid)).error);
+  fail((await supabase.from("content_packs").delete().eq("owner_id", uid)).error);
+}
+

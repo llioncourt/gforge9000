@@ -380,7 +380,7 @@ function CharacterPage() {
         </TabsList>
 
         {/* Attributes */}
-        <TabsContent forceMount value="attributes" className="mt-6 grid gap-6 lg:grid-cols-2">
+        <TabsContent value="attributes" className="mt-6 grid gap-6 lg:grid-cols-2">
           <section className="panel space-y-4 p-5">
             <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
               Identity
@@ -526,7 +526,7 @@ function CharacterPage() {
         </TabsContent>
 
         {/* Traits */}
-        <TabsContent forceMount value="traits" className="mt-6 space-y-6">
+        <TabsContent value="traits" className="mt-6 space-y-6">
           {[...TRAIT_KINDS, ...LORE_KINDS].map((kind) => (
             <EntryGroup
               key={kind}
@@ -542,7 +542,7 @@ function CharacterPage() {
         </TabsContent>
 
         {/* Skills */}
-        <TabsContent forceMount value="skills" className="mt-6 space-y-6">
+        <TabsContent value="skills" className="mt-6 space-y-6">
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={() => setPickerKinds(["skill"])}>
               <Plus className="mr-1 h-4 w-4" /> Skills from packs
@@ -658,7 +658,7 @@ function CharacterPage() {
         </TabsContent>
 
         {/* Equipment */}
-        <TabsContent forceMount value="equipment" className="mt-6 space-y-4">
+        <TabsContent value="equipment" className="mt-6 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <Button size="sm" onClick={() => setPickerKinds(["equipment"])}>
               <Plus className="mr-1 h-4 w-4" /> Add from packs

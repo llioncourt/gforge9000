@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Loader2, ShieldAlert } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +10,24 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getProfile, upsertProfile } from "@/lib/api";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { getProfile, upsertProfile, wipeAllMyData } from "@/lib/api";
+import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/hooks/use-session";
 import { AUDIT_SUMMARY, RULES_AUDIT } from "@/rules/audit";
+
+const WIPE_INTENT_KEY = "ucf:wipe-intent";
+const WIPE_INTENT_TTL = 5 * 60 * 1000;
+
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({

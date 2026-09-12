@@ -16,6 +16,16 @@ export interface DerivedStats {
   dodge: number;
 }
 
+/**
+ * Basic Lift = ST^2 / divisor (divisor is ruleset-driven). The value keeps its
+ * fractional precision (ST 11 with divisor 5 => 24.2); only binary floating
+ * point noise is trimmed. Rounding for display is a UI concern, not a rule.
+ */
+export function basicLift(st: number, rules: Ruleset = defaultRuleset): number {
+  const raw = (st * st) / rules.basicLiftDivisor;
+  return Math.round(raw * 1e6) / 1e6;
+}
+
 /** Pure derivation of secondary characteristics from primary attributes. */
 export function deriveStats(c: CharacterRecord, rules: Ruleset = defaultRuleset): DerivedStats {
   const basicSpeed = (c.dx + c.ht) / 4 + Number(c.speed_delta ?? 0);

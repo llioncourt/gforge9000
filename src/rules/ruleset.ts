@@ -102,9 +102,9 @@ export function mergeRuleset(base: Ruleset, overrides?: DeepPartial<Ruleset> | n
     if (value === undefined) continue;
     const current = base[key];
     if (Array.isArray(value) || value === null || typeof value !== "object") {
-      (out as Record<string, unknown>)[key] = value;
+      (out as unknown as Record<string, unknown>)[key] = value;
     } else {
-      (out as Record<string, unknown>)[key] = { ...(current as object), ...(value as object) };
+      (out as unknown as Record<string, unknown>)[key] = { ...(current as object), ...(value as object) };
     }
   }
   return out;

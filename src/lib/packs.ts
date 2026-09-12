@@ -32,7 +32,8 @@ export function packGateReason(
 
 /* ---------- pack grouping ---------- */
 
-export const UNPACKED_LABEL = "Unpacked / Personal Content";
+/** Every library entry belongs to a pack; entries without one land here. */
+export const DEFAULT_PACK_NAME = "My Content";
 
 export interface PackEntryLike {
   id?: string;
@@ -47,8 +48,7 @@ export interface PackEntryLike {
 }
 
 export interface PackGroup<T extends PackEntryLike = PackEntryLike> {
-  /** null for personal content that belongs to no pack. */
-  pack: string | null;
+  pack: string;
   label: string;
   entries: T[];
   total: number;
@@ -57,28 +57,22 @@ export interface PackGroup<T extends PackEntryLike = PackEntryLike> {
   visibilities: string[];
 }
 
-/** Groups library entries by their pack name; personal content is kept visible. */
+/** Groups library entries by their pack name; orphans fall into the default pack. */
 export function groupEntriesByPack<T extends PackEntryLike>(entries: T[]): PackGroup<T>[] {
   const buckets = new Map<string, T[]>();
   for (const entry of entries) {
-    const key = (entry.pack ?? "").trim() || "";
+    const key = (entry.pack ?? "").trim() || DEFAULT_PACK_NAME;
     const list = buckets.get(key);
     if (list) list.push(entry);
     else buckets.set(key, [entry]);
   }
   const groups: PackGroup<T>[] = [];
-  for (const [key, list] of buckets) {
-    groups.push(makeGroup(key === "" ? null : key, list));
-  }
-  groups.sort((a, b) => {
-    if (a.pack === null) return 1;
-    if (b.pack === null) return -1;
-    return a.label.localeCompare(b.label);
-  });
+  for (const [key, list] of buckets) groups.push(makeGroup(key, list));
+  groups.sort((a, b) => a.label.localeCompare(b.label));
   return groups;
 }
 
-export function makeGroup<T extends PackEntryLike>(pack: string | null, entries: T[]): PackGroup<T> {
+export function makeGroup<T extends PackEntryLike>(pack: string, entries: T[]): PackGroup<T> {
   const counts = new Map<string, number>();
   const sources = new Set<string>();
   const visibilities = new Set<string>();
@@ -89,7 +83,7 @@ export function makeGroup<T extends PackEntryLike>(pack: string | null, entries:
   }
   return {
     pack,
-    label: pack ?? UNPACKED_LABEL,
+    label: pack,
     entries,
     total: entries.length,
     kinds: [...counts.entries()]
@@ -120,7 +114,7 @@ export function groupEntriesByKind<T extends PackEntryLike>(
 
 /** Campaigns (that the user GMs) where a given pack is enabled. */
 export function campaignsEnablingPack(
-  pack: string | null,
+  pack: string,
   campaigns: { id: string; name: string; settings: unknown }[],
 ): { id: string; name: string }[] {
   if (!pack) return [];

@@ -32,7 +32,6 @@ import {
   campaignsEnablingPack,
   groupEntriesByPack,
   makeGroup,
-  UNPACKED_LABEL,
   type PackGroup,
 } from "@/lib/packs";
 import { useSession } from "@/hooks/use-session";
@@ -77,13 +76,11 @@ function PacksPage() {
 
   const groups = useMemo(() => {
     const grouped = groupEntriesByPack(library.data ?? []);
-    const named = new Set(grouped.map((g) => g.pack).filter(Boolean) as string[]);
+    const named = new Set(grouped.map((g) => g.pack));
     const empty: PackGroup[] = (packsQuery.data ?? [])
       .filter((p) => !named.has(p.name))
       .map((p) => makeGroup(p.name, []));
-    return [...grouped.filter((g) => g.pack !== null), ...empty]
-      .sort((a, b) => a.label.localeCompare(b.label))
-      .concat(grouped.filter((g) => g.pack === null));
+    return [...grouped, ...empty].sort((a, b) => a.label.localeCompare(b.label));
   }, [library.data, packsQuery.data]);
 
   const filtered = groups.filter((g) =>
@@ -186,7 +183,6 @@ function PacksPage() {
                     <p className="truncate font-medium">{g.label}</p>
                     <p className="text-xs text-muted-foreground">
                       {g.total} entr{g.total === 1 ? "y" : "ies"}
-                      {g.pack === null ? " · not in any pack" : ""}
                     </p>
                   </div>
                 </div>
@@ -207,11 +203,9 @@ function PacksPage() {
                   {g.visibilities.length ? ` · ${g.visibilities.join(", ")}` : ""}
                 </p>
                 <p className="mt-auto pt-3 text-[11px] text-muted-foreground">
-                  {g.pack === null
-                    ? "Personal content is always available to you."
-                    : enabledIn.length
-                      ? `Enabled in ${enabledIn.map((c) => c.name).join(", ")}`
-                      : "Not enabled in any campaign you run"}
+                  {enabledIn.length
+                    ? `Enabled in ${enabledIn.map((c) => c.name).join(", ")}`
+                    : "Not enabled in any campaign you run"}
                 </p>
               </Link>
             );
@@ -224,7 +218,7 @@ function PacksPage() {
           <DialogHeader>
             <DialogTitle>New content pack</DialogTitle>
             <DialogDescription>
-              A pack groups your own library entries. {UNPACKED_LABEL} stays available either way.
+              A pack groups your own library entries. Every entry belongs to a pack.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">

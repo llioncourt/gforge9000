@@ -53,7 +53,7 @@ import {
   makeGroup,
   togglePackInList,
   NO_PACKS_MARKER,
-  UNPACKED_LABEL,
+  DEFAULT_PACK_NAME,
 } from "@/lib/packs";
 import { packFromSlug, packSlug } from "@/lib/pack-slug";
 import { slugify } from "@/lib/portable";
@@ -93,25 +93,24 @@ function PackDetailPage() {
   const [addId, setAddId] = useState("");
 
   const rows = useMemo(
-    () => (library.data ?? []).filter((e) => (e.pack ?? null) === packName),
+    () => (library.data ?? []).filter((e) => (e.pack ?? "") === packName),
     [library.data, packName],
   );
   const group = makeGroup(packName, rows);
   const meta = (packsQuery.data ?? []).find((p) => p.name === packName);
-  const mine = packName === null || !meta || meta.owner_id === user?.id;
+  const mine = !meta || meta.owner_id === user?.id;
   const gmCampaigns = (campaigns.data ?? []).filter((c) => c.gm_id === user?.id);
 
   const unpacked = useMemo(
     () =>
       (library.data ?? []).filter(
-        (e) => (e.pack ?? null) !== packName && e.owner_id === user?.id,
+        (e) => (e.pack ?? "") !== packName && e.owner_id === user?.id,
       ),
     [library.data, packName, user?.id],
   );
 
   const rename = useMutation({
     mutationFn: async () => {
-      if (!packName) throw new Error("Personal content cannot be renamed.");
       const target = nextName.trim();
       if (!target) throw new Error("Give the pack a name.");
       if (meta) await renameContentPack(meta.id, packName, target);
@@ -132,7 +131,6 @@ function PackDetailPage() {
 
   const remove = useMutation({
     mutationFn: async () => {
-      if (!packName) throw new Error("Personal content cannot be deleted.");
       if (meta) await deleteContentPack(meta.id, packName);
       else await deletePackContents(packName);
     },
@@ -145,7 +143,7 @@ function PackDetailPage() {
   });
 
   const moveEntry = useMutation({
-    mutationFn: ({ id, to }: { id: string; to: string | null }) => setLibraryEntryPack(id, to),
+    mutationFn: ({ id, to }: { id: string; to: string }) => setLibraryEntryPack(id, to),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["library"] });
       setAddId("");
@@ -204,11 +202,7 @@ function PackDetailPage() {
       </Link>
       <PageHeader
         title={group.label}
-        description={
-          packName === null
-            ? "Entries that belong to no pack. They stay available to you and are never gated by campaign pack rules."
-            : (meta?.description ?? "Content pack")
-        }
+        description={meta?.description ?? "Content pack"}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button
@@ -219,7 +213,7 @@ function PackDetailPage() {
                   JSON.stringify(
                     toPortablePack(
                       {
-                        name: packName ?? UNPACKED_LABEL,
+                        name: packName,
                         description: meta?.description ?? null,
                         source_label: meta?.source_label ?? "User content",
                         source_edition: meta?.source_edition ?? null,
@@ -236,7 +230,7 @@ function PackDetailPage() {
             >
               <Download className="mr-2 h-4 w-4" /> Export pack
             </Button>
-            {packName && mine ? (
+            {mine ? (
               <>
                 <Button
                   variant="outline"
@@ -275,11 +269,7 @@ function PackDetailPage() {
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
             Enabled in campaigns you run
           </p>
-          {packName === null ? (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Personal content is never restricted by campaign pack rules.
-            </p>
-          ) : gmCampaigns.length === 0 ? (
+          {gmCampaigns.length === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">You do not run any campaign yet.</p>
           ) : (
             <ul className="mt-2 space-y-2">
@@ -311,7 +301,7 @@ function PackDetailPage() {
         </div>
       </div>
 
-      {packName && mine ? (
+      {mine ? (
         <div className="panel mb-6 flex flex-wrap items-end gap-3 p-4">
           <div className="space-y-1.5">
             <Label htmlFor="add-entry">Add a library entry to this pack</Label>
@@ -375,13 +365,13 @@ function PackDetailPage() {
                         {t}
                       </Badge>
                     ))}
-                    {packName && e.owner_id === user?.id ? (
+                    {e.owner_id === user?.id && packName !== DEFAULT_PACK_NAME ? (
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => moveEntry.mutate({ id: e.id, to: null })}
+                        onClick={() => moveEntry.mutate({ id: e.id, to: DEFAULT_PACK_NAME })}
                       >
-                        Remove from pack
+                        Move to {DEFAULT_PACK_NAME}
                       </Button>
                     ) : null}
                   </li>

@@ -1,3 +1,4 @@
+import { DEFAULT_PACK_NAME } from "@/lib/packs";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import type { CharacterEntry, CharacterRecord } from "@/rules";
@@ -257,10 +258,12 @@ export async function listLibrary() {
 
 export async function createLibraryEntry(input: TablesInsert<"library_entries">) {
   const { data: auth } = await supabase.auth.getUser();
+  const pack = (input.pack ?? "").trim() || DEFAULT_PACK_NAME;
+  await ensureContentPack(pack);
   return unwrap(
     await supabase
       .from("library_entries")
-      .insert({ ...input, owner_id: auth.user!.id })
+      .insert({ ...input, pack, owner_id: auth.user!.id })
       .select()
       .single(),
   );
@@ -357,15 +360,36 @@ export async function updateLibraryEntry(id: string, patch: TablesUpdate<"librar
 export async function importLibraryEntries(rows: Omit<TablesInsert<"library_entries">, "owner_id">[]) {
   const { data: auth } = await supabase.auth.getUser();
   if (!rows.length) return [] as LibraryRow[];
+  const withPacks = rows.map((r) => ({
+    ...r,
+    pack: (r.pack ?? "").trim() || DEFAULT_PACK_NAME,
+  }));
+  for (const name of new Set(withPacks.map((r) => r.pack))) await ensureContentPack(name);
   return unwrap(
     await supabase
       .from("library_entries")
-      .insert(rows.map((r) => ({ ...r, owner_id: auth.user!.id })) as TablesInsert<"library_entries">[])
+      .insert(withPacks.map((r) => ({ ...r, owner_id: auth.user!.id })) as TablesInsert<"library_entries">[])
       .select(),
   );
 }
 
 /* ---------- content packs ---------- */
+
+/** Creates the pack row if this user does not have it yet. */
+async function ensureContentPack(name: string) {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return;
+  const { data: existing } = await supabase
+    .from("content_packs")
+    .select("id")
+    .eq("owner_id", auth.user.id)
+    .eq("name", name)
+    .maybeSingle();
+  if (existing) return;
+  await supabase
+    .from("content_packs")
+    .insert({ name, owner_id: auth.user.id } as TablesInsert<"content_packs">);
+}
 
 export type PackRow = Tables<"content_packs">;
 

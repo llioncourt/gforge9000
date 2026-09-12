@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
-import { allowedPacksOf, packGateReason } from "@/lib/packs";
+import { allowedPacksOf, packGateReason, DEFAULT_PACK_NAME } from "@/lib/packs";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -113,7 +113,7 @@ const blankForm: LibraryForm = {
   costPerLevel: "0",
   notes: "",
   tags: "",
-  pack: "",
+  pack: DEFAULT_PACK_NAME,
   sourceLabel: "User created",
   sourceEdition: "",
   sourcePage: "",
@@ -130,7 +130,7 @@ function toForm(row: LibraryRow): LibraryForm {
     costPerLevel: String(row.cost_per_level ?? 0),
     notes: row.summary ?? "",
     tags: (row.tags ?? []).join(", "),
-    pack: row.pack ?? "",
+    pack: row.pack ?? DEFAULT_PACK_NAME,
     sourceLabel: row.source_label ?? "User created",
     sourceEdition: row.source_edition ?? "",
     sourcePage: row.source_page ?? "",
@@ -169,7 +169,7 @@ function LibraryPage() {
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean),
-    pack: f.pack || null,
+    pack: f.pack.trim() || DEFAULT_PACK_NAME,
     source_label: f.sourceLabel || "User created",
     source_edition: f.sourceEdition || null,
     source_page: f.sourcePage || null,
@@ -467,7 +467,7 @@ function LibraryPage() {
               <Field label="Content pack">
                 <Input
                   value={form.pack}
-                  placeholder="e.g. Core Generic Pack"
+                  placeholder={DEFAULT_PACK_NAME}
                   onChange={(e) => setForm({ ...form, pack: e.target.value })}
                 />
               </Field>

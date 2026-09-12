@@ -1,10 +1,8 @@
-export const UNPACKED_SLUG = "__personal";
-
-/** URL slug for a pack name; personal (unpacked) content has a reserved slug. */
-export function packSlug(pack: string | null): string {
-  return pack === null ? UNPACKED_SLUG : encodeURIComponent(pack);
+/** URL slug for a pack name. Every library entry belongs to a pack. */
+export function packSlug(pack: string): string {
+  return encodeURIComponent(pack);
 }
 
-export function packFromSlug(slug: string): string | null {
-  return slug === UNPACKED_SLUG ? null : decodeURIComponent(slug);
+export function packFromSlug(slug: string): string {
+  return decodeURIComponent(slug);
 }

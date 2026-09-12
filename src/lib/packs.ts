@@ -135,3 +135,10 @@ export function togglePackInList(allowed: string[], pack: string, enabled: boole
   return enabled ? [...without, pack] : without;
 }
 
+
+/**
+ * Placeholder kept in a campaign allow list when a GM disables the only pack.
+ * An empty list means "all packs allowed", so the list must stay non-empty to
+ * express "no packs allowed". It matches no real pack name.
+ */
+export const NO_PACKS_MARKER = "(no packs)";

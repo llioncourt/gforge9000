@@ -51,6 +51,7 @@ import {
   groupEntriesByKind,
   makeGroup,
   togglePackInList,
+  NO_PACKS_MARKER,
   UNPACKED_LABEL,
 } from "@/lib/packs";
 import { packFromSlug, packSlug } from "@/lib/pack-slug";
@@ -173,7 +174,9 @@ function PackDetailPage() {
       // turn that into an explicit list of the remaining packs.
       const base =
         !enabled && current.length === 0
-          ? allPackNames.filter((n) => n.toLowerCase() !== packName.toLowerCase())
+          ? (allPackNames.filter((n) => n.toLowerCase() !== packName.toLowerCase()).length
+              ? allPackNames.filter((n) => n.toLowerCase() !== packName.toLowerCase())
+              : [NO_PACKS_MARKER])
           : current;
       const next = togglePackInList(base, packName, enabled);
       await updateCampaign(id, { settings: { ...settings, allowed_packs: next } as never });

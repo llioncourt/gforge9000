@@ -249,7 +249,7 @@ function CharacterPage() {
     );
   }
 
-  const appearance = (form.appearance ?? {}) as Record<string, unknown>;
+  const appearance = (form.appearance ?? {}) as Record<string, string>;
   const gear = entries.filter((e) => e.kind === "equipment");
   const weaponEntries = gear.filter(
     (e) => ((e.data["weapons"] as unknown[] | undefined) ?? []).length > 0,
@@ -399,7 +399,7 @@ function CharacterPage() {
                   <Field key={key} label={label}>
                     <Input
                       value={String(appearance[key] ?? "")}
-                      onChange={(e) => patch({ appearance: { ...appearance, [key]: e.target.value } })}
+                      onChange={(e) => patch({ appearance: { ...appearance, [key]: e.target.value } as never })}
                     />
                   </Field>
                 ))}

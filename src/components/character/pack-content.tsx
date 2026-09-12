@@ -108,10 +108,11 @@ export function PackPickerDialog({
   }, [library.data, kinds, packs, search]);
 
   const descParts = (e: LibraryRow) =>
-    [e.pack, e.category, ...(Array.isArray(e.modifiers) ? e.modifiers : [])].filter(Boolean) as string[];
+    [e.category, e.source_label, e.source_page ? `p. ${e.source_page}` : null, ...(e.tags ?? [])]
+      .filter(Boolean) as string[];
 
   const hasDesc = (e: LibraryRow) =>
-    !!(e.summary || e.notes || e.category || (Array.isArray(e.modifiers) && e.modifiers.length));
+    !!(e.summary || e.category || e.source_label || e.source_page || (e.tags && e.tags.length));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

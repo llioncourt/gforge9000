@@ -275,6 +275,7 @@ export type Database = {
           iq: number
           is_npc: boolean
           is_template: boolean
+          model_path: string | null
           move_delta: number
           name: string
           notes: string | null
@@ -310,6 +311,7 @@ export type Database = {
           iq?: number
           is_npc?: boolean
           is_template?: boolean
+          model_path?: string | null
           move_delta?: number
           name?: string
           notes?: string | null
@@ -345,6 +347,7 @@ export type Database = {
           iq?: number
           is_npc?: boolean
           is_template?: boolean
+          model_path?: string | null
           move_delta?: number
           name?: string
           notes?: string | null

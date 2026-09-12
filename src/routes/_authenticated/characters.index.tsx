@@ -75,7 +75,7 @@ function CharactersPage() {
     mutationFn: async (file: File) => {
       const parsed = parsePortable(await file.text());
       const { id: _ignored, ...character } = parsed.character;
-      const row = await createCharacter(character);
+      const row = await createCharacter(character as never);
       for (const entry of parsed.entries) {
         await addEntry({ ...entry, character_id: row.id, data: entry.data ?? {} } as never);
       }

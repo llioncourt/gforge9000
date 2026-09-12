@@ -1052,6 +1052,19 @@ function EntryGroup({
   onEdit: (e: CharacterEntry) => void;
   onDelete: (id: string) => void;
 }) {
+  const [descFor, setDescFor] = useState<CharacterEntry | null>(null);
+
+  const descParts = (e: CharacterEntry) => {
+    const mods = (e.data["modifiers"] as { name: string; percent: number }[] | undefined) ?? [];
+    return [
+      isCustomEntry(e.source)
+        ? "custom"
+        : String((e.source as Record<string, unknown>)["pack"] ?? ""),
+      e.category,
+      ...mods.map((m) => `${m.name} ${m.percent > 0 ? "+" : ""}${m.percent}%`),
+    ].filter(Boolean);
+  };
+
   return (
     <section className="panel p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1074,40 +1087,24 @@ function EntryGroup({
       ) : (
         <ul className="mt-3 divide-y divide-border">
           {entries.map((e) => {
-            const mods = (e.data["modifiers"] as { name: string; percent: number }[] | undefined) ?? [];
+            const parts = descParts(e);
+            const hasDesc = parts.length > 0 || !!e.notes;
             return (
               <li key={e.id} className="flex items-center gap-3 py-2.5">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">
+                  <p className="text-sm font-medium">
                     {e.name}
                     {e.levels > 1 ? ` ${e.levels}` : ""}
-                    {e.notes ? (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            className="ml-1.5 inline-flex align-middle text-muted-foreground hover:text-foreground"
-                            aria-label="Show description"
-                          >
-                            <Info className="h-3.5 w-3.5" />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="max-w-sm text-xs" align="start">
-                          <p className="whitespace-pre-wrap">{e.notes}</p>
-                        </PopoverContent>
-                      </Popover>
+                    {hasDesc ? (
+                      <button
+                        type="button"
+                        className="ml-1.5 inline-flex align-middle text-muted-foreground hover:text-foreground"
+                        aria-label="Show description"
+                        onClick={() => setDescFor(e)}
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </button>
                     ) : null}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {[
-                      isCustomEntry(e.source)
-                        ? "custom"
-                        : String((e.source as Record<string, unknown>)["pack"] ?? ""),
-                      e.category,
-                      ...mods.map((m) => `${m.name} ${m.percent > 0 ? "+" : ""}${m.percent}%`),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || "—"}
                   </p>
                 </div>
                 <span className="stat-value text-sm">{e.points * Math.max(1, e.levels)}</span>
@@ -1117,6 +1114,22 @@ function EntryGroup({
           })}
         </ul>
       )}
+
+      <Dialog open={!!descFor} onOpenChange={(v) => !v && setDescFor(null)}>
+        <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{descFor?.name}</DialogTitle>
+            <DialogDescription>
+              {descFor ? descParts(descFor).join(" · ") : ""}
+            </DialogDescription>
+          </DialogHeader>
+          {descFor?.notes ? (
+            <p className="whitespace-pre-wrap text-sm text-foreground">{descFor.notes}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">No additional description.</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

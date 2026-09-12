@@ -1,8 +1,9 @@
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DEFAULT_MODEL_TRANSFORM, type ModelTransform } from "@/lib/model3d";
 
 function useGlb(url: string) {
   const [scene, setScene] = useState<THREE.Group | null>(null);
@@ -24,9 +25,8 @@ function useGlb(url: string) {
         const maxAxis = Math.max(size.x, size.y, size.z) || 1;
         const scale = 2 / maxAxis;
         root.scale.setScalar(scale);
+        // Centre on the origin; the orientation group below sits it on the floor.
         root.position.sub(center.multiplyScalar(scale));
-        // Sit the model on the ground plane.
-        root.position.y += (size.y * scale) / 2;
         setScene(root);
       },
       undefined,
@@ -40,6 +40,30 @@ function useGlb(url: string) {
   return { scene, error };
 }
 
+/** Applies the saved orientation and keeps the model standing on the floor. */
+function Oriented({ scene, transform }: { scene: THREE.Group; transform: ModelTransform }) {
+  const ref = useRef<THREE.Group>(null);
+  const { rx, ry, rz, scale } = transform;
+
+  useEffect(() => {
+    const g = ref.current;
+    if (!g) return;
+    const d = Math.PI / 180;
+    g.rotation.set(rx * d, ry * d, rz * d);
+    g.scale.setScalar(scale || 1);
+    g.position.y = 0;
+    g.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(g);
+    if (Number.isFinite(box.min.y)) g.position.y = -box.min.y;
+  }, [scene, rx, ry, rz, scale]);
+
+  return (
+    <group ref={ref}>
+      <primitive object={scene} />
+    </group>
+  );
+}
+
 /**
  * Loads a .glb from a signed URL.
  * `stage` adds orbit/zoom controls, ground shadow and grid for the large viewer.
@@ -49,11 +73,13 @@ export default function ModelViewer({
   stage = false,
   autoRotate = true,
   wireframe = false,
+  transform = DEFAULT_MODEL_TRANSFORM,
 }: {
   url: string;
   stage?: boolean;
   autoRotate?: boolean;
   wireframe?: boolean;
+  transform?: ModelTransform;
 }) {
   const { scene, error } = useGlb(url);
 
@@ -92,7 +118,7 @@ export default function ModelViewer({
       <directionalLight position={[4, 6, 3]} intensity={1.4} castShadow />
       <directionalLight position={[-4, 2, -3]} intensity={0.5} />
       <Suspense fallback={null}>
-        {scene ? <primitive object={scene} /> : null}
+        {scene ? <Oriented scene={scene} transform={transform} /> : null}
       </Suspense>
       {stage ? (
         <>

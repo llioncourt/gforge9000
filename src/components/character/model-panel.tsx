@@ -1,11 +1,27 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Box, Expand, Loader2, RotateCw, Trash2 } from "lucide-react";
+import {
+  Box,
+  Expand,
+  Loader2,
+  Minus,
+  Plus,
+  RotateCcw,
+  RotateCw,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FileDropzone } from "@/components/ui/FileDropzone";
-import { modelUrl, removeModel, uploadModel, validateModelFile } from "@/lib/model3d";
+import {
+  DEFAULT_MODEL_TRANSFORM,
+  type ModelTransform,
+  modelUrl,
+  removeModel,
+  uploadModel,
+  validateModelFile,
+} from "@/lib/model3d";
 
 const ModelViewer = lazy(() => import("@/components/character/model-viewer"));
 
@@ -33,14 +49,28 @@ export function ModelStageDialog({
   name,
   open,
   onOpenChange,
+  transform = DEFAULT_MODEL_TRANSFORM,
+  onTransformChange,
 }: {
   url: string;
   name?: string | undefined;
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  transform?: ModelTransform;
+  onTransformChange?: ((t: ModelTransform) => void) | undefined;
 }) {
   const [autoRotate, setAutoRotate] = useState(true);
   const [wireframe, setWireframe] = useState(false);
+
+  const wrap = (deg: number) => ((deg % 360) + 360) % 360;
+  const nudge = (axis: "rx" | "ry" | "rz", by: number) =>
+    onTransformChange?.({ ...transform, [axis]: wrap(transform[axis] + by) });
+  const zoom = (by: number) =>
+    onTransformChange?.({
+      ...transform,
+      scale: Math.min(4, Math.max(0.25, Number((transform.scale + by).toFixed(2)))),
+    });
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,7 +83,13 @@ export function ModelStageDialog({
         <div className="relative h-[70vh] w-full overflow-hidden rounded-b-lg border-t border-border bg-muted/20">
           {open ? (
             <Suspense fallback={<ViewerFallback />}>
-              <ModelViewer url={url} stage autoRotate={autoRotate} wireframe={wireframe} />
+              <ModelViewer
+                url={url}
+                stage
+                autoRotate={autoRotate}
+                wireframe={wireframe}
+                transform={transform}
+              />
             </Suspense>
           ) : null}
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-background/85 px-2 py-1 backdrop-blur">
@@ -75,6 +111,64 @@ export function ModelStageDialog({
               Drag to orbit · scroll to zoom · right-drag to pan
             </span>
           </div>
+
+          {onTransformChange ? (
+            <div className="absolute right-3 top-3 w-40 space-y-2 rounded-lg border border-border bg-background/90 p-3 backdrop-blur">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Fix orientation
+              </p>
+              {(
+                [
+                  ["rx", "Tilt"],
+                  ["ry", "Turn"],
+                  ["rz", "Roll"],
+                ] as const
+              ).map(([axis, label]) => (
+                <div key={axis} className="flex items-center gap-1">
+                  <span className="w-10 text-[11px] text-muted-foreground">{label}</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`${label} -90 degrees`}
+                    onClick={() => nudge(axis, -90)}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`${label} +90 degrees`}
+                    onClick={() => nudge(axis, 90)}
+                  >
+                    <RotateCw className="h-3.5 w-3.5" />
+                  </Button>
+                  <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
+                    {transform[axis]}°
+                  </span>
+                </div>
+              ))}
+              <div className="flex items-center gap-1">
+                <span className="w-10 text-[11px] text-muted-foreground">Size</span>
+                <Button size="sm" variant="ghost" aria-label="Smaller" onClick={() => zoom(-0.1)}>
+                  <Minus className="h-3.5 w-3.5" />
+                </Button>
+                <Button size="sm" variant="ghost" aria-label="Bigger" onClick={() => zoom(0.1)}>
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+                <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
+                  {transform.scale.toFixed(2)}x
+                </span>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-full"
+                onClick={() => onTransformChange(DEFAULT_MODEL_TRANSFORM)}
+              >
+                Reset
+              </Button>
+            </div>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
@@ -87,12 +181,16 @@ export function ModelPanel({
   path,
   readOnly = false,
   onChange,
+  transform = DEFAULT_MODEL_TRANSFORM,
+  onTransformChange,
 }: {
   characterId: string;
   name?: string | undefined;
   path: string | null;
   readOnly?: boolean;
   onChange: (path: string | null) => void;
+  transform?: ModelTransform;
+  onTransformChange?: ((t: ModelTransform) => void) | undefined;
 }) {
   const signed = useModelUrl(path);
   const [mounted, setMounted] = useState(false);
@@ -131,7 +229,7 @@ export function ModelPanel({
         {signed && mounted ? (
           <>
             <Suspense fallback={<ViewerFallback />}>
-              <ModelViewer url={signed} />
+              <ModelViewer url={signed} transform={transform} />
             </Suspense>
             <button
               type="button"
@@ -153,7 +251,14 @@ export function ModelPanel({
       </div>
 
       {signed ? (
-        <ModelStageDialog url={signed} name={name} open={stageOpen} onOpenChange={setStageOpen} />
+        <ModelStageDialog
+          url={signed}
+          name={name}
+          open={stageOpen}
+          onOpenChange={setStageOpen}
+          transform={transform}
+          onTransformChange={readOnly ? undefined : onTransformChange}
+        />
       ) : null}
 
       {readOnly ? null : (

@@ -103,6 +103,7 @@ import {
 import type { LibraryRow } from "@/lib/api";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
 import { ModelPanel } from "@/components/character/model-panel";
+import { parseModelTransform } from "@/lib/model3d";
 
 import { PrintSheet } from "@/components/character/print-sheet";
 
@@ -408,6 +409,8 @@ function CharacterPage() {
                   name={form.name}
                   path={form.model_path ?? null}
                   onChange={(p) => patch({ model_path: p })}
+                  transform={parseModelTransform(form.model_transform)}
+                  onTransformChange={(t) => patch({ model_transform: t })}
                 />
 
               </div>

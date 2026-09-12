@@ -211,6 +211,51 @@ export type Database = {
           },
         ]
       }
+      character_weapon_state: {
+        Row: {
+          character_entry_id: string
+          character_id: string
+          created_at: string
+          current_shots: number
+          id: string
+          mode_key: string
+          updated_at: string
+        }
+        Insert: {
+          character_entry_id: string
+          character_id: string
+          created_at?: string
+          current_shots?: number
+          id?: string
+          mode_key: string
+          updated_at?: string
+        }
+        Update: {
+          character_entry_id?: string
+          character_id?: string
+          created_at?: string
+          current_shots?: number
+          id?: string
+          mode_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_weapon_state_character_entry_id_fkey"
+            columns: ["character_entry_id"]
+            isOneToOne: false
+            referencedRelation: "character_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "character_weapon_state_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       characters: {
         Row: {
           appearance: Json

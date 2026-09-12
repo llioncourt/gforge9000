@@ -212,7 +212,7 @@ function CharacterPage() {
               onClick={() =>
                 download(
                   `${slugify(form.name)}.json`,
-                  JSON.stringify(toPortable(form, entriesQuery.data ?? []), null, 2),
+                  JSON.stringify(toPortable(toCharacterRecord(form), entries), null, 2),
                 )
               }
             >

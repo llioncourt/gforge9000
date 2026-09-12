@@ -24,9 +24,8 @@ function useGlb(url: string) {
         const maxAxis = Math.max(size.x, size.y, size.z) || 1;
         const scale = 2 / maxAxis;
         root.scale.setScalar(scale);
+        // Centre on the origin; the orientation group below sits it on the floor.
         root.position.sub(center.multiplyScalar(scale));
-        // Sit the model on the ground plane.
-        root.position.y += (size.y * scale) / 2;
         setScene(root);
       },
       undefined,

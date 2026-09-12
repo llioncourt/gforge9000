@@ -405,9 +405,11 @@ function CharacterPage() {
                 />
                 <ModelPanel
                   characterId={id}
+                  name={form.name}
                   path={form.model_path ?? null}
                   onChange={(p) => patch({ model_path: p })}
                 />
+
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">

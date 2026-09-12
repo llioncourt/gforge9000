@@ -102,6 +102,8 @@ import {
 } from "@/components/character/pack-content";
 import type { LibraryRow } from "@/lib/api";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
+import { ModelPanel } from "@/components/character/model-panel";
+
 import { PrintSheet } from "@/components/character/print-sheet";
 
 

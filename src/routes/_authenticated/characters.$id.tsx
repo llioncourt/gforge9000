@@ -6,6 +6,7 @@ import {
   Download,
   Dices,
   History,
+  Info,
   Pencil,
   Plus,
   Printer,
@@ -23,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -1073,6 +1075,22 @@ function EntryGroup({
                   <p className="truncate text-sm font-medium">
                     {e.name}
                     {e.levels > 1 ? ` ${e.levels}` : ""}
+                    {e.notes ? (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="ml-1.5 inline-flex align-middle text-muted-foreground hover:text-foreground"
+                            aria-label="Show description"
+                          >
+                            <Info className="h-3.5 w-3.5" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="max-w-sm text-xs" align="start">
+                          <p className="whitespace-pre-wrap">{e.notes}</p>
+                        </PopoverContent>
+                      </Popover>
+                    ) : null}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
                     {[

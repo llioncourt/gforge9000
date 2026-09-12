@@ -12,9 +12,9 @@ export interface RollEvent {
   target: number | null;
   margin: number | null;
   outcome: Outcome | null;
-  contextKey?: string;
-  characterId?: string | null;
-  campaignId?: string | null;
+  contextKey: string | null;
+  characterId: string | null;
+  campaignId: string | null;
   at: string;
 }
 
@@ -85,7 +85,7 @@ export function DiceProvider({ children }: { children: ReactNode }) {
         target,
         margin: resolved?.margin ?? null,
         outcome: resolved?.outcome ?? null,
-        contextKey: request.contextKey,
+        contextKey: request.contextKey ?? null,
         characterId: request.characterId ?? null,
         campaignId: request.campaignId ?? null,
         at: new Date().toISOString(),

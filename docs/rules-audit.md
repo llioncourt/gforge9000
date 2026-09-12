@@ -23,7 +23,7 @@ default and the UI reports it as unavailable.
 | attributes | ST / DX / IQ / HT point costs | CONFIGURABLE | `attributes.ts:attributePoints` |
 | secondary | HP, FP, Will, Per | CONFIGURABLE | `attributes.ts:deriveStats` |
 | secondary | Basic Speed / Basic Move | CONFIGURABLE | `attributes.ts:deriveStats` |
-| secondary | Basic Lift | CONFIGURABLE | `attributes.ts:deriveStats` |
+| secondary | Basic Lift | CONFIGURABLE | `attributes.ts:basicLift` — `ST^2 / divisor`, fractional precision preserved (ST 11 -> 24.2) |
 | points | Point totals and remaining budget | EXACT | `points.ts:computePoints` |
 | traits | Levelled traits | EXACT | `points.ts:entryCost` |
 | traits | Enhancements / limitations | CONFIGURABLE | `points.ts:modifiedCost` |

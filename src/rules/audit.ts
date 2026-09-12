@@ -62,7 +62,7 @@ export const RULES_AUDIT: RuleAuditEntry[] = [
     title: "Basic Lift",
     status: "CONFIGURABLE",
     implementation: "src/rules/attributes.ts:deriveStats via ruleset.basicLiftDivisor",
-    notes: "BL = round(ST^2 / 5) pounds. Divisor configurable.",
+    notes: "BL = ST^2 / divisor (default 5) in pounds, fractional precision preserved (ST 11 => 24.2). Divisor configurable.",
   },
   {
     id: "points.total",

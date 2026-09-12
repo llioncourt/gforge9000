@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Pencil, Plus, Trash2, Upload, UserPlus } from "lucide-react";
+import { Download, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -310,8 +310,9 @@ function LibraryPage() {
         </div>
         <FileDropzone
           accept="application/json"
+          compact
           label="Import a library export"
-          description="Drop a Universal Character Forge library JSON file"
+          hint="Drop a Universal Character Forge library JSON file"
           onFiles={(files) => {
             const file = files[0];
             if (file) importJson.mutate(file);
@@ -554,9 +555,6 @@ function LibraryPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <span className="sr-only">
-        <Upload className="h-4 w-4" />
-      </span>
     </div>
   );
 }

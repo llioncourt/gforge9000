@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Package, Search } from "lucide-react";
+import { Info, Package, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -94,6 +94,7 @@ export function PackPickerDialog({
 }) {
   const library = useQuery({ queryKey: ["library"], queryFn: listLibrary, enabled: open });
   const [search, setSearch] = useState("");
+  const [descFor, setDescFor] = useState<LibraryRow | null>(null);
 
   const rows = useMemo(() => {
     const linked = packs.map((p) => p.toLowerCase());
@@ -105,6 +106,13 @@ export function PackPickerDialog({
         `${e.name} ${e.category ?? ""}`.toLowerCase().includes(search.toLowerCase()),
     );
   }, [library.data, kinds, packs, search]);
+
+  const descParts = (e: LibraryRow) =>
+    [e.category, e.source_label, e.source_page ? `p. ${e.source_page}` : null, ...(e.tags ?? [])]
+      .filter(Boolean) as string[];
+
+  const hasDesc = (e: LibraryRow) =>
+    !!(e.summary || e.category || e.source_label || e.source_page || (e.tags && e.tags.length));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -134,29 +142,54 @@ export function PackPickerDialog({
               Nothing available here.
             </p>
           ) : (
-            rows.map((e) => {
-              const desc = [e.category, e.summary].filter(Boolean).join(" · ") || "—";
-              return (
-                <div
-                  key={e.id}
-                  className="flex items-center gap-3 rounded-md border border-border px-3 py-2"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-sm font-medium" title={e.name}>{e.name}</p>
-                    <p className="line-clamp-2 text-xs text-muted-foreground" title={desc}>
-                      {desc}
-                    </p>
-                  </div>
-                  <Badge variant="outline">{e.pack}</Badge>
-                  <Button size="sm" disabled={pending} onClick={() => onAdd(e)}>
-                    Add
-                  </Button>
+            rows.map((e) => (
+              <div
+                key={e.id}
+                className="flex items-center gap-2 rounded-md border border-border px-3 py-2"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium" title={e.name}>{e.name}</p>
                 </div>
-              );
-            })
+                {hasDesc(e) && (
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => setDescFor(e)}
+                    aria-label={`Description for ${e.name}`}
+                  >
+                    <Info className="h-4 w-4" />
+                  </button>
+                )}
+                <Badge variant="outline">{e.pack}</Badge>
+                <Button size="sm" disabled={pending} onClick={() => onAdd(e)}>
+                  Add
+                </Button>
+              </div>
+            ))
           )}
         </div>
       </DialogContent>
+
+      <Dialog open={!!descFor} onOpenChange={(v) => !v && setDescFor(null)}>
+        <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto">
+          {descFor && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{descFor.name}</DialogTitle>
+                {descParts(descFor).length > 0 && (
+                  <DialogDescription>{descParts(descFor).join(" · ")}</DialogDescription>
+                )}
+              </DialogHeader>
+              {descFor.summary && (
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{descFor.summary}</p>
+              )}
+              {!descFor.summary && (
+                <p className="text-sm text-muted-foreground">No further details.</p>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

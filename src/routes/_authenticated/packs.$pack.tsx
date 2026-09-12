@@ -153,17 +153,35 @@ function PackDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const allPackNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const e of library.data ?? []) {
+      const n = (e.pack ?? "").trim();
+      if (n) names.add(n);
+    }
+    for (const p of packsQuery.data ?? []) names.add(p.name);
+    return [...names];
+  }, [library.data, packsQuery.data]);
+
   const toggleCampaign = useMutation({
     mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
       const campaign = gmCampaigns.find((c) => c.id === id);
       if (!campaign || !packName) return;
       const settings = (campaign.settings ?? {}) as Record<string, unknown>;
-      const next = togglePackInList(allowedPacksOf(settings), packName, enabled);
+      const current = allowedPacksOf(settings);
+      // An empty list means "everything allowed"; switching one pack off has to
+      // turn that into an explicit list of the remaining packs.
+      const base =
+        !enabled && current.length === 0
+          ? allPackNames.filter((n) => n.toLowerCase() !== packName.toLowerCase())
+          : current;
+      const next = togglePackInList(base, packName, enabled);
       await updateCampaign(id, { settings: { ...settings, allowed_packs: next } as never });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaigns"] }),
     onError: (e: Error) => toast.error(e.message),
   });
+
 
   if (library.isLoading) {
     return (

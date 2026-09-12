@@ -527,13 +527,14 @@ function CharacterPage() {
                   <TableHead className="w-24 text-right">Relative</TableHead>
                   <TableHead className="w-20 text-right">Points</TableHead>
                   <TableHead className="w-24 text-right">Level</TableHead>
-                  <TableHead className="w-28" />
+                   <TableHead className="w-64 text-right">Roll result</TableHead>
+                   <TableHead className="w-28" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sheet.skills.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                     <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
                       No skills yet.
                     </TableCell>
                   </TableRow>
@@ -580,8 +581,8 @@ function CharacterPage() {
                         </Button>
                         {latestRoll ? (
                           <Badge variant={passed ? "default" : "destructive"}>
-                            {passed ? "Passed" : "Failed"}
-                            {latestRoll.outcome?.startsWith("critical") ? " critically" : ""}
+                            {latestRoll.outcome?.startsWith("critical") ? "Critical " : ""}
+                            {passed ? "pass" : "failure"}
                             {latestRoll.margin !== null
                               ? ` by ${Math.abs(latestRoll.margin)}`
                               : ""}

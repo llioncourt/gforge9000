@@ -13,6 +13,8 @@ export interface RollEvent {
   margin: number | null;
   outcome: Outcome | null;
   contextKey?: string;
+  characterId?: string | null;
+  campaignId?: string | null;
   at: string;
 }
 
@@ -84,6 +86,8 @@ export function DiceProvider({ children }: { children: ReactNode }) {
         margin: resolved?.margin ?? null,
         outcome: resolved?.outcome ?? null,
         contextKey: request.contextKey,
+        characterId: request.characterId ?? null,
+        campaignId: request.campaignId ?? null,
         at: new Date().toISOString(),
       };
       setHistory((prev) => [event, ...prev].slice(0, 50));
@@ -171,6 +175,9 @@ export function DiceProvider({ children }: { children: ReactNode }) {
             label: last.label,
             expression: last.expression,
             target: last.target,
+              characterId: last.characterId,
+              campaignId: last.campaignId,
+              contextKey: last.contextKey,
           },
         });
       }

@@ -239,7 +239,7 @@ describe("full sheet", () => {
 
 describe("imported skills with a stated level", () => {
   it("uses data.level when no points are purchased", () => {
-    const stats = deriveStats(baseCharacter());
+    const stats = deriveStats(base);
     const level = skillLevel(
       { id: "s1", kind: "skill", name: "Brawling", points: 0, levels: 1, data: { attribute: "DX", difficulty: "E", level: 13 } } as never,
       stats,

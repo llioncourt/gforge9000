@@ -121,7 +121,7 @@ export default function ModelViewer({
       <directionalLight position={[4, 6, 3]} intensity={1.4} castShadow />
       <directionalLight position={[-4, 2, -3]} intensity={0.5} />
       <Suspense fallback={null}>
-        {scene ? <primitive object={scene} /> : null}
+        {scene ? <Oriented scene={scene} transform={transform} /> : null}
       </Suspense>
       {stage ? (
         <>

@@ -102,7 +102,7 @@ function Dashboard() {
       ) : null}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        <section className="lg:col-span-2">
+        <section className="min-w-0 lg:col-span-2">
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
             Recent characters
           </h2>

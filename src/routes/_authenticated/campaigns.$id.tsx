@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, Plus, Trash2 } from "lucide-react";
@@ -33,6 +33,8 @@ import {
   toEntry,
   updateCampaign,
   updateCharacter,
+  createCharacter,
+  duplicateCharacter,
 } from "@/lib/api";
 import { buildSheet } from "@/rules";
 import { useSession } from "@/hooks/use-session";
@@ -56,6 +58,7 @@ function CampaignPage() {
   const { id } = Route.useParams();
   const { user } = useSession();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const campaign = useQuery({ queryKey: ["campaign", id], queryFn: () => getCampaign(id) });
   const roster = useQuery({

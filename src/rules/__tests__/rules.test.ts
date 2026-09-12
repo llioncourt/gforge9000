@@ -236,3 +236,14 @@ describe("full sheet", () => {
     expect(sheet.encumbrance.label).toBe("None");
   });
 });
+
+describe("imported skills with a stated level", () => {
+  it("uses data.level when no points are purchased", () => {
+    const stats = deriveStats(baseCharacter());
+    const level = skillLevel(
+      { id: "s1", kind: "skill", name: "Brawling", points: 0, levels: 1, data: { attribute: "DX", difficulty: "E", level: 13 } } as never,
+      stats,
+    );
+    expect(level.effective).toBe(13);
+  });
+});

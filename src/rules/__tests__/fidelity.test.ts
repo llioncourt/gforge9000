@@ -259,3 +259,46 @@ describe("audit metadata", () => {
     expect(new Set(RULES_AUDIT.map((r) => r.id)).size).toBe(RULES_AUDIT.length);
   });
 });
+
+describe("Basic Lift precision", () => {
+  it("preserves fractional values (ST 11, divisor 5 -> 24.2)", () => {
+    expect(basicLift(11, defaultRuleset)).toBe(24.2);
+    expect(deriveStats({ ...blBase, st: 11 }).basicLift).toBe(24.2);
+  });
+
+  it("keeps precision for other ST values and divisors", () => {
+    expect(basicLift(12)).toBe(28.8);
+    expect(basicLift(10)).toBe(20);
+    expect(basicLift(13)).toBe(33.8);
+    expect(basicLift(11, { ...defaultRuleset, basicLiftDivisor: 10 })).toBe(12.1);
+  });
+});
+
+describe("audit coverage of required mechanics", () => {
+  it("includes every mechanic required by the fidelity pass", () => {
+    const ids = RULES_AUDIT.map((r) => r.id);
+    for (const id of [
+      "attr.primary-cost",
+      "sec.hp-fp-will-per",
+      "sec.basic-speed-move",
+      "sec.basic-lift",
+      "points.total",
+      "traits.levels",
+      "traits.modifiers",
+      "skills.relative-level",
+      "skills.defaults",
+      "skills.techniques",
+      "equip.encumbrance",
+      "equip.dr",
+      "combat.active-defenses",
+      "combat.basic-damage",
+      "combat.health",
+      "combat.weapon-fields",
+      "dice.expressions",
+      "dice.success",
+      "campaign.overrides",
+    ]) {
+      expect(ids).toContain(id);
+    }
+  });
+});

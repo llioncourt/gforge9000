@@ -29,6 +29,7 @@ import {
 import { addEntry, createCharacter, deleteCharacter, listCharacters } from "@/lib/api";
 import { parsePortable } from "@/lib/portable";
 import { FileDropzone } from "@/components/ui/FileDropzone";
+import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 
 export const Route = createFileRoute("/_authenticated/characters/")({
   head: () => ({
@@ -111,16 +112,19 @@ function CharactersPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <FileDropzone
-          accept="application/json,.json"
-          compact
-          label={
-            <span className="flex items-center gap-2 text-sm">
-              <Upload className="h-4 w-4" /> Drop a Forge JSON export to import
-            </span>
-          }
-          onFiles={(files) => files[0] && importJson.mutate(files[0])}
-        />
+        <div className="grid gap-2">
+          <FileDropzone
+            accept="application/json,.json"
+            compact
+            label={
+              <span className="flex items-center gap-2 text-sm">
+                <Upload className="h-4 w-4" /> Drop a Forge JSON export to import
+              </span>
+            }
+            onFiles={(files) => files[0] && importJson.mutate(files[0])}
+          />
+          <AiConversionGuideButton kind="character" />
+        </div>
       </div>
 
       <div className="panel overflow-hidden">

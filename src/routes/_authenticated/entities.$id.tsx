@@ -537,6 +537,90 @@ function EntityPage() {
               })}
             </ul>
           )}
+
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold">Mentions</h2>
+            {mentions.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                No other entry mentions “{form.name}” in its text.
+              </p>
+            ) : (
+              <ul className="divide-y rounded-lg border">
+                {mentions.map((row) => (
+                  <li key={row.id} className="flex items-center gap-3 p-3">
+                    <span className="text-muted-foreground text-xs uppercase">
+                      {kindDef(row.kind).label}
+                    </span>
+                    <Link
+                      to="/entities/$id"
+                      params={{ id: row.id }}
+                      className="font-medium hover:underline"
+                    >
+                      {row.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-4 pt-4">
+          <p className="text-muted-foreground text-sm">
+            Each save stores the previous version. The 30 most recent are kept.
+          </p>
+          {revisions.isLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : (revisions.data ?? []).length === 0 ? (
+            <p className="text-muted-foreground text-sm">No earlier versions yet.</p>
+          ) : (
+            <ul className="divide-y rounded-lg border">
+              {(revisions.data ?? []).map((row) => {
+                const snapshot = (row.snapshot ?? {}) as Record<string, unknown>;
+                return (
+                  <li key={row.id} className="flex items-center gap-3 p-3">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">
+                        {String(snapshot["name"] ?? form.name)}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {new Date(row.created_at).toLocaleString()}
+                        {row.label ? ` · ${row.label}` : ""}
+                      </p>
+                    </div>
+                    {canEdit ? (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="ml-auto">
+                            Restore
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Restore this version?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              The current text is replaced by this saved version. The current
+                              version is kept in history.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => restore.mutate(snapshot)}>
+                              Restore
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </TabsContent>
 
         {isGm ? (

@@ -1047,7 +1047,7 @@ function EntryGroup({
           {title}
         </h2>
         <Button size="sm" variant="ghost" onClick={onAdd}>
-          <Plus className="mr-1 h-4 w-4" /> Add {kind}
+          <Plus className="mr-1 h-4 w-4" /> Custom {kind}
         </Button>
       </div>
       {entries.length === 0 ? (

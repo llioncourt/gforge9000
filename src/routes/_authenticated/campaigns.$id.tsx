@@ -430,19 +430,26 @@ function Mini({ label, value }: { label: string; value: string | number }) {
 function HouseRules({
   settings,
   disabled,
+  knownPacks,
   onSave,
 }: {
   settings: Record<string, unknown>;
   disabled: boolean;
+  knownPacks: string[];
   onSave: (patch: Record<string, unknown>) => void;
 }) {
   const [pointLimit, setPointLimit] = useState(String(settings["point_limit"] ?? 150));
   const [disadvLimit, setDisadvLimit] = useState(String(settings["disadvantage_limit"] ?? -50));
   const [tl, setTl] = useState(String(settings["tech_level"] ?? 8));
   const [houseRules, setHouseRules] = useState(String(settings["house_rules"] ?? ""));
-  const [packs, setPacks] = useState(
-    (Array.isArray(settings["allowed_packs"]) ? (settings["allowed_packs"] as string[]) : []).join(", "),
+  const [packs, setPacks] = useState<string[]>(allowedPacksOf(settings));
+  const [newPack, setNewPack] = useState("");
+  const packOptions = useMemo(
+    () => Array.from(new Set([...knownPacks, ...packs])).sort((a, b) => a.localeCompare(b)),
+    [knownPacks, packs],
   );
+  const togglePack = (name: string, on: boolean) =>
+    setPacks((prev) => (on ? [...new Set([...prev, name])] : prev.filter((p) => p !== name)));
 
   return (
     <div className="panel max-w-2xl space-y-4 p-6">

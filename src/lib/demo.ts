@@ -365,6 +365,6 @@ export async function seedDemoEntries(characterId: string) {
 
   const { error } = await supabase
     .from("character_entries")
-    .insert(entries.map((row) => ({ data: {}, points: 0, levels: 1, ...row })));
+    .insert(entries.map((row) => ({ data: {}, points: 0, levels: 1, source: {}, notes: null, ...row })));
   if (error) throw new Error(error.message);
 }

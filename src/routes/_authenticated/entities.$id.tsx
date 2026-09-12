@@ -202,6 +202,23 @@ function EntityPage() {
     (row) => row.source_id === id || row.target_id === id,
   );
 
+  const myName = (entity.data?.name ?? "").trim();
+  const mentions =
+    myName.length < 3
+      ? []
+      : (siblings.data ?? []).filter((row) => {
+          if (row.id === id) return false;
+          const haystack = [
+            row.summary ?? "",
+            row.player_description ?? "",
+            isGm ? (row.gm_notes ?? "") : "",
+            JSON.stringify(row.data ?? {}),
+          ]
+            .join("\n")
+            .toLowerCase();
+          return haystack.includes(myName.toLowerCase());
+        });
+
   if (entity.isLoading || !form) {
     return (
       <div className="space-y-4">

@@ -422,8 +422,8 @@ function PackDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this pack?</AlertDialogTitle>
             <AlertDialogDescription>
-              Only the grouping is deleted. Every library entry is kept and moves to{" "}
-              {UNPACKED_LABEL}, and entries already copied onto characters are untouched.
+              Every entry inside this pack is deleted with it. Anything already added to a
+              character stays on the sheet and becomes a custom entry.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

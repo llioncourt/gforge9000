@@ -39,10 +39,6 @@ function useGlb(url: string) {
   return { scene, error };
 }
 
-export type ModelTransform = { rx: number; ry: number; rz: number; scale: number };
-
-export const DEFAULT_MODEL_TRANSFORM: ModelTransform = { rx: 0, ry: 0, rz: 0, scale: 1 };
-
 /** Applies the saved orientation and keeps the model standing on the floor. */
 function Oriented({ scene, transform }: { scene: THREE.Group; transform: ModelTransform }) {
   const ref = useRef<THREE.Group>(null);

@@ -138,7 +138,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               ⌘K
             </kbd>
           </button>
-          <Button size="sm" variant="secondary" className="gap-2" onClick={() => setTrayOpen(true)}>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="gap-2"
+            aria-label="Roll dice"
+            onClick={() => setTrayOpen(true)}
+          >
+
             <Dices className="h-4 w-4" />
             <span className="hidden sm:inline">Roll</span>
           </Button>

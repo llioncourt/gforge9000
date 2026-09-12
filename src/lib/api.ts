@@ -193,6 +193,15 @@ export async function joinCampaign(code: string) {
   return data as string;
 }
 
+export async function transferCampaignGm(campaignId: string, newGmId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC created after types were generated
+  const { error } = await (supabase.rpc as any)("transfer_campaign_gm", {
+    _campaign: campaignId,
+    _new_gm: newGmId,
+  });
+  if (error) throw new Error(error.message);
+}
+
 export async function listMembers(campaignId: string) {
   const members = unwrap(
     await supabase.from("campaign_members").select("*").eq("campaign_id", campaignId),

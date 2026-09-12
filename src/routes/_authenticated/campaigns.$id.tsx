@@ -14,6 +14,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -28,6 +39,7 @@ import {
   listCharacters,
   listEntriesForCharacters,
   listMembers,
+  transferCampaignGm,
   listNotes,
   setCharacterCampaign,
   toCharacterRecord,
@@ -118,6 +130,16 @@ function CampaignPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
       toast.success("Copy created.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const transferGm = useMutation({
+    mutationFn: (newGmId: string) => transferCampaignGm(id, newGmId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaign", id] });
+      queryClient.invalidateQueries({ queryKey: ["members", id] });
+      toast.success("GM role transferred.");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -429,9 +451,35 @@ function CampaignPage() {
         <TabsContent value="members" className="mt-6">
           <div className="panel divide-y divide-border">
             {(members.data ?? []).map((m) => (
-              <div key={m.user_id} className="flex items-center justify-between p-4">
+              <div key={m.user_id} className="flex items-center justify-between gap-2 p-4">
                 <span>{m.display_name}</span>
-                <Badge variant={m.role === "gm" ? "default" : "outline"}>{m.role}</Badge>
+                <div className="flex items-center gap-2">
+                  {isGm && m.user_id !== user?.id && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="outline" disabled={transferGm.isPending}>
+                          Make GM
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Transfer the GM role?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {m.display_name} becomes the game master of this campaign and you
+                            become a regular player. Only the new GM can transfer it back.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => transferGm.mutate(m.user_id)}>
+                            Transfer
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                  <Badge variant={m.role === "gm" ? "default" : "outline"}>{m.role}</Badge>
+                </div>
               </div>
             ))}
           </div>

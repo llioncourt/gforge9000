@@ -261,7 +261,7 @@ function CharacterPage() {
         title={form.name || "Untitled character"}
         description={form.concept ?? undefined}
         actions={
-          <>
+          <div className="no-print flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={() => window.print()}>
               <Printer className="mr-2 h-4 w-4" /> Print
             </Button>

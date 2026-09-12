@@ -1,6 +1,8 @@
-import { attributePoints, deriveStats, basicDamage, type DerivedStats } from "./attributes";
+import { attributePoints, deriveStats, type DerivedStats } from "./attributes";
+import { basicDamage, type BasicDamage } from "./damage";
 import { computeEncumbrance, drByLocation, type EncumbranceResult } from "./equipment";
 import { skillLevel } from "./skills";
+import { fpState, hpState, type HealthState } from "./health";
 import { defaultRuleset, type Ruleset } from "./ruleset";
 import type { CharacterEntry, CharacterRecord, EntryKind, TraitModifier } from "./types";
 
@@ -19,20 +21,27 @@ export interface PointBreakdown {
 }
 
 /** Applies enhancement/limitation percentages to a base cost. */
-export function modifiedCost(base: number, modifiers: TraitModifier[] = []): number {
+export function modifiedCost(
+  base: number,
+  modifiers: TraitModifier[] = [],
+  rules: Ruleset = defaultRuleset,
+): number {
   const percent = modifiers.reduce((sum, m) => sum + (Number(m.percent) || 0), 0);
-  const clamped = Math.max(-80, percent);
-  return Math.round(base * (1 + clamped / 100));
+  const clamped = Math.max(rules.modifierFloorPercent, percent);
+  const raw = base * (1 + clamped / 100);
+  if (rules.modifierRounding === "up") return base < 0 ? Math.floor(raw) : Math.ceil(raw);
+  if (rules.modifierRounding === "down") return base < 0 ? Math.ceil(raw) : Math.floor(raw);
+  return Math.round(raw);
 }
 
-export function entryCost(entry: CharacterEntry): number {
+export function entryCost(entry: CharacterEntry, rules: Ruleset = defaultRuleset): number {
   const modifiers = (entry.data?.modifiers as TraitModifier[] | undefined) ?? [];
   if (entry.kind === "skill" || entry.kind === "technique" || entry.kind === "spell") {
     return Number(entry.data?.points ?? entry.points ?? 0);
   }
   if (entry.kind === "equipment") return 0;
   const base = Number(entry.points ?? 0) * Math.max(1, Number(entry.levels ?? 1));
-  return modifiers.length ? modifiedCost(base, modifiers) : base;
+  return modifiers.length ? modifiedCost(base, modifiers, rules) : base;
 }
 
 const BUCKETS: Record<EntryKind, keyof PointBreakdown> = {

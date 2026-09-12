@@ -181,12 +181,16 @@ export function ModelPanel({
   path,
   readOnly = false,
   onChange,
+  transform = DEFAULT_MODEL_TRANSFORM,
+  onTransformChange,
 }: {
   characterId: string;
   name?: string | undefined;
   path: string | null;
   readOnly?: boolean;
   onChange: (path: string | null) => void;
+  transform?: ModelTransform;
+  onTransformChange?: ((t: ModelTransform) => void) | undefined;
 }) {
   const signed = useModelUrl(path);
   const [mounted, setMounted] = useState(false);

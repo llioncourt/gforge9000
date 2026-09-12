@@ -80,7 +80,19 @@ import {
   toDraft,
   type EntryDraft,
 } from "@/components/character/entry-dialog";
-import { download, entriesToCsv, slugify, toPortable } from "@/lib/portable";
+import {
+  download,
+  entriesToCsv,
+  libraryEntryToCharacterDraft,
+  slugify,
+  toPortable,
+} from "@/lib/portable";
+import {
+  CharacterPacksPanel,
+  PackPickerDialog,
+  isCustomEntry,
+} from "@/components/character/pack-content";
+import type { LibraryRow } from "@/lib/api";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
 import { PrintSheet } from "@/components/character/print-sheet";
 
@@ -237,14 +249,36 @@ function CharacterPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Hand-typed entries are explicitly custom content, never pack content.
   function openNew(kind: EntryKind) {
-    setDraft(emptyDraft(kind));
+    setDraft({
+      ...emptyDraft(kind),
+      source: { label: "Custom", edition: "", page: "", type: "custom" },
+    });
     setDialogOpen(true);
   }
   function openEdit(entry: CharacterEntry) {
     setDraft(toDraft(entry));
     setDialogOpen(true);
   }
+
+  const [pickerKinds, setPickerKinds] = useState<EntryKind[] | null>(null);
+  const linkedPacks = form?.packs ?? [];
+
+  const addFromPack = useMutation({
+    mutationFn: async (entry: LibraryRow) => {
+      const draftRow = libraryEntryToCharacterDraft({
+        ...entry,
+        data: (entry.data ?? {}) as Record<string, unknown>,
+      });
+      return addEntry({ ...draftRow, character_id: id } as never);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["entries", id] });
+      toast.success("Added from pack.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   if (!form || !sheet) {
     return (
@@ -409,6 +443,7 @@ function CharacterPage() {
               </div>
               <Switch checked={form.is_npc} onCheckedChange={(v) => patch({ is_npc: v })} />
             </div>
+            <CharacterPacksPanel packs={linkedPacks} onChange={(next) => patch({ packs: next })} />
             <div className="space-y-3 border-t border-border pt-4">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Appearance &amp; background
@@ -492,6 +527,11 @@ function CharacterPage() {
 
         {/* Traits */}
         <TabsContent forceMount value="traits" className="mt-6 space-y-6">
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => setPickerKinds([...TRAIT_KINDS, ...LORE_KINDS])}>
+              <Plus className="mr-1 h-4 w-4" /> Add from packs
+            </Button>
+          </div>
           {[...TRAIT_KINDS, ...LORE_KINDS].map((kind) => (
             <EntryGroup
               key={kind}
@@ -508,14 +548,17 @@ function CharacterPage() {
         {/* Skills */}
         <TabsContent forceMount value="skills" className="mt-6 space-y-6">
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={() => openNew("skill")}>
-              <Plus className="mr-1 h-4 w-4" /> Skill
+            <Button size="sm" onClick={() => setPickerKinds(["skill", "technique", "spell"])}>
+              <Plus className="mr-1 h-4 w-4" /> Add from packs
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => openNew("skill")}>
+              <Plus className="mr-1 h-4 w-4" /> Custom skill
             </Button>
             <Button size="sm" variant="outline" onClick={() => openNew("technique")}>
-              <Plus className="mr-1 h-4 w-4" /> Technique
+              <Plus className="mr-1 h-4 w-4" /> Custom technique
             </Button>
             <Button size="sm" variant="outline" onClick={() => openNew("spell")}>
-              <Plus className="mr-1 h-4 w-4" /> Spell / ability
+              <Plus className="mr-1 h-4 w-4" /> Custom spell / ability
             </Button>
           </div>
           <div className="panel overflow-hidden">
@@ -554,7 +597,12 @@ function CharacterPage() {
                           </span>
                         ) : null}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{entry.kind}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {entry.kind}
+                        {isCustomEntry(entry.source) ? (
+                          <Badge variant="outline" className="ml-1">custom</Badge>
+                        ) : null}
+                      </TableCell>
                       <TableCell className="text-right font-mono">{level.label}</TableCell>
                       <TableCell className="text-right font-mono">
                         {Number(entry.data["points"] ?? 0)}
@@ -610,8 +658,11 @@ function CharacterPage() {
         {/* Equipment */}
         <TabsContent forceMount value="equipment" className="mt-6 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <Button size="sm" onClick={() => openNew("equipment")}>
-              <Plus className="mr-1 h-4 w-4" /> Add item
+            <Button size="sm" onClick={() => setPickerKinds(["equipment"])}>
+              <Plus className="mr-1 h-4 w-4" /> Add from packs
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => openNew("equipment")}>
+              <Plus className="mr-1 h-4 w-4" /> Custom item
             </Button>
             <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
               <span>
@@ -952,6 +1003,15 @@ function CharacterPage() {
         onChange={setDraft}
         onSubmit={() => upsertEntry.mutate(draft)}
       />
+
+      <PackPickerDialog
+        open={pickerKinds !== null}
+        onOpenChange={(v) => !v && setPickerKinds(null)}
+        kinds={pickerKinds ?? []}
+        packs={linkedPacks}
+        pending={addFromPack.isPending}
+        onAdd={(entry) => addFromPack.mutate(entry)}
+      />
       </div>
 
       <PrintSheet
@@ -987,7 +1047,7 @@ function EntryGroup({
           {title}
         </h2>
         <Button size="sm" variant="ghost" onClick={onAdd}>
-          <Plus className="mr-1 h-4 w-4" /> Add {kind}
+          <Plus className="mr-1 h-4 w-4" /> Custom {kind}
         </Button>
       </div>
       {entries.length === 0 ? (
@@ -1004,7 +1064,13 @@ function EntryGroup({
                     {e.levels > 1 ? ` ${e.levels}` : ""}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {[e.category, ...mods.map((m) => `${m.name} ${m.percent > 0 ? "+" : ""}${m.percent}%`)]
+                    {[
+                      isCustomEntry(e.source)
+                        ? "custom"
+                        : String((e.source as Record<string, unknown>)["pack"] ?? ""),
+                      e.category,
+                      ...mods.map((m) => `${m.name} ${m.percent > 0 ? "+" : ""}${m.percent}%`),
+                    ]
                       .filter(Boolean)
                       .join(" · ") || "—"}
                   </p>

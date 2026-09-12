@@ -279,6 +279,7 @@ export type Database = {
           name: string
           notes: string | null
           owner_id: string
+          packs: string[]
           per_delta: number
           player_name: string | null
           point_budget: number
@@ -313,6 +314,7 @@ export type Database = {
           name?: string
           notes?: string | null
           owner_id?: string
+          packs?: string[]
           per_delta?: number
           player_name?: string | null
           point_budget?: number
@@ -347,6 +349,7 @@ export type Database = {
           name?: string
           notes?: string | null
           owner_id?: string
+          packs?: string[]
           per_delta?: number
           player_name?: string | null
           point_budget?: number

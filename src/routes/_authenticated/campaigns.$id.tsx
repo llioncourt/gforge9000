@@ -543,10 +543,7 @@ function HouseRules({
             disadvantage_limit: Number(disadvLimit) || 0,
             tech_level: Number(tl) || 0,
             house_rules: houseRules,
-            allowed_packs: packs
-              .split(",")
-              .map((p) => p.trim())
-              .filter(Boolean),
+            allowed_packs: packs.map((p) => p.trim()).filter(Boolean),
           })
         }
       >

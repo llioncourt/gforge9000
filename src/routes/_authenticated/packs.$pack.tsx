@@ -37,6 +37,7 @@ import {
 import {
   createContentPack,
   deleteContentPack,
+  deletePackContents,
   listCampaigns,
   listContentPacks,
   listLibrary,

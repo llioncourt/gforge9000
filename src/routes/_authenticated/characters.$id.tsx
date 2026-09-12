@@ -1032,6 +1032,7 @@ function EntryGroup({
   kind,
   entries,
   onAdd,
+  onAddFromPack,
   onEdit,
   onDelete,
 }: {
@@ -1039,18 +1040,26 @@ function EntryGroup({
   kind: EntryKind;
   entries: CharacterEntry[];
   onAdd: () => void;
+  onAddFromPack?: () => void;
   onEdit: (e: CharacterEntry) => void;
   onDelete: (id: string) => void;
 }) {
   return (
     <section className="panel p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
           {title}
         </h2>
-        <Button size="sm" variant="ghost" onClick={onAdd}>
-          <Plus className="mr-1 h-4 w-4" /> Custom {kind}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {onAddFromPack ? (
+            <Button size="sm" onClick={onAddFromPack}>
+              <Plus className="mr-1 h-4 w-4" /> From packs
+            </Button>
+          ) : null}
+          <Button size="sm" variant="ghost" onClick={onAdd}>
+            <Plus className="mr-1 h-4 w-4" /> Custom {kind}
+          </Button>
+        </div>
       </div>
       {entries.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">Nothing here yet.</p>

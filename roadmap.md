@@ -29,3 +29,10 @@ Order agreed with the user: lore first, battle grid after.
 - [ ] Draggable tokens, distance measurement
 - [ ] Realtime sync GM/players
 - [ ] Token visual: 3D .glb model if the character has one, else portrait, else simple 2D name token
+
+## Battle grid (in progress)
+- [ ] maps + map_objects schema + RLS
+- [ ] Map editor (image, square/hex grid, zoom/pan)
+- [ ] Tokens: 3D model > portrait > name token, drag + snap
+- [ ] Distance measurement
+- [ ] Realtime sync

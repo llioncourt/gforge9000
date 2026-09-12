@@ -53,6 +53,7 @@ import {
   makeGroup,
   togglePackInList,
   NO_PACKS_MARKER,
+  DEFAULT_PACK_NAME,
 } from "@/lib/packs";
 import { packFromSlug, packSlug } from "@/lib/pack-slug";
 import { slugify } from "@/lib/portable";
@@ -142,7 +143,7 @@ function PackDetailPage() {
   });
 
   const moveEntry = useMutation({
-    mutationFn: ({ id, to }: { id: string; to: string | null }) => setLibraryEntryPack(id, to),
+    mutationFn: ({ id, to }: { id: string; to: string }) => setLibraryEntryPack(id, to),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["library"] });
       setAddId("");
@@ -364,13 +365,13 @@ function PackDetailPage() {
                         {t}
                       </Badge>
                     ))}
-                    {e.owner_id === user?.id ? (
+                    {e.owner_id === user?.id && packName !== DEFAULT_PACK_NAME ? (
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => moveEntry.mutate({ id: e.id, to: null })}
+                        onClick={() => moveEntry.mutate({ id: e.id, to: DEFAULT_PACK_NAME })}
                       >
-                        Remove from pack
+                        Move to {DEFAULT_PACK_NAME}
                       </Button>
                     ) : null}
                   </li>

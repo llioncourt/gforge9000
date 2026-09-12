@@ -3,6 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { ContactShadows, OrbitControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DEFAULT_MODEL_TRANSFORM, type ModelTransform } from "@/lib/model3d";
 
 function useGlb(url: string) {
   const [scene, setScene] = useState<THREE.Group | null>(null);

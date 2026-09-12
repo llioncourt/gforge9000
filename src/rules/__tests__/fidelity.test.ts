@@ -294,7 +294,7 @@ describe("audit coverage of required mechanics", () => {
       "combat.active-defenses",
       "combat.basic-damage",
       "combat.health",
-      "combat.weapon-fields",
+      "combat.weapon-parsing",
       "dice.expressions",
       "dice.success",
       "campaign.overrides",

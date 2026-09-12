@@ -106,10 +106,47 @@ function EntityPage() {
     if (entity.data) setForm(entity.data);
   }, [entity.data]);
 
+  const revisions = useQuery({
+    queryKey: ["lore-revisions", id],
+    queryFn: () => listEntityRevisions(id),
+  });
+
   const save = useMutation({
-    mutationFn: (patch: Partial<EntityRow>) => updateEntity(id, patch),
+    mutationFn: async (patch: Partial<EntityRow>) => {
+      const previous = entity.data;
+      if (previous) {
+        try {
+          await snapshotEntity(previous);
+        } catch {
+          /* history is best-effort */
+        }
+      }
+      return updateEntity(id, patch);
+    },
     onSuccess: async (row) => {
       setForm(row);
+      await queryClient.invalidateQueries({ queryKey: ["entity", id] });
+      await queryClient.invalidateQueries({ queryKey: ["lore-revisions", id] });
+      await queryClient.invalidateQueries({ queryKey: ["lore-entities", row.campaign_id] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const restore = useMutation({
+    mutationFn: async (snapshot: Record<string, unknown>) =>
+      updateEntity(id, {
+        name: String(snapshot["name"] ?? ""),
+        summary: (snapshot["summary"] ?? null) as string | null,
+        player_description: (snapshot["player_description"] ?? null) as string | null,
+        gm_notes: (snapshot["gm_notes"] ?? null) as string | null,
+        status: String(snapshot["status"] ?? ""),
+        visibility: String(snapshot["visibility"] ?? ""),
+        tags: (snapshot["tags"] ?? []) as string[],
+        data: (snapshot["data"] ?? {}) as never,
+      }),
+    onSuccess: async (row) => {
+      setForm(row);
+      toast.success("Version restored");
       await queryClient.invalidateQueries({ queryKey: ["entity", id] });
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", row.campaign_id] });
     },

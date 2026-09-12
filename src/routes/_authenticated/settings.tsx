@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProfile, upsertProfile } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
+import { AUDIT_SUMMARY, RULES_AUDIT } from "@/rules/audit";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -100,6 +101,38 @@ function SettingsPage() {
               </p>
             </div>
             <Switch checked={light} onCheckedChange={setLight} aria-label="Light theme" />
+          </section>
+
+          <section className="panel space-y-4 p-6">
+            <div>
+              <h2 className="font-display text-lg font-semibold">Rules status</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Every mechanic in the calculation engine, and how faithfully it is implemented.
+                Exact {AUDIT_SUMMARY.EXACT} · Configurable {AUDIT_SUMMARY.CONFIGURABLE} ·
+                Approximation {AUDIT_SUMMARY.APPROXIMATION} · Missing {AUDIT_SUMMARY.MISSING}
+              </p>
+            </div>
+            <ul className="divide-y divide-border text-sm">
+              {RULES_AUDIT.map((rule) => (
+                <li key={rule.id} className="flex flex-col gap-1 py-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium text-foreground">{rule.title}</span>
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-[11px] uppercase tracking-wide ${
+                        rule.status === "EXACT"
+                          ? "bg-emerald-500/15 text-emerald-400"
+                          : rule.status === "CONFIGURABLE"
+                            ? "bg-amber-500/15 text-amber-400"
+                            : "bg-destructive/15 text-destructive"
+                      }`}
+                    >
+                      {rule.status}
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground">{rule.notes}</p>
+                </li>
+              ))}
+            </ul>
           </section>
         </div>
       )}

@@ -216,11 +216,9 @@ describe("dice", () => {
 });
 
 describe("basic damage", () => {
-  it("is monotonic in ST", () => {
-    expect(basicDamage(10).thrust).toBe("1d-2");
-    expect(basicDamage(12).thrust).toBe("1d");
-    expect(basicDamage(14).swing).toBe("2d+3");
-    expect(basicDamage(16).thrust).toBe("2d");
+  it("reports unavailable rather than inventing a formula", () => {
+    expect(basicDamage(10, null).status).toBe("not-configured");
+    expect(basicDamage(16, null).thrust).toBeNull();
   });
 });
 

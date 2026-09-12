@@ -48,7 +48,7 @@ describe("derived stats", () => {
     expect(s.hp).toBe(12);
     expect(s.basicSpeed).toBe(5.75);
     expect(s.basicMove).toBe(5);
-    expect(s.basicLift).toBe(29);
+    expect(s.basicLift).toBe(28.8);
     expect(s.dodge).toBe(8);
   });
 

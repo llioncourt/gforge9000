@@ -183,10 +183,7 @@ export function PackPickerDialog({
               {descFor.summary && (
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{descFor.summary}</p>
               )}
-              {descFor.notes && (
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{descFor.notes}</p>
-              )}
-              {!descFor.summary && !descFor.notes && (
+              {!descFor.summary && (
                 <p className="text-sm text-muted-foreground">No further details.</p>
               )}
             </>

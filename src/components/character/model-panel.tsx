@@ -83,7 +83,13 @@ export function ModelStageDialog({
         <div className="relative h-[70vh] w-full overflow-hidden rounded-b-lg border-t border-border bg-muted/20">
           {open ? (
             <Suspense fallback={<ViewerFallback />}>
-              <ModelViewer url={url} stage autoRotate={autoRotate} wireframe={wireframe} />
+              <ModelViewer
+                url={url}
+                stage
+                autoRotate={autoRotate}
+                wireframe={wireframe}
+                transform={transform}
+              />
             </Suspense>
           ) : null}
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-background/85 px-2 py-1 backdrop-blur">

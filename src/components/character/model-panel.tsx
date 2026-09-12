@@ -1,13 +1,39 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Box, Expand, Loader2, RotateCw, Trash2 } from "lucide-react";
+import {
+  Box,
+  Expand,
+  Loader2,
+  Minus,
+  Plus,
+  RotateCcw,
+  RotateCw,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { modelUrl, removeModel, uploadModel, validateModelFile } from "@/lib/model3d";
+import {
+  DEFAULT_MODEL_TRANSFORM,
+  type ModelTransform,
+} from "@/components/character/model-viewer";
 
 const ModelViewer = lazy(() => import("@/components/character/model-viewer"));
+
+/** Reads a stored jsonb value into a safe transform. */
+export function parseModelTransform(value: unknown): ModelTransform {
+  const v = (value ?? {}) as Partial<Record<keyof ModelTransform, unknown>>;
+  const num = (x: unknown, fallback: number) =>
+    typeof x === "number" && Number.isFinite(x) ? x : fallback;
+  return {
+    rx: num(v.rx, 0),
+    ry: num(v.ry, 0),
+    rz: num(v.rz, 0),
+    scale: Math.min(4, Math.max(0.25, num(v.scale, 1))),
+  };
+}
 
 export function useModelUrl(path: string | null | undefined) {
   const query = useQuery({

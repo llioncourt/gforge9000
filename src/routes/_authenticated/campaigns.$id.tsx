@@ -134,6 +134,16 @@ function CampaignPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const transferGm = useMutation({
+    mutationFn: (newGmId: string) => transferCampaignGm(id, newGmId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaign", id] });
+      queryClient.invalidateQueries({ queryKey: ["members", id] });
+      toast.success("GM role transferred.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const approve = useMutation({
     mutationFn: ({ cid, value }: { cid: string; value: boolean }) =>
       updateCharacter(cid, { approved: value }),

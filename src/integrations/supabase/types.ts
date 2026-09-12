@@ -276,6 +276,7 @@ export type Database = {
           is_npc: boolean
           is_template: boolean
           model_path: string | null
+          model_transform: Json
           move_delta: number
           name: string
           notes: string | null
@@ -312,6 +313,7 @@ export type Database = {
           is_npc?: boolean
           is_template?: boolean
           model_path?: string | null
+          model_transform?: Json
           move_delta?: number
           name?: string
           notes?: string | null
@@ -348,6 +350,7 @@ export type Database = {
           is_npc?: boolean
           is_template?: boolean
           model_path?: string | null
+          model_transform?: Json
           move_delta?: number
           name?: string
           notes?: string | null

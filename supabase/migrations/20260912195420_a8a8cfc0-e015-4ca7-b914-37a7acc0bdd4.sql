@@ -1,0 +1,1 @@
+ALTER TABLE public.characters ADD COLUMN IF NOT EXISTS model_transform jsonb NOT NULL DEFAULT '{"rx":0,"ry":0,"rz":0,"scale":1}'::jsonb;

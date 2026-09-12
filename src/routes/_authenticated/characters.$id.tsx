@@ -338,7 +338,7 @@ function CharacterPage() {
         </TabsList>
 
         {/* Attributes */}
-        <TabsContent value="attributes" className="mt-6 grid gap-6 lg:grid-cols-2">
+        <TabsContent forceMount value="attributes" className="mt-6 grid gap-6 lg:grid-cols-2">
           <section className="panel space-y-4 p-5">
             <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
               Identity
@@ -473,7 +473,7 @@ function CharacterPage() {
         </TabsContent>
 
         {/* Traits */}
-        <TabsContent value="traits" className="mt-6 space-y-6">
+        <TabsContent forceMount value="traits" className="mt-6 space-y-6">
           {[...TRAIT_KINDS, ...LORE_KINDS].map((kind) => (
             <EntryGroup
               key={kind}
@@ -488,7 +488,7 @@ function CharacterPage() {
         </TabsContent>
 
         {/* Skills */}
-        <TabsContent value="skills" className="mt-6 space-y-6">
+        <TabsContent forceMount value="skills" className="mt-6 space-y-6">
           <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={() => openNew("skill")}>
               <Plus className="mr-1 h-4 w-4" /> Skill
@@ -567,7 +567,7 @@ function CharacterPage() {
         </TabsContent>
 
         {/* Equipment */}
-        <TabsContent value="equipment" className="mt-6 space-y-4">
+        <TabsContent forceMount value="equipment" className="mt-6 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             <Button size="sm" onClick={() => openNew("equipment")}>
               <Plus className="mr-1 h-4 w-4" /> Add item

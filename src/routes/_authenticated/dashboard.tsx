@@ -123,13 +123,13 @@ function Dashboard() {
                       </p>
                     </div>
                     {c.is_npc ? <Badge variant="outline">NPC</Badge> : null}
-                    <span className="stat-value text-sm">{c.point_budget} pts</span>
+                    <span className="stat-value shrink-0 text-sm">{c.point_budget} pts</span>
                   </Link>
                 ))}
           </div>
         </section>
 
-        <section>
+        <section className="min-w-0">
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
             Recent rolls
           </h2>

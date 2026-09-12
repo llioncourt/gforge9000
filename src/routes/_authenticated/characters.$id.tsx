@@ -694,7 +694,7 @@ function CharacterPage() {
                         const target = skill?.level.effective ?? sheet.stats.dx;
                         return (
                           <AttackModeCard
-                            key={i}
+                            key={`${i}:${persisted ?? "none"}`}
                             weapon={weapon}
                             target={target}
                             onAttack={() =>

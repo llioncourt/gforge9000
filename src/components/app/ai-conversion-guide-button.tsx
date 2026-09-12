@@ -1,11 +1,5 @@
 import { FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { AI_IMPORT_GUIDES, type GuideKind } from "@/lib/ai-import-guides";
 import { download } from "@/lib/portable";
 import { cn } from "@/lib/utils";
@@ -26,23 +20,22 @@ export function AiConversionGuideButton({
 }) {
   const guide = AI_IMPORT_GUIDES[kind];
   return (
-    <TooltipProvider delayDuration={200}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className={cn("w-full whitespace-normal sm:w-auto", className)}
-            title={HELP}
-            onClick={() => download(guide.filename, guide.markdown, "text/markdown;charset=utf-8")}
-          >
-            <FileDown className="mr-2 h-4 w-4 shrink-0" />
-            Download AI conversion guide (.md)
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent className="max-w-xs text-xs">{HELP}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div className={cn("grid gap-1", className)}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="w-full whitespace-normal sm:w-auto sm:justify-self-start"
+        title={HELP}
+        aria-describedby={`guide-help-${kind}`}
+        onClick={() => download(guide.filename, guide.markdown, "text/markdown;charset=utf-8")}
+      >
+        <FileDown className="mr-2 h-4 w-4 shrink-0" />
+        Download AI conversion guide (.md)
+      </Button>
+      <p id={`guide-help-${kind}`} className="text-xs text-muted-foreground">
+        {HELP}
+      </p>
+    </div>
   );
 }

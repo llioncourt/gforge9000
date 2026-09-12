@@ -183,10 +183,38 @@ export async function seedDemoContent(userId: string) {
     {
       character_id: character.id,
       kind: "equipment",
+      name: "Crew Sidearm",
+      category: "Weapon",
+      data: {
+        quantity: 1,
+        weight: 3,
+        cost: 400,
+        carried: true,
+        tl: 8,
+        legality: "LC3",
+        weapons: [
+          {
+            name: "Shot",
+            damage: "2d pi",
+            accuracy: "2",
+            range: "150/1800",
+            rof: "3",
+            shots: "8",
+            bulk: "-2",
+            recoil: "2",
+            skill: "Close Combat",
+          },
+        ],
+      },
+    },
+    {
+      character_id: character.id,
+      kind: "equipment",
       name: "Trauma Kit",
       category: "Gear",
       data: { quantity: 1, weight: 6, cost: 300, carried: true, tl: 8 },
     },
+
     {
       character_id: character.id,
       kind: "equipment",

@@ -207,7 +207,8 @@
     padding-left: 0 !important;
     font-weight: 600 !important;
   }
-  [role="tablist"] {
+  [role="tablist"],
+  button:not([role="switch"]) {
     display: none !important;
   }
   [role="tabpanel"][hidden] {

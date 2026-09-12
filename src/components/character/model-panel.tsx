@@ -229,7 +229,7 @@ export function ModelPanel({
         {signed && mounted ? (
           <>
             <Suspense fallback={<ViewerFallback />}>
-              <ModelViewer url={signed} />
+              <ModelViewer url={signed} transform={transform} />
             </Suspense>
             <button
               type="button"

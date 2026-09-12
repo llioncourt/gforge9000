@@ -443,6 +443,7 @@ function CharacterPage() {
               </div>
               <Switch checked={form.is_npc} onCheckedChange={(v) => patch({ is_npc: v })} />
             </div>
+            <CharacterPacksPanel packs={linkedPacks} onChange={(next) => patch({ packs: next })} />
             <div className="space-y-3 border-t border-border pt-4">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Appearance &amp; background

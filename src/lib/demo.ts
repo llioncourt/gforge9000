@@ -6,15 +6,20 @@ export const DEMO_CHARACTER_NAME = "Wren Calloway";
 export const DEMO_CAMPAIGN_NAME = "Ashfall Expedition";
 export const DEMO_PACK = "Core Generic Pack";
 
-/** True when this account already holds the demo set. Keeps seeding idempotent. */
-export async function hasDemoContent(): Promise<boolean> {
+/** Returns the demo character id for this account, if it already exists. */
+export async function findDemoCharacter(): Promise<string | null> {
   const { data, error } = await supabase
     .from("characters")
     .select("id")
     .eq("name", DEMO_CHARACTER_NAME)
     .limit(1);
   if (error) throw new Error(error.message);
-  return (data ?? []).length > 0;
+  return data?.[0]?.id ?? null;
+}
+
+/** True when this account already holds the demo set. Keeps seeding idempotent. */
+export async function hasDemoContent(): Promise<boolean> {
+  return (await findDemoCharacter()) !== null;
 }
 
 /**
@@ -22,8 +27,10 @@ export async function hasDemoContent(): Promise<boolean> {
  * Guarded: calling it twice will not duplicate the demo set.
  */
 export async function seedDemoContent(userId: string) {
-  if (await hasDemoContent()) {
+  const existing = await findDemoCharacter();
+  if (existing) {
     await seedDemoLibrary(userId);
+    await seedDemoEntries(existing);
     return { skipped: true as const };
   }
   const campaign = await createCampaign({
@@ -66,171 +73,8 @@ export async function seedDemoContent(userId: string) {
     notes: "Demo character. Everything here is editable — treat it as a starting point.",
   });
 
-  const entries: TablesInsert<"character_entries">[] = [
-    {
-      character_id: character.id,
-      kind: "advantage",
-      name: "Field Medic",
-      category: "Talent",
-      points: 10,
-      levels: 1,
-      notes: "Bonus to stabilising wounded allies under pressure.",
-      source: { label: "Core Generic Pack", type: "user" },
-    },
-    {
-      character_id: character.id,
-      kind: "advantage",
-      name: "Quick Reflexes",
-      category: "Physical",
-      points: 15,
-      levels: 1,
-      data: { modifiers: [{ name: "Situational (crisis only)", percent: -20 }] },
-      source: { label: "Core Generic Pack", type: "user" },
-    },
-    {
-      character_id: character.id,
-      kind: "perk",
-      name: "Steady Hands",
-      category: "Perk",
-      points: 1,
-      levels: 1,
-    },
-    {
-      character_id: character.id,
-      kind: "disadvantage",
-      name: "Duty to Crew",
-      category: "Social",
-      points: -10,
-      levels: 1,
-      notes: "Will not abandon a crewmate on contract.",
-    },
-    {
-      character_id: character.id,
-      kind: "quirk",
-      name: "Narrates repairs out loud",
-      category: "Quirk",
-      points: -1,
-      levels: 1,
-    },
-    {
-      character_id: character.id,
-      kind: "skill",
-      name: "Urban Navigation",
-      category: "Exploration",
-      points: 4,
-      data: { attribute: "IQ", difficulty: "A", points: 4, defaults: "IQ-5" },
-    },
-    {
-      character_id: character.id,
-      kind: "skill",
-      name: "Emergency Medicine",
-      category: "Medical",
-      points: 8,
-      data: { attribute: "IQ", difficulty: "H", points: 8, specialization: "Trauma" },
-    },
-    {
-      character_id: character.id,
-      kind: "skill",
-      name: "Close Combat",
-      category: "Combat",
-      points: 4,
-      data: { attribute: "DX", difficulty: "A", points: 4 },
-    },
-    {
-      character_id: character.id,
-      kind: "language",
-      name: "Trade Creole",
-      category: "Language",
-      points: 2,
-      data: { spoken: "Accented", written: "Broken" },
-    },
-    {
-      character_id: character.id,
-      kind: "equipment",
-      name: "Responder Vest",
-      category: "Armour",
-      data: {
-        quantity: 1,
-        weight: 8,
-        cost: 450,
-        carried: true,
-        tl: 8,
-        legality: "LC4",
-        dr: 5,
-        locations: ["Torso"],
-      },
-    },
-    {
-      character_id: character.id,
-      kind: "equipment",
-      name: "Utility Baton",
-      category: "Weapon",
-      data: {
-        quantity: 1,
-        weight: 2,
-        cost: 60,
-        carried: true,
-        tl: 8,
-        legality: "LC4",
-        weapons: [
-          {
-            name: "Swing",
-            damage: "sw+1 cr",
-            reach: "1",
-            parry: "0",
-            skill: "Close Combat",
-          },
-        ],
-      },
-    },
-    {
-      character_id: character.id,
-      kind: "equipment",
-      name: "Crew Sidearm",
-      category: "Weapon",
-      data: {
-        quantity: 1,
-        weight: 3,
-        cost: 400,
-        carried: true,
-        tl: 8,
-        legality: "LC3",
-        weapons: [
-          {
-            name: "Shot",
-            damage: "2d pi",
-            accuracy: "2",
-            range: "150/1800",
-            rof: "3",
-            shots: "8",
-            bulk: "-2",
-            recoil: "2",
-            skill: "Close Combat",
-          },
-        ],
-      },
-    },
-    {
-      character_id: character.id,
-      kind: "equipment",
-      name: "Trauma Kit",
-      category: "Gear",
-      data: { quantity: 1, weight: 6, cost: 300, carried: true, tl: 8 },
-    },
+  await seedDemoEntries(character.id);
 
-    {
-      character_id: character.id,
-      kind: "equipment",
-      name: "Spare Cell Pack",
-      category: "Consumable",
-      data: { quantity: 4, weight: 1, cost: 25, carried: false, tl: 8 },
-    },
-  ];
-
-  const { error } = await supabase
-    .from("character_entries")
-    .insert(entries.map((row) => ({ data: {}, points: 0, levels: 1, ...row })));
-  if (error) throw new Error(error.message);
 
   await seedDemoLibrary(userId);
 
@@ -347,4 +191,180 @@ export async function seedDemoLibrary(userId: string) {
     })),
   );
   if (libError) throw new Error(libError.message);
+}
+
+/** Inserts the demo sheet contents once; safe to call on an existing demo character. */
+export async function seedDemoEntries(characterId: string) {
+  const { count, error: countError } = await supabase
+    .from("character_entries")
+    .select("id", { count: "exact", head: true })
+    .eq("character_id", characterId);
+  if (countError) throw new Error(countError.message);
+  if ((count ?? 0) > 0) return;
+
+  const entries: TablesInsert<"character_entries">[] = [
+    {
+      character_id: characterId,
+      kind: "advantage",
+      name: "Field Medic",
+      category: "Talent",
+      points: 10,
+      levels: 1,
+      notes: "Bonus to stabilising wounded allies under pressure.",
+      source: { label: "Core Generic Pack", type: "user" },
+    },
+    {
+      character_id: characterId,
+      kind: "advantage",
+      name: "Quick Reflexes",
+      category: "Physical",
+      points: 15,
+      levels: 1,
+      data: { modifiers: [{ name: "Situational (crisis only)", percent: -20 }] },
+      source: { label: "Core Generic Pack", type: "user" },
+    },
+    {
+      character_id: characterId,
+      kind: "perk",
+      name: "Steady Hands",
+      category: "Perk",
+      points: 1,
+      levels: 1,
+    },
+    {
+      character_id: characterId,
+      kind: "disadvantage",
+      name: "Duty to Crew",
+      category: "Social",
+      points: -10,
+      levels: 1,
+      notes: "Will not abandon a crewmate on contract.",
+    },
+    {
+      character_id: characterId,
+      kind: "quirk",
+      name: "Narrates repairs out loud",
+      category: "Quirk",
+      points: -1,
+      levels: 1,
+    },
+    {
+      character_id: characterId,
+      kind: "skill",
+      name: "Urban Navigation",
+      category: "Exploration",
+      points: 4,
+      data: { attribute: "IQ", difficulty: "A", points: 4, defaults: "IQ-5" },
+    },
+    {
+      character_id: characterId,
+      kind: "skill",
+      name: "Emergency Medicine",
+      category: "Medical",
+      points: 8,
+      data: { attribute: "IQ", difficulty: "H", points: 8, specialization: "Trauma" },
+    },
+    {
+      character_id: characterId,
+      kind: "skill",
+      name: "Close Combat",
+      category: "Combat",
+      points: 4,
+      data: { attribute: "DX", difficulty: "A", points: 4 },
+    },
+    {
+      character_id: characterId,
+      kind: "language",
+      name: "Trade Creole",
+      category: "Language",
+      points: 2,
+      data: { spoken: "Accented", written: "Broken" },
+    },
+    {
+      character_id: characterId,
+      kind: "equipment",
+      name: "Responder Vest",
+      category: "Armour",
+      data: {
+        quantity: 1,
+        weight: 8,
+        cost: 450,
+        carried: true,
+        tl: 8,
+        legality: "LC4",
+        dr: 5,
+        locations: ["Torso"],
+      },
+    },
+    {
+      character_id: characterId,
+      kind: "equipment",
+      name: "Utility Baton",
+      category: "Weapon",
+      data: {
+        quantity: 1,
+        weight: 2,
+        cost: 60,
+        carried: true,
+        tl: 8,
+        legality: "LC4",
+        weapons: [
+          {
+            name: "Swing",
+            damage: "sw+1 cr",
+            reach: "1",
+            parry: "0",
+            skill: "Close Combat",
+          },
+        ],
+      },
+    },
+    {
+      character_id: characterId,
+      kind: "equipment",
+      name: "Crew Sidearm",
+      category: "Weapon",
+      data: {
+        quantity: 1,
+        weight: 3,
+        cost: 400,
+        carried: true,
+        tl: 8,
+        legality: "LC3",
+        weapons: [
+          {
+            name: "Shot",
+            damage: "2d pi",
+            accuracy: "2",
+            range: "150/1800",
+            rof: "3",
+            shots: "8",
+            bulk: "-2",
+            recoil: "2",
+            skill: "Close Combat",
+          },
+        ],
+      },
+    },
+    {
+      character_id: characterId,
+      kind: "equipment",
+      name: "Trauma Kit",
+      category: "Gear",
+      data: { quantity: 1, weight: 6, cost: 300, carried: true, tl: 8 },
+    },
+
+    {
+      character_id: characterId,
+      kind: "equipment",
+      name: "Spare Cell Pack",
+      category: "Consumable",
+      data: { quantity: 4, weight: 1, cost: 25, carried: false, tl: 8 },
+    },
+  ];
+
+  const { error } = await supabase
+    .from("character_entries")
+    .insert(entries.map((row) => ({ data: {}, points: 0, levels: 1, ...row })));
+  if (error) throw new Error(error.message);
 }

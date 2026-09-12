@@ -134,23 +134,26 @@ export function PackPickerDialog({
               Nothing available here.
             </p>
           ) : (
-            rows.map((e) => (
-              <div
-                key={e.id}
-                className="flex items-center gap-3 rounded-md border border-border px-3 py-2"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{e.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {[e.category, e.summary].filter(Boolean).join(" · ") || "—"}
-                  </p>
+            rows.map((e) => {
+              const desc = [e.category, e.summary].filter(Boolean).join(" · ") || "—";
+              return (
+                <div
+                  key={e.id}
+                  className="flex items-center gap-3 rounded-md border border-border px-3 py-2"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 text-sm font-medium" title={e.name}>{e.name}</p>
+                    <p className="line-clamp-2 text-xs text-muted-foreground" title={desc}>
+                      {desc}
+                    </p>
+                  </div>
+                  <Badge variant="outline">{e.pack}</Badge>
+                  <Button size="sm" disabled={pending} onClick={() => onAdd(e)}>
+                    Add
+                  </Button>
                 </div>
-                <Badge variant="outline">{e.pack}</Badge>
-                <Button size="sm" disabled={pending} onClick={() => onAdd(e)}>
-                  Add
-                </Button>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </DialogContent>

@@ -1,0 +1,1 @@
+UPDATE public.content_packs SET description = NULL WHERE name = 'My Content' AND description = 'Your own entries that were not in a pack.';

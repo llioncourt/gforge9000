@@ -20,6 +20,7 @@ import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
 import { Route as AuthenticatedCharactersIndexRouteImport } from './routes/_authenticated/characters.index'
 import { Route as AuthenticatedCharactersIdRouteImport } from './routes/_authenticated/characters.$id'
+import { Route as AuthenticatedEntitiesIdRouteImport } from './routes/_authenticated/entities.$id'
 import { Route as AuthenticatedPacksIndexRouteImport } from './routes/_authenticated/packs.index'
 import { Route as AuthenticatedPacksPackRouteImport } from './routes/_authenticated/packs.$pack'
 
@@ -81,6 +82,11 @@ const AuthenticatedCharactersIdRoute =
     path: '/characters/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedEntitiesIdRoute = AuthenticatedEntitiesIdRouteImport.update({
+  id: '/entities/$id',
+  path: '/entities/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPacksIndexRoute = AuthenticatedPacksIndexRouteImport.update({
   id: '/packs/',
   path: '/packs/',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
+  '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/characters/': typeof AuthenticatedCharactersIndexRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
+  '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
   '/characters': typeof AuthenticatedCharactersIndexRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/characters/$id': typeof AuthenticatedCharactersIdRoute
+  '/_authenticated/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/_authenticated/packs/$pack': typeof AuthenticatedPacksPackRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/_authenticated/characters/': typeof AuthenticatedCharactersIndexRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/campaigns/$id'
     | '/characters/$id'
+    | '/entities/$id'
     | '/packs/$pack'
     | '/campaigns/'
     | '/characters/'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/campaigns/$id'
     | '/characters/$id'
+    | '/entities/$id'
     | '/packs/$pack'
     | '/campaigns'
     | '/characters'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/characters/$id'
+    | '/_authenticated/entities/$id'
     | '/_authenticated/packs/$pack'
     | '/_authenticated/campaigns/'
     | '/_authenticated/characters/'
@@ -268,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCharactersIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/entities/$id': {
+      id: '/_authenticated/entities/$id'
+      path: '/entities/$id'
+      fullPath: '/entities/$id'
+      preLoaderRoute: typeof AuthenticatedEntitiesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/packs/': {
       id: '/_authenticated/packs/'
       path: '/packs'
@@ -291,6 +310,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
   AuthenticatedCharactersIdRoute: typeof AuthenticatedCharactersIdRoute
+  AuthenticatedEntitiesIdRoute: typeof AuthenticatedEntitiesIdRoute
   AuthenticatedPacksPackRoute: typeof AuthenticatedPacksPackRoute
   AuthenticatedCampaignsIndexRoute: typeof AuthenticatedCampaignsIndexRoute
   AuthenticatedCharactersIndexRoute: typeof AuthenticatedCharactersIndexRoute
@@ -303,6 +323,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
   AuthenticatedCharactersIdRoute: AuthenticatedCharactersIdRoute,
+  AuthenticatedEntitiesIdRoute: AuthenticatedEntitiesIdRoute,
   AuthenticatedPacksPackRoute: AuthenticatedPacksPackRoute,
   AuthenticatedCampaignsIndexRoute: AuthenticatedCampaignsIndexRoute,
   AuthenticatedCharactersIndexRoute: AuthenticatedCharactersIndexRoute,

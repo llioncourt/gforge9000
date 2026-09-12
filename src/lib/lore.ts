@@ -1,0 +1,123 @@
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+
+export type EntityRow = Tables<"entities">;
+export type RelationshipRow = Tables<"entity_relationships">;
+export type GrantRow = Tables<"knowledge_grants">;
+export type EntityRevisionRow = Tables<"entity_revisions">;
+
+function unwrap<T>(res: { data: T; error: { message: string } | null }): NonNullable<T> {
+  if (res.error) throw new Error(res.error.message);
+  return res.data as NonNullable<T>;
+}
+
+export async function listEntities(campaignId: string): Promise<EntityRow[]> {
+  return unwrap(
+    await supabase
+      .from("entities")
+      .select("*")
+      .eq("campaign_id", campaignId)
+      .order("kind", { ascending: true })
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true }),
+  );
+}
+
+export async function getEntity(id: string): Promise<EntityRow> {
+  return unwrap(await supabase.from("entities").select("*").eq("id", id).single());
+}
+
+export async function createEntity(input: TablesInsert<"entities">): Promise<EntityRow> {
+  return unwrap(await supabase.from("entities").insert(input).select("*").single());
+}
+
+export async function updateEntity(
+  id: string,
+  patch: TablesUpdate<"entities">,
+): Promise<EntityRow> {
+  return unwrap(await supabase.from("entities").update(patch).eq("id", id).select("*").single());
+}
+
+export async function deleteEntity(id: string): Promise<void> {
+  const { error } = await supabase.from("entities").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function listRelationships(campaignId: string): Promise<RelationshipRow[]> {
+  return unwrap(
+    await supabase
+      .from("entity_relationships")
+      .select("*")
+      .eq("campaign_id", campaignId)
+      .order("created_at", { ascending: true }),
+  );
+}
+
+export async function createRelationship(
+  input: TablesInsert<"entity_relationships">,
+): Promise<RelationshipRow> {
+  return unwrap(await supabase.from("entity_relationships").insert(input).select("*").single());
+}
+
+export async function deleteRelationship(id: string): Promise<void> {
+  const { error } = await supabase.from("entity_relationships").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function listGrants(entityId: string): Promise<GrantRow[]> {
+  return unwrap(
+    await supabase.from("knowledge_grants").select("*").eq("entity_id", entityId),
+  );
+}
+
+export async function grantKnowledge(input: TablesInsert<"knowledge_grants">): Promise<GrantRow> {
+  return unwrap(await supabase.from("knowledge_grants").insert(input).select("*").single());
+}
+
+export async function revokeKnowledge(id: string): Promise<void> {
+  const { error } = await supabase.from("knowledge_grants").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+export async function listEntityRevisions(entityId: string): Promise<EntityRevisionRow[]> {
+  return unwrap(
+    await supabase
+      .from("entity_revisions")
+      .select("*")
+      .eq("entity_id", entityId)
+      .order("created_at", { ascending: false })
+      .limit(30),
+  );
+}
+
+export async function snapshotEntity(row: EntityRow, label?: string): Promise<void> {
+  const { error } = await supabase.from("entity_revisions").insert({
+    campaign_id: row.campaign_id,
+    entity_id: row.id,
+    label: label ?? null,
+    snapshot: row as unknown as Record<string, unknown>,
+  } as TablesInsert<"entity_revisions">);
+  if (error) throw new Error(error.message);
+}
+
+export type EntityData = Record<string, unknown>;
+
+export function dataValue(row: EntityRow, key: string): string {
+  const data = (row.data ?? {}) as EntityData;
+  const value = data[key];
+  if (value == null) return "";
+  if (Array.isArray(value)) return value.join("\n");
+  return String(value);
+}
+
+export function withDataValue(
+  row: EntityRow,
+  key: string,
+  value: string,
+  asList: boolean,
+): EntityData {
+  const data = { ...((row.data ?? {}) as EntityData) };
+  if (!value.trim()) delete data[key];
+  else data[key] = asList ? value.split("\n").filter((line) => line.trim()) : value;
+  return data;
+}

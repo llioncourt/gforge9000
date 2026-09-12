@@ -35,13 +35,23 @@ export function AttackModeCard({
   target,
   onAttack,
   onDamage,
+  persistAmmo,
 }: {
   weapon: NormalizedWeapon;
   target: number;
   onAttack: () => void;
   onDamage: (expression: string) => void;
+  /** Persists current shots; the card reverts optimistically on failure. */
+  persistAmmo?: (current: number) => Promise<void>;
 }) {
   const [ammo, setAmmo] = useState<AmmoState | null>(weapon.ammo);
+
+  // Optimistic update with rollback; never mutates the weapon definition.
+  const applyAmmo = (next: AmmoState, previous: AmmoState) => {
+    setAmmo(next);
+    if (!persistAmmo) return;
+    void persistAmmo(next.current).catch(() => setAmmo(previous));
+  };
   const rollable = weapon.damage.status === "rollable";
 
   return (
@@ -78,7 +88,7 @@ export function AttackModeCard({
             disabled={ammo.current <= 0}
             onClick={() => {
               const result = consumeShots(ammo, 1);
-              if (result.ok) setAmmo(result.state);
+              if (result.ok) applyAmmo(result.state, ammo);
             }}
           >
             Fire
@@ -88,7 +98,7 @@ export function AttackModeCard({
             variant="ghost"
             className="h-6 px-2"
             disabled={ammo.current >= ammo.capacity}
-            onClick={() => setAmmo(reloadAmmo(ammo))}
+            onClick={() => applyAmmo(reloadAmmo(ammo), ammo)}
           >
             Reload
           </Button>

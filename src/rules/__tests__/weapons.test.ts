@@ -273,8 +273,6 @@ describe("audit after phase B", () => {
 
   it("reports zero approximations and only documented MISSING entries", () => {
     expect(RULES_AUDIT.filter((r) => r.status === "APPROXIMATION")).toEqual([]);
-    expect(RULES_AUDIT.filter((r) => r.status === "MISSING").map((r) => r.id)).toEqual([
-      "combat.ammo-persistence",
-    ]);
+    expect(RULES_AUDIT.filter((r) => r.status === "MISSING").map((r) => r.id)).toEqual([]);
   });
 });

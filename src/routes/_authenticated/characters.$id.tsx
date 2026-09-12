@@ -50,6 +50,13 @@ import {
   type WeaponMode,
 } from "@/rules";
 import { AttackModeCard } from "@/components/character/attack-mode-card";
+import {
+  attackModeKey,
+  currentShotsFor,
+  listWeaponState,
+  toWeaponStateMap,
+  upsertWeaponState,
+} from "@/lib/weapon-state";
 import { useDice } from "@/components/app/dice-context";
 import { PointsBar } from "@/components/character/stat-bar";
 import {
@@ -87,6 +94,10 @@ function CharacterPage() {
   const characterQuery = useQuery({ queryKey: ["character", id], queryFn: () => getCharacter(id) });
   const entriesQuery = useQuery({ queryKey: ["entries", id], queryFn: () => listEntries(id) });
   const versionsQuery = useQuery({ queryKey: ["versions", id], queryFn: () => listVersions(id) });
+  const weaponStateQuery = useQuery({
+    queryKey: ["weapon-state", id],
+    queryFn: () => listWeaponState(id),
+  });
 
   const [form, setForm] = useState<CharacterRow | null>(null);
   const dirty = useRef(false);
@@ -668,14 +679,22 @@ function CharacterPage() {
                     </div>
                     <div className="mt-3 space-y-2">
                       {modes.map((m, i) => {
-                        const weapon = normalizeWeaponMode(m, { st: sheet.stats.st });
+                        const persisted = currentShotsFor(
+                          toWeaponStateMap(weaponStateQuery.data ?? []),
+                          e.id!,
+                          i,
+                        );
+                        const weapon = normalizeWeaponMode(m, {
+                          st: sheet.stats.st,
+                          ...(persisted === undefined ? {} : { currentShots: persisted }),
+                        });
                         const skill = sheet.skills.find(
                           (s) => s.entry.name.toLowerCase() === (weapon.skill ?? "").toLowerCase(),
                         );
                         const target = skill?.level.effective ?? sheet.stats.dx;
                         return (
                           <AttackModeCard
-                            key={i}
+                            key={`${i}:${persisted ?? "none"}`}
                             weapon={weapon}
                             target={target}
                             onAttack={() =>
@@ -692,6 +711,17 @@ function CharacterPage() {
                                 characterId: id,
                               })
                             }
+                            persistAmmo={async (current) => {
+                              await upsertWeaponState({
+                                characterId: id,
+                                entryId: e.id!,
+                                modeKey: attackModeKey(i),
+                                currentShots: current,
+                              });
+                              await queryClient.invalidateQueries({
+                                queryKey: ["weapon-state", id],
+                              });
+                            }}
                           />
                         );
                       })}

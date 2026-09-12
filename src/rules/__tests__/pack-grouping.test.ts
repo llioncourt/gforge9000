@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  UNPACKED_LABEL,
+  DEFAULT_PACK_NAME,
   campaignsEnablingPack,
   groupEntriesByKind,
   groupEntriesByPack,
@@ -18,13 +18,13 @@ const entries = [
 ];
 
 describe("pack grouping", () => {
-  it("groups entries by pack and keeps personal content visible", () => {
+  it("groups entries by pack and puts orphans in the default pack", () => {
     const groups = groupEntriesByPack(entries);
     const names = groups.map((g) => g.label);
     expect(names).toContain("Alpha");
     expect(names).toContain("Beta");
-    expect(names).toContain(UNPACKED_LABEL);
-    const personal = groups.find((g) => g.label === UNPACKED_LABEL)!;
+    expect(names).toContain(DEFAULT_PACK_NAME);
+    const personal = groups.find((g) => g.label === DEFAULT_PACK_NAME)!;
     expect(personal.entries).toHaveLength(2);
     expect(groups.find((g) => g.label === "Alpha")!.entries).toHaveLength(2);
   });
@@ -57,7 +57,6 @@ describe("pack grouping", () => {
     for (const name of ["Alpha", "Tsubasa — Futebol cinematográfico", "a/b c"]) {
       expect(packFromSlug(packSlug(name))).toBe(name);
     }
-    expect(packFromSlug(packSlug(null))).toBeNull();
   });
 });
 

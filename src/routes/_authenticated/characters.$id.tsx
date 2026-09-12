@@ -527,11 +527,6 @@ function CharacterPage() {
 
         {/* Traits */}
         <TabsContent forceMount value="traits" className="mt-6 space-y-6">
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={() => setPickerKinds([...TRAIT_KINDS, ...LORE_KINDS])}>
-              <Plus className="mr-1 h-4 w-4" /> Add from packs
-            </Button>
-          </div>
           {[...TRAIT_KINDS, ...LORE_KINDS].map((kind) => (
             <EntryGroup
               key={kind}
@@ -539,6 +534,7 @@ function CharacterPage() {
               kind={kind}
               entries={entries.filter((e) => e.kind === kind)}
               onAdd={() => openNew(kind)}
+              onAddFromPack={() => setPickerKinds([kind])}
               onEdit={openEdit}
               onDelete={(eid) => removeEntry.mutate(eid)}
             />
@@ -548,8 +544,14 @@ function CharacterPage() {
         {/* Skills */}
         <TabsContent forceMount value="skills" className="mt-6 space-y-6">
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" onClick={() => setPickerKinds(["skill", "technique", "spell"])}>
-              <Plus className="mr-1 h-4 w-4" /> Add from packs
+            <Button size="sm" onClick={() => setPickerKinds(["skill"])}>
+              <Plus className="mr-1 h-4 w-4" /> Skills from packs
+            </Button>
+            <Button size="sm" onClick={() => setPickerKinds(["technique"])}>
+              <Plus className="mr-1 h-4 w-4" /> Techniques from packs
+            </Button>
+            <Button size="sm" onClick={() => setPickerKinds(["spell"])}>
+              <Plus className="mr-1 h-4 w-4" /> Spells from packs
             </Button>
             <Button size="sm" variant="outline" onClick={() => openNew("skill")}>
               <Plus className="mr-1 h-4 w-4" /> Custom skill
@@ -1030,6 +1032,7 @@ function EntryGroup({
   kind,
   entries,
   onAdd,
+  onAddFromPack,
   onEdit,
   onDelete,
 }: {
@@ -1037,18 +1040,26 @@ function EntryGroup({
   kind: EntryKind;
   entries: CharacterEntry[];
   onAdd: () => void;
+  onAddFromPack?: () => void;
   onEdit: (e: CharacterEntry) => void;
   onDelete: (id: string) => void;
 }) {
   return (
     <section className="panel p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
           {title}
         </h2>
-        <Button size="sm" variant="ghost" onClick={onAdd}>
-          <Plus className="mr-1 h-4 w-4" /> Custom {kind}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {onAddFromPack ? (
+            <Button size="sm" onClick={onAddFromPack}>
+              <Plus className="mr-1 h-4 w-4" /> From packs
+            </Button>
+          ) : null}
+          <Button size="sm" variant="ghost" onClick={onAdd}>
+            <Plus className="mr-1 h-4 w-4" /> Custom {kind}
+          </Button>
+        </div>
       </div>
       {entries.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">Nothing here yet.</p>

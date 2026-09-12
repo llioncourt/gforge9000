@@ -227,7 +227,9 @@ export async function seedDemoContent(userId: string) {
     },
   ];
 
-  const { error } = await supabase.from("character_entries").insert(entries);
+  const { error } = await supabase
+    .from("character_entries")
+    .insert(entries.map((row) => ({ data: {}, points: 0, levels: 1, ...row })));
   if (error) throw new Error(error.message);
 
   await seedDemoLibrary(userId);

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   RULES_AUDIT,
   basicDamage,
+  basicLift,
   bestDefault,
   blockFromSkill,
   buildSheet,
@@ -263,7 +264,7 @@ describe("audit metadata", () => {
 describe("Basic Lift precision", () => {
   it("preserves fractional values (ST 11, divisor 5 -> 24.2)", () => {
     expect(basicLift(11, defaultRuleset)).toBe(24.2);
-    expect(deriveStats({ ...blBase, st: 11 }).basicLift).toBe(24.2);
+    expect(deriveStats({ ...base, st: 11 }).basicLift).toBe(24.2);
   });
 
   it("keeps precision for other ST values and divisors", () => {

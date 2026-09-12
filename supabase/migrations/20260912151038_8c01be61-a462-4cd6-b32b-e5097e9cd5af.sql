@@ -1,0 +1,1 @@
+ALTER TABLE public.characters ADD COLUMN IF NOT EXISTS packs text[] NOT NULL DEFAULT '{}'::text[];

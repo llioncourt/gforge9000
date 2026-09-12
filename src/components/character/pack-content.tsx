@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Package, Search } from "lucide-react";
+import { Info, Package, Search } from "lucide-react";
 import {
   Dialog,
   DialogContent,

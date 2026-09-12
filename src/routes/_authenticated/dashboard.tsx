@@ -47,9 +47,13 @@ function Dashboard() {
       const { data } = await supabase.auth.getUser();
       return seedDemoContent(data.user!.id);
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries();
-      toast.success("Demo character and campaign created.");
+      toast.success(
+        result.skipped
+          ? "Demo content already exists on this account."
+          : "Demo character and campaign created.",
+      );
     },
     onError: (e: Error) => toast.error(e.message),
   });

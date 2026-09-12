@@ -49,14 +49,28 @@ export function ModelStageDialog({
   name,
   open,
   onOpenChange,
+  transform = DEFAULT_MODEL_TRANSFORM,
+  onTransformChange,
 }: {
   url: string;
   name?: string | undefined;
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  transform?: ModelTransform;
+  onTransformChange?: ((t: ModelTransform) => void) | undefined;
 }) {
   const [autoRotate, setAutoRotate] = useState(true);
   const [wireframe, setWireframe] = useState(false);
+
+  const wrap = (deg: number) => ((deg % 360) + 360) % 360;
+  const nudge = (axis: "rx" | "ry" | "rz", by: number) =>
+    onTransformChange?.({ ...transform, [axis]: wrap(transform[axis] + by) });
+  const zoom = (by: number) =>
+    onTransformChange?.({
+      ...transform,
+      scale: Math.min(4, Math.max(0.25, Number((transform.scale + by).toFixed(2)))),
+    });
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

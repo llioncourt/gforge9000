@@ -175,9 +175,9 @@ export function DiceProvider({ children }: { children: ReactNode }) {
             label: last.label,
             expression: last.expression,
             target: last.target,
-              characterId: last.characterId,
-              campaignId: last.campaignId,
-              contextKey: last.contextKey,
+            characterId: last.characterId,
+            campaignId: last.campaignId,
+            ...(last.contextKey ? { contextKey: last.contextKey } : {}),
           },
         });
       }

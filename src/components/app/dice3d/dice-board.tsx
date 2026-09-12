@@ -55,6 +55,7 @@ function Simulation({
   onSettled: (faces: number[]) => void;
 }) {
   const reported = useRef(false);
+  const elapsed = useRef(0);
 
   useEffect(() => {
     let s = (seed >>> 0) || 1;
@@ -64,11 +65,13 @@ function Simulation({
     };
     dice.current = createDice(count, rng);
     reported.current = false;
+    elapsed.current = 0;
   }, [count, seed, dice]);
 
   useFrame((_, rawDelta) => {
     if (!dice.current || reported.current) return;
-    const dt = Math.min(rawDelta, 0.05);
+    const dt = Math.min(rawDelta, 0.1);
+    elapsed.current += rawDelta;
     // Fixed sub-steps keep the simulation stable at any frame rate.
     let remaining = dt;
     while (remaining > 0) {
@@ -76,11 +79,21 @@ function Simulation({
       dice.current = stepDice(dice.current, step, defaultTray);
       remaining -= step;
     }
+    // Safety net for very slow devices: finish the same simulation headlessly
+    // so the result never stalls. The dice snap to the faces that result.
+    if (!allSettled(dice.current) && elapsed.current > 6) {
+      let guard = 0;
+      while (!allSettled(dice.current) && guard < 2000) {
+        dice.current = stepDice(dice.current, 1 / 120, defaultTray);
+        guard++;
+      }
+    }
     if (allSettled(dice.current)) {
       reported.current = true;
       onSettled(facesOf(dice.current));
     }
   });
+
 
   return null;
 }

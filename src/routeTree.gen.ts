@@ -20,6 +20,8 @@ import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
 import { Route as AuthenticatedCharactersIndexRouteImport } from './routes/_authenticated/characters.index'
 import { Route as AuthenticatedCharactersIdRouteImport } from './routes/_authenticated/characters.$id'
+import { Route as AuthenticatedPacksIndexRouteImport } from './routes/_authenticated/packs.index'
+import { Route as AuthenticatedPacksPackRouteImport } from './routes/_authenticated/packs.$pack'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -79,6 +81,16 @@ const AuthenticatedCharactersIdRoute =
     path: '/characters/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPacksIndexRoute = AuthenticatedPacksIndexRouteImport.update({
+  id: '/packs/',
+  path: '/packs/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPacksPackRoute = AuthenticatedPacksPackRouteImport.update({
+  id: '/packs/$pack',
+  path: '/packs/$pack',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,8 +101,10 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
+  '/packs/$pack': typeof AuthenticatedPacksPackRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/characters/': typeof AuthenticatedCharactersIndexRoute
+  '/packs/': typeof AuthenticatedPacksIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -101,8 +115,10 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
+  '/packs/$pack': typeof AuthenticatedPacksPackRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
   '/characters': typeof AuthenticatedCharactersIndexRoute
+  '/packs': typeof AuthenticatedPacksIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,8 +131,10 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/characters/$id': typeof AuthenticatedCharactersIdRoute
+  '/_authenticated/packs/$pack': typeof AuthenticatedPacksPackRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/_authenticated/characters/': typeof AuthenticatedCharactersIndexRoute
+  '/_authenticated/packs/': typeof AuthenticatedPacksIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -129,8 +147,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/campaigns/$id'
     | '/characters/$id'
+    | '/packs/$pack'
     | '/campaigns/'
     | '/characters/'
+    | '/packs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -141,8 +161,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/campaigns/$id'
     | '/characters/$id'
+    | '/packs/$pack'
     | '/campaigns'
     | '/characters'
+    | '/packs'
   id:
     | '__root__'
     | '/'
@@ -154,8 +176,10 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/characters/$id'
+    | '/_authenticated/packs/$pack'
     | '/_authenticated/campaigns/'
     | '/_authenticated/characters/'
+    | '/_authenticated/packs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -244,6 +268,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCharactersIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/packs/': {
+      id: '/_authenticated/packs/'
+      path: '/packs'
+      fullPath: '/packs/'
+      preLoaderRoute: typeof AuthenticatedPacksIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/packs/$pack': {
+      id: '/_authenticated/packs/$pack'
+      path: '/packs/$pack'
+      fullPath: '/packs/$pack'
+      preLoaderRoute: typeof AuthenticatedPacksPackRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -253,8 +291,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
   AuthenticatedCharactersIdRoute: typeof AuthenticatedCharactersIdRoute
+  AuthenticatedPacksPackRoute: typeof AuthenticatedPacksPackRoute
   AuthenticatedCampaignsIndexRoute: typeof AuthenticatedCampaignsIndexRoute
   AuthenticatedCharactersIndexRoute: typeof AuthenticatedCharactersIndexRoute
+  AuthenticatedPacksIndexRoute: typeof AuthenticatedPacksIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -263,8 +303,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
   AuthenticatedCharactersIdRoute: AuthenticatedCharactersIdRoute,
+  AuthenticatedPacksPackRoute: AuthenticatedPacksPackRoute,
   AuthenticatedCampaignsIndexRoute: AuthenticatedCampaignsIndexRoute,
   AuthenticatedCharactersIndexRoute: AuthenticatedCharactersIndexRoute,
+  AuthenticatedPacksIndexRoute: AuthenticatedPacksIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

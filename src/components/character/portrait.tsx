@@ -1,0 +1,154 @@
+import { useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ImageUp, Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { FileDropzone } from "@/components/ui/FileDropzone";
+import {
+  portraitInitials,
+  portraitUrl,
+  removePortrait,
+  uploadPortrait,
+  validatePortraitFile,
+} from "@/lib/portrait";
+import { cn } from "@/lib/utils";
+
+/** Neutral silhouette + initials placeholder. Original artwork only. */
+export function PortraitFrame({
+  url,
+  name,
+  className,
+}: {
+  url: string | null;
+  name: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "portrait-frame relative aspect-[3/4] w-full overflow-hidden rounded-md border border-border bg-muted/30",
+        className,
+      )}
+    >
+      {url ? (
+        <img
+          src={url}
+          alt={`Portrait of ${name}`}
+          className="h-full w-full object-cover object-top"
+          loading="lazy"
+        />
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
+          <svg viewBox="0 0 64 64" className="h-12 w-12" aria-hidden="true" fill="currentColor">
+            <circle cx="32" cy="22" r="12" opacity="0.55" />
+            <path d="M8 62c0-13.3 10.7-24 24-24s24 10.7 24 24z" opacity="0.35" />
+          </svg>
+          <span className="stat-value text-lg">{portraitInitials(name)}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function usePortraitUrl(path: string | null | undefined) {
+  const query = useQuery({
+    queryKey: ["portrait", path ?? "none"],
+    queryFn: () => portraitUrl(path),
+    enabled: !!path,
+    staleTime: 1000 * 60 * 30,
+  });
+  return path ? (query.data ?? null) : null;
+}
+
+export function PortraitPanel({
+  characterId,
+  name,
+  path,
+  onChange,
+}: {
+  characterId: string;
+  name: string;
+  path: string | null;
+  onChange: (path: string | null) => void;
+}) {
+  const signed = usePortraitUrl(path);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  useEffect(() => () => {
+    if (preview) URL.revokeObjectURL(preview);
+  }, [preview]);
+
+  const upload = useMutation({
+    mutationFn: async (file: File) => {
+      const invalid = validatePortraitFile(file);
+      if (invalid) throw new Error(invalid);
+      setPreview((old) => {
+        if (old) URL.revokeObjectURL(old);
+        return URL.createObjectURL(file);
+      });
+      const next = await uploadPortrait(characterId, file);
+      if (path) await removePortrait(path).catch(() => undefined);
+      return next;
+    },
+    onSuccess: (next) => {
+      onChange(next);
+      toast.success("Portrait updated.");
+    },
+    onError: (e: Error) => {
+      setPreview(null);
+      toast.error(e.message);
+    },
+  });
+
+  const clear = useMutation({
+    mutationFn: async () => {
+      if (path) await removePortrait(path).catch(() => undefined);
+    },
+    onSuccess: () => {
+      setPreview(null);
+      onChange(null);
+      toast.success("Portrait removed.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <div className="space-y-3">
+      <PortraitFrame url={preview ?? signed} name={name} />
+      <div className="no-print space-y-2">
+        <FileDropzone
+          accept="image/*"
+          compact
+          label="Upload portrait"
+          hint="PNG, JPEG, WebP, GIF or AVIF · up to 5 MB · shown as 3:4"
+          onFiles={(files) => {
+            const file = files[0];
+            if (file) upload.mutate(file);
+          }}
+        />
+        <div className="flex gap-2">
+          {upload.isPending ? (
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading…
+            </span>
+          ) : (
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <ImageUp className="h-3.5 w-3.5" /> Private to your account
+            </span>
+          )}
+          {path ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-auto"
+              onClick={() => clear.mutate()}
+              disabled={clear.isPending}
+            >
+              <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}

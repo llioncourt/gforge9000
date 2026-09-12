@@ -364,3 +364,64 @@ export async function importLibraryEntries(rows: Omit<TablesInsert<"library_entr
       .select(),
   );
 }
+
+/* ---------- content packs ---------- */
+
+export type PackRow = Tables<"content_packs">;
+
+export async function listContentPacks() {
+  return unwrap(await supabase.from("content_packs").select("*").order("name"));
+}
+
+export async function createContentPack(input: Partial<TablesInsert<"content_packs">> & { name: string }) {
+  const { data: auth } = await supabase.auth.getUser();
+  return unwrap(
+    await supabase
+      .from("content_packs")
+      .insert({ ...input, owner_id: auth.user!.id } as TablesInsert<"content_packs">)
+      .select()
+      .single(),
+  );
+}
+
+export async function updateContentPack(id: string, patch: TablesUpdate<"content_packs">) {
+  return unwrap(await supabase.from("content_packs").update(patch).eq("id", id).select().single());
+}
+
+/** Renames a pack and re-tags every library entry that referenced the old name. */
+export async function renameContentPack(id: string, oldName: string, newName: string) {
+  const pack = await updateContentPack(id, { name: newName });
+  const { data: auth } = await supabase.auth.getUser();
+  if (auth.user) {
+    const { error } = await supabase
+      .from("library_entries")
+      .update({ pack: newName })
+      .eq("owner_id", auth.user.id)
+      .eq("pack", oldName);
+    if (error) throw new Error(error.message);
+  }
+  return pack;
+}
+
+/**
+ * Deletes the pack grouping only. Library entries are kept and become personal
+ * (unpacked) content; character entries copied from the pack are never touched.
+ */
+export async function deleteContentPack(id: string, name: string) {
+  const { data: auth } = await supabase.auth.getUser();
+  if (auth.user) {
+    const { error } = await supabase
+      .from("library_entries")
+      .update({ pack: null })
+      .eq("owner_id", auth.user.id)
+      .eq("pack", name);
+    if (error) throw new Error(error.message);
+  }
+  const { error } = await supabase.from("content_packs").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+/** Moves a single library entry into (or out of) a pack. */
+export async function setLibraryEntryPack(entryId: string, pack: string | null) {
+  return updateLibraryEntry(entryId, { pack });
+}

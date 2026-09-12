@@ -408,6 +408,8 @@ function CharacterPage() {
                   name={form.name}
                   path={form.model_path ?? null}
                   onChange={(p) => patch({ model_path: p })}
+                  transform={parseModelTransform(form.model_transform)}
+                  onTransformChange={(t) => patch({ model_transform: t })}
                 />
 
               </div>

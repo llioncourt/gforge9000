@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   BookOpen,
+  Boxes,
   Dices,
   LayoutDashboard,
   LogOut,
@@ -18,14 +19,17 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/app/command-palette";
 import { DiceTray } from "@/components/app/dice-tray";
+import { DiceOverlay } from "@/components/app/dice-overlay";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/characters", label: "Characters", icon: Shield },
   { to: "/campaigns", label: "Campaigns", icon: Users },
   { to: "/library", label: "Library", icon: BookOpen },
+  { to: "/packs", label: "Packs", icon: Boxes },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
+
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -59,6 +63,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background">
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <DiceTray open={trayOpen} onOpenChange={setTrayOpen} />
+      <DiceOverlay />
+
 
       <aside
         className={cn(
@@ -132,7 +138,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               ⌘K
             </kbd>
           </button>
-          <Button size="sm" variant="secondary" className="gap-2" onClick={() => setTrayOpen(true)}>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="gap-2"
+            aria-label="Roll dice"
+            onClick={() => setTrayOpen(true)}
+          >
+
             <Dices className="h-4 w-4" />
             <span className="hidden sm:inline">Roll</span>
           </Button>

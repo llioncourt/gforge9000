@@ -282,6 +282,7 @@ export type Database = {
           per_delta: number
           player_name: string | null
           point_budget: number
+          portrait_path: string | null
           speed_delta: number
           st: number
           status: number
@@ -315,6 +316,7 @@ export type Database = {
           per_delta?: number
           player_name?: string | null
           point_budget?: number
+          portrait_path?: string | null
           speed_delta?: number
           st?: number
           status?: number
@@ -348,6 +350,7 @@ export type Database = {
           per_delta?: number
           player_name?: string | null
           point_budget?: number
+          portrait_path?: string | null
           speed_delta?: number
           st?: number
           status?: number
@@ -365,6 +368,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      content_packs: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_id: string
+          source_edition: string | null
+          source_label: string
+          source_type: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          owner_id?: string
+          source_edition?: string | null
+          source_label?: string
+          source_type?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          source_edition?: string | null
+          source_label?: string
+          source_type?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
       }
       library_entries: {
         Row: {

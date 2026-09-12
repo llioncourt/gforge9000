@@ -175,25 +175,37 @@
   background-size: 44px 44px;
 }
 
+/* Dedicated print sheet (hidden on screen). */
+.print-sheet {
+  display: none;
+}
+
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
   .no-print,
   nav,
-  header {
+  header:not(.print-head) {
+    display: none !important;
+  }
+  .screen-only {
     display: none !important;
   }
   html,
   body {
     background: #fff !important;
-    color: #111 !important;
+    color: #000 !important;
   }
   *,
   *::before,
   *::after {
     background: transparent !important;
-    color: #111 !important;
-    border-color: #999 !important;
+    color: #000 !important;
     box-shadow: none !important;
     text-shadow: none !important;
+    filter: grayscale(100%) !important;
   }
   main {
     padding: 0 !important;
@@ -201,25 +213,128 @@
   .lg\:pl-64 {
     padding-left: 0 !important;
   }
-  input,
-  textarea {
-    border: 0 !important;
-    padding-left: 0 !important;
-    font-weight: 600 !important;
+
+  .print-sheet {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 9.5pt;
+    line-height: 1.25;
   }
-  [role="tablist"],
-  button:not([role="switch"]) {
-    display: none !important;
-  }
-  [role="tabpanel"][hidden] {
-    display: block !important;
-  }
-  [role="tabpanel"] {
-    margin-top: 1rem !important;
-  }
-  .panel,
-  .print-plain {
-    border: 1px solid #999 !important;
+  .print-head {
+    display: grid;
+    grid-template-columns: 1fr 34mm;
+    gap: 6mm;
+    border-bottom: 2px solid #000;
+    padding-bottom: 3mm;
+    margin-bottom: 3mm;
     break-inside: avoid;
   }
+  .print-title {
+    font-size: 19pt;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .print-sub {
+    font-size: 9pt;
+    margin: 0 0 2mm;
+  }
+  .print-portrait {
+    break-inside: avoid;
+  }
+  .print-portrait .portrait-frame {
+    width: 34mm;
+    aspect-ratio: 3 / 4;
+    border: 1.5px solid #000 !important;
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .print-portrait .portrait-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    filter: grayscale(100%) contrast(1.05);
+  }
+  .print-portrait-caption {
+    font-size: 6.5pt;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-align: center;
+    margin: 1mm 0 0;
+  }
+  .print-stat-row {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1mm;
+    margin-top: 2mm;
+  }
+  .print-stat {
+    border: 1px solid #000;
+    text-align: center;
+    padding: 0.8mm 0;
+  }
+  .print-stat-label {
+    display: block;
+    font-size: 6pt;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .print-stat-value {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11pt;
+    font-weight: 700;
+  }
+  .print-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4mm;
+  }
+  .print-block {
+    break-inside: avoid;
+    margin-bottom: 3mm;
+  }
+  .print-h2 {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    border-bottom: 1px solid #000;
+    margin: 0 0 1mm;
+    padding-bottom: 0.6mm;
+  }
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+  }
+  .print-table th,
+  .print-table td {
+    border: 0.5pt solid #666;
+    padding: 0.7mm 1.2mm;
+    text-align: left;
+    vertical-align: top;
+  }
+  .print-table thead th,
+  .print-identity th {
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: #eee !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print-notes {
+    border: 0.5pt solid #666;
+    min-height: 22mm;
+    padding: 1.5mm;
+    white-space: pre-wrap;
+  }
+  .print-footer {
+    border-top: 1px solid #000;
+    margin-top: 3mm;
+    padding-top: 1.5mm;
+    font-size: 6.5pt;
+  }
 }
+

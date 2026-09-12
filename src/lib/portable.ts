@@ -244,3 +244,107 @@ export function libraryEntryToCharacterDraft(entry: {
     },
   };
 }
+
+/* ---------- content packs ---------- */
+
+export interface PortablePackMeta {
+  name: string;
+  description: string | null;
+  source_label: string;
+  source_edition: string | null;
+  source_type: string;
+  visibility: string;
+}
+
+export interface PortablePack {
+  format: "universal-character-forge-pack";
+  version: 1;
+  exported_at: string;
+  pack: PortablePackMeta;
+  entries: PortableLibraryEntry[];
+}
+
+export function toPortablePack(
+  pack: Partial<PortablePackMeta> & { name: string },
+  rows: Record<string, unknown>[],
+): PortablePack {
+  return {
+    format: "universal-character-forge-pack",
+    version: 1,
+    exported_at: new Date().toISOString(),
+    pack: {
+      name: pack.name,
+      description: pack.description ?? null,
+      source_label: pack.source_label ?? "User content",
+      source_edition: pack.source_edition ?? null,
+      source_type: pack.source_type ?? "user",
+      visibility: pack.visibility ?? "private",
+    },
+    entries: toPortableLibrary(rows).entries.map((e) => ({ ...e, pack: pack.name })),
+  };
+}
+
+/**
+ * Validates a pack file. A plain library export is also accepted as long as
+ * every entry names the same pack, so existing exports keep working.
+ */
+export function parsePortablePack(raw: string): PortablePack {
+  const parsed = JSON.parse(raw) as Partial<PortablePack> & Partial<PortableLibrary>;
+  if (parsed?.format === "universal-character-forge-library") {
+    const library = parsePortableLibrary(raw);
+    const names = [...new Set(library.entries.map((e) => (e.pack ?? "").trim()).filter(Boolean))];
+    if (names.length !== 1) {
+      throw new Error(
+        "This library export does not describe a single pack. Import it from the Library page instead.",
+      );
+    }
+    return {
+      format: "universal-character-forge-pack",
+      version: 1,
+      exported_at: library.exported_at,
+      pack: {
+        name: names[0]!,
+        description: null,
+        source_label: library.entries[0]?.source_label ?? "User content",
+        source_edition: null,
+        source_type: "user",
+        visibility: "private",
+      },
+      entries: library.entries,
+    };
+  }
+  if (parsed?.format !== "universal-character-forge-pack") {
+    throw new Error("Unrecognised file. Expected a Universal Character Forge pack export.");
+  }
+  const meta = parsed.pack;
+  if (!meta || typeof meta.name !== "string" || meta.name.trim() === "") {
+    throw new Error("Pack export is missing a pack name.");
+  }
+  if (!Array.isArray(parsed.entries)) throw new Error("Pack export has no entries array.");
+  const name = meta.name.trim();
+  const entries = parsed.entries.map((entry, index) => {
+    if (!entry || typeof entry !== "object") throw new Error(`Entry ${index + 1} is not an object.`);
+    if (typeof entry.name !== "string" || entry.name.trim() === "") {
+      throw new Error(`Entry ${index + 1} is missing a name.`);
+    }
+    if (typeof entry.kind !== "string" || entry.kind.trim() === "") {
+      throw new Error(`Entry "${entry.name}" is missing a kind.`);
+    }
+    const normalised = toPortableLibrary([entry as unknown as Record<string, unknown>]).entries[0]!;
+    return { ...normalised, pack: name };
+  });
+  return {
+    format: "universal-character-forge-pack",
+    version: 1,
+    exported_at: parsed.exported_at ?? "",
+    pack: {
+      name,
+      description: meta.description ?? null,
+      source_label: meta.source_label ?? "User content",
+      source_edition: meta.source_edition ?? null,
+      source_type: meta.source_type ?? "user",
+      visibility: meta.visibility ?? "private",
+    },
+    entries,
+  };
+}

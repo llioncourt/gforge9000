@@ -80,6 +80,9 @@ import {
   type EntryDraft,
 } from "@/components/character/entry-dialog";
 import { download, entriesToCsv, slugify, toPortable } from "@/lib/portable";
+import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
+import { PrintSheet } from "@/components/character/print-sheet";
+
 
 export const Route = createFileRoute("/_authenticated/characters/$id")({
   head: () => ({
@@ -128,6 +131,8 @@ function CharacterPage() {
   const [saveError, setSaveError] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<VersionRow | null>(null);
   const dirty = useRef(false);
+  const printPortraitUrl = usePortraitUrl(form?.portrait_path ?? null);
+
 
   useEffect(() => {
     if (characterQuery.data && !dirty.current) setForm(characterQuery.data);
@@ -258,8 +263,10 @@ function CharacterPage() {
 
   return (
     <div>
+      <div className="screen-only">
       <PageHeader
         title={form.name || "Untitled character"}
+
         description={form.concept ?? undefined}
         actions={
           <div className="no-print flex flex-wrap items-center gap-2">
@@ -343,7 +350,15 @@ function CharacterPage() {
             <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
               Identity
             </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-5 sm:grid-cols-[160px_1fr]">
+              <PortraitPanel
+                characterId={id}
+                name={form.name}
+                path={form.portrait_path}
+                onChange={(p) => patch({ portrait_path: p })}
+              />
+              <div className="grid gap-4 sm:grid-cols-2">
+
               <Field label="Name">
                 <Input value={form.name} onChange={(e) => patch({ name: e.target.value })} />
               </Field>
@@ -383,7 +398,9 @@ function CharacterPage() {
                   onChange={(e) => patch({ status: Number(e.target.value) })}
                 />
               </Field>
+              </div>
             </div>
+
             <div className="flex items-center justify-between rounded-md border border-border p-3">
               <div>
                 <Label>Treat as NPC</Label>
@@ -911,7 +928,16 @@ function CharacterPage() {
         onChange={setDraft}
         onSubmit={() => upsertEntry.mutate(draft)}
       />
+      </div>
+
+      <PrintSheet
+        character={form}
+        sheet={sheet}
+        entries={entries}
+        portraitUrl={printPortraitUrl}
+      />
     </div>
+
   );
 }
 

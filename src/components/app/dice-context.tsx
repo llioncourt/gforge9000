@@ -12,6 +12,7 @@ export interface RollEvent {
   target: number | null;
   margin: number | null;
   outcome: Outcome | null;
+  contextKey?: string;
   at: string;
 }
 
@@ -21,6 +22,8 @@ export interface RollRequest {
   target?: number | null;
   characterId?: string | null;
   campaignId?: string | null;
+  /** Optional UI identity used to associate the settled result with its source control. */
+  contextKey?: string;
 }
 
 /** A roll waiting for the 3D dice to settle. */
@@ -80,6 +83,7 @@ export function DiceProvider({ children }: { children: ReactNode }) {
         target,
         margin: resolved?.margin ?? null,
         outcome: resolved?.outcome ?? null,
+        contextKey: request.contextKey,
         at: new Date().toISOString(),
       };
       setHistory((prev) => [event, ...prev].slice(0, 50));

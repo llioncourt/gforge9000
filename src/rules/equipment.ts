@@ -71,14 +71,26 @@ export function computeEncumbrance(
   };
 }
 
-/** Damage Resistance aggregated per hit location from carried armour. */
-export function drByLocation(entries: CharacterEntry[]): Record<string, number> {
+/**
+ * Damage Resistance per hit location from carried armour.
+ *
+ * How several layers combine is a **policy**, not a universal truth: flexible
+ * layering, partial coverage and ablative rules all differ by setting. The
+ * policy is therefore ruleset-driven (`drStacking`), defaulting to additive.
+ */
+export function drByLocation(
+  entries: CharacterEntry[],
+  rules: Ruleset = defaultRuleset,
+): Record<string, number> {
   const out: Record<string, number> = {};
   for (const entry of equipmentOf(entries)) {
     const e = asEquipment(entry);
     if (!e.carried || !e.dr) continue;
     const locations = e.locations?.length ? e.locations : ["Torso"];
-    for (const loc of locations) out[loc] = (out[loc] ?? 0) + e.dr;
+    for (const loc of locations) {
+      const prev = out[loc] ?? 0;
+      out[loc] = rules.drStacking === "highest" ? Math.max(prev, e.dr) : prev + e.dr;
+    }
   }
   return out;
 }

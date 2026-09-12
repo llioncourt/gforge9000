@@ -335,6 +335,14 @@ export async function seedDemoLibrary(userId: string) {
       source_type: "user",
     },
   ];
-  const { error: libError } = await supabase.from("library_entries").insert(library);
+  const { error: libError } = await supabase.from("library_entries").insert(
+    library.map((row) => ({
+      data: {},
+      base_points: 0,
+      cost_per_level: 0,
+      tags: [],
+      ...row,
+    })),
+  );
   if (libError) throw new Error(libError.message);
 }

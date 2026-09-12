@@ -239,7 +239,8 @@ export async function seedDemoContent(userId: string) {
       max_levels: 4,
       tags: ["medical", "talent"],
       visibility: "private",
-      source_label: "Core Generic Pack",
+      source_label: DEMO_PACK,
+      pack: DEMO_PACK,
       source_type: "user",
     },
     {
@@ -252,7 +253,8 @@ export async function seedDemoContent(userId: string) {
       cost_per_level: 0,
       tags: ["physical"],
       visibility: "private",
-      source_label: "Core Generic Pack",
+      source_label: DEMO_PACK,
+      pack: DEMO_PACK,
       source_type: "user",
     },
     {
@@ -265,7 +267,8 @@ export async function seedDemoContent(userId: string) {
       data: { attribute: "IQ", difficulty: "A", defaults: "IQ-5" },
       tags: ["exploration"],
       visibility: "private",
-      source_label: "Core Generic Pack",
+      source_label: DEMO_PACK,
+      pack: DEMO_PACK,
       source_type: "user",
     },
     {
@@ -277,7 +280,8 @@ export async function seedDemoContent(userId: string) {
       base_points: -10,
       tags: ["social"],
       visibility: "private",
-      source_label: "Core Generic Pack",
+      source_label: DEMO_PACK,
+      pack: DEMO_PACK,
       source_type: "user",
     },
     {
@@ -289,7 +293,8 @@ export async function seedDemoContent(userId: string) {
       data: { weight: 8, cost: 450, tl: 8, legality: "LC4", dr: 5, locations: ["Torso"] },
       tags: ["armour"],
       visibility: "private",
-      source_label: "Core Generic Pack",
+      source_label: DEMO_PACK,
+      pack: DEMO_PACK,
       source_type: "user",
     },
   ];
@@ -312,5 +317,5 @@ export async function seedDemoContent(userId: string) {
     },
   ]);
 
-  return { campaignId: campaign.id, characterId: character.id };
+  return { skipped: false as const, campaignId: campaign.id, characterId: character.id };
 }

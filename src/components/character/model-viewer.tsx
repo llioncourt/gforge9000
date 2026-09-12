@@ -39,6 +39,34 @@ function useGlb(url: string) {
   return { scene, error };
 }
 
+export type ModelTransform = { rx: number; ry: number; rz: number; scale: number };
+
+export const DEFAULT_MODEL_TRANSFORM: ModelTransform = { rx: 0, ry: 0, rz: 0, scale: 1 };
+
+/** Applies the saved orientation and keeps the model standing on the floor. */
+function Oriented({ scene, transform }: { scene: THREE.Group; transform: ModelTransform }) {
+  const ref = useRef<THREE.Group>(null);
+  const { rx, ry, rz, scale } = transform;
+
+  useEffect(() => {
+    const g = ref.current;
+    if (!g) return;
+    const d = Math.PI / 180;
+    g.rotation.set(rx * d, ry * d, rz * d);
+    g.scale.setScalar(scale || 1);
+    g.position.y = 0;
+    g.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(g);
+    if (Number.isFinite(box.min.y)) g.position.y = -box.min.y;
+  }, [scene, rx, ry, rz, scale]);
+
+  return (
+    <group ref={ref}>
+      <primitive object={scene} />
+    </group>
+  );
+}
+
 /**
  * Loads a .glb from a signed URL.
  * `stage` adds orbit/zoom controls, ground shadow and grid for the large viewer.
@@ -48,11 +76,13 @@ export default function ModelViewer({
   stage = false,
   autoRotate = true,
   wireframe = false,
+  transform = DEFAULT_MODEL_TRANSFORM,
 }: {
   url: string;
   stage?: boolean;
   autoRotate?: boolean;
   wireframe?: boolean;
+  transform?: ModelTransform;
 }) {
   const { scene, error } = useGlb(url);
 

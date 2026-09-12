@@ -44,3 +44,21 @@ export async function modelUrl(path: string | null | undefined): Promise<string 
   if (error) return null;
   return data?.signedUrl ?? null;
 }
+
+/** Saved orientation of a character's 3D model (degrees + uniform scale). */
+export type ModelTransform = { rx: number; ry: number; rz: number; scale: number };
+
+export const DEFAULT_MODEL_TRANSFORM: ModelTransform = { rx: 0, ry: 0, rz: 0, scale: 1 };
+
+/** Reads a stored jsonb value into a safe transform. */
+export function parseModelTransform(value: unknown): ModelTransform {
+  const v = (value ?? {}) as Partial<Record<keyof ModelTransform, unknown>>;
+  const num = (x: unknown, fallback: number) =>
+    typeof x === "number" && Number.isFinite(x) ? x : fallback;
+  return {
+    rx: num(v.rx, 0),
+    ry: num(v.ry, 0),
+    rz: num(v.rz, 0),
+    scale: Math.min(4, Math.max(0.25, num(v.scale, 1))),
+  };
+}

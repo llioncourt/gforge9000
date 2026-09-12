@@ -467,16 +467,51 @@ function HouseRules({
           <Input value={tl} onChange={(e) => setTl(e.target.value)} disabled={disabled} />
         </div>
       </div>
-      <div className="space-y-1.5">
-        <Label>Allowed content packs</Label>
-        <Input
-          value={packs}
-          onChange={(e) => setPacks(e.target.value)}
-          disabled={disabled}
-          placeholder="Comma separated pack names, e.g. Core Generic Pack"
-        />
+      <div className="space-y-2">
+        <Label>Enabled content packs</Label>
+        {packOptions.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            No content packs found yet. Tag library entries with a pack name to manage them here.
+          </p>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {packOptions.map((p) => (
+              <label key={p} className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  checked={packs.includes(p)}
+                  disabled={disabled}
+                  onCheckedChange={(v) => togglePack(p, v === true)}
+                  aria-label={`Enable pack ${p}`}
+                />
+                <span>{p}</span>
+              </label>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Input
+            value={newPack}
+            onChange={(e) => setNewPack(e.target.value)}
+            disabled={disabled}
+            placeholder="Add another pack name"
+            aria-label="Add another pack name"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            disabled={disabled || !newPack.trim()}
+            onClick={() => {
+              togglePack(newPack.trim(), true);
+              setNewPack("");
+            }}
+          >
+            Add
+          </Button>
+        </div>
         <p className="text-xs text-muted-foreground">
-          Library entries are grouped by pack. Leave empty to allow every pack.
+          With nothing enabled every pack is allowed. When at least one pack is enabled, library
+          entries from other packs cannot be added to characters in this campaign. Entries with no
+          pack are personal content and stay available.
         </p>
       </div>
       <div className="space-y-1.5">

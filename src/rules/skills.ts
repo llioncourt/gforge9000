@@ -118,7 +118,7 @@ export function skillLevel(
   if (rel === null) {
     // Imported/licensed content may state a final level directly instead of points.
     // EXACT: the stated level is authoritative when no point purchase exists.
-    const stated = entry.data.level;
+    const stated = entry.data['level'];
     if (stated !== undefined && stated !== null && Number.isFinite(Number(stated))) {
       return {
         relative: null,

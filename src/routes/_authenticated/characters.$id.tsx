@@ -1064,7 +1064,13 @@ function EntryGroup({
                     {e.levels > 1 ? ` ${e.levels}` : ""}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {[e.category, ...mods.map((m) => `${m.name} ${m.percent > 0 ? "+" : ""}${m.percent}%`)]
+                    {[
+                      isCustomEntry(e.source)
+                        ? "custom"
+                        : String((e.source as Record<string, unknown>)["pack"] ?? ""),
+                      e.category,
+                      ...mods.map((m) => `${m.name} ${m.percent > 0 ? "+" : ""}${m.percent}%`),
+                    ]
                       .filter(Boolean)
                       .join(" · ") || "—"}
                   </p>

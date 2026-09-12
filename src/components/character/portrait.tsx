@@ -18,10 +18,12 @@ export function PortraitFrame({
   url,
   name,
   className,
+  eager = false,
 }: {
   url: string | null;
   name: string;
   className?: string;
+  eager?: boolean;
 }) {
   return (
     <div
@@ -35,7 +37,7 @@ export function PortraitFrame({
           src={url}
           alt={`Portrait of ${name}`}
           className="h-full w-full object-cover object-top"
-          loading="lazy"
+          loading={eager ? "eager" : "lazy"}
         />
       ) : (
         <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">

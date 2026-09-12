@@ -111,6 +111,64 @@ export function ModelStageDialog({
               Drag to orbit · scroll to zoom · right-drag to pan
             </span>
           </div>
+
+          {onTransformChange ? (
+            <div className="absolute right-3 top-3 w-40 space-y-2 rounded-lg border border-border bg-background/90 p-3 backdrop-blur">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Fix orientation
+              </p>
+              {(
+                [
+                  ["rx", "Tilt"],
+                  ["ry", "Turn"],
+                  ["rz", "Roll"],
+                ] as const
+              ).map(([axis, label]) => (
+                <div key={axis} className="flex items-center gap-1">
+                  <span className="w-10 text-[11px] text-muted-foreground">{label}</span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`${label} -90 degrees`}
+                    onClick={() => nudge(axis, -90)}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-label={`${label} +90 degrees`}
+                    onClick={() => nudge(axis, 90)}
+                  >
+                    <RotateCw className="h-3.5 w-3.5" />
+                  </Button>
+                  <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
+                    {transform[axis]}°
+                  </span>
+                </div>
+              ))}
+              <div className="flex items-center gap-1">
+                <span className="w-10 text-[11px] text-muted-foreground">Size</span>
+                <Button size="sm" variant="ghost" aria-label="Smaller" onClick={() => zoom(-0.1)}>
+                  <Minus className="h-3.5 w-3.5" />
+                </Button>
+                <Button size="sm" variant="ghost" aria-label="Bigger" onClick={() => zoom(0.1)}>
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+                <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
+                  {transform.scale.toFixed(2)}x
+                </span>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="w-full"
+                onClick={() => onTransformChange(DEFAULT_MODEL_TRANSFORM)}
+              >
+                Reset
+              </Button>
+            </div>
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>

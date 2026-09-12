@@ -394,12 +394,20 @@ function CharacterPage() {
               Identity
             </h2>
             <div className="grid gap-5 sm:grid-cols-[160px_1fr]">
-              <PortraitPanel
-                characterId={id}
-                name={form.name}
-                path={form.portrait_path}
-                onChange={(p) => patch({ portrait_path: p })}
-              />
+              <div className="space-y-4">
+                <PortraitPanel
+                  characterId={id}
+                  name={form.name}
+                  path={form.portrait_path}
+                  onChange={(p) => patch({ portrait_path: p })}
+                />
+                <ModelPanel
+                  characterId={id}
+                  path={form.model_path ?? null}
+                  onChange={(p) => patch({ model_path: p })}
+                />
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
 
               <Field label="Name">

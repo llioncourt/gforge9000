@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProfile, upsertProfile } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
+import { AUDIT_SUMMARY, RULES_AUDIT } from "@/rules/audit";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({

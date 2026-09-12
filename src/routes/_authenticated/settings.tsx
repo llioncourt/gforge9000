@@ -195,8 +195,75 @@ function SettingsPage() {
               ))}
             </ul>
           </section>
+
+          <section className="panel space-y-4 border-destructive/40 p-6">
+            <div className="flex items-start gap-3">
+              <ShieldAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
+              <div>
+                <h2 className="font-display text-lg font-semibold text-destructive">
+                  Erase everything
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Deletes all your characters, campaigns, notes, library entries, packs and roll
+                  history. Your account and sign-in stay. This cannot be undone, so you have to
+                  confirm with your Google sign-in first.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                setVerified(false);
+                setWipeOpen(true);
+              }}
+            >
+              Erase all my data
+            </Button>
+          </section>
         </div>
       )}
+
+      <AlertDialog
+        open={wipeOpen}
+        onOpenChange={(open) => {
+          setWipeOpen(open);
+          if (!open) setVerified(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Erase everything in your account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Characters, campaigns, notes, library entries, packs and roll history are deleted
+              permanently. Confirm with your Google sign-in ({user?.email}) to continue.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={wipe.isPending}>Cancel</AlertDialogCancel>
+            {verified ? (
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  wipe.mutate();
+                }}
+                disabled={wipe.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {wipe.isPending ? (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                ) : null}
+                Delete everything
+              </AlertDialogAction>
+            ) : (
+              <Button onClick={confirmWithGoogle} disabled={verifying}>
+                {verifying ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                Confirm with Google
+              </Button>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+
   );
 }

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Download,
+  Dices,
   History,
   Pencil,
   Plus,
@@ -116,7 +117,7 @@ const APPEARANCE_FIELDS: [string, string][] = [
 function CharacterPage() {
   const { id } = Route.useParams();
   const queryClient = useQueryClient();
-  const { roll } = useDice();
+  const { roll, history } = useDice();
 
   const characterQuery = useQuery({ queryKey: ["character", id], queryFn: () => getCharacter(id) });
   const entriesQuery = useQuery({ queryKey: ["entries", id], queryFn: () => listEntries(id) });
@@ -526,18 +527,23 @@ function CharacterPage() {
                   <TableHead className="w-24 text-right">Relative</TableHead>
                   <TableHead className="w-20 text-right">Points</TableHead>
                   <TableHead className="w-24 text-right">Level</TableHead>
-                  <TableHead className="w-28" />
+                   <TableHead className="w-64 text-right">Roll result</TableHead>
+                   <TableHead className="w-28" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sheet.skills.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                     <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
                       No skills yet.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  sheet.skills.map(({ entry, level }) => (
+                  sheet.skills.map(({ entry, level }) => {
+                    const rollKey = `skill:${id}:${entry.id}`;
+                    const latestRoll = history.find((event) => event.contextKey === rollKey);
+                    const passed = latestRoll?.outcome?.includes("success") ?? false;
+                    return (
                     <TableRow key={entry.id}>
                       <TableCell className="font-medium">
                         {entry.name}
@@ -553,21 +559,38 @@ function CharacterPage() {
                       <TableCell className="text-right font-mono">
                         {Number(entry.data["points"] ?? 0)}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right font-mono font-semibold">
+                        {level.effective ?? "—"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex min-w-[180px] flex-wrap items-center justify-end gap-2">
                         <Button
                           size="sm"
-                          variant="ghost"
-                          className="stat-value"
+                          variant="outline"
+                          disabled={level.effective === null}
                           onClick={() =>
                             roll({
-                              label: `${entry.name}`,
-                              target: level.effective ?? 10,
+                              label: `${entry.name} skill check`,
+                              target: level.effective,
                               characterId: id,
+                              contextKey: rollKey,
                             })
                           }
                         >
-                          {level.effective ?? "—"}
+                          <Dices className="mr-1 h-4 w-4" /> Roll
                         </Button>
+                        {latestRoll ? (
+                          <Badge variant={passed ? "default" : "destructive"}>
+                            {latestRoll.outcome?.startsWith("critical") ? "Critical " : ""}
+                            {passed ? "pass" : "failure"}
+                            {latestRoll.margin !== null
+                              ? ` by ${Math.abs(latestRoll.margin)}`
+                              : ""}
+                          </Badge>
+                        ) : level.effective === null ? (
+                          <span className="text-xs text-muted-foreground">Not configured</span>
+                        ) : null}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <RowActions
@@ -576,7 +599,8 @@ function CharacterPage() {
                         />
                       </TableCell>
                     </TableRow>
-                  ))
+                    );
+                  })
                 )}
               </TableBody>
             </Table>

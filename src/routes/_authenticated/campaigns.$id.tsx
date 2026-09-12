@@ -242,6 +242,7 @@ function CampaignPage() {
       <Tabs defaultValue="roster">
         <TabsList>
           <TabsTrigger value="roster">Roster</TabsTrigger>
+          <TabsTrigger value="lore">World &amp; lore</TabsTrigger>
           <TabsTrigger value="notes">Notes &amp; handouts</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="rules">House rules</TabsTrigger>

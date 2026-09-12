@@ -760,6 +760,165 @@ export type Database = {
           },
         ]
       }
+      map_objects: {
+        Row: {
+          campaign_id: string
+          character_id: string | null
+          color: string | null
+          created_at: string
+          created_by: string
+          data: Json
+          hidden: boolean
+          id: string
+          image_url: string | null
+          kind: string
+          label: string
+          map_id: string
+          owner_user_id: string | null
+          rotation: number
+          size: number
+          updated_at: string
+          x: number
+          y: number
+        }
+        Insert: {
+          campaign_id: string
+          character_id?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string
+          data?: Json
+          hidden?: boolean
+          id?: string
+          image_url?: string | null
+          kind?: string
+          label?: string
+          map_id: string
+          owner_user_id?: string | null
+          rotation?: number
+          size?: number
+          updated_at?: string
+          x?: number
+          y?: number
+        }
+        Update: {
+          campaign_id?: string
+          character_id?: string | null
+          color?: string | null
+          created_at?: string
+          created_by?: string
+          data?: Json
+          hidden?: boolean
+          id?: string
+          image_url?: string | null
+          kind?: string
+          label?: string
+          map_id?: string
+          owner_user_id?: string | null
+          rotation?: number
+          size?: number
+          updated_at?: string
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "map_objects_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "map_objects_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "map_objects_map_id_fkey"
+            columns: ["map_id"]
+            isOneToOne: false
+            referencedRelation: "maps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maps: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          created_by: string
+          data: Json
+          fog: Json
+          grid_offset_x: number
+          grid_offset_y: number
+          grid_size: number
+          grid_type: string
+          id: string
+          image_height: number | null
+          image_path: string | null
+          image_width: number | null
+          is_active: boolean
+          name: string
+          unit_name: string
+          unit_per_cell: number
+          updated_at: string
+          visible_to_players: boolean
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          created_by?: string
+          data?: Json
+          fog?: Json
+          grid_offset_x?: number
+          grid_offset_y?: number
+          grid_size?: number
+          grid_type?: string
+          id?: string
+          image_height?: number | null
+          image_path?: string | null
+          image_width?: number | null
+          is_active?: boolean
+          name?: string
+          unit_name?: string
+          unit_per_cell?: number
+          updated_at?: string
+          visible_to_players?: boolean
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          created_by?: string
+          data?: Json
+          fog?: Json
+          grid_offset_x?: number
+          grid_offset_y?: number
+          grid_size?: number
+          grid_type?: string
+          id?: string
+          image_height?: number | null
+          image_path?: string | null
+          image_width?: number | null
+          is_active?: boolean
+          name?: string
+          unit_name?: string
+          unit_per_cell?: number
+          updated_at?: string
+          visible_to_players?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maps_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

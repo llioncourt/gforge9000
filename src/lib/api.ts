@@ -10,9 +10,9 @@ export type NoteRow = Tables<"campaign_notes">;
 export type VersionRow = Tables<"character_versions">;
 export type RollRow = Tables<"roll_history">;
 
-function unwrap<T>(res: { data: T | null; error: { message: string } | null }): T {
+function unwrap<T>(res: { data: T; error: { message: string } | null }): NonNullable<T> {
   if (res.error) throw new Error(res.error.message);
-  return res.data as T;
+  return res.data as NonNullable<T>;
 }
 
 export function toCharacterRecord(row: CharacterRow): CharacterRecord {

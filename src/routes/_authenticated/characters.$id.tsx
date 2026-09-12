@@ -642,7 +642,7 @@ function CharacterPage() {
               </div>
             ) : (
               weaponEntries.map((e) => {
-                const modes = (e.data["weapons"] as Record<string, string>[]) ?? [];
+                const modes = ((e.data["weapons"] ?? []) as unknown as Record<string, string>[]);
                 return (
                   <div key={e.id} className="panel p-4">
                     <div className="flex items-center justify-between">

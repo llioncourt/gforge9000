@@ -26,22 +26,22 @@ export interface TraitModifier {
   name: string;
   /** Percentage: +100 enhancement, -40 limitation. */
   percent: number;
-  notes?: string;
+  notes?: string | undefined;
 }
 
 export interface SkillData {
   attribute: ControllingAttribute;
   difficulty: Difficulty;
   points: number;
-  specialization?: string;
-  bonus?: number;
-  defaults?: string;
-  prerequisites?: string;
+  specialization?: string | undefined;
+  bonus?: number | undefined;
+  defaults?: string | undefined;
+  prerequisites?: string | undefined;
 }
 
 export interface TechniqueData extends Partial<SkillData> {
-  baseSkill?: string;
-  defaultPenalty?: number;
+  baseSkill?: string | undefined;
+  defaultPenalty?: number | undefined;
   points: number;
   difficulty: Difficulty;
 }
@@ -65,47 +65,47 @@ export interface EquipmentData {
   weight: number;
   cost: number;
   carried: boolean;
-  tl?: number;
-  legality?: string;
-  container?: string;
-  dr?: number;
-  locations?: string[];
-  weapons?: WeaponMode[];
+  tl?: number | undefined;
+  legality?: string | undefined;
+  container?: string | undefined;
+  dr?: number | undefined;
+  locations?: string[] | undefined;
+  weapons?: WeaponMode[] | undefined;
 }
 
 export interface TraitData {
-  modifiers?: TraitModifier[];
-  prerequisites?: string;
-  formula?: string;
-  tags?: string[];
+  modifiers?: TraitModifier[] | undefined;
+  prerequisites?: string | undefined;
+  formula?: string | undefined;
+  tags?: string[] | undefined;
 }
 
 export interface SourceMeta {
-  label?: string;
-  edition?: string;
-  page?: string;
-  type?: "user" | "community" | "licensed" | "official";
+  label?: string | undefined;
+  edition?: string | undefined;
+  page?: string | undefined;
+  type?: "user" | "community" | "licensed" | "official" | undefined;
 }
 
 export interface CharacterEntry {
   id: string;
-  character_id?: string;
+  character_id?: string | undefined;
   kind: EntryKind;
   name: string;
-  category?: string | null;
+  category?: string | null | undefined;
   points: number;
   levels: number;
   data: Partial<SkillData & TechniqueData & EquipmentData & TraitData> & Record<string, unknown>;
-  notes?: string | null;
-  source?: SourceMeta | null;
-  sort_order?: number;
+  notes?: string | null | undefined;
+  source?: SourceMeta | null | undefined;
+  sort_order?: number | undefined;
 }
 
 export interface CharacterRecord {
   id: string;
   name: string;
-  player_name?: string | null;
-  concept?: string | null;
+  player_name?: string | null | undefined;
+  concept?: string | null | undefined;
   point_budget: number;
   tech_level: number;
   st: number;
@@ -118,12 +118,12 @@ export interface CharacterRecord {
   fp_delta: number;
   speed_delta: number;
   move_delta: number;
-  current_hp?: number | null;
-  current_fp?: number | null;
+  current_hp?: number | null | undefined;
+  current_fp?: number | null | undefined;
   conditions: string[];
   wealth: string;
   status: number;
-  notes?: string | null;
-  is_npc?: boolean;
-  approved?: boolean;
+  notes?: string | null | undefined;
+  is_npc?: boolean | undefined;
+  approved?: boolean | undefined;
 }

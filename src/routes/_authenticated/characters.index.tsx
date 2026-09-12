@@ -77,8 +77,7 @@ function CharactersPage() {
       const { id: _ignored, ...character } = parsed.character;
       const row = await createCharacter(character);
       for (const entry of parsed.entries) {
-        const { id: _entryId, character_id: _cid, ...rest } = entry;
-        await addEntry({ ...rest, character_id: row.id, data: rest.data ?? {} } as never);
+        await addEntry({ ...entry, character_id: row.id, data: entry.data ?? {} } as never);
       }
       return row;
     },

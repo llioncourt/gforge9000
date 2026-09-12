@@ -42,7 +42,14 @@ import {
   updateEntry,
   type CharacterRow,
 } from "@/lib/api";
-import { buildSheet, type CharacterEntry, type EntryKind } from "@/rules";
+import {
+  buildSheet,
+  normalizeWeaponMode,
+  type CharacterEntry,
+  type EntryKind,
+  type WeaponMode,
+} from "@/rules";
+import { AttackModeCard } from "@/components/character/attack-mode-card";
 import { useDice } from "@/components/app/dice-context";
 import { PointsBar } from "@/components/character/stat-bar";
 import {
@@ -652,7 +659,7 @@ function CharacterPage() {
               </div>
             ) : (
               weaponEntries.map((e) => {
-                const modes = ((e.data["weapons"] ?? []) as unknown as Record<string, string>[]);
+                const modes = ((e.data["weapons"] ?? []) as unknown as WeaponMode[]);
                 return (
                   <div key={e.id} className="panel p-4">
                     <div className="flex items-center justify-between">
@@ -661,53 +668,31 @@ function CharacterPage() {
                     </div>
                     <div className="mt-3 space-y-2">
                       {modes.map((m, i) => {
+                        const weapon = normalizeWeaponMode(m, { st: sheet.stats.st });
                         const skill = sheet.skills.find(
-                          (s) => s.entry.name.toLowerCase() === String(m["skill"] ?? "").toLowerCase(),
+                          (s) => s.entry.name.toLowerCase() === (weapon.skill ?? "").toLowerCase(),
                         );
                         const target = skill?.level.effective ?? sheet.stats.dx;
                         return (
-                          <div
+                          <AttackModeCard
                             key={i}
-                            className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-muted/20 p-3 text-sm"
-                          >
-                            <span className="font-medium">{m["name"]}</span>
-                            <span className="font-mono text-muted-foreground">{m["damage"]}</span>
-                            {m["reach"] ? <Meta label="Reach" value={m["reach"]} /> : null}
-                            {m["parry"] ? <Meta label="Parry" value={m["parry"]} /> : null}
-                            {m["accuracy"] ? <Meta label="Acc" value={m["accuracy"]} /> : null}
-                            {m["range"] ? <Meta label="Range" value={m["range"]} /> : null}
-                            {m["rof"] ? <Meta label="RoF" value={m["rof"]} /> : null}
-                            {m["shots"] ? <Meta label="Shots" value={m["shots"]} /> : null}
-                            {m["bulk"] ? <Meta label="Bulk" value={m["bulk"]} /> : null}
-                            {m["recoil"] ? <Meta label="Rcl" value={m["recoil"]} /> : null}
-                            <div className="ml-auto flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() =>
-                                  roll({
-                                    label: `${e.name} — ${m["name"]}`,
-                                    target,
-                                    characterId: id,
-                                  })
-                                }
-                              >
-                                Attack {target}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() =>
-                                  roll({
-                                    label: `${e.name} damage`,
-                                    expression: String(m["damage"] ?? "1d6"),
-                                    characterId: id,
-                                  })
-                                }
-                              >
-                                Damage
-                              </Button>
-                            </div>
-                          </div>
+                            weapon={weapon}
+                            target={target}
+                            onAttack={() =>
+                              roll({
+                                label: `${e.name} — ${weapon.name}`,
+                                target,
+                                characterId: id,
+                              })
+                            }
+                            onDamage={(expression) =>
+                              roll({
+                                label: `${e.name} damage`,
+                                expression,
+                                characterId: id,
+                              })
+                            }
+                          />
                         );
                       })}
                     </div>

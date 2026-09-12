@@ -174,7 +174,7 @@ export function buildSheet(
     points,
     encumbrance,
     damage: basicDamage(stats.st, rules.damageProgression),
-    dr: drByLocation(entries),
+    dr: drByLocation(entries, rules),
     skills,
     hp: hpState(character.current_hp, stats.hp, rules),
     fp: fpState(character.current_fp, stats.fp, rules),

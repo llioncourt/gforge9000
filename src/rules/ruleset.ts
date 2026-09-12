@@ -39,6 +39,20 @@ export interface Ruleset {
     hpThresholds: { atOrBelow: number; label: string; moveFactor: number }[];
     fpThresholds: { atOrBelow: number; label: string; moveFactor: number }[];
   };
+  /**
+   * Weapon/attack parameters. Nothing here encodes a published weapon table;
+   * these only gate how declared weapon fields are consumed.
+   */
+  weapon: {
+    /** Recoil values below this are treated as unusable. */
+    minimumRecoil: number;
+    /** Optional hard cap on extra hits from rapid fire. `null` = uncapped. */
+    maxAdditionalHits: number | null;
+    accuracyBonusEnabled: boolean;
+    bulkPenaltyEnabled: boolean;
+  };
+  /** How DR from several pieces of armour on one location combines. */
+  drStacking: "additive" | "highest";
   /** Campaign caps. `null` means no cap is enforced. */
   limits: {
     pointBudget: number | null;
@@ -87,6 +101,13 @@ export const defaultRuleset: Ruleset = {
       { atOrBelow: 0, label: "Collapse risk", moveFactor: 0 },
     ],
   },
+  weapon: {
+    minimumRecoil: 1,
+    maxAdditionalHits: null,
+    accuracyBonusEnabled: true,
+    bulkPenaltyEnabled: true,
+  },
+  drStacking: "additive",
   limits: { pointBudget: null, disadvantageLimit: null, quirkLimit: null, techLevel: null },
   damageProgression: null,
 };

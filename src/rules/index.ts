@@ -6,6 +6,7 @@ export * from "./defenses";
 export * from "./health";
 export * from "./skills";
 export * from "./equipment";
+export * from "./weapons";
 export * from "./dice";
 export * from "./points";
 export * from "./audit";

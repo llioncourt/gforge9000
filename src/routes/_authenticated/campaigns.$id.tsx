@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, Plus, Trash2 } from "lucide-react";
@@ -33,6 +33,8 @@ import {
   toEntry,
   updateCampaign,
   updateCharacter,
+  createCharacter,
+  duplicateCharacter,
 } from "@/lib/api";
 import { buildSheet } from "@/rules";
 import { useSession } from "@/hooks/use-session";
@@ -56,6 +58,7 @@ function CampaignPage() {
   const { id } = Route.useParams();
   const { user } = useSession();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const campaign = useQuery({ queryKey: ["campaign", id], queryFn: () => getCampaign(id) });
   const roster = useQuery({
@@ -82,6 +85,32 @@ function CampaignPage() {
     }
     return byChar;
   }, [roster.data, entries.data]);
+
+  const createNpc = useMutation({
+    mutationFn: () =>
+      createCharacter({
+        name: "New NPC",
+        campaign_id: id,
+        is_npc: true,
+        approved: true,
+        point_budget: Number((campaign.data?.settings as Record<string, unknown>)?.["point_limit"] ?? 150),
+      } as never),
+    onSuccess: (row) => {
+      queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
+      toast.success("NPC created.");
+      navigate({ to: "/characters/$id", params: { id: row.id } });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const cloneCharacter = useMutation({
+    mutationFn: (cid: string) => duplicateCharacter(cid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
+      toast.success("Copy created.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const approve = useMutation({
     mutationFn: ({ cid, value }: { cid: string; value: boolean }) =>
@@ -152,6 +181,12 @@ function CampaignPage() {
         title={campaign.data?.name ?? "Campaign"}
         description={campaign.data?.description ?? undefined}
         actions={
+          <>
+          {isGm ? (
+            <Button onClick={() => createNpc.mutate()} disabled={createNpc.isPending}>
+              <Plus className="mr-2 h-4 w-4" /> New NPC
+            </Button>
+          ) : null}
           <Button
             variant="outline"
             onClick={() => {
@@ -162,6 +197,7 @@ function CampaignPage() {
             <Copy className="mr-2 h-4 w-4" />
             <span className="font-mono">{campaign.data?.invite_code}</span>
           </Button>
+          </>
         }
       />
 
@@ -247,6 +283,14 @@ function CampaignPage() {
                         >
                           <Check className="mr-1 h-3.5 w-3.5" />
                           {c.approved ? "Revoke" : "Approve"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => cloneCharacter.mutate(c.id)}
+                          disabled={cloneCharacter.isPending}
+                        >
+                          Duplicate
                         </Button>
                         <Button asChild size="sm" variant="ghost">
                           <Link to="/characters/$id" params={{ id: c.id }}>
@@ -396,6 +440,9 @@ function HouseRules({
   const [disadvLimit, setDisadvLimit] = useState(String(settings["disadvantage_limit"] ?? -50));
   const [tl, setTl] = useState(String(settings["tech_level"] ?? 8));
   const [houseRules, setHouseRules] = useState(String(settings["house_rules"] ?? ""));
+  const [packs, setPacks] = useState(
+    (Array.isArray(settings["allowed_packs"]) ? (settings["allowed_packs"] as string[]) : []).join(", "),
+  );
 
   return (
     <div className="panel max-w-2xl space-y-4 p-6">
@@ -412,6 +459,18 @@ function HouseRules({
           <Label>Tech level</Label>
           <Input value={tl} onChange={(e) => setTl(e.target.value)} disabled={disabled} />
         </div>
+      </div>
+      <div className="space-y-1.5">
+        <Label>Allowed content packs</Label>
+        <Input
+          value={packs}
+          onChange={(e) => setPacks(e.target.value)}
+          disabled={disabled}
+          placeholder="Comma separated pack names, e.g. Core Generic Pack"
+        />
+        <p className="text-xs text-muted-foreground">
+          Library entries are grouped by pack. Leave empty to allow every pack.
+        </p>
       </div>
       <div className="space-y-1.5">
         <Label>House rules</Label>
@@ -431,6 +490,10 @@ function HouseRules({
             disadvantage_limit: Number(disadvLimit) || 0,
             tech_level: Number(tl) || 0,
             house_rules: houseRules,
+            allowed_packs: packs
+              .split(",")
+              .map((p) => p.trim())
+              .filter(Boolean),
           })
         }
       >

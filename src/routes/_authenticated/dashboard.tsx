@@ -47,9 +47,13 @@ function Dashboard() {
       const { data } = await supabase.auth.getUser();
       return seedDemoContent(data.user!.id);
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries();
-      toast.success("Demo character and campaign created.");
+      toast.success(
+        result.skipped
+          ? "Demo content already exists on this account."
+          : "Demo character and campaign created.",
+      );
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -98,7 +102,7 @@ function Dashboard() {
       ) : null}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        <section className="lg:col-span-2">
+        <section className="min-w-0 lg:col-span-2">
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
             Recent characters
           </h2>
@@ -119,13 +123,13 @@ function Dashboard() {
                       </p>
                     </div>
                     {c.is_npc ? <Badge variant="outline">NPC</Badge> : null}
-                    <span className="stat-value text-sm">{c.point_budget} pts</span>
+                    <span className="stat-value shrink-0 text-sm">{c.point_budget} pts</span>
                   </Link>
                 ))}
           </div>
         </section>
 
-        <section>
+        <section className="min-w-0">
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
             Recent rolls
           </h2>

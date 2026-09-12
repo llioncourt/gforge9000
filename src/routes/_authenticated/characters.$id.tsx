@@ -1,3 +1,4 @@
+import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,8 +9,19 @@ import {
   Plus,
   Printer,
   Save,
+  Copy,
   Trash2,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -40,7 +52,9 @@ import {
   toEntry,
   updateCharacter,
   updateEntry,
+  duplicateCharacter,
   type CharacterRow,
+  type VersionRow,
 } from "@/lib/api";
 import {
   buildSheet,
@@ -85,6 +99,16 @@ export const Route = createFileRoute("/_authenticated/characters/$id")({
 
 const TRAIT_KINDS: EntryKind[] = ["advantage", "disadvantage", "perk", "quirk", "custom"];
 const LORE_KINDS: EntryKind[] = ["language", "culture"];
+const APPEARANCE_FIELDS: [string, string][] = [
+  ["age", "Age"],
+  ["height", "Height"],
+  ["weight", "Weight"],
+  ["build", "Build"],
+  ["hair", "Hair"],
+  ["eyes", "Eyes"],
+  ["handedness", "Handedness"],
+  ["languages_note", "Cultural / language note"],
+];
 
 function CharacterPage() {
   const { id } = Route.useParams();
@@ -100,6 +124,9 @@ function CharacterPage() {
   });
 
   const [form, setForm] = useState<CharacterRow | null>(null);
+  const [conditionInput, setConditionInput] = useState("");
+  const [saveError, setSaveError] = useState(false);
+  const [pendingRestore, setPendingRestore] = useState<VersionRow | null>(null);
   const dirty = useRef(false);
 
   useEffect(() => {
@@ -110,9 +137,13 @@ function CharacterPage() {
     mutationFn: (patch: Partial<CharacterRow>) => updateCharacter(id, patch),
     onSuccess: () => {
       dirty.current = false;
+      setSaveError(false);
       queryClient.invalidateQueries({ queryKey: ["characters"] });
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      setSaveError(true);
+      toast.error(e.message);
+    },
   });
 
   // Debounced autosave of the character record.
@@ -191,6 +222,15 @@ function CharacterPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const clone = useMutation({
+    mutationFn: () => duplicateCharacter(id),
+    onSuccess: (copy) => {
+      queryClient.invalidateQueries({ queryKey: ["characters"] });
+      toast.success(`Created “${copy.name}”.`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   function openNew(kind: EntryKind) {
     setDraft(emptyDraft(kind));
     setDialogOpen(true);
@@ -210,6 +250,7 @@ function CharacterPage() {
     );
   }
 
+  const appearance = (form.appearance ?? {}) as Record<string, string>;
   const gear = entries.filter((e) => e.kind === "equipment");
   const weaponEntries = gear.filter(
     (e) => ((e.data["weapons"] as unknown[] | undefined) ?? []).length > 0,
@@ -221,7 +262,7 @@ function CharacterPage() {
         title={form.name || "Untitled character"}
         description={form.concept ?? undefined}
         actions={
-          <>
+          <div className="no-print flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={() => window.print()}>
               <Printer className="mr-2 h-4 w-4" /> Print
             </Button>
@@ -244,10 +285,23 @@ function CharacterPage() {
             >
               CSV
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => clone.mutate()}
+              disabled={clone.isPending}
+            >
+              <Copy className="mr-2 h-4 w-4" /> Duplicate
+            </Button>
             <Button onClick={() => snapshot.mutate()} disabled={snapshot.isPending}>
               <Save className="mr-2 h-4 w-4" /> Save version
             </Button>
-          </>
+            <span
+              aria-live="polite"
+              className="text-xs text-muted-foreground"
+            >
+              {save.isPending ? "Saving…" : saveError ? "Not saved" : "All changes saved"}
+            </span>
+          </div>
         }
       />
 
@@ -336,6 +390,21 @@ function CharacterPage() {
                 <p className="text-xs text-muted-foreground">NPCs appear separately on GM tools.</p>
               </div>
               <Switch checked={form.is_npc} onCheckedChange={(v) => patch({ is_npc: v })} />
+            </div>
+            <div className="space-y-3 border-t border-border pt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                Appearance &amp; background
+              </h3>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {APPEARANCE_FIELDS.map(([key, label]) => (
+                  <Field key={key} label={label}>
+                    <Input
+                      value={String(appearance[key] ?? "")}
+                      onChange={(e) => patch({ appearance: { ...appearance, [key]: e.target.value } as never })}
+                    />
+                  </Field>
+                ))}
+              </div>
             </div>
           </section>
 
@@ -597,19 +666,50 @@ function CharacterPage() {
                   />
                 </Field>
               </div>
-              <Field label="Conditions (comma separated)">
-                <Input
-                  value={form.conditions.join(", ")}
-                  onChange={(e) =>
-                    patch({
-                      conditions: e.target.value
-                        .split(",")
-                        .map((c) => c.trim())
-                        .filter(Boolean),
-                    })
-                  }
-                />
-              </Field>
+              <div className="space-y-2">
+                <Label>Conditions</Label>
+                <div className="flex flex-wrap gap-1">
+                  {form.conditions.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">None active.</p>
+                  ) : (
+                    form.conditions.map((c) => (
+                      <Badge key={c} variant="outline" className="gap-1">
+                        {c}
+                        <button
+                          type="button"
+                          aria-label={`Remove ${c}`}
+                          className="text-muted-foreground hover:text-foreground"
+                          onClick={() =>
+                            patch({ conditions: form.conditions.filter((x) => x !== c) })
+                          }
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))
+                  )}
+                </div>
+                <form
+                  className="flex gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const value = conditionInput.trim();
+                    if (!value || form.conditions.includes(value)) return;
+                    patch({ conditions: [...form.conditions, value] });
+                    setConditionInput("");
+                  }}
+                >
+                  <Input
+                    value={conditionInput}
+                    placeholder="Add a condition…"
+                    onChange={(e) => setConditionInput(e.target.value)}
+                  />
+                  <Button type="submit" variant="outline" size="sm">
+                    Add
+                  </Button>
+                </form>
+              </div>
+
               <div className="grid grid-cols-3 gap-2 text-center">
                 <Mini label="Move" value={sheet.encumbrance.effectiveMove} />
                 <Mini label="Dodge" value={sheet.encumbrance.effectiveDodge} />
@@ -767,7 +867,7 @@ function CharacterPage() {
                       </p>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => restore.mutate(v)}>
+                  <Button size="sm" variant="outline" onClick={() => setPendingRestore(v)}>
                     Restore
                   </Button>
                 </div>
@@ -780,6 +880,29 @@ function CharacterPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={!!pendingRestore} onOpenChange={(v) => !v && setPendingRestore(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore this snapshot?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The sheet is replaced with the saved snapshot. Ownership and campaign links are kept.
+              Save a version first if you want to keep the current state.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingRestore) restore.mutate(pendingRestore);
+                setPendingRestore(null);
+              }}
+            >
+              Restore
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <EntryDialog
         open={dialogOpen}
@@ -869,10 +992,16 @@ function Field({
   children: React.ReactNode;
   className?: string;
 }) {
+  const id = React.useId();
+  const child = React.isValidElement(children)
+    ? React.cloneElement(children as React.ReactElement<{ id?: string }>, { id })
+    : children;
   return (
     <div className={`space-y-1.5 ${className ?? ""}`}>
-      <Label className="text-xs uppercase tracking-wide text-muted-foreground">{label}</Label>
-      {children}
+      <Label htmlFor={id} className="text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </Label>
+      {child}
     </div>
   );
 }

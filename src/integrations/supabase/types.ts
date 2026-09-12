@@ -379,6 +379,7 @@ export type Database = {
           max_levels: number | null
           name: string
           owner_id: string
+          pack: string | null
           source_edition: string | null
           source_label: string
           source_page: string | null
@@ -400,6 +401,7 @@ export type Database = {
           max_levels?: number | null
           name: string
           owner_id?: string
+          pack?: string | null
           source_edition?: string | null
           source_label?: string
           source_page?: string | null
@@ -421,6 +423,7 @@ export type Database = {
           max_levels?: number | null
           name?: string
           owner_id?: string
+          pack?: string | null
           source_edition?: string | null
           source_label?: string
           source_page?: string | null

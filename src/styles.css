@@ -176,17 +176,40 @@
 }
 
 @media print {
-  .no-print {
+  .no-print,
+  nav,
+  header {
     display: none !important;
   }
+  html,
   body {
     background: #fff !important;
     color: #111 !important;
   }
-  .print-plain {
-    background: #fff !important;
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
     color: #111 !important;
     border-color: #999 !important;
     box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  .lg\:pl-64 {
+    padding-left: 0 !important;
+  }
+  input,
+  textarea {
+    border: 0 !important;
+    padding-left: 0 !important;
+    font-weight: 600 !important;
+  }
+  .panel,
+  .print-plain {
+    border: 1px solid #999 !important;
+    break-inside: avoid;
   }
 }

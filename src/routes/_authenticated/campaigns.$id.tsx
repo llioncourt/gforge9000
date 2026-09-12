@@ -152,6 +152,12 @@ function CampaignPage() {
         title={campaign.data?.name ?? "Campaign"}
         description={campaign.data?.description ?? undefined}
         actions={
+          <>
+          {isGm ? (
+            <Button onClick={() => createNpc.mutate()} disabled={createNpc.isPending}>
+              <Plus className="mr-2 h-4 w-4" /> New NPC
+            </Button>
+          ) : null}
           <Button
             variant="outline"
             onClick={() => {
@@ -162,6 +168,7 @@ function CampaignPage() {
             <Copy className="mr-2 h-4 w-4" />
             <span className="font-mono">{campaign.data?.invite_code}</span>
           </Button>
+          </>
         }
       />
 
@@ -247,6 +254,14 @@ function CampaignPage() {
                         >
                           <Check className="mr-1 h-3.5 w-3.5" />
                           {c.approved ? "Revoke" : "Approve"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => cloneCharacter.mutate(c.id)}
+                          disabled={cloneCharacter.isPending}
+                        >
+                          Duplicate
                         </Button>
                         <Button asChild size="sm" variant="ghost">
                           <Link to="/characters/$id" params={{ id: c.id }}>
@@ -396,6 +411,9 @@ function HouseRules({
   const [disadvLimit, setDisadvLimit] = useState(String(settings["disadvantage_limit"] ?? -50));
   const [tl, setTl] = useState(String(settings["tech_level"] ?? 8));
   const [houseRules, setHouseRules] = useState(String(settings["house_rules"] ?? ""));
+  const [packs, setPacks] = useState(
+    (Array.isArray(settings["allowed_packs"]) ? (settings["allowed_packs"] as string[]) : []).join(", "),
+  );
 
   return (
     <div className="panel max-w-2xl space-y-4 p-6">
@@ -412,6 +430,18 @@ function HouseRules({
           <Label>Tech level</Label>
           <Input value={tl} onChange={(e) => setTl(e.target.value)} disabled={disabled} />
         </div>
+      </div>
+      <div className="space-y-1.5">
+        <Label>Allowed content packs</Label>
+        <Input
+          value={packs}
+          onChange={(e) => setPacks(e.target.value)}
+          disabled={disabled}
+          placeholder="Comma separated pack names, e.g. Core Generic Pack"
+        />
+        <p className="text-xs text-muted-foreground">
+          Library entries are grouped by pack. Leave empty to allow every pack.
+        </p>
       </div>
       <div className="space-y-1.5">
         <Label>House rules</Label>
@@ -431,6 +461,10 @@ function HouseRules({
             disadvantage_limit: Number(disadvLimit) || 0,
             tech_level: Number(tl) || 0,
             house_rules: houseRules,
+            allowed_packs: packs
+              .split(",")
+              .map((p) => p.trim())
+              .filter(Boolean),
           })
         }
       >

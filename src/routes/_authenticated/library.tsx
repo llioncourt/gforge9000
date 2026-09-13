@@ -245,12 +245,11 @@ function LibraryPage() {
         (e) =>
           (kindFilter === "all" || e.kind === kindFilter) &&
           (packFilter === "all" || (e.pack ?? "") === packFilter) &&
-          `${e.name} ${e.category ?? ""} ${(e.tags ?? []).join(" ")}`
-            .toLowerCase()
-            .includes(search.toLowerCase()),
+          matchesSearch(search, [e.name, e.category, e.summary, e.pack, ...(e.tags ?? [])]),
       ),
     [data, kindFilter, packFilter, search],
   );
+
 
   const portable = toPortableLibrary((rows ?? []) as unknown as Record<string, unknown>[]);
 

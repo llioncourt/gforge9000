@@ -301,10 +301,27 @@ export async function deleteNote(id: string) {
 /* ---------- library ---------- */
 
 export async function listLibrary() {
-  return unwrap(
-    await supabase.from("library_entries").select("*").order("name", { ascending: true }),
-  );
+  // PostgREST caps a single response at 1000 rows, so page through everything.
+  const pageSize = 1000;
+  const all: Awaited<ReturnType<typeof fetchPage>> = [];
+  async function fetchPage(from: number) {
+    return unwrap(
+      await supabase
+        .from("library_entries")
+        .select("*")
+        .order("name", { ascending: true })
+        .order("id", { ascending: true })
+        .range(from, from + pageSize - 1),
+    );
+  }
+  for (let from = 0; ; from += pageSize) {
+    const page = await fetchPage(from);
+    all.push(...page);
+    if (page.length < pageSize) break;
+  }
+  return all;
 }
+
 
 export async function createLibraryEntry(input: TablesInsert<"library_entries">) {
   const { data: auth } = await supabase.auth.getUser();

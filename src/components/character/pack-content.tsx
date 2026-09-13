@@ -128,9 +128,10 @@ export function PackPickerDialog({
         kinds.includes(e.kind) &&
         !!e.pack &&
         linked.includes(e.pack.toLowerCase()) &&
-        `${e.name} ${e.category ?? ""}`.toLowerCase().includes(search.toLowerCase()),
+        matchesSearch(search, [e.name, e.category, e.summary, e.pack, ...(e.tags ?? [])]),
     );
   }, [library.data, kinds, packs, search]);
+
 
   const descParts = (e: LibraryRow) =>
     [e.category, e.source_label, e.source_page ? `p. ${e.source_page}` : null, ...(e.tags ?? [])]

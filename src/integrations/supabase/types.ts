@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_assets: {
+        Row: {
+          byte_size: number
+          campaign_id: string
+          caption: string | null
+          created_at: string
+          created_by: string
+          height: number | null
+          id: string
+          mime_type: string
+          storage_path: string
+          tags: string[]
+          title: string
+          updated_at: string
+          visible_to_players: boolean
+          width: number | null
+        }
+        Insert: {
+          byte_size?: number
+          campaign_id: string
+          caption?: string | null
+          created_at?: string
+          created_by?: string
+          height?: number | null
+          id?: string
+          mime_type?: string
+          storage_path: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          visible_to_players?: boolean
+          width?: number | null
+        }
+        Update: {
+          byte_size?: number
+          campaign_id?: string
+          caption?: string | null
+          created_at?: string
+          created_by?: string
+          height?: number | null
+          id?: string
+          mime_type?: string
+          storage_path?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          visible_to_players?: boolean
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_assets_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_members: {
         Row: {
           campaign_id: string

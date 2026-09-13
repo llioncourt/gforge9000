@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { Download, Plus, Search, Upload } from "lucide-react";
+
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { KINDS, kindDef, VISIBILITIES } from "@/lib/entity-kinds";
-import { createEntity, listEntities, type EntityRow } from "@/lib/lore";
+import { createEntity, listEntities, listRelationships, type EntityRow } from "@/lib/lore";
+import { getCampaign } from "@/lib/api";
+import { download } from "@/lib/portable";
+import { parsePortableLore, toPortableLore } from "@/lib/lore-portable";
+import { importLore } from "@/lib/lore-import";
+import { FileDropzone } from "@/components/ui/FileDropzone";
 
 const GROUPS: { group: string; label: string }[] = [
   { group: "world", label: "World" },
@@ -38,8 +44,39 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
   const [group, setGroup] = useState("world");
   const [kindFilter, setKindFilter] = useState("ALL");
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [newKind, setNewKind] = useState("NPC");
   const [newName, setNewName] = useState("");
+
+  const exportLore = useMutation({
+    mutationFn: async () => {
+      const [campaign, rows, rels] = await Promise.all([
+        getCampaign(campaignId),
+        listEntities(campaignId),
+        listRelationships(campaignId),
+      ]);
+      const file = toPortableLore(campaign.name, rows, rels);
+      const slug = campaign.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      download(`${slug || "campaign"}-lore.json`, JSON.stringify(file, null, 2));
+      return file.entities.length;
+    },
+    onSuccess: (count) => toast.success(`Exported ${count} entries`),
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const runImport = useMutation({
+    mutationFn: async (file: File) => {
+      const parsed = parsePortableLore(await file.text());
+      return importLore(campaignId, parsed);
+    },
+    onSuccess: async (result) => {
+      setImporting(false);
+      toast.success(`Imported ${result.entities} entries and ${result.relationships} links`);
+      await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
 
   const entities = useQuery({
     queryKey: ["lore-entities", campaignId],
@@ -132,15 +169,28 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
             </SelectContent>
           </Select>
           {isGm ? (
-            <Button
-              onClick={() => {
-                setNewKind(kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"));
-                setCreating(true);
-              }}
-            >
-              <Plus className="mr-2 size-4" /> New entry
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => exportLore.mutate()}
+                disabled={exportLore.isPending}
+              >
+                <Download className="mr-2 size-4" /> Export
+              </Button>
+              <Button variant="outline" onClick={() => setImporting(true)}>
+                <Upload className="mr-2 size-4" /> Import
+              </Button>
+              <Button
+                onClick={() => {
+                  setNewKind(kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"));
+                  setCreating(true);
+                }}
+              >
+                <Plus className="mr-2 size-4" /> New entry
+              </Button>
+            </>
           ) : null}
+
         </div>
       </div>
 
@@ -228,6 +278,32 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={importing} onOpenChange={setImporting}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import lore</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-muted-foreground text-sm">
+              Adds the entries and their links from an exported file to this campaign. Existing
+              entries are kept; nothing is overwritten. Player reveals and history are not included.
+            </p>
+            <FileDropzone
+              accept="application/json,.json"
+              onFiles={(files) => files[0] && runImport.mutate(files[0])}
+              label={runImport.isPending ? "Importing…" : "Drop a lore export here, or click to browse"}
+              hint="JSON file exported from a campaign"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImporting(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }

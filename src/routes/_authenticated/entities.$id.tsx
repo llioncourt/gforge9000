@@ -407,7 +407,7 @@ function EntityPage() {
                 {form.image_url ? (
                   <div className="flex items-start gap-3">
                     {photoUrl.data ? (
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={photoUrl.data}
                         alt={`${form.name} portrait`}
                         className="h-32 w-32 rounded-lg border object-cover"

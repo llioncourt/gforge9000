@@ -204,7 +204,7 @@ export function BattleGrid({
           }}
         >
           {imageUrl ? (
-            <img
+            <img decoding="async"
               src={imageUrl}
               alt={map.name}
               draggable={false}

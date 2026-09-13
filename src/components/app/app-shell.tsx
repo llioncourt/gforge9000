@@ -21,6 +21,7 @@ import { CommandPalette } from "@/components/app/command-palette";
 import { DiceTray } from "@/components/app/dice-tray";
 import { DiceOverlay } from "@/components/app/dice-overlay";
 import { CampaignSoundtrackProvider } from "@/components/campaign/campaign-soundtrack-player";
+import { AmbientBackground } from "@/components/app/ambient-background";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -62,7 +63,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <CampaignSoundtrackProvider pathname={pathname}>
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen">
+      <AmbientBackground />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <DiceTray open={trayOpen} onOpenChange={setTrayOpen} />
       <DiceOverlay />
@@ -70,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <aside
         className={cn(
-          "no-print fixed inset-y-0 left-0 z-40 w-64 border-r border-sidebar-border bg-sidebar transition-transform lg:translate-x-0",
+          "no-print fixed inset-y-0 left-0 z-40 w-[17rem] max-w-[85vw] border-r border-sidebar-border/70 bg-sidebar/80 backdrop-blur-xl transition-transform duration-300 ease-out will-change-transform lg:w-64 lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -100,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link
               key={to}
               to={to}
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               activeProps={{
                 className:
                   "bg-sidebar-accent text-sidebar-accent-foreground font-medium ring-1 ring-sidebar-border",
@@ -125,18 +127,25 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="lg:pl-64">
-        <header className="no-print sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur">
-          <button className="lg:hidden" onClick={() => setOpen(true)} aria-label="Open navigation">
+      <div className="relative z-10 lg:pl-64">
+        <header className="glass-bar no-print sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border/70 px-3 sm:gap-3 sm:px-4">
+          <button
+            className="-ml-1 grid h-10 w-10 shrink-0 place-content-center rounded-md text-foreground transition-colors hover:bg-secondary lg:hidden"
+            onClick={() => setOpen(true)}
+            aria-label="Open navigation"
+          >
             <Menu className="h-5 w-5" />
           </button>
           <button
             onClick={() => setPaletteOpen(true)}
-            className="flex h-9 flex-1 max-w-md items-center gap-2 rounded-md border border-input bg-card px-3 text-sm text-muted-foreground transition-colors hover:border-ring"
+            className="glass-soft flex h-10 min-w-0 flex-1 max-w-md items-center gap-2 rounded-md px-3 text-sm text-muted-foreground transition-colors hover:border-ring"
           >
-            <Search className="h-4 w-4" />
-            Search characters, campaigns, library…
-            <kbd className="ml-auto rounded border border-border px-1.5 py-0.5 font-mono text-[10px]">
+            <Search className="h-4 w-4 shrink-0" />
+            <span className="truncate">
+              <span className="sm:hidden">Search…</span>
+              <span className="hidden sm:inline">Search characters, campaigns, library…</span>
+            </span>
+            <kbd className="ml-auto hidden rounded sm:inline-block border border-border px-1.5 py-0.5 font-mono text-[10px]">
               ⌘K
             </kbd>
           </button>
@@ -153,7 +162,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Button>
         </header>
 
-        <main className="min-h-[calc(100vh-4rem)] px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="safe-b min-h-[calc(100vh-4rem)] px-3 py-5 sm:px-6 sm:py-6 lg:px-8">
+          {children}
+        </main>
 
         <footer className="no-print border-t border-border px-6 py-6 text-xs leading-relaxed text-muted-foreground">
           Universal Character Forge is an unofficial, independent companion tool. GURPS is a
@@ -165,7 +176,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {open ? (
         <button
-          className="fixed inset-0 z-30 bg-background/70 lg:hidden"
+          className="fixed inset-0 z-30 bg-background/60 backdrop-blur-sm lg:hidden"
           aria-label="Close navigation overlay"
           onClick={() => setOpen(false)}
         />

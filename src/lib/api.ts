@@ -231,7 +231,13 @@ export async function listEntriesForCharacters(ids: string[]) {
 }
 
 export async function setCharacterCampaign(characterId: string, campaignId: string | null) {
-  return updateCharacter(characterId, { campaign_id: campaignId });
+  // No .select() here: after unlinking, the GM may no longer be able to read
+  // the row, so a select would report a false failure.
+  const { error } = await supabase
+    .from("characters")
+    .update({ campaign_id: campaignId })
+    .eq("id", characterId);
+  if (error) throw new Error(error.message);
 }
 
 export async function listNotes(campaignId: string) {

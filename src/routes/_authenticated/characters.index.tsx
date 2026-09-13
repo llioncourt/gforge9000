@@ -80,11 +80,16 @@ function CharactersPage() {
       const parsed = parsePortable(await file.text());
       const { id: _ignored, ...character } = parsed.character;
       const row = await createCharacter(character as never);
-      for (const entry of parsed.entries) {
+      // Reconcile trait names against enabled content before saving them.
+      const { entries } = await reconcileImportedEntries(
+        parsed.entries as unknown as ImportedEntry[],
+      );
+      for (const entry of entries) {
         await addEntry({ ...entry, character_id: row.id, data: entry.data ?? {} } as never);
       }
       return row;
     },
+
     onSuccess: (row) => {
       queryClient.invalidateQueries({ queryKey: ["characters"] });
       toast.success("Character imported.");

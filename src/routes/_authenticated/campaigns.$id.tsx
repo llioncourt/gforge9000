@@ -381,6 +381,10 @@ function CampaignPage() {
           <GraphPanel campaignId={id} />
         </TabsContent>
 
+        <TabsContent value="reveals" className="mt-6">
+          <PlayersPanel campaignId={id} isGm={isGm} />
+        </TabsContent>
+
         <TabsContent value="battle" className="mt-6">
           <BattlePanel campaignId={id} isGm={isGm} />
         </TabsContent>

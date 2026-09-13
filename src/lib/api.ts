@@ -90,7 +90,7 @@ export async function createCharacter(input: Partial<TablesInsert<"characters">>
   return unwrap(
     await supabase
       .from("characters")
-      .insert({ owner_id: auth.user!.id, ...input } as TablesInsert<"characters">)
+      .insert({ ...input, owner_id: auth.user!.id } as TablesInsert<"characters">)
       .select()
       .single(),
   );

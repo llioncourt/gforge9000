@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  PanelLeftClose,
   Search,
   Settings,
   Shield,
@@ -35,6 +36,7 @@ const NAV = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [trayOpen, setTrayOpen] = useState(false);
   const navigate = useNavigate();
@@ -42,6 +44,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => setOpen(false), [pathname]);
+
+  useEffect(() => {
+    setCollapsed(window.localStorage.getItem("sidebar-collapsed") === "1");
+  }, []);
+
+  function toggleCollapsed(value: boolean) {
+    setCollapsed(value);
+    window.localStorage.setItem("sidebar-collapsed", value ? "1" : "0");
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -72,8 +83,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <aside
         className={cn(
-          "no-print fixed inset-y-0 left-0 z-40 w-[17rem] max-w-[85vw] border-r border-sidebar-border/70 bg-sidebar/80 backdrop-blur-xl transition-transform duration-300 ease-out will-change-transform lg:w-64 lg:translate-x-0",
+          "no-print fixed inset-y-0 left-0 z-40 w-[17rem] max-w-[85vw] border-r border-sidebar-border/70 bg-sidebar/80 backdrop-blur-xl transition-transform duration-300 ease-out will-change-transform lg:w-64",
           open ? "translate-x-0" : "-translate-x-full",
+          collapsed ? "lg:-translate-x-full" : "lg:translate-x-0",
         )}
       >
         <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5">
@@ -89,11 +101,19 @@ export function AppShell({ children }: { children: ReactNode }) {
             </p>
           </div>
           <button
-            className="ml-auto text-muted-foreground lg:hidden"
+            className="ml-auto text-muted-foreground hover:text-foreground lg:hidden"
             onClick={() => setOpen(false)}
             aria-label="Close navigation"
           >
             <X className="h-4 w-4" />
+          </button>
+          <button
+            className="ml-auto hidden text-muted-foreground hover:text-foreground lg:block"
+            onClick={() => toggleCollapsed(true)}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose className="h-4 w-4" />
           </button>
         </div>
 
@@ -127,11 +147,17 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="relative z-10 lg:pl-64">
+      <div className={cn("relative z-10 transition-[padding] duration-300", collapsed ? "" : "lg:pl-64")}>
         <header className="glass-bar no-print sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border/70 px-3 sm:gap-3 sm:px-4">
           <button
-            className="-ml-1 grid h-10 w-10 shrink-0 place-content-center rounded-md text-foreground transition-colors hover:bg-secondary lg:hidden"
-            onClick={() => setOpen(true)}
+            className={cn(
+              "-ml-1 grid h-10 w-10 shrink-0 place-content-center rounded-md text-foreground transition-colors hover:bg-secondary",
+              collapsed ? "" : "lg:hidden",
+            )}
+            onClick={() => {
+              setOpen(true);
+              if (collapsed) toggleCollapsed(false);
+            }}
             aria-label="Open navigation"
           >
             <Menu className="h-5 w-5" />

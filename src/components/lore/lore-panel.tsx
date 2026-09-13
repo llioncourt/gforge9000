@@ -188,6 +188,15 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
               <Button
                 variant="outline"
                 onClick={() => {
+                  setDraftKind("NPC");
+                  setDrafting(true);
+                }}
+              >
+                <Sparkles className="mr-2 size-4" /> AI NPC
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
                   setDraftKind(kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"));
                   setDrafting(true);
                 }}

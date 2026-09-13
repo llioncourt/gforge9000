@@ -176,6 +176,15 @@ function CampaignPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const removeFromCampaign = useMutation({
+    mutationFn: (cid: string) => setCharacterCampaign(cid, null),
+    onSuccess: () => {
+      queryClient.invalidateQueries();
+      toast.success("Character removed from the campaign.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const saveSettings = useMutation({
     mutationFn: (patch: Record<string, unknown>) =>
       updateCampaign(id, { settings: { ...settings, ...patch } as never }),

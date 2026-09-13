@@ -31,3 +31,8 @@ Order agreed with the user: lore first, battle grid after.
 - [x] Token visual: 3D .glb model if the character has one, else portrait, else simple 2D name token
 - [x] Token polish: current NPC photos remain visible, tokens fit hex cells, and map zoom scales tokens with the grid
 
+
+## Phase 5 — Campaign soundtrack (in progress)
+- [ ] Silicon Studios ZIP import with private campaign storage
+- [ ] GM-synchronized persistent player across campaign-related pages
+- [ ] Player teardown outside campaign scope and regression tests

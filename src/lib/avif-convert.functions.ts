@@ -1,73 +1,46 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import avifEncoderWasmUrl from "@jsquash/avif/codec/enc/avif_enc.wasm?url";
 
 /**
- * Server-side image -> AVIF conversion.
+ * Server-side AVIF encoding fallback.
  *
- * Used as a fallback when the browser cannot encode AVIF itself (no native
- * canvas encoder, WASM blocked, etc.). Decoding is done with WASM codecs that
- * run in the edge runtime — no native binaries involved.
+ * The browser always decodes and resizes the image (canvas), so this function
+ * only receives raw RGBA pixels and encodes them to AVIF. It exists for
+ * browsers/environments where neither the native canvas encoder nor the
+ * client-side WASM encoder can run. The encoder WASM is loaded over HTTP from
+ * the app's own origin, which works both in dev and in the edge runtime.
  */
 
-const MAX_INPUT_BYTES = 25 * 1024 * 1024;
+type EncodeFn = (
+  data: Uint8Array,
+  width: number,
+  height: number,
+  options: Record<string, unknown>,
+) => Uint8Array | undefined;
 
-type RawImage = { data: Uint8ClampedArray; width: number; height: number };
+let encoderPromise: Promise<EncodeFn> | undefined;
 
-function fitWithinSize(width: number, height: number, max: number) {
-  if (width <= max && height <= max) return { width, height };
-  const ratio = Math.min(max / width, max / height);
-  return {
-    width: Math.max(1, Math.round(width * ratio)),
-    height: Math.max(1, Math.round(height * ratio)),
-  };
-}
-
-/** Bilinear downscale so we never ship oversized originals. */
-function resizeImageData(src: RawImage, targetWidth: number, targetHeight: number): RawImage {
-  if (src.width === targetWidth && src.height === targetHeight) return src;
-  const out = new Uint8ClampedArray(targetWidth * targetHeight * 4);
-  const xRatio = src.width / targetWidth;
-  const yRatio = src.height / targetHeight;
-  for (let y = 0; y < targetHeight; y++) {
-    const sy = Math.min(src.height - 1, (y + 0.5) * yRatio - 0.5);
-    const y0 = Math.max(0, Math.floor(sy));
-    const y1 = Math.min(src.height - 1, y0 + 1);
-    const fy = Math.min(1, Math.max(0, sy - y0));
-    for (let x = 0; x < targetWidth; x++) {
-      const sx = Math.min(src.width - 1, (x + 0.5) * xRatio - 0.5);
-      const x0 = Math.max(0, Math.floor(sx));
-      const x1 = Math.min(src.width - 1, x0 + 1);
-      const fx = Math.min(1, Math.max(0, sx - x0));
-      const di = (y * targetWidth + x) * 4;
-      for (let c = 0; c < 4; c++) {
-        const p00 = src.data[(y0 * src.width + x0) * 4 + c] ?? 0;
-        const p10 = src.data[(y0 * src.width + x1) * 4 + c] ?? 0;
-        const p01 = src.data[(y1 * src.width + x0) * 4 + c] ?? 0;
-        const p11 = src.data[(y1 * src.width + x1) * 4 + c] ?? 0;
-        const top = p00 + (p10 - p00) * fx;
-        const bottom = p01 + (p11 - p01) * fx;
-        out[di + c] = Math.round(top + (bottom - top) * fy);
-      }
-    }
+async function loadEncoder(origin: string): Promise<EncodeFn> {
+  encoderPromise ??= (async () => {
+    const wasmUrl = new URL(avifEncoderWasmUrl, origin);
+    const response = await fetch(wasmUrl);
+    if (!response.ok) throw new Error("Could not load the AVIF encoder.");
+    const wasmModule = await WebAssembly.compile(await response.arrayBuffer());
+    const { init } = await import("@jsquash/avif/encode");
+    const emscriptenModule = (await init(wasmModule as WebAssembly.Module)) as {
+      encode: EncodeFn;
+    };
+    return emscriptenModule.encode;
+  })();
+  try {
+    return await encoderPromise;
+  } catch (error) {
+    encoderPromise = undefined;
+    throw error;
   }
-  return { data: out, width: targetWidth, height: targetHeight };
-}
-
-async function decodeImage(buffer: ArrayBuffer, mime: string): Promise<RawImage> {
-  if (mime === "image/jpeg" || mime === "image/jpg") {
-    const mod = await import("@jsquash/jpeg");
-    return mod.decode(buffer) as Promise<RawImage>;
-  }
-  if (mime === "image/png") {
-    const mod = await import("@jsquash/png");
-    return mod.decode(buffer) as Promise<RawImage>;
-  }
-  if (mime === "image/webp") {
-    const mod = await import("@jsquash/webp");
-    return mod.decode(buffer) as Promise<RawImage>;
-  }
-  throw new Error(`Unsupported image format: ${mime || "unknown"}`);
 }
 
 function toBase64(bytes: Uint8Array): string {
@@ -79,27 +52,32 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
+const MAX_DIMENSION = 4096;
+const MAX_PIXELS = MAX_DIMENSION * MAX_DIMENSION;
+
 export const convertImageToAvif = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: FormData) => data)
   .handler(async ({ data }) => {
-    const file = data.get("file");
-    if (!(file instanceof File)) throw new Error("No image received.");
-    if (file.size > MAX_INPUT_BYTES) throw new Error("Image is too large (max 25 MB).");
-
-    const maxDimension = Math.min(4096, Math.max(64, Number(data.get("maxDimension")) || 2048));
+    const width = Number(data.get("width"));
+    const height = Number(data.get("height"));
     const quality = Math.min(100, Math.max(10, Number(data.get("quality")) || 62));
+    const pixels = data.get("pixels");
 
-    const buffer = await file.arrayBuffer();
-    const decoded = await decodeImage(buffer, (file.type || "").toLowerCase());
-    const { width, height } = fitWithinSize(decoded.width, decoded.height, maxDimension);
-    const pixels = resizeImageData(decoded, width, height);
+    if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1) {
+      throw new Error("Invalid image dimensions.");
+    }
+    if (width > MAX_DIMENSION || height > MAX_DIMENSION || width * height > MAX_PIXELS) {
+      throw new Error("Image is too large.");
+    }
+    if (!(pixels instanceof File) || pixels.size !== width * height * 4) {
+      throw new Error("Invalid image data.");
+    }
 
-    const mod = await import("@jsquash/avif");
-    const encode = mod.encode as unknown as (
-      data: { data: Uint8ClampedArray; width: number; height: number },
-      opts?: Record<string, number>,
-    ) => Promise<ArrayBuffer>;
-    const encoded = await encode(pixels, { quality, speed: 8 });
-    return { base64: toBase64(new Uint8Array(encoded)), mime: "image/avif" };
+    const raw = new Uint8Array(await pixels.arrayBuffer());
+    const encode = await loadEncoder(new URL(getRequest().url).origin);
+    const output = encode(raw, width, height, { quality, speed: 8 });
+    if (!output || output.byteLength === 0) throw new Error("AVIF encoding failed.");
+
+    return { base64: toBase64(output), mime: "image/avif" };
   });

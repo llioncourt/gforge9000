@@ -1,7 +1,11 @@
 /**
  * Single place where every uploaded image becomes AVIF.
- * Storage only ever receives `image/avif`; conversion happens in the browser.
+ * Storage only ever receives `image/avif`. Conversion happens in the browser
+ * when possible, and falls back to a server-side converter when the browser
+ * cannot encode AVIF (no native encoder, WASM blocked, undecodable format).
  */
+
+import { convertImageToAvif } from "@/lib/avif-convert.functions";
 
 export const AVIF_MIME = "image/avif";
 export const AVIF_MAX_DIMENSION = 2048;
@@ -65,6 +69,14 @@ export async function convertToAvif(
   const max = opts.maxDimension ?? AVIF_MAX_DIMENSION;
   const quality = opts.quality ?? AVIF_QUALITY;
 
+  try {
+    return await convertInBrowser(file, max, quality);
+  } catch {
+    return convertOnServer(file, max, quality);
+  }
+}
+
+async function convertInBrowser(file: File, max: number, quality: number): Promise<File> {
   const { canvas, ctx, width, height } = await canvasFromFile(file, max);
 
   const native = await canvasToBlob(canvas, AVIF_MIME, quality).catch(() => null);
@@ -80,6 +92,23 @@ export async function convertToAvif(
   const imageData = ctx.getImageData(0, 0, width, height);
   const buffer = await encode(imageData, { cqLevel: 30, speed: 7 });
   return new File([buffer], avifFileName(file.name), { type: AVIF_MIME });
+}
+
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+async function convertOnServer(file: File, max: number, quality: number): Promise<File> {
+  const formData = new FormData();
+  formData.set("file", file);
+  formData.set("maxDimension", String(max));
+  formData.set("quality", String(Math.round(quality * 100)));
+  const result = await convertImageToAvif({ data: formData });
+  const bytes = base64ToBytes(result.base64);
+  return new File([bytes.buffer as ArrayBuffer], avifFileName(file.name), { type: AVIF_MIME });
 }
 
 /** Converts images to AVIF; leaves non-images untouched. */

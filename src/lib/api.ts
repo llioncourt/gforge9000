@@ -101,8 +101,11 @@ export async function updateCharacter(id: string, patch: TablesUpdate<"character
 }
 
 export async function deleteCharacter(id: string) {
-  const { error } = await supabase.from("characters").delete().eq("id", id);
+  const { data, error } = await supabase.from("characters").delete().eq("id", id).select("id");
   if (error) throw new Error(error.message);
+  if (!data || data.length === 0) {
+    throw new Error("Character could not be deleted — you may not have permission.");
+  }
 }
 
 export async function addEntry(input: TablesInsert<"character_entries">) {

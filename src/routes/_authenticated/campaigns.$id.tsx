@@ -400,6 +400,13 @@ function CampaignPage() {
                             const val = c.player_name ?? (c.is_npc ? "__npc__" : "__unassigned__");
                             const orphan = c.player_name && !names.includes(c.player_name) && c.player_name !== "NPC";
                             return (
+                              <div className="mt-0.5 flex items-center gap-2">
+                              {c.player_name ? (
+                                <UserAvatar
+                                  name={c.player_name}
+                                  avatarPath={playerMember?.avatar_url}
+                                />
+                              ) : null}
                               <Select
                                 value={val}
                                 onValueChange={(v) =>
@@ -425,10 +432,17 @@ function CampaignPage() {
                                   )}
                                 </SelectContent>
                               </Select>
+                              </div>
                             );
                           })()
                         ) : (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                            {c.player_name ? (
+                              <UserAvatar
+                                name={c.player_name}
+                                avatarPath={playerMember?.avatar_url}
+                              />
+                            ) : null}
                             {c.player_name || (c.is_npc ? "NPC" : "Player character")}
                           </p>
                         )}
@@ -522,6 +536,7 @@ function CampaignPage() {
                         </AlertDialog>
                       </div>
                     ) : null}
+                    </div>
                   </div>
                 );
               })}

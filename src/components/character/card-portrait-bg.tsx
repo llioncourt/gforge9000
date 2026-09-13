@@ -20,7 +20,7 @@ export function CardPortraitBg({ path }: { path: string | null | undefined }) {
         src={url}
         alt=""
         aria-hidden
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-top"
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/95 via-background/85 to-background/70" />
     </>

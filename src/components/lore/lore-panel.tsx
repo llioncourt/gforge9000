@@ -278,6 +278,32 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={importing} onOpenChange={setImporting}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import lore</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-muted-foreground text-sm">
+              Adds the entries and their links from an exported file to this campaign. Existing
+              entries are kept; nothing is overwritten. Player reveals and history are not included.
+            </p>
+            <FileDropzone
+              accept="application/json,.json"
+              onFiles={(files) => files[0] && runImport.mutate(files[0])}
+              label={runImport.isPending ? "Importing…" : "Drop a lore export here, or click to browse"}
+              hint="JSON file exported from a campaign"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImporting(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }

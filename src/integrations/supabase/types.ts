@@ -1339,6 +1339,10 @@ export type Database = {
         Args: { _campaign: string; _new_gm: string }
         Returns: undefined
       }
+      transfer_character_owner: {
+        Args: { _character: string; _new_owner: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

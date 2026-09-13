@@ -48,6 +48,7 @@ import {
   listMembers,
   removeMember,
   transferCampaignGm,
+  transferCharacterOwner,
   listNotes,
   setCharacterCampaign,
   toCharacterRecord,
@@ -185,6 +186,17 @@ function CampaignPage() {
     mutationFn: ({ cid, name }: { cid: string; name: string | null }) =>
       updateCharacter(cid, { player_name: name }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const transferOwner = useMutation({
+    mutationFn: ({ cid, userId }: { cid: string; userId: string }) =>
+      transferCharacterOwner(cid, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
+      queryClient.invalidateQueries({ queryKey: ["characters"] });
+      toast.success("Character ownership transferred.");
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -507,6 +519,35 @@ function CampaignPage() {
                         ))}
                       </div>
                     ) : null}
+
+                    {isGm || c.owner_id === user?.id ? (
+                      <div className="mt-3 flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Owner</span>
+                        <Select
+                          value={c.owner_id}
+                          onValueChange={(v) => {
+                            if (v !== c.owner_id) transferOwner.mutate({ cid: c.id, userId: v });
+                          }}
+                          disabled={transferOwner.isPending}
+                        >
+                          <SelectTrigger className="h-7 w-[180px] text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(members.data ?? []).some((m) => m.user_id === c.owner_id) ? null : (
+                              <SelectItem value={c.owner_id}>Current owner</SelectItem>
+                            )}
+                            {members.data?.map((m) => (
+                              <SelectItem key={m.user_id} value={m.user_id}>
+                                {m.display_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : null}
+
+
 
                     {isGm ? (
                       <div className="mt-4 flex flex-wrap gap-2">

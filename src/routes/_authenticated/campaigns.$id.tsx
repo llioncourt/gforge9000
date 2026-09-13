@@ -394,6 +394,10 @@ function CampaignPage() {
           <SessionsPanel campaignId={id} isGm={isGm} />
         </TabsContent>
 
+        <TabsContent value="timeline" className="mt-6">
+          <TimelinePanel campaignId={id} isGm={isGm} />
+        </TabsContent>
+
         <TabsContent value="battle" className="mt-6">
           <BattlePanel campaignId={id} isGm={isGm} />
         </TabsContent>

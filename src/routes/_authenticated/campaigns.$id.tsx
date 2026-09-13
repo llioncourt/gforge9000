@@ -160,6 +160,13 @@ function CampaignPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const assignPlayer = useMutation({
+    mutationFn: ({ cid, name }: { cid: string; name: string | null }) =>
+      updateCharacter(cid, { player_name: name }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const attach = useMutation({
     mutationFn: (cid: string) => setCharacterCampaign(cid, id),
     onSuccess: () => {

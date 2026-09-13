@@ -125,13 +125,13 @@ export function PackPickerDialog({
 
   const rows = useMemo(() => {
     const linked = packs.map((p) => p.toLowerCase());
-    return (library.data ?? []).filter(
-      (e) =>
-        kinds.includes(e.kind) &&
-        !!e.pack &&
-        linked.includes(e.pack.toLowerCase()) &&
-        matchesSearch(search, [e.name, e.category, e.summary, e.pack, ...(e.tags ?? [])]),
+    const base = (library.data ?? []).filter(
+      (e) => kinds.includes(e.kind) && !!e.pack && linked.includes(e.pack.toLowerCase()),
     );
+    return rankSearch(search, base, (e) => ({
+      name: e.name,
+      fields: [e.category, e.summary, e.pack, ...(e.tags ?? [])],
+    }));
   }, [library.data, kinds, packs, search]);
 
 

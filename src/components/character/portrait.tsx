@@ -33,7 +33,7 @@ export function PortraitFrame({
       )}
     >
       {url ? (
-        <img
+        <img loading="lazy" decoding="async"
           src={url}
           alt={`Portrait of ${name}`}
           className="h-full w-full object-cover object-top"

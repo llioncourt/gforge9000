@@ -175,7 +175,7 @@ function SettingsPage() {
             <h2 className="font-display text-lg font-semibold">Profile</h2>
             <div className="flex items-start gap-4">
               {avatarPreview ? (
-                <img
+                <img loading="lazy" decoding="async"
                   src={avatarPreview}
                   alt="Your profile photo"
                   className="size-20 shrink-0 rounded-full border border-border object-cover"

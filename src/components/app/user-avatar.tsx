@@ -31,7 +31,7 @@ export function UserAvatar({
       title={name}
     >
       {url ? (
-        <img src={url} alt={name} className="h-full w-full object-cover" />
+        <img loading="lazy" decoding="async" src={url} alt={name} className="h-full w-full object-cover" />
       ) : (
         <span className="text-[10px] font-semibold text-muted-foreground">
           {portraitInitials(name)}

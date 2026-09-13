@@ -16,7 +16,7 @@ export function CardPortraitBg({ path }: { path: string | null | undefined }) {
   if (!url) return null;
   return (
     <>
-      <img
+      <img loading="lazy" decoding="async"
         src={url}
         alt=""
         aria-hidden

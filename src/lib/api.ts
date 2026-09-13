@@ -252,6 +252,10 @@ export async function addNote(input: TablesInsert<"campaign_notes">) {
   );
 }
 
+export async function updateNote(id: string, patch: TablesUpdate<"campaign_notes">) {
+  return unwrap(await supabase.from("campaign_notes").update(patch).eq("id", id).select().single());
+}
+
 export async function deleteNote(id: string) {
   const { error } = await supabase.from("campaign_notes").delete().eq("id", id);
   if (error) throw new Error(error.message);

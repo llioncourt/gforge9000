@@ -57,6 +57,7 @@ import { LorePanel } from "@/components/lore/lore-panel";
 import { StoryPanel } from "@/components/lore/story-panel";
 import { GraphPanel } from "@/components/lore/graph-panel";
 import { PlayersPanel } from "@/components/lore/players-panel";
+import { SessionsPanel } from "@/components/lore/sessions-panel";
 import { BattlePanel } from "@/components/battle/battle-panel";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({

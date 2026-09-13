@@ -25,6 +25,8 @@ export function FileDropzone({
   hint,
   compact = false,
   className,
+  loading = false,
+  loadingLabel = "Importing…",
 }: FileDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);

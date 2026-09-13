@@ -406,6 +406,11 @@ function CampaignPage() {
           <BattlePanel campaignId={id} isGm={isGm} />
         </TabsContent>
 
+        <TabsContent value="library" className="mt-6">
+          <AssetsPanel campaignId={id} isGm={isGm} />
+        </TabsContent>
+
+
         <TabsContent value="notes" className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
           <div className="space-y-3">
             <div className="w-full sm:w-60">

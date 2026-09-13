@@ -144,6 +144,8 @@ function PacksPage() {
           <FileDropzone
             accept="application/json"
             compact
+            loading={importPack.isPending}
+            loadingLabel="Importing pack…"
             label="Import a pack"
             hint="Drop a Universal Character Forge pack JSON file"
             onFiles={(files) => {

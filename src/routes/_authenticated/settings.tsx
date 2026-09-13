@@ -20,7 +20,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { FileDropzone } from "@/components/ui/FileDropzone";
+import { UserAvatar } from "@/components/app/user-avatar";
 import { getProfile, upsertProfile, wipeAllMyData } from "@/lib/api";
+import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/hooks/use-session";
 import { AUDIT_SUMMARY, RULES_AUDIT } from "@/rules/audit";
@@ -110,6 +113,44 @@ function SettingsPage() {
     document.documentElement.classList.toggle("dark", !light);
   }, [light]);
 
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  const uploadPhoto = useMutation({
+    mutationFn: async (file: File) => {
+      const path = await uploadAvatar(file);
+      await upsertProfile(user!.id, { avatar_url: path });
+      return { path, localUrl: URL.createObjectURL(file) };
+    },
+    onSuccess: ({ localUrl }) => {
+      setAvatarPreview((old) => {
+        if (old) URL.revokeObjectURL(old);
+        return localUrl;
+      });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["portrait"] });
+      toast.success("Photo updated.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removePhoto = useMutation({
+    mutationFn: async () => {
+      const old = data?.avatar_url;
+      await upsertProfile(user!.id, { avatar_url: null });
+      if (old) await removePortrait(old).catch(() => undefined);
+    },
+    onSuccess: () => {
+      setAvatarPreview((old) => {
+        if (old) URL.revokeObjectURL(old);
+        return null;
+      });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["portrait"] });
+      toast.success("Photo removed.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const save = useMutation({
     mutationFn: () => upsertProfile(user!.id, { display_name: displayName, bio }),
     onSuccess: () => {
@@ -132,6 +173,47 @@ function SettingsPage() {
         <div className="space-y-6">
           <section className="panel space-y-4 p-6">
             <h2 className="font-display text-lg font-semibold">Profile</h2>
+            <div className="flex items-start gap-4">
+              {avatarPreview ? (
+                <img
+                  src={avatarPreview}
+                  alt="Your profile photo"
+                  className="size-20 shrink-0 rounded-full border border-border object-cover"
+                />
+              ) : (
+                <UserAvatar
+                  name={displayName || user?.email || "?"}
+                  avatarPath={data?.avatar_url}
+                  className="size-20 text-lg"
+                />
+              )}
+              <div className="flex-1 space-y-2">
+                <Label>Profile photo</Label>
+                <FileDropzone
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+                  compact
+                  loading={uploadPhoto.isPending}
+                  loadingLabel="Uploading photo…"
+                  label={
+                    <span className="text-xs text-muted-foreground">
+                      Drop an image here — it is converted to AVIF automatically
+                    </span>
+                  }
+                  onFiles={(files) => files[0] && uploadPhoto.mutate(files[0])}
+                />
+                {data?.avatar_url ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => removePhoto.mutate()}
+                    disabled={removePhoto.isPending}
+                  >
+                    Remove photo
+                  </Button>
+                ) : null}
+              </div>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="display">Display name</Label>
               <Input

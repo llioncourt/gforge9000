@@ -46,6 +46,7 @@ import {
   listCharacters,
   listEntriesForCharacters,
   listMembers,
+  removeMember,
   transferCampaignGm,
   listNotes,
   setCharacterCampaign,
@@ -683,6 +684,35 @@ function CampaignPage() {
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction onClick={() => transferGm.mutate(m.user_id)}>
                             Transfer
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                  {isGm && m.user_id !== user?.id && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          aria-label={`Remove ${m.display_name} from the campaign`}
+                          disabled={removeMemberMut.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Remove this member?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {m.display_name} loses access to this campaign. Their characters stay in
+                            their account and can be re-attached later.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => removeMemberMut.mutate(m.user_id)}>
+                            Remove
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>

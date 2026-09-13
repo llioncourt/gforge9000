@@ -57,6 +57,7 @@ import {
   listVersions,
   restoreVersion,
   saveVersion,
+  getCampaign,
   toCharacterRecord,
   toEntry,
   updateCharacter,

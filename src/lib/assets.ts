@@ -65,7 +65,7 @@ export async function uploadAssetFile(campaignId: string, file: File): Promise<s
   const path = assetPathFor(user.id, campaignId, file.name);
   const { error } = await supabase.storage
     .from(ASSET_BUCKET)
-    .upload(path, file, { contentType: file.type || undefined, upsert: false });
+    .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
   if (error) throw new Error(error.message);
   return path;
 }

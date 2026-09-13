@@ -143,7 +143,7 @@ export function entityInserts(
       tags: e.tags ?? [],
       image_url: e.image_url,
       sort_order: e.sort_order ?? 0,
-      data: (e.data ?? {}) as TablesInsert<"entities">["data"],
+      data: (e.data ?? {}) as NonNullable<TablesInsert<"entities">["data"]>,
     },
   }));
 }

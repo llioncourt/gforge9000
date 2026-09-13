@@ -122,6 +122,19 @@ export function BattleGrid({
     };
   }, [drag, panning, toImage, grid, onMove, tool]);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const zoomMap = (event: WheelEvent) => {
+      if (!event.ctrlKey) return;
+      event.preventDefault();
+      const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
+      setZoom((value) => Math.min(4, Math.max(0.15, value * factor)));
+    };
+    container.addEventListener("wheel", zoomMap, { passive: false });
+    return () => container.removeEventListener("wheel", zoomMap);
+  }, []);
+
   const canMove = useCallback(
     (object: MapObjectRow) =>
       isGm ||
@@ -166,12 +179,6 @@ export function BattleGrid({
           "bg-muted/20 relative h-[70vh] w-full touch-none overflow-hidden rounded-lg border",
           panning ? "cursor-grabbing" : tool === "move" ? "cursor-grab" : "cursor-crosshair",
         )}
-        onWheel={(event) => {
-          if (!event.ctrlKey) return;
-          event.preventDefault();
-          const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
-          setZoom((z) => Math.min(4, Math.max(0.15, z * factor)));
-        }}
         onPointerDown={(event) => {
           if (event.button !== 0) return;
           const p = toImage(event.clientX, event.clientY);
@@ -302,9 +309,19 @@ export function BattleGrid({
 
           {objects.map((object) => {
             const character = characters.find((c) => c.id === object.character_id) ?? null;
+            const objectData =
+              object.data && typeof object.data === "object" && !Array.isArray(object.data)
+                ? object.data
+                : null;
+            const entityId =
+              objectData && typeof objectData.entity_id === "string"
+                ? objectData.entity_id
+                : null;
             const npc = character
               ? null
-              : npcs.find((candidate) => candidate.name === object.label) ?? null;
+              : npcs.find((candidate) => candidate.id === entityId) ??
+                npcs.find((candidate) => candidate.name === object.label) ??
+                null;
             const dragging = drag?.id === object.id;
             const base = dragging
               ? { x: drag.x, y: drag.y }

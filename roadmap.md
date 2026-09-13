@@ -21,7 +21,7 @@ Order agreed with the user: lore first, battle grid after.
 ## Phase 3 — Assets, import/export, AI
 - [x] Assets library (private storage, GM share toggle) + AssetImage
 - [x] Import/export of campaign lore (UCF-LORE v1 JSON)
-- [ ] AI generation helpers (Lovable AI Gateway)
+- [x] AI generation helpers (Lovable AI Gateway) — lore draft dialog, GM-only, review before save
 
 ## Phase 4 — Battle grid (done)
 - [x] maps + map_objects schema, RLS, fog of war

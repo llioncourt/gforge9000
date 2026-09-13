@@ -745,6 +745,7 @@ function CharacterPage() {
                               target: level.effective,
                               characterId: id,
                               contextKey: rollKey,
+                              campaignId,
                             })
                           }
                         >
@@ -966,7 +967,7 @@ function CharacterPage() {
                     key={label}
                     variant="outline"
                     size="sm"
-                    onClick={() => roll({ label: `${label} check`, target: value, characterId: id })}
+                    onClick={() => rollAttribute(label, value)}
                   >
                     {label} {value}
                   </Button>
@@ -1017,6 +1018,7 @@ function CharacterPage() {
                                 label: `${e.name} — ${weapon.name}`,
                                 target,
                                 characterId: id,
+                                campaignId,
                               })
                             }
                             onDamage={(expression) =>
@@ -1024,6 +1026,7 @@ function CharacterPage() {
                                 label: `${e.name} damage`,
                                 expression,
                                 characterId: id,
+                                campaignId,
                               })
                             }
                             persistAmmo={async (current) => {

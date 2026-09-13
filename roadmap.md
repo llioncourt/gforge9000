@@ -14,7 +14,7 @@ Order agreed with the user: lore first, battle grid after.
 ## Phase 2 — Story & play
 - [x] Story tab (arcs/adventures/chapters/scenes/quests/mysteries)
 - [x] Sessions prep/recap merged with existing campaign notes
-- [ ] Timeline + in-world calendar
+- [x] Timeline + in-world calendar
 - [x] Relationship graph
 - [x] Player portal / knowledge grants UI
 

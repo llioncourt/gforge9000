@@ -330,6 +330,10 @@ function CharacterPage() {
   }
 
   const appearance = (form.appearance ?? {}) as Record<string, string>;
+  const campaignId = form.campaign_id ?? null;
+  const rollAttribute = (label: string, target: number) =>
+    roll({ label: `${label} check`, target, characterId: id, campaignId });
+
   const gear = entries.filter((e) => e.kind === "equipment");
   const weaponEntries = gear.filter(
     (e) => ((e.data["weapons"] as unknown[] | undefined) ?? []).length > 0,
@@ -560,14 +564,46 @@ function CharacterPage() {
                 ] as const
               ).map(([label, key]) => (
                 <Field key={key} label={label}>
-                  <Input
-                    type="number"
-                    value={form[key]}
-                    onChange={(e) => patch({ [key]: Number(e.target.value) } as Partial<CharacterRow>)}
-                  />
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      value={form[key]}
+                      onChange={(e) => patch({ [key]: Number(e.target.value) } as Partial<CharacterRow>)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      aria-label={`Roll ${label}`}
+                      title={`Roll against ${label} ${sheet.stats[key]}`}
+                      onClick={() => rollAttribute(label, sheet.stats[key])}
+                    >
+                      <Dices className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </Field>
               ))}
             </div>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["Will", sheet.stats.will],
+                  ["Per", sheet.stats.per],
+                  ["HT (FP)", sheet.stats.ht],
+                ] as const
+              ).map(([label, value]) => (
+                <Button
+                  key={label}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => rollAttribute(label, value)}
+                >
+                  <Dices className="mr-1 h-4 w-4" /> {label} {value}
+                </Button>
+              ))}
+            </div>
+
             <h3 className="pt-2 font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
               Secondary adjustments
             </h3>
@@ -709,6 +745,7 @@ function CharacterPage() {
                               target: level.effective,
                               characterId: id,
                               contextKey: rollKey,
+                              campaignId,
                             })
                           }
                         >
@@ -930,7 +967,7 @@ function CharacterPage() {
                     key={label}
                     variant="outline"
                     size="sm"
-                    onClick={() => roll({ label: `${label} check`, target: value, characterId: id })}
+                    onClick={() => rollAttribute(label, value)}
                   >
                     {label} {value}
                   </Button>
@@ -981,6 +1018,7 @@ function CharacterPage() {
                                 label: `${e.name} — ${weapon.name}`,
                                 target,
                                 characterId: id,
+                                campaignId,
                               })
                             }
                             onDamage={(expression) =>
@@ -988,6 +1026,7 @@ function CharacterPage() {
                                 label: `${e.name} damage`,
                                 expression,
                                 characterId: id,
+                                campaignId,
                               })
                             }
                             persistAmmo={async (current) => {

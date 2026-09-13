@@ -314,8 +314,8 @@ export function BattleGrid({
                 ? object.data
                 : null;
             const entityId =
-              objectData && typeof objectData.entity_id === "string"
-                ? objectData.entity_id
+              objectData && typeof objectData["entity_id"] === "string"
+                ? objectData["entity_id"]
                 : null;
             const npc = character
               ? null

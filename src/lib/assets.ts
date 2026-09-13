@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { toAvifIfImage } from "@/lib/image-avif";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type AssetRow = Tables<"campaign_assets">;
@@ -58,16 +59,20 @@ export async function listAssets(campaignId: string): Promise<AssetRow[]> {
   );
 }
 
-export async function uploadAssetFile(campaignId: string, file: File): Promise<string> {
+export async function uploadAssetFile(
+  campaignId: string,
+  file: File,
+): Promise<{ path: string; mimeType: string; byteSize: number }> {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
-  const path = assetPathFor(user.id, campaignId, file.name);
+  const stored = await toAvifIfImage(file);
+  const path = assetPathFor(user.id, campaignId, stored.name);
   const { error } = await supabase.storage
     .from(ASSET_BUCKET)
-    .upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+    .upload(path, stored, { contentType: stored.type || "application/octet-stream", upsert: false });
   if (error) throw new Error(error.message);
-  return path;
+  return { path, mimeType: stored.type || "application/octet-stream", byteSize: stored.size };
 }
 
 export async function createAsset(input: TablesInsert<"campaign_assets">): Promise<AssetRow> {

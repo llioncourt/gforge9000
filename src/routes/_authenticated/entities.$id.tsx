@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -47,8 +47,10 @@ import {
   withDataValue,
   type EntityRow,
 } from "@/lib/lore";
-import { getCampaign, listMembers } from "@/lib/api";
+import { getCampaign, listCampaignCharacters, listMembers } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
+import { FileDropzone } from "@/components/ui/FileDropzone";
+import { portraitInitials, portraitUrl, removePortrait, uploadPortrait } from "@/lib/portrait";
 
 export const Route = createFileRoute("/_authenticated/entities/$id")({
   head: () => ({

@@ -353,6 +353,33 @@ export async function listRolls(limit = 30) {
   );
 }
 
+/** Rolls made inside a campaign. RLS shows the GM everyone's rolls, players only their own. */
+export async function listCampaignRolls(campaignId: string, limit = 100) {
+  const rolls = unwrap(
+    await supabase
+      .from("roll_history")
+      .select("*")
+      .eq("campaign_id", campaignId)
+      .order("created_at", { ascending: false })
+      .limit(limit),
+  );
+  const ids = [...new Set(rolls.map((r) => r.user_id))];
+  const profiles = ids.length
+    ? unwrap(await supabase.from("profiles").select("id, display_name").in("id", ids))
+    : [];
+  const charIds = [...new Set(rolls.map((r) => r.character_id).filter(Boolean))] as string[];
+  const chars = charIds.length
+    ? unwrap(await supabase.from("characters").select("id, name").in("id", charIds))
+    : [];
+  return rolls.map((r) => ({
+    ...r,
+    display_name: profiles.find((p) => p.id === r.user_id)?.display_name ?? "Player",
+    character_name: chars.find((c) => c.id === r.character_id)?.name ?? null,
+  }));
+}
+
+export type CampaignRollRow = Awaited<ReturnType<typeof listCampaignRolls>>[number];
+
 export async function recordRoll(input: Omit<TablesInsert<"roll_history">, "user_id">) {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return null;

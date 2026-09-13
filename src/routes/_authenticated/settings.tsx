@@ -113,6 +113,44 @@ function SettingsPage() {
     document.documentElement.classList.toggle("dark", !light);
   }, [light]);
 
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  const uploadPhoto = useMutation({
+    mutationFn: async (file: File) => {
+      const path = await uploadAvatar(file);
+      await upsertProfile(user!.id, { avatar_url: path });
+      return { path, localUrl: URL.createObjectURL(file) };
+    },
+    onSuccess: ({ localUrl }) => {
+      setAvatarPreview((old) => {
+        if (old) URL.revokeObjectURL(old);
+        return localUrl;
+      });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["portrait"] });
+      toast.success("Photo updated.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removePhoto = useMutation({
+    mutationFn: async () => {
+      const old = data?.avatar_url;
+      await upsertProfile(user!.id, { avatar_url: null });
+      if (old) await removePortrait(old).catch(() => undefined);
+    },
+    onSuccess: () => {
+      setAvatarPreview((old) => {
+        if (old) URL.revokeObjectURL(old);
+        return null;
+      });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["portrait"] });
+      toast.success("Photo removed.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const save = useMutation({
     mutationFn: () => upsertProfile(user!.id, { display_name: displayName, bio }),
     onSuccess: () => {

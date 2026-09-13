@@ -132,15 +132,28 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
             </SelectContent>
           </Select>
           {isGm ? (
-            <Button
-              onClick={() => {
-                setNewKind(kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"));
-                setCreating(true);
-              }}
-            >
-              <Plus className="mr-2 size-4" /> New entry
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => exportLore.mutate()}
+                disabled={exportLore.isPending}
+              >
+                <Download className="mr-2 size-4" /> Export
+              </Button>
+              <Button variant="outline" onClick={() => setImporting(true)}>
+                <Upload className="mr-2 size-4" /> Import
+              </Button>
+              <Button
+                onClick={() => {
+                  setNewKind(kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"));
+                  setCreating(true);
+                }}
+              >
+                <Plus className="mr-2 size-4" /> New entry
+              </Button>
+            </>
           ) : null}
+
         </div>
       </div>
 

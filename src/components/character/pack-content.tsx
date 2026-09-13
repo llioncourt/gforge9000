@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { listContentPacks, listLibrary, type LibraryRow } from "@/lib/api";
+import { matchesSearch } from "@/lib/search";
+
 
 /** Pack names that exist for this user: declared packs plus packs seen on entries. */
 export function useAvailablePacks() {
@@ -128,9 +130,10 @@ export function PackPickerDialog({
         kinds.includes(e.kind) &&
         !!e.pack &&
         linked.includes(e.pack.toLowerCase()) &&
-        `${e.name} ${e.category ?? ""}`.toLowerCase().includes(search.toLowerCase()),
+        matchesSearch(search, [e.name, e.category, e.summary, e.pack, ...(e.tags ?? [])]),
     );
   }, [library.data, kinds, packs, search]);
+
 
   const descParts = (e: LibraryRow) =>
     [e.category, e.source_label, e.source_page ? `p. ${e.source_page}` : null, ...(e.tags ?? [])]

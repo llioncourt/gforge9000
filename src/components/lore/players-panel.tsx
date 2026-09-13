@@ -23,6 +23,7 @@ import {
   revokeKnowledge,
   type EntityRow,
 } from "@/lib/lore";
+import { createNotification } from "@/lib/notifications";
 import { useSession } from "@/hooks/use-session";
 
 /**
@@ -55,13 +56,25 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     queryClient.invalidateQueries({ queryKey: ["lore-grants", campaignId] });
 
   const give = useMutation({
-    mutationFn: (input: { userId: string; entityId: string }) =>
-      grantKnowledge({
+    mutationFn: async (input: { userId: string; entityId: string }) => {
+      const grant = await grantKnowledge({
         campaign_id: campaignId,
         entity_id: input.entityId,
         user_id: input.userId,
         granted_by: user!.id,
-      }),
+      });
+      const entity = entityById.get(input.entityId);
+      await createNotification({
+        user_id: input.userId,
+        campaign_id: campaignId,
+        entity_id: input.entityId,
+        kind: "reveal",
+        title: entity ? `New record revealed: ${entity.name}` : "A new record was revealed",
+        body: entity ? kindDef(entity.kind).label : null,
+        created_by: user!.id,
+      }).catch(() => undefined);
+      return grant;
+    },
     onSuccess: async () => {
       toast.success("Revealed to the player");
       await invalidate();

@@ -12,7 +12,7 @@ export function UserAvatar({
   className,
 }: {
   name: string;
-  avatarPath?: string | null;
+  avatarPath?: string | null | undefined;
   className?: string;
 }) {
   const { data: url } = useQuery({

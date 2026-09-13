@@ -57,6 +57,7 @@ import {
   listVersions,
   restoreVersion,
   saveVersion,
+  getCampaign,
   toCharacterRecord,
   toEntry,
   updateCharacter,
@@ -104,6 +105,7 @@ import type { LibraryRow } from "@/lib/api";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
 import { ModelPanel } from "@/components/character/model-panel";
 import { parseModelTransform } from "@/lib/model3d";
+import { allowedPacksOf } from "@/lib/packs";
 
 import { PrintSheet } from "@/components/character/print-sheet";
 
@@ -275,6 +277,30 @@ function CharacterPage() {
 
   const [pickerKinds, setPickerKinds] = useState<EntryKind[] | null>(null);
   const linkedPacks = form?.packs ?? [];
+
+  // When the character belongs to a campaign, the campaign's enabled packs are
+  // automatically available on the sheet (unioned with the character's own).
+  const campaignQuery = useQuery({
+    queryKey: ["campaign", form?.campaign_id],
+    queryFn: () => getCampaign(form!.campaign_id!),
+    enabled: !!form?.campaign_id,
+  });
+  const campaignPacks = useMemo(
+    () => allowedPacksOf(campaignQuery.data?.settings),
+    [campaignQuery.data],
+  );
+  const effectivePacks = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const name of [...linkedPacks, ...campaignPacks]) {
+      const key = name.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        out.push(name);
+      }
+    }
+    return out;
+  }, [linkedPacks, campaignPacks]);
 
   const addFromPack = useMutation({
     mutationFn: async (entry: LibraryRow) => {
@@ -466,7 +492,11 @@ function CharacterPage() {
               </div>
               <Switch checked={form.is_npc} onCheckedChange={(v) => patch({ is_npc: v })} />
             </div>
-            <CharacterPacksPanel packs={linkedPacks} onChange={(next) => patch({ packs: next })} />
+            <CharacterPacksPanel
+              packs={linkedPacks}
+              lockedPacks={campaignPacks}
+              onChange={(next) => patch({ packs: next })}
+            />
             <div className="space-y-3 border-t border-border pt-4">
               <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Appearance &amp; background
@@ -1033,7 +1063,7 @@ function CharacterPage() {
         open={pickerKinds !== null}
         onOpenChange={(v) => !v && setPickerKinds(null)}
         kinds={pickerKinds ?? []}
-        packs={linkedPacks}
+        packs={effectivePacks}
         pending={addFromPack.isPending}
         onAdd={(entry) => addFromPack.mutate(entry)}
       />

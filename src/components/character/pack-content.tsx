@@ -29,12 +29,28 @@ export function useAvailablePacks() {
 /** Lets the player link the character to the packs its content may come from. */
 export function CharacterPacksPanel({
   packs,
+  lockedPacks = [],
   onChange,
 }: {
   packs: string[];
+  /** Packs forced on by the character's campaign; they cannot be unlinked here. */
+  lockedPacks?: string[];
   onChange: (next: string[]) => void;
 }) {
   const available = useAvailablePacks();
+  const lockedSet = new Set(lockedPacks.map((p) => p.toLowerCase()));
+  const names = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const name of [...lockedPacks, ...available]) {
+      const key = name.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        out.push(name);
+      }
+    }
+    return out;
+  }, [lockedPacks, available]);
   const toggle = (name: string) =>
     onChange(packs.includes(name) ? packs.filter((p) => p !== name) : [...packs, name]);
 
@@ -48,25 +64,34 @@ export function CharacterPacksPanel({
         Traits, skills and gear are picked from the packs linked here. Anything typed by hand is
         marked as custom.
       </p>
-      {available.length === 0 ? (
+      {lockedPacks.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Packs enabled by the campaign are always available and cannot be removed here.
+        </p>
+      )}
+      {names.length === 0 ? (
         <p className="text-xs text-muted-foreground">No packs available yet.</p>
       ) : (
         <div className="flex flex-wrap gap-2 pt-1">
-          {available.map((name) => {
-            const active = packs.includes(name);
+          {names.map((name) => {
+            const locked = lockedSet.has(name.toLowerCase());
+            const active = locked || packs.includes(name);
             return (
               <button
                 key={name}
                 type="button"
-                onClick={() => toggle(name)}
+                onClick={() => !locked && toggle(name)}
+                disabled={locked}
                 aria-pressed={active}
+                title={locked ? "Enabled by the campaign" : undefined}
                 className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${
                   active
                     ? "border-primary bg-primary/15 text-foreground"
                     : "border-border text-muted-foreground hover:text-foreground"
-                }`}
+                } ${locked ? "cursor-not-allowed opacity-90" : ""}`}
               >
                 {name}
+                {locked ? " (campaign)" : ""}
               </button>
             );
           })}

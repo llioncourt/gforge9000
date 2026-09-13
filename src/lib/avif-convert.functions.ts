@@ -19,7 +19,7 @@ type EncodeFn = (
   width: number,
   height: number,
   options: Record<string, unknown>,
-) => Uint8Array | undefined;
+) => Promise<ArrayBuffer>;
 
 let encoderPromise: Promise<EncodeFn> | undefined;
 
@@ -29,11 +29,16 @@ async function loadEncoder(origin: string): Promise<EncodeFn> {
     const response = await fetch(wasmUrl);
     if (!response.ok) throw new Error("Could not load the AVIF encoder.");
     const wasmModule = await WebAssembly.compile(await response.arrayBuffer());
-    const { init } = await import("@jsquash/avif/encode");
-    const emscriptenModule = (await init(wasmModule as WebAssembly.Module)) as {
-      encode: EncodeFn;
-    };
-    return emscriptenModule.encode;
+    const mod = await import("@jsquash/avif/encode");
+    // init() primes the module singleton with our pre-loaded WASM, so the
+    // default export never tries to fetch the codec itself.
+    await mod.init(wasmModule as WebAssembly.Module);
+    const encode = mod.default as unknown as (
+      data: { data: Uint8ClampedArray; width: number; height: number },
+      options: Record<string, unknown>,
+    ) => Promise<ArrayBuffer>;
+    return async (raw, width, height, options) =>
+      encode({ data: new Uint8ClampedArray(raw.buffer, 0, width * height * 4), width, height }, options);
   })();
   try {
     return await encoderPromise;
@@ -76,8 +81,8 @@ export const convertImageToAvif = createServerFn({ method: "POST" })
 
     const raw = new Uint8Array(await pixels.arrayBuffer());
     const encode = await loadEncoder(new URL(getRequest().url).origin);
-    const output = encode(raw, width, height, { quality, speed: 8 });
+    const output = await encode(raw, width, height, { quality, speed: 8 });
     if (!output || output.byteLength === 0) throw new Error("AVIF encoding failed.");
 
-    return { base64: toBase64(output), mime: "image/avif" };
+    return { base64: toBase64(new Uint8Array(output)), mime: "image/avif" };
   });

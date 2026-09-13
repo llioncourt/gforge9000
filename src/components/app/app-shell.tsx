@@ -83,8 +83,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <aside
         className={cn(
-          "no-print fixed inset-y-0 left-0 z-40 w-[17rem] max-w-[85vw] border-r border-sidebar-border/70 bg-sidebar/80 backdrop-blur-xl transition-transform duration-300 ease-out will-change-transform lg:w-64 lg:translate-x-0",
+          "no-print fixed inset-y-0 left-0 z-40 w-[17rem] max-w-[85vw] border-r border-sidebar-border/70 bg-sidebar/80 backdrop-blur-xl transition-transform duration-300 ease-out will-change-transform lg:w-64",
           open ? "translate-x-0" : "-translate-x-full",
+          collapsed ? "lg:-translate-x-full" : "lg:translate-x-0",
         )}
       >
         <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5">
@@ -100,11 +101,19 @@ export function AppShell({ children }: { children: ReactNode }) {
             </p>
           </div>
           <button
-            className="ml-auto text-muted-foreground lg:hidden"
+            className="ml-auto text-muted-foreground hover:text-foreground lg:hidden"
             onClick={() => setOpen(false)}
             aria-label="Close navigation"
           >
             <X className="h-4 w-4" />
+          </button>
+          <button
+            className="ml-auto hidden text-muted-foreground hover:text-foreground lg:block"
+            onClick={() => toggleCollapsed(true)}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+          >
+            <PanelLeftClose className="h-4 w-4" />
           </button>
         </div>
 

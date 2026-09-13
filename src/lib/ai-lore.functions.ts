@@ -18,11 +18,11 @@ export const draftLoreEntry = createServerFn({ method: "POST" })
     // Only the campaign's game master may generate drafts.
     const { data: campaign, error } = await context.supabase
       .from("campaigns")
-      .select("id, owner_id")
+      .select("id, gm_id")
       .eq("id", data.campaignId)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    if (!campaign || campaign.owner_id !== context.userId) {
+    if (!campaign || campaign.gm_id !== context.userId) {
       throw new Error("Only the game master can generate drafts for this campaign.");
     }
 

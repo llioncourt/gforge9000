@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -47,8 +47,10 @@ import {
   withDataValue,
   type EntityRow,
 } from "@/lib/lore";
-import { getCampaign, listMembers } from "@/lib/api";
+import { getCampaign, listCampaignCharacters, listMembers } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
+import { FileDropzone } from "@/components/ui/FileDropzone";
+import { portraitInitials, portraitUrl, removePortrait, uploadPortrait } from "@/lib/portrait";
 
 export const Route = createFileRoute("/_authenticated/entities/$id")({
   head: () => ({
@@ -96,6 +98,46 @@ function EntityPage() {
     enabled: !!campaignId,
   });
   const grants = useQuery({ queryKey: ["lore-grants", id], queryFn: () => listGrants(id) });
+  const campaignCharacters = useQuery({
+    queryKey: ["campaign-characters", campaignId],
+    queryFn: () => listCampaignCharacters(campaignId!),
+    enabled: !!campaignId,
+  });
+  const entityImagePath = entity.data?.image_url;
+  const photoUrl = useQuery({
+    queryKey: ["entity-photo", entityImagePath],
+    queryFn: () => portraitUrl(entityImagePath),
+    enabled: !!entityImagePath,
+  });
+
+  const uploadPhoto = useMutation({
+    mutationFn: async (file: File) => {
+      const path = await uploadPortrait(id, file);
+      await updateEntity(id, { image_url: path });
+      return path;
+    },
+    onSuccess: async (path) => {
+      setForm((prev) => (prev ? ({ ...prev, image_url: path } as EntityRow) : prev));
+      await queryClient.invalidateQueries({ queryKey: ["entity", id] });
+      await queryClient.invalidateQueries({ queryKey: ["entity-photo"] });
+      await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+      toast.success("Photo updated.");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+  const removePhoto = useMutation({
+    mutationFn: async (path: string) => {
+      await updateEntity(id, { image_url: null });
+      await removePortrait(path).catch(() => undefined);
+    },
+    onSuccess: async () => {
+      setForm((prev) => (prev ? ({ ...prev, image_url: null } as EntityRow) : prev));
+      await queryClient.invalidateQueries({ queryKey: ["entity", id] });
+      await queryClient.invalidateQueries({ queryKey: ["entity-photo"] });
+      await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
 
   const isGm = !!campaign.data && campaign.data.gm_id === user?.id;
   const canEdit = isGm || entity.data?.owner_user_id === user?.id;
@@ -357,6 +399,105 @@ function EntityPage() {
               />
             </div>
           </div>
+
+          {form.kind === "NPC" ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Photo</Label>
+                {form.image_url ? (
+                  <div className="flex items-start gap-3">
+                    {photoUrl.data ? (
+                      <img
+                        src={photoUrl.data}
+                        alt={`${form.name} portrait`}
+                        className="h-32 w-32 rounded-lg border object-cover"
+                      />
+                    ) : (
+                      <Skeleton className="h-32 w-32 rounded-lg" />
+                    )}
+                    {canEdit ? (
+                      <div className="space-y-2">
+                        <FileDropzone
+                          compact
+                          accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+                          label="Drop a new photo, or click to browse"
+                          loading={uploadPhoto.isPending}
+                          loadingLabel="Uploading photo…"
+                          onFiles={(files) => {
+                            const file = files[0];
+                            if (file) uploadPhoto.mutate(file);
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removePhoto.mutate(form.image_url!)}
+                          disabled={removePhoto.isPending}
+                        >
+                          <Trash2 className="mr-2 size-4" /> Remove photo
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : canEdit ? (
+                  <FileDropzone
+                    accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+                    label={`Drop a photo of ${form.name || "this NPC"}, or click to browse`}
+                    hint="PNG, JPEG, WebP, GIF or AVIF up to 5 MB"
+                    loading={uploadPhoto.isPending}
+                    loadingLabel="Uploading photo…"
+                    onFiles={(files) => {
+                      const file = files[0];
+                      if (file) uploadPhoto.mutate(file);
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-32 w-32 items-center justify-center rounded-lg border bg-muted text-2xl font-semibold text-muted-foreground">
+                    {portraitInitials(form.name)}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="entity-sheet">Character sheet (optional)</Label>
+                <Select
+                  value={dataValue(form, "character_sheet_id") || "none"}
+                  disabled={!canEdit}
+                  onValueChange={(value) => {
+                    const data = withDataValue(
+                      form,
+                      "character_sheet_id",
+                      value === "none" ? "" : value,
+                      false,
+                    );
+                    patch({ data: data as never });
+                    commit({ data: data as never });
+                  }}
+                >
+                  <SelectTrigger id="entity-sheet">
+                    <SelectValue placeholder="No linked sheet" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No linked sheet</SelectItem>
+                    {(campaignCharacters.data ?? []).map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {dataValue(form, "character_sheet_id") ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link
+                      to="/characters/$id"
+                      params={{ id: dataValue(form, "character_sheet_id") }}
+                    >
+                      <ExternalLink className="mr-2 size-4" /> Open character sheet
+                    </Link>
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
 
           <div className="space-y-2">
             <Label htmlFor="entity-summary">Summary</Label>

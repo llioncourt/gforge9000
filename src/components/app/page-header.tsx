@@ -10,14 +10,14 @@ export function PageHeader({
   actions?: ReactNode | undefined;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [clamped, setClamped] = useState(false);
+  const [canClamp, setCanClamp] = useState(false);
   const descRef = useRef<HTMLParagraphElement>(null);
 
   function measureClamp() {
     const el = descRef.current;
-    if (!el) return;
+    if (!el || expanded) return;
     // A clamped element's scrollHeight exceeds clientHeight when text is cut.
-    setClamped(el.scrollHeight > el.clientHeight + 1);
+    setCanClamp(el.scrollHeight > el.clientHeight + 1);
   }
 
   return (
@@ -38,7 +38,7 @@ export function PageHeader({
             >
               {description}
             </p>
-            {clamped ? (
+            {canClamp || expanded ? (
               <button
                 type="button"
                 onClick={() => setExpanded((v) => !v)}

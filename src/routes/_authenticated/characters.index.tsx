@@ -124,6 +124,8 @@ function CharactersPage() {
           <FileDropzone
             accept="application/json,.json"
             compact
+            loading={importJson.isPending}
+            loadingLabel="Importing character…"
             label={
               <span className="flex items-center gap-2 text-sm">
                 <Upload className="h-4 w-4" /> Drop a Forge JSON export to import

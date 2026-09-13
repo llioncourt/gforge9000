@@ -57,6 +57,7 @@ import { LorePanel } from "@/components/lore/lore-panel";
 import { StoryPanel } from "@/components/lore/story-panel";
 import { GraphPanel } from "@/components/lore/graph-panel";
 import { PlayersPanel } from "@/components/lore/players-panel";
+import { SessionsPanel } from "@/components/lore/sessions-panel";
 import { BattlePanel } from "@/components/battle/battle-panel";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
@@ -251,6 +252,7 @@ function CampaignPage() {
           <TabsTrigger value="story">Story</TabsTrigger>
           <TabsTrigger value="graph">Graph</TabsTrigger>
           <TabsTrigger value="reveals">Reveals</TabsTrigger>
+          <TabsTrigger value="sessions">Sessions</TabsTrigger>
           <TabsTrigger value="battle">Battle grid</TabsTrigger>
           <TabsTrigger value="notes">Notes &amp; handouts</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
@@ -384,6 +386,10 @@ function CampaignPage() {
 
         <TabsContent value="reveals" className="mt-6">
           <PlayersPanel campaignId={id} isGm={isGm} />
+        </TabsContent>
+
+        <TabsContent value="sessions" className="mt-6">
+          <SessionsPanel campaignId={id} isGm={isGm} />
         </TabsContent>
 
         <TabsContent value="battle" className="mt-6">

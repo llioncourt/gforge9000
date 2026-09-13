@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { matchesSearch, normaliseSearch, searchTokens } from "@/lib/search";
+import { matchesSearch, normaliseSearch, rankSearch, searchTokens } from "@/lib/search";
 
 describe("normaliseSearch", () => {
   it("strips accents, case and punctuation", () => {
@@ -40,5 +40,27 @@ describe("matchesSearch", () => {
 
   it("tolerates missing fields", () => {
     expect(matchesSearch("stealth", ["Stealth", null, undefined])).toBe(true);
+  });
+});
+
+describe("rankSearch", () => {
+  const rows = [
+    { name: "Hierarquia", summary: "confere poderes legais a certos membros" },
+    { name: "Poderes Legais", summary: "jurisdicao local" },
+    { name: "Poderes Legais (nacional)", summary: "jurisdicao nacional" },
+  ];
+  const select = (r: (typeof rows)[number]) => ({ name: r.name, fields: [r.summary] });
+
+  it("puts exact name matches before description-only matches", () => {
+    expect(rankSearch("poderes legais", rows, select).map((r) => r.name)).toEqual([
+      "Poderes Legais",
+      "Poderes Legais (nacional)",
+      "Hierarquia",
+    ]);
+  });
+
+  it("keeps every match and returns all rows for an empty query", () => {
+    expect(rankSearch("", rows, select)).toHaveLength(3);
+    expect(rankSearch("zzz", rows, select)).toHaveLength(0);
   });
 });

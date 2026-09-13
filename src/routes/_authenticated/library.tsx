@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { allowedPacksOf, packGateReason, DEFAULT_PACK_NAME } from "@/lib/packs";
-import { matchesSearch } from "@/lib/search";
+import { rankSearch } from "@/lib/search";
 
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -241,16 +241,17 @@ function LibraryPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const rows = useMemo(
-    () =>
-      (data ?? []).filter(
-        (e) =>
-          (kindFilter === "all" || e.kind === kindFilter) &&
-          (packFilter === "all" || (e.pack ?? "") === packFilter) &&
-          matchesSearch(search, [e.name, e.category, e.summary, e.pack, ...(e.tags ?? [])]),
-      ),
-    [data, kindFilter, packFilter, search],
-  );
+  const rows = useMemo(() => {
+    const base = (data ?? []).filter(
+      (e) =>
+        (kindFilter === "all" || e.kind === kindFilter) &&
+        (packFilter === "all" || (e.pack ?? "") === packFilter),
+    );
+    return rankSearch(search, base, (e) => ({
+      name: e.name,
+      fields: [e.category, e.summary, e.pack, ...(e.tags ?? [])],
+    }));
+  }, [data, kindFilter, packFilter, search]);
 
 
   const portable = toPortableLibrary((rows ?? []) as unknown as Record<string, unknown>[]);

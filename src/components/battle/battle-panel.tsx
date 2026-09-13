@@ -483,30 +483,6 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
         onToggleFog={toggleFog}
       />
 
-      {isGm ? (
-        <div className="space-y-2 rounded-lg border p-3">
-          <h4 className="text-xs font-semibold tracking-wide uppercase">Add tokens</h4>
-          <div className="flex flex-wrap gap-2">
-            {(characters.data ?? []).map((c) => (
-              <Button
-                key={c.id}
-                size="sm"
-                variant="outline"
-                onClick={() => addToken.mutate({ characterId: c.id, label: c.name })}
-              >
-                <Plus className="mr-1 size-3.5" /> {c.name}
-              </Button>
-            ))}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => addToken.mutate({ characterId: null, label: "Marker" })}
-            >
-              <Plus className="mr-1 size-3.5" /> Blank marker
-            </Button>
-          </div>
-        </div>
-      ) : null}
 
       {selected ? (
         <div className="flex flex-wrap items-end gap-3 rounded-lg border p-3">

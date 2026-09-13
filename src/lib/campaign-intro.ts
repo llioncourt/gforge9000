@@ -57,12 +57,23 @@ export async function campaignIntroUrl(path: string) {
   return data?.signedUrl ?? "";
 }
 
+export function campaignIntroFileName(campaignName: string | null | undefined) {
+  const base = (campaignName ?? "").trim().replace(/[\\/:*?"<>|]+/g, "").trim();
+  return `${base || "Campaign"}_intro.mp4`;
+}
+
 export async function uploadCampaignIntro(campaignId: string, file: File) {
   const validation = validateCampaignIntroFile(file);
   if (validation) throw new Error(validation);
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
+
+  const { data: campaign } = await supabase
+    .from("campaigns")
+    .select("name")
+    .eq("id", campaignId)
+    .maybeSingle();
 
   const current = await getCampaignIntro(campaignId);
   const path = `${user.id}/${campaignId}/${crypto.randomUUID()}.mp4`;
@@ -74,7 +85,7 @@ export async function uploadCampaignIntro(campaignId: string, file: File) {
   const { error } = await supabase.from("campaign_intros").upsert({
     campaign_id: campaignId,
     storage_path: path,
-    file_name: file.name,
+    file_name: campaignIntroFileName(campaign?.name),
     byte_size: file.size,
     mime_type: "video/mp4",
     version: crypto.randomUUID(),

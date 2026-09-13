@@ -100,6 +100,9 @@ const AssetsPanel = lazy(() =>
 const BattlePanel = lazy(() =>
   import("@/components/battle/battle-panel").then((mod) => ({ default: mod.BattlePanel })),
 );
+const RollsPanel = lazy(() =>
+  import("@/components/campaign/rolls-panel").then((mod) => ({ default: mod.RollsPanel })),
+);
 const SoundtrackPanel = lazy(() =>
   import("@/components/campaign/soundtrack-panel").then((mod) => ({ default: mod.SoundtrackPanel })),
 );
@@ -424,6 +427,7 @@ function CampaignPage() {
           <TabsTrigger value="battle">Battle grid</TabsTrigger>
           <TabsTrigger value="library">Library</TabsTrigger>
           <TabsTrigger value="soundtrack">Soundtrack</TabsTrigger>
+          <TabsTrigger value="rolls">Rolls</TabsTrigger>
 
           <TabsTrigger value="notes">Notes &amp; handouts</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
@@ -714,6 +718,12 @@ function CampaignPage() {
           </Suspense>
         </TabsContent>
 
+
+        <TabsContent value="rolls" className="mt-6">
+          <Suspense fallback={<PanelFallback />}>
+            <RollsPanel campaignId={id} isGm={isGm} />
+          </Suspense>
+        </TabsContent>
 
         <TabsContent value="notes" className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
           <div className="space-y-3">

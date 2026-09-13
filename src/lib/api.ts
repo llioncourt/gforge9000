@@ -219,6 +219,15 @@ export async function listMembers(campaignId: string) {
   }));
 }
 
+export async function removeMember(campaignId: string, userId: string) {
+  const { error } = await supabase
+    .from("campaign_members")
+    .delete()
+    .eq("campaign_id", campaignId)
+    .eq("user_id", userId);
+  if (error) throw new Error(error.message);
+}
+
 export async function listCampaignCharacters(campaignId: string) {
   return unwrap(
     await supabase.from("characters").select("*").eq("campaign_id", campaignId).order("name"),

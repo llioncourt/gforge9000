@@ -160,6 +160,15 @@ function CampaignPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const removeMemberMut = useMutation({
+    mutationFn: (userId: string) => removeMember(id, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["members", id] });
+      toast.success("Member removed from the campaign.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const approve = useMutation({
     mutationFn: ({ cid, value }: { cid: string; value: boolean }) =>
       updateCharacter(cid, { approved: value }),

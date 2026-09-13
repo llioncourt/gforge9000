@@ -475,6 +475,7 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
         imageUrl={image.data ?? null}
         objects={objects.data ?? []}
         characters={characters.data ?? []}
+        npcs={npcs.data ?? []}
         isGm={isGm}
         userId={user?.id ?? null}
         show3d={show3d}

@@ -29,6 +29,7 @@ function initials(name: string) {
 export function MapToken({
   object,
   character,
+  fallbackImagePath,
   sizePx,
   selected,
   dimmed,
@@ -36,6 +37,7 @@ export function MapToken({
 }: {
   object: MapObjectRow;
   character: CharacterRow | null;
+  fallbackImagePath?: string | null;
   sizePx: number;
   selected: boolean;
   dimmed: boolean;
@@ -51,9 +53,9 @@ export function MapToken({
   });
 
   const npcImage = useQuery({
-    queryKey: ["entity-photo", object.image_url],
-    queryFn: () => portraitUrl(object.image_url),
-    enabled: !character && Boolean(object.image_url),
+    queryKey: ["entity-photo", object.image_url ?? fallbackImagePath],
+    queryFn: () => portraitUrl(object.image_url ?? fallbackImagePath),
+    enabled: !character && Boolean(object.image_url ?? fallbackImagePath),
     staleTime: 1000 * 60 * 30,
   });
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Tables } from "@/integrations/supabase/types";
+import type { EntityRow } from "@/lib/lore";
 import {
   cellDistance,
   cellToPixel,
@@ -40,6 +41,7 @@ export function BattleGrid({
   imageUrl,
   objects,
   characters,
+  npcs,
   isGm,
   userId,
   show3d,
@@ -53,6 +55,7 @@ export function BattleGrid({
   imageUrl: string | null;
   objects: MapObjectRow[];
   characters: CharacterRow[];
+  npcs: EntityRow[];
   isGm: boolean;
   userId: string | null;
   show3d: boolean;
@@ -76,8 +79,6 @@ export function BattleGrid({
 
   const grid = map;
   const fog = useMemo(() => fogCells(map), [map]);
-  const fogKeys = useMemo(() => new Set(fog.map((c) => `${c.x},${c.y}`)), [fog]);
-
   const toImage = useCallback(
     (clientX: number, clientY: number) => {
       const rect = containerRef.current?.getBoundingClientRect();
@@ -300,11 +301,18 @@ export function BattleGrid({
 
           {objects.map((object) => {
             const character = characters.find((c) => c.id === object.character_id) ?? null;
+            const npc = character
+              ? null
+              : npcs.find((candidate) => candidate.name === object.label) ?? null;
             const dragging = drag?.id === object.id;
             const base = dragging
               ? { x: drag.x, y: drag.y }
               : cellToPixel(grid, Number(object.x), Number(object.y));
-            const tokenSize = cellPx * (Number(object.size) || 1);
+            const tokenScale = Number(object.size) || 1;
+            const tokenWidth =
+              cellPx * (map.grid_type === "hex" ? HEX_W : 1) * tokenScale;
+            const tokenHeight = cellPx * tokenScale;
+            const tokenSize = Math.min(tokenWidth, tokenHeight);
             const hiddenForPlayers = object.hidden;
             const movable = canMove(object) && tool === "move";
             return (
@@ -312,10 +320,10 @@ export function BattleGrid({
                 key={object.id}
                 className="absolute"
                 style={{
-                  left: base.x - tokenSize / 2,
-                  top: base.y - tokenSize / 2,
-                  width: tokenSize,
-                  height: tokenSize,
+                  left: base.x - tokenWidth / 2,
+                  top: base.y - tokenHeight / 2,
+                  width: tokenWidth,
+                  height: tokenHeight,
                   cursor: movable ? "grab" : "default",
                   zIndex: dragging ? 20 : 10,
                 }}
@@ -331,6 +339,7 @@ export function BattleGrid({
                 <MapToken
                   object={object}
                   character={character}
+                  fallbackImagePath={npc?.image_url}
                   sizePx={tokenSize}
                   selected={selectedId === object.id}
                   dimmed={hiddenForPlayers}

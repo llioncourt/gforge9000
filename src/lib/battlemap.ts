@@ -117,6 +117,14 @@ export function formatDistance(grid: GridSpec, value: number): string {
   return `${rounded} ${grid.unit_name}`;
 }
 
+/** Unscaled token bounds; the map transform scales these with the grid and image. */
+export function tokenDimensions(grid: GridSpec, cells = 1) {
+  const scale = Number.isFinite(cells) && cells > 0 ? cells : 1;
+  const height = (grid.grid_size || 50) * scale;
+  const width = height * (grid.grid_type === "hex" ? HEX_W : 1);
+  return { width, height, diameter: Math.min(width, height) };
+}
+
 /* ---------------------------------------------------------------- data */
 
 function unwrap<T>(res: { data: T; error: { message: string } | null }): NonNullable<T> {

@@ -74,7 +74,7 @@ export async function convertToAvif(
 
   const { encode } = await import("@jsquash/avif");
   const imageData = ctx.getImageData(0, 0, width, height);
-  const buffer = await encode(imageData, { cqLevel: 30, speed: 7 });
+  const buffer = await encode(imageData as never, { cqLevel: 30, speed: 7 });
   return new File([buffer], avifFileName(file.name), { type: AVIF_MIME });
 }
 

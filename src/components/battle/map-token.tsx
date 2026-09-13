@@ -89,7 +89,7 @@ export function MapToken({
         </ClientOnly>
       ) : portrait.data || npcImage.data ? (
         <img
-          src={portrait.data ?? npcImage.data}
+          src={portrait.data ?? npcImage.data ?? undefined}
           alt={label}
           className="h-full w-full object-cover object-top"
           draggable={false}

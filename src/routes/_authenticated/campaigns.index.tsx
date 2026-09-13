@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/dialog";
 import { createCampaign, joinCampaign, listCampaigns } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
+import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
+import { CAMPAIGN_COVER_SETTING } from "@/lib/campaign-cover";
 
 export const Route = createFileRoute("/_authenticated/campaigns/")({
   head: () => ({
@@ -166,24 +168,29 @@ function CampaignsPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data?.map((c) => {
-            const settings = (c.settings ?? {}) as Record<string, number | string>;
+            const settings = (c.settings ?? {}) as Record<string, number | string | null>;
+            const coverPath =
+              typeof settings[CAMPAIGN_COVER_SETTING] === "string"
+                ? settings[CAMPAIGN_COVER_SETTING]
+                : null;
             return (
               <Link
                 key={c.id}
                 to="/campaigns/$id"
                 params={{ id: c.id }}
-                className="panel flex flex-col p-5 transition-colors hover:border-ring"
+                className="panel hover-lift relative flex min-h-[180px] flex-col overflow-hidden p-5 transition-colors hover:border-ring"
               >
-                <div className="flex items-start justify-between gap-2">
+                <CampaignCoverBg path={coverPath} />
+                <div className="relative flex items-start justify-between gap-2">
                   <h2 className="font-display text-lg font-semibold">{c.name}</h2>
                   <Badge variant={c.gm_id === user?.id ? "default" : "outline"}>
                     {c.gm_id === user?.id ? "GM" : "Player"}
                   </Badge>
                 </div>
-                <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">
+                <p className="relative mt-2 line-clamp-3 text-sm text-muted-foreground">
                   {c.description || "No premise written yet."}
                 </p>
-                <div className="mt-4 flex gap-4 text-xs text-muted-foreground">
+                <div className="relative mt-auto flex gap-4 pt-4 text-xs text-muted-foreground">
                   <span>{settings["point_limit"] ?? "—"} pts</span>
                   <span>TL {settings["tech_level"] ?? "—"}</span>
                   <span className="font-mono">{c.invite_code}</span>

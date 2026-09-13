@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Suspense, lazy, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
@@ -66,6 +67,12 @@ import { CardPortraitBg } from "@/components/character/card-portrait-bg";
 import { UserAvatar } from "@/components/app/user-avatar";
 
 import { CampaignIntroExperience } from "@/components/campaign/intro-panel";
+import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
+import {
+  CAMPAIGN_COVER_SETTING,
+  removeCampaignCoverFile,
+  uploadCampaignCover,
+} from "@/lib/campaign-cover";
 
 // Heavy campaign tabs load on demand — the campaign page ships a much
 // smaller first bundle and each panel is fetched only when its tab opens.
@@ -864,6 +871,7 @@ function CampaignPage() {
 
         <TabsContent value="rules" className="mt-6">
           <HouseRules
+            campaignId={id}
             settings={settings}
             disabled={!isGm}
             knownPacks={knownPacks}
@@ -885,11 +893,13 @@ function Mini({ label, value }: { label: string; value: string | number }) {
 }
 
 function HouseRules({
+  campaignId,
   settings,
   disabled,
   knownPacks,
   onSave,
 }: {
+  campaignId: string;
   settings: Record<string, unknown>;
   disabled: boolean;
   knownPacks: string[];
@@ -901,6 +911,62 @@ function HouseRules({
   const [houseRules, setHouseRules] = useState(String(settings["house_rules"] ?? ""));
   const [packs, setPacks] = useState<string[]>(allowedPacksOf(settings));
   const [newPack, setNewPack] = useState("");
+  const queryClient = useQueryClient();
+  const coverPath =
+    typeof settings[CAMPAIGN_COVER_SETTING] === "string"
+      ? String(settings[CAMPAIGN_COVER_SETTING])
+      : null;
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  useEffect(
+    () => () => {
+      if (coverPreview) URL.revokeObjectURL(coverPreview);
+    },
+    [coverPreview],
+  );
+  const cover = useMutation({
+    mutationFn: async (file: File) => {
+      const nextPath = await uploadCampaignCover(campaignId, file);
+      try {
+        await updateCampaign(campaignId, {
+          settings: { ...settings, [CAMPAIGN_COVER_SETTING]: nextPath } as never,
+        });
+      } catch (error) {
+        await removeCampaignCoverFile(nextPath).catch(() => undefined);
+        throw error;
+      }
+      if (coverPath && coverPath !== nextPath) {
+        await removeCampaignCoverFile(coverPath).catch(() => undefined);
+      }
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] }),
+        queryClient.invalidateQueries({ queryKey: ["campaigns"] }),
+      ]);
+      setCoverPreview(null);
+      toast.success("Campaign cover updated.");
+    },
+    onError: (error: Error) => {
+      setCoverPreview(null);
+      toast.error(error.message);
+    },
+  });
+  const removeCover = useMutation({
+    mutationFn: async () => {
+      await updateCampaign(campaignId, {
+        settings: { ...settings, [CAMPAIGN_COVER_SETTING]: null } as never,
+      });
+      if (coverPath) await removeCampaignCoverFile(coverPath).catch(() => undefined);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] }),
+        queryClient.invalidateQueries({ queryKey: ["campaigns"] }),
+      ]);
+      toast.success("Campaign cover removed.");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
   const packOptions = useMemo(
     () => Array.from(new Set([...knownPacks, ...packs])).sort((a, b) => a.localeCompare(b)),
     [knownPacks, packs],
@@ -910,6 +976,56 @@ function HouseRules({
 
   return (
     <div className="panel max-w-2xl space-y-4 p-6">
+      <section className="space-y-3">
+        <div>
+          <Label>Campaign card cover</Label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            This image appears behind the campaign card. Images are converted to AVIF.
+          </p>
+        </div>
+        {coverPath || coverPreview ? (
+          <div className="relative aspect-[16/7] overflow-hidden rounded-lg border border-border">
+            <CampaignCoverBg path={coverPath} previewUrl={coverPreview} />
+          </div>
+        ) : null}
+        {!disabled ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            <FileDropzone
+              compact
+              accept="image/*,.heic,.heif,.tif,.tiff,.bmp"
+              loading={cover.isPending}
+              loadingLabel="Uploading cover…"
+              className="min-h-20 flex-1"
+              label={coverPath ? "Drop a replacement cover here, or click to browse" : "Drop a cover here, or click to browse"}
+              hint="Any common image format, up to 25 MB."
+              onFiles={(files) => {
+                const file = files[0];
+                if (!file) return;
+                const preview = URL.createObjectURL(file);
+                setCoverPreview((current) => {
+                  if (current) URL.revokeObjectURL(current);
+                  return preview;
+                });
+                cover.mutate(file);
+              }}
+            />
+            {coverPath ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 self-end sm:h-auto sm:w-10 sm:self-stretch"
+                aria-label="Remove campaign cover"
+                disabled={cover.isPending || removeCover.isPending}
+                onClick={() => removeCover.mutate()}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
+      <div className="border-t border-border" />
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label>Point limit</Label>

@@ -412,8 +412,7 @@ function CampaignPage() {
                               className="text-destructive hover:text-destructive"
                               disabled={removeFromCampaign.isPending}
                             >
-                              <Trash2 className="mr-1 h-3.5 w-3.5" />
-                              Remove
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>

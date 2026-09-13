@@ -73,6 +73,92 @@ export type Database = {
           },
         ]
       }
+      campaign_intro_views: {
+        Row: {
+          campaign_id: string
+          completed_at: string
+          do_not_show_again: boolean
+          intro_version: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          completed_at?: string
+          do_not_show_again?: boolean
+          intro_version: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          campaign_id?: string
+          completed_at?: string
+          do_not_show_again?: boolean
+          intro_version?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_intro_views_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_intro_views_member_fk"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_intros"
+            referencedColumns: ["campaign_id"]
+          },
+        ]
+      }
+      campaign_intros: {
+        Row: {
+          byte_size: number
+          campaign_id: string
+          created_at: string
+          created_by: string
+          file_name: string
+          mime_type: string
+          storage_path: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          byte_size: number
+          campaign_id: string
+          created_at?: string
+          created_by?: string
+          file_name: string
+          mime_type?: string
+          storage_path: string
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          byte_size?: number
+          campaign_id?: string
+          created_at?: string
+          created_by?: string
+          file_name?: string
+          mime_type?: string
+          storage_path?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_intros_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_members: {
         Row: {
           campaign_id: string

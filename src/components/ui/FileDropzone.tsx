@@ -1,4 +1,5 @@
 import { useRef, useState, type ReactNode } from "react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface FileDropzoneProps {
@@ -9,6 +10,10 @@ export interface FileDropzoneProps {
   hint?: ReactNode;
   compact?: boolean;
   className?: string;
+  /** When true, shows a spinner and disables interaction. */
+  loading?: boolean;
+  /** Text shown while loading; defaults to "Importing…". */
+  loadingLabel?: ReactNode;
 }
 
 /** Shared drag-and-drop upload surface. Every file input in the app uses this. */

@@ -75,7 +75,7 @@ function Landing() {
   const heroRef = useParallax<HTMLElement>();
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen">
       <AmbientBackground />
       <header className="glass-bar sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border/60 px-4 py-4 sm:px-6 sm:py-5">
         <div className="flex items-center gap-2">

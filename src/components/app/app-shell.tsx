@@ -63,7 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <CampaignSoundtrackProvider pathname={pathname}>
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen">
       <AmbientBackground />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <DiceTray open={trayOpen} onOpenChange={setTrayOpen} />

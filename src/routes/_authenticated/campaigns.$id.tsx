@@ -202,6 +202,20 @@ function CampaignPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+
+  const renameCampaign = useMutation({
+    mutationFn: (name: string) => updateCampaign(id, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaign", id] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      setRenameOpen(false);
+      toast.success("Campaign renamed.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const [noteFilter, setNoteFilter] = useState("all");
   const [noteTitle, setNoteTitle] = useState("");
   const [noteBody, setNoteBody] = useState("");
@@ -248,7 +262,24 @@ function CampaignPage() {
   return (
     <div>
       <PageHeader
-        title={campaign.data?.name ?? "Campaign"}
+        title={
+          <span className="inline-flex items-center gap-2">
+            {campaign.data?.name ?? "Campaign"}
+            {isGm ? (
+              <button
+                type="button"
+                aria-label="Rename campaign"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+                onClick={() => {
+                  setRenameValue(campaign.data?.name ?? "");
+                  setRenameOpen(true);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            ) : null}
+          </span>
+        }
         description={campaign.data?.description ?? undefined}
         actions={
           <>

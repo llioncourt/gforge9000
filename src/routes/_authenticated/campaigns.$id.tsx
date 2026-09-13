@@ -160,6 +160,13 @@ function CampaignPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const assignPlayer = useMutation({
+    mutationFn: ({ cid, name }: { cid: string; name: string | null }) =>
+      updateCharacter(cid, { player_name: name }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const attach = useMutation({
     mutationFn: (cid: string) => setCharacterCampaign(cid, id),
     onSuccess: () => {
@@ -291,9 +298,44 @@ function CampaignPage() {
                         >
                           {c.name}
                         </Link>
-                        <p className="text-xs text-muted-foreground">
-                          {c.player_name || (c.is_npc ? "NPC" : "Player character")}
-                        </p>
+                        {isGm ? (
+                          (() => {
+                            const names = (members.data ?? []).map((m) => m.display_name);
+                            const val = c.player_name ?? (c.is_npc ? "__npc__" : "__unassigned__");
+                            const orphan = c.player_name && !names.includes(c.player_name) && c.player_name !== "NPC";
+                            return (
+                              <Select
+                                value={val}
+                                onValueChange={(v) =>
+                                  assignPlayer.mutate({
+                                    cid: c.id,
+                                    name: v === "__unassigned__" || v === "__npc__" ? null : v,
+                                  })
+                                }
+                              >
+                                <SelectTrigger className="mt-0.5 h-7 w-[180px] text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__unassigned__">Unassigned</SelectItem>
+                                  {c.is_npc && <SelectItem value="__npc__">NPC</SelectItem>}
+                                  {members.data?.map((m) => (
+                                    <SelectItem key={m.user_id} value={m.display_name}>
+                                      {m.display_name}
+                                    </SelectItem>
+                                  ))}
+                                  {orphan && (
+                                    <SelectItem value={c.player_name!}>{c.player_name}</SelectItem>
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            );
+                          })()
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            {c.player_name || (c.is_npc ? "NPC" : "Player character")}
+                          </p>
+                        )}
                       </div>
                       <Badge variant={c.approved ? "default" : "outline"}>
                         {c.approved ? "Approved" : "Pending"}

@@ -216,14 +216,16 @@ function CampaignPage() {
 
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState("");
+  const [premiseValue, setPremiseValue] = useState("");
 
   const renameCampaign = useMutation({
-    mutationFn: (name: string) => updateCampaign(id, { name }),
+    mutationFn: ({ name, description }: { name: string; description: string | null }) =>
+      updateCampaign(id, { name, description }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaign", id] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       setRenameOpen(false);
-      toast.success("Campaign renamed.");
+      toast.success("Campaign updated.");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -284,6 +286,7 @@ function CampaignPage() {
                 className="text-muted-foreground transition-colors hover:text-foreground"
                 onClick={() => {
                   setRenameValue(campaign.data?.name ?? "");
+                  setPremiseValue(campaign.data?.description ?? "");
                   setRenameOpen(true);
                 }}
               >
@@ -317,7 +320,7 @@ function CampaignPage() {
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename campaign</DialogTitle>
+            <DialogTitle>Edit campaign</DialogTitle>
           </DialogHeader>
           <form
             className="space-y-4"
@@ -325,7 +328,10 @@ function CampaignPage() {
               e.preventDefault();
               const name = renameValue.trim();
               if (!name) return;
-              renameCampaign.mutate(name);
+              renameCampaign.mutate({
+                name,
+                description: premiseValue.trim() || null,
+              });
             }}
           >
             <div className="space-y-2">
@@ -335,6 +341,16 @@ function CampaignPage() {
                 value={renameValue}
                 onChange={(e) => setRenameValue(e.target.value)}
                 autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="campaign-premise">Premise</Label>
+              <Textarea
+                id="campaign-premise"
+                rows={4}
+                placeholder="What is this campaign about?"
+                value={premiseValue}
+                onChange={(e) => setPremiseValue(e.target.value)}
               />
             </div>
             <DialogFooter>

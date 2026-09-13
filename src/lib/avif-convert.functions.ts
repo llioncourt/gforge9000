@@ -41,10 +41,10 @@ function resizeImageData(src: RawImage, targetWidth: number, targetHeight: numbe
       const fx = Math.min(1, Math.max(0, sx - x0));
       const di = (y * targetWidth + x) * 4;
       for (let c = 0; c < 4; c++) {
-        const p00 = src.data[(y0 * src.width + x0) * 4 + c];
-        const p10 = src.data[(y0 * src.width + x1) * 4 + c];
-        const p01 = src.data[(y1 * src.width + x0) * 4 + c];
-        const p11 = src.data[(y1 * src.width + x1) * 4 + c];
+        const p00 = src.data[(y0 * src.width + x0) * 4 + c] ?? 0;
+        const p10 = src.data[(y0 * src.width + x1) * 4 + c] ?? 0;
+        const p01 = src.data[(y1 * src.width + x0) * 4 + c] ?? 0;
+        const p11 = src.data[(y1 * src.width + x1) * 4 + c] ?? 0;
         const top = p00 + (p10 - p00) * fx;
         const bottom = p01 + (p11 - p01) * fx;
         out[di + c] = Math.round(top + (bottom - top) * fy);

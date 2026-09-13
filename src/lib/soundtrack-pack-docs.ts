@@ -46,7 +46,7 @@ A soundtrack package is a single ZIP file you upload on the campaign Soundtrack 
 \`\`\`
 my-album.zip
 ├── album.json          (required, at the ZIP root)
-├── cover.avif          (required, AVIF only, max ${COVER_MB} MB)
+├── cover.avif          (required, any image format, max ${COVER_MB} MB)
 └── tracks/
     ├── 01-first-track.mp3
     └── 02-second-track.mp3
@@ -95,7 +95,7 @@ album.json schema (no extra keys allowed):
 - album.release_year: optional integer 1970-2100
 - album.game_slug: optional, same slug rules
 - album.status: optional, "draft" or "published"
-- album.cover: path inside the ZIP of the cover image; must end in .avif and be at most ${COVER_MB} MB
+- album.cover: path inside the ZIP of the cover image; any common image format (converted to AVIF on import), max ${COVER_MB} MB
 - tracks: array of 1-${MAX_SOUNDTRACK_TRACKS} items, each with:
   - position: integer starting at 1, consecutive with no gaps
   - title: 1-200 chars

@@ -12,6 +12,7 @@ import {
   Printer,
   Save,
   Copy,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 import {
@@ -106,6 +107,7 @@ import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
 import { ModelPanel } from "@/components/character/model-panel";
 import { parseModelTransform } from "@/lib/model3d";
 import { allowedPacksOf } from "@/lib/packs";
+import { buildImagePrompt } from "@/lib/image-prompt";
 
 import { PrintSheet } from "@/components/character/print-sheet";
 
@@ -344,6 +346,28 @@ function CharacterPage() {
           <div className="no-print flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={() => window.print()}>
               <Printer className="mr-2 h-4 w-4" /> Print
+            </Button>
+            <Button
+              variant="outline"
+              aria-label="Copy image generation prompt"
+              onClick={() => {
+                const prompt = buildImagePrompt({
+                  name: form.name,
+                  concept: form.concept,
+                  techLevel: form.tech_level,
+                  appearance,
+                  traits: entries
+                    .filter((e) => TRAIT_KINDS.includes(e.kind))
+                    .map((e) => e.name),
+                  gear: gear.map((e) => e.name),
+                });
+                void navigator.clipboard
+                  .writeText(prompt)
+                  .then(() => toast.success("Image prompt copied to clipboard."))
+                  .catch(() => toast.error("Could not copy the prompt."));
+              }}
+            >
+              <Sparkles className="mr-2 h-4 w-4" /> Prompt
             </Button>
             <Button
               variant="outline"

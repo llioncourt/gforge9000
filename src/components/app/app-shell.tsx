@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  PanelLeftClose,
   Search,
   Settings,
   Shield,
@@ -35,6 +36,7 @@ const NAV = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [trayOpen, setTrayOpen] = useState(false);
   const navigate = useNavigate();

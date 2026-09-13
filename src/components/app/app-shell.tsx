@@ -46,6 +46,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => setOpen(false), [pathname]);
 
   useEffect(() => {
+    setCollapsed(window.localStorage.getItem("sidebar-collapsed") === "1");
+  }, []);
+
+  function toggleCollapsed(value: boolean) {
+    setCollapsed(value);
+    window.localStorage.setItem("sidebar-collapsed", value ? "1" : "0");
+  }
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();

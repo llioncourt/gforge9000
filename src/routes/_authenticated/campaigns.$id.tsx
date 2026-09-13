@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, Plus, Trash2 } from "lucide-react";
+import { Check, Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -195,6 +202,20 @@ function CampaignPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+
+  const renameCampaign = useMutation({
+    mutationFn: (name: string) => updateCampaign(id, { name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaign", id] });
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      setRenameOpen(false);
+      toast.success("Campaign renamed.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const [noteFilter, setNoteFilter] = useState("all");
   const [noteTitle, setNoteTitle] = useState("");
   const [noteBody, setNoteBody] = useState("");
@@ -241,7 +262,24 @@ function CampaignPage() {
   return (
     <div>
       <PageHeader
-        title={campaign.data?.name ?? "Campaign"}
+        title={
+          <span className="inline-flex items-center gap-2">
+            {campaign.data?.name ?? "Campaign"}
+            {isGm ? (
+              <button
+                type="button"
+                aria-label="Rename campaign"
+                className="text-muted-foreground transition-colors hover:text-foreground"
+                onClick={() => {
+                  setRenameValue(campaign.data?.name ?? "");
+                  setRenameOpen(true);
+                }}
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            ) : null}
+          </span>
+        }
         description={campaign.data?.description ?? undefined}
         actions={
           <>
@@ -263,6 +301,38 @@ function CampaignPage() {
           </>
         }
       />
+
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename campaign</DialogTitle>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const name = renameValue.trim();
+              if (!name) return;
+              renameCampaign.mutate(name);
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="campaign-name">Campaign name</Label>
+              <Input
+                id="campaign-name"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={renameCampaign.isPending || !renameValue.trim()}>
+                Save
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Tabs defaultValue="roster">
         <TabsList>

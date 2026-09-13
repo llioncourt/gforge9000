@@ -61,6 +61,8 @@ import { listLibrary } from "@/lib/api";
 import { allowedPacksOf } from "@/lib/packs";
 import { buildSheet } from "@/rules";
 import { useSession } from "@/hooks/use-session";
+import { CardPortraitBg } from "@/components/character/card-portrait-bg";
+import { UserAvatar } from "@/components/app/user-avatar";
 import { LorePanel } from "@/components/lore/lore-panel";
 import { StoryPanel } from "@/components/lore/story-panel";
 import { GraphPanel } from "@/components/lore/graph-panel";
@@ -376,8 +378,13 @@ function CampaignPage() {
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {roster.data?.map((c) => {
                 const sheet = sheets.get(c.id);
+                const playerMember = (members.data ?? []).find(
+                  (m) => m.display_name === c.player_name,
+                );
                 return (
-                  <div key={c.id} className="panel p-4">
+                  <div key={c.id} className="panel relative overflow-hidden p-4">
+                    <CardPortraitBg path={c.portrait_path} />
+                    <div className="relative">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <Link

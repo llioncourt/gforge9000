@@ -330,6 +330,10 @@ function CharacterPage() {
   }
 
   const appearance = (form.appearance ?? {}) as Record<string, string>;
+  const campaignId = form.campaign_id ?? null;
+  const rollAttribute = (label: string, target: number) =>
+    roll({ label: `${label} check`, target, characterId: id, campaignId });
+
   const gear = entries.filter((e) => e.kind === "equipment");
   const weaponEntries = gear.filter(
     (e) => ((e.data["weapons"] as unknown[] | undefined) ?? []).length > 0,

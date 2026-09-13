@@ -339,7 +339,7 @@ export function BattleGrid({
                 <MapToken
                   object={object}
                   character={character}
-                  fallbackImagePath={npc?.image_url}
+                  fallbackImagePath={npc?.image_url ?? null}
                   sizePx={tokenSize}
                   selected={selectedId === object.id}
                   dimmed={hiddenForPlayers}

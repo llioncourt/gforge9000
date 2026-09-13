@@ -6,6 +6,7 @@ import {
   cellToPixel,
   formatDistance,
   pixelToCell,
+  tokenDimensions,
   type MapObjectRow,
   type MapRow,
 } from "@/lib/battlemap";
@@ -308,11 +309,10 @@ export function BattleGrid({
             const base = dragging
               ? { x: drag.x, y: drag.y }
               : cellToPixel(grid, Number(object.x), Number(object.y));
-            const tokenScale = Number(object.size) || 1;
-            const tokenWidth =
-              cellPx * (map.grid_type === "hex" ? HEX_W : 1) * tokenScale;
-            const tokenHeight = cellPx * tokenScale;
-            const tokenSize = Math.min(tokenWidth, tokenHeight);
+            const dimensions = tokenDimensions(grid, Number(object.size));
+            const tokenWidth = dimensions.width;
+            const tokenHeight = dimensions.height;
+            const tokenSize = dimensions.diameter;
             const hiddenForPlayers = object.hidden;
             const movable = canMove(object) && tool === "move";
             return (

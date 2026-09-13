@@ -53,9 +53,9 @@ export function MapToken({
   });
 
   const npcImage = useQuery({
-    queryKey: ["entity-photo", object.image_url ?? fallbackImagePath],
-    queryFn: () => portraitUrl(object.image_url ?? fallbackImagePath),
-    enabled: !character && Boolean(object.image_url ?? fallbackImagePath),
+    queryKey: ["entity-photo", fallbackImagePath ?? object.image_url],
+    queryFn: () => portraitUrl(fallbackImagePath ?? object.image_url),
+    enabled: !character && Boolean(fallbackImagePath ?? object.image_url),
     staleTime: 1000 * 60 * 30,
   });
 

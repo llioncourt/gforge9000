@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { matchesSearch, normaliseSearch, searchTokens } from "@/lib/search";
+import { matchesSearch, normaliseSearch, rankSearch, searchTokens } from "@/lib/search";
 
 describe("normaliseSearch", () => {
   it("strips accents, case and punctuation", () => {

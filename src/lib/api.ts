@@ -205,6 +205,17 @@ export async function transferCampaignGm(campaignId: string, newGmId: string) {
   if (error) throw new Error(error.message);
 }
 
+export async function transferCharacterOwner(characterId: string, newOwnerId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC created after types were generated
+  const { error } = await (supabase.rpc as any)("transfer_character_owner", {
+    _character: characterId,
+    _new_owner: newOwnerId,
+  });
+  if (error) throw new Error(error.message);
+}
+
+
+
 export async function listMembers(campaignId: string) {
   const members = unwrap(
     await supabase.from("campaign_members").select("*").eq("campaign_id", campaignId),

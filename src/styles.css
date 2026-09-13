@@ -274,7 +274,7 @@
   position: absolute;
   border-radius: 9999px;
   filter: blur(90px);
-  opacity: 0.5;
+  opacity: 0.6;
   will-change: transform;
   transform: translate3d(
     calc(var(--px, 0) * var(--depth, 1) * 1px),

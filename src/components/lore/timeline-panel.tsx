@@ -19,6 +19,7 @@ import {
 import { getCampaign, updateCampaign } from "@/lib/api";
 import { createEntity, listEntities, type EntityRow } from "@/lib/lore";
 import { useSession } from "@/hooks/use-session";
+import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
 
 export interface WorldCalendar {
   era: string;
@@ -175,9 +176,18 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
                   >
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="font-medium">{row.name}</h3>
-                      <Badge variant="outline" className="text-[10px]">
-                        {eventLabel(row)}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-[10px]">
+                          {eventLabel(row)}
+                        </Badge>
+                        {isGm ? (
+                          <EntityDeleteButton
+                            campaignId={campaignId}
+                            entityId={row.id}
+                            name={row.name}
+                          />
+                        ) : null}
+                      </div>
                     </div>
                     {row.summary ? (
                       <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{row.summary}</p>

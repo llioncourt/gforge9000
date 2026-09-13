@@ -32,10 +32,10 @@ describe("ai lore drafts", () => {
       ],
     });
     expect(applied.name).toBe("Mira");
-    expect(applied.data.personality).toBe("Wry and watchful");
-    expect(applied.data.flaws).toEqual(["Greedy", "Proud"]);
-    expect(applied.data.not_a_field).toBeUndefined();
-    expect(applied.data.voice).toBeUndefined();
+    expect(applied.data["personality"]).toBe("Wry and watchful");
+    expect(applied.data["flaws"]).toEqual(["Greedy", "Proud"]);
+    expect(applied.data["not_a_field"]).toBeUndefined();
+    expect(applied.data["voice"]).toBeUndefined();
   });
 
   it("falls back to a placeholder name and clamps the summary", () => {

@@ -2,7 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import avifEncoderWasmUrl from "@jsquash/avif/codec/enc/avif_enc.wasm?url";
+
+// Served as a static asset from public/wasm so the binary never enters the
+// server bundle; fetched over HTTP from the app's own origin at call time.
+const AVIF_ENCODER_WASM_PATH = "/wasm/avif_enc.wasm";
 
 /**
  * Server-side AVIF encoding fallback.
@@ -25,7 +28,7 @@ let encoderPromise: Promise<EncodeFn> | undefined;
 
 async function loadEncoder(origin: string): Promise<EncodeFn> {
   encoderPromise ??= (async () => {
-    const wasmUrl = new URL(avifEncoderWasmUrl, origin);
+    const wasmUrl = new URL(AVIF_ENCODER_WASM_PATH, origin);
     const response = await fetch(wasmUrl);
     if (!response.ok) throw new Error("Could not load the AVIF encoder.");
     const wasmModule = await WebAssembly.compile(await response.arrayBuffer());

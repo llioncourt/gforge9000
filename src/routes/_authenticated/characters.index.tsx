@@ -28,6 +28,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { addEntry, createCharacter, deleteCharacter, listCharacters } from "@/lib/api";
 import { parsePortable } from "@/lib/portable";
+import { reconcileImportedEntries } from "@/lib/import-reconcile";
+import type { ImportedEntry } from "@/lib/trait-match";
+
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 
@@ -77,11 +80,16 @@ function CharactersPage() {
       const parsed = parsePortable(await file.text());
       const { id: _ignored, ...character } = parsed.character;
       const row = await createCharacter(character as never);
-      for (const entry of parsed.entries) {
+      // Reconcile trait names against enabled content before saving them.
+      const { entries } = await reconcileImportedEntries(
+        parsed.entries as unknown as ImportedEntry[],
+      );
+      for (const entry of entries) {
         await addEntry({ ...entry, character_id: row.id, data: entry.data ?? {} } as never);
       }
       return row;
     },
+
     onSuccess: (row) => {
       queryClient.invalidateQueries({ queryKey: ["characters"] });
       toast.success("Character imported.");

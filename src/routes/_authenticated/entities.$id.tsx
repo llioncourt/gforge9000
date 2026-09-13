@@ -103,10 +103,11 @@ function EntityPage() {
     queryFn: () => listCampaignCharacters(campaignId!),
     enabled: !!campaignId,
   });
+  const entityImagePath = entity.data?.image_url;
   const photoUrl = useQuery({
-    queryKey: ["entity-photo", form?.image_url],
-    queryFn: () => portraitUrl(form?.image_url),
-    enabled: !!form?.image_url,
+    queryKey: ["entity-photo", entityImagePath],
+    queryFn: () => portraitUrl(entityImagePath),
+    enabled: !!entityImagePath,
   });
 
   const uploadPhoto = useMutation({

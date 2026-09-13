@@ -72,6 +72,7 @@ import { TimelinePanel } from "@/components/lore/timeline-panel";
 import { AssetsPanel } from "@/components/lore/assets-panel";
 
 import { BattlePanel } from "@/components/battle/battle-panel";
+import { SoundtrackPanel } from "@/components/campaign/soundtrack-panel";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   head: () => ({
@@ -373,6 +374,7 @@ function CampaignPage() {
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="battle">Battle grid</TabsTrigger>
           <TabsTrigger value="library">Library</TabsTrigger>
+          <TabsTrigger value="soundtrack">Soundtrack</TabsTrigger>
 
           <TabsTrigger value="notes">Notes &amp; handouts</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
@@ -606,6 +608,10 @@ function CampaignPage() {
 
         <TabsContent value="library" className="mt-6">
           <AssetsPanel campaignId={id} isGm={isGm} />
+        </TabsContent>
+
+        <TabsContent value="soundtrack" className="mt-6">
+          <SoundtrackPanel campaignId={id} isGm={isGm} />
         </TabsContent>
 
 

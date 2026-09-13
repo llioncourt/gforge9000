@@ -1,15 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,10 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FileDropzone } from "@/components/ui/FileDropzone";
-import { UserAvatar } from "@/components/app/user-avatar";
-import { getProfile, upsertProfile, wipeAllMyData } from "@/lib/api";
-import { removePortrait, uploadAvatar } from "@/lib/portrait";
+import { wipeAllMyData } from "@/lib/api";
 import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/hooks/use-session";
 import { AUDIT_SUMMARY, RULES_AUDIT } from "@/rules/audit";
@@ -31,14 +23,13 @@ import { AUDIT_SUMMARY, RULES_AUDIT } from "@/rules/audit";
 const WIPE_INTENT_KEY = "ucf:wipe-intent";
 const WIPE_INTENT_TTL = 5 * 60 * 1000;
 
-
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
       { title: "Settings — Universal Character Forge" },
-      { name: "description", content: "Profile, display preferences and account details." },
+      { name: "description", content: "Rules status and account data controls." },
       { property: "og:title", content: "Settings — Universal Character Forge" },
-      { property: "og:description", content: "Manage your profile and preferences." },
+      { property: "og:description", content: "Rules status and account data controls." },
     ],
   }),
   component: SettingsPage,
@@ -47,15 +38,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function SettingsPage() {
   const { user } = useSession();
   const queryClient = useQueryClient();
-  const { data, isLoading } = useQuery({
-    queryKey: ["profile", user?.id],
-    queryFn: () => getProfile(user!.id),
-    enabled: !!user,
-  });
 
-  const [displayName, setDisplayName] = useState("");
-  const [bio, setBio] = useState("");
-  const [light, setLight] = useState(false);
   const [wipeOpen, setWipeOpen] = useState(false);
   const [verified, setVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -101,209 +84,68 @@ function SettingsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-
-  useEffect(() => {
-    if (data) {
-      setDisplayName(data.display_name ?? "");
-      setBio(data.bio ?? "");
-    }
-  }, [data]);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", !light);
-  }, [light]);
-
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-
-  const uploadPhoto = useMutation({
-    mutationFn: async (file: File) => {
-      const path = await uploadAvatar(file);
-      await upsertProfile(user!.id, { avatar_url: path });
-      return { path, localUrl: URL.createObjectURL(file) };
-    },
-    onSuccess: ({ localUrl }) => {
-      setAvatarPreview((old) => {
-        if (old) URL.revokeObjectURL(old);
-        return localUrl;
-      });
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      queryClient.invalidateQueries({ queryKey: ["portrait"] });
-      toast.success("Photo updated.");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const removePhoto = useMutation({
-    mutationFn: async () => {
-      const old = data?.avatar_url;
-      await upsertProfile(user!.id, { avatar_url: null });
-      if (old) await removePortrait(old).catch(() => undefined);
-    },
-    onSuccess: () => {
-      setAvatarPreview((old) => {
-        if (old) URL.revokeObjectURL(old);
-        return null;
-      });
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      queryClient.invalidateQueries({ queryKey: ["portrait"] });
-      toast.success("Photo removed.");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const save = useMutation({
-    mutationFn: () => upsertProfile(user!.id, { display_name: displayName, bio }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      toast.success("Profile saved.");
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
   return (
     <div className="max-w-2xl">
-      <PageHeader title="Settings" description="Your profile and workspace preferences." />
+      <PageHeader title="Settings" description="Rules status and account data controls." />
 
-      {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-[88px] w-full rounded-lg" />
-          <Skeleton className="h-[140px] w-full rounded-lg" />
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <section className="panel space-y-4 p-6">
-            <h2 className="font-display text-lg font-semibold">Profile</h2>
-            <div className="flex items-start gap-4">
-              {avatarPreview ? (
-                <img loading="lazy" decoding="async"
-                  src={avatarPreview}
-                  alt="Your profile photo"
-                  className="size-20 shrink-0 rounded-full border border-border object-cover"
-                />
-              ) : (
-                <UserAvatar
-                  name={displayName || user?.email || "?"}
-                  avatarPath={data?.avatar_url}
-                  className="size-20 text-lg"
-                />
-              )}
-              <div className="flex-1 space-y-2">
-                <Label>Profile photo</Label>
-                <FileDropzone
-                  accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
-                  compact
-                  loading={uploadPhoto.isPending}
-                  loadingLabel="Uploading photo…"
-                  label={
-                    <span className="text-xs text-muted-foreground">
-                      Drop an image here — it is converted to AVIF automatically
-                    </span>
-                  }
-                  onFiles={(files) => files[0] && uploadPhoto.mutate(files[0])}
-                />
-                {data?.avatar_url ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => removePhoto.mutate()}
-                    disabled={removePhoto.isPending}
+      <div className="space-y-6">
+        <section className="panel space-y-4 p-6">
+          <div>
+            <h2 className="font-display text-lg font-semibold">Rules status</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Every mechanic in the calculation engine, and how faithfully it is implemented.
+              Exact {AUDIT_SUMMARY.EXACT} · Configurable {AUDIT_SUMMARY.CONFIGURABLE} ·
+              Approximation {AUDIT_SUMMARY.APPROXIMATION} · Missing {AUDIT_SUMMARY.MISSING}
+            </p>
+          </div>
+          <ul className="divide-y divide-border text-sm">
+            {RULES_AUDIT.map((rule) => (
+              <li key={rule.id} className="flex flex-col gap-1 py-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-foreground">{rule.title}</span>
+                  <span
+                    className={`rounded px-1.5 py-0.5 text-[11px] uppercase tracking-wide ${
+                      rule.status === "EXACT"
+                        ? "bg-emerald-500/15 text-emerald-400"
+                        : rule.status === "CONFIGURABLE"
+                          ? "bg-amber-500/15 text-amber-400"
+                          : "bg-destructive/15 text-destructive"
+                    }`}
                   >
-                    Remove photo
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="display">Display name</Label>
-              <Input
-                id="display"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="bio">About you</Label>
-              <Textarea id="bio" rows={4} value={bio} onChange={(e) => setBio(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Email</Label>
-              <Input value={user?.email ?? ""} readOnly disabled />
-            </div>
-            <Button onClick={() => save.mutate()} disabled={save.isPending}>
-              Save profile
-            </Button>
-          </section>
+                    {rule.status}
+                  </span>
+                </div>
+                <p className="text-muted-foreground">{rule.notes}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-          <section className="panel flex items-center justify-between gap-4 p-6">
+        <section className="panel space-y-4 border-destructive/40 p-6">
+          <div className="flex items-start gap-3">
+            <ShieldAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
             <div>
-              <h2 className="font-display text-lg font-semibold">Light theme</h2>
+              <h2 className="font-display text-lg font-semibold text-destructive">
+                Erase everything
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                The Forge is dark-first. Switch to the parchment palette for bright rooms and
-                printing.
+                Deletes all your characters, campaigns, notes, library entries, packs and roll
+                history. Your account and sign-in stay. This cannot be undone, so you have to
+                confirm with your Google sign-in first.
               </p>
             </div>
-            <Switch checked={light} onCheckedChange={setLight} aria-label="Light theme" />
-          </section>
-
-          <section className="panel space-y-4 p-6">
-            <div>
-              <h2 className="font-display text-lg font-semibold">Rules status</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Every mechanic in the calculation engine, and how faithfully it is implemented.
-                Exact {AUDIT_SUMMARY.EXACT} · Configurable {AUDIT_SUMMARY.CONFIGURABLE} ·
-                Approximation {AUDIT_SUMMARY.APPROXIMATION} · Missing {AUDIT_SUMMARY.MISSING}
-              </p>
-            </div>
-            <ul className="divide-y divide-border text-sm">
-              {RULES_AUDIT.map((rule) => (
-                <li key={rule.id} className="flex flex-col gap-1 py-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-foreground">{rule.title}</span>
-                    <span
-                      className={`rounded px-1.5 py-0.5 text-[11px] uppercase tracking-wide ${
-                        rule.status === "EXACT"
-                          ? "bg-emerald-500/15 text-emerald-400"
-                          : rule.status === "CONFIGURABLE"
-                            ? "bg-amber-500/15 text-amber-400"
-                            : "bg-destructive/15 text-destructive"
-                      }`}
-                    >
-                      {rule.status}
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground">{rule.notes}</p>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="panel space-y-4 border-destructive/40 p-6">
-            <div className="flex items-start gap-3">
-              <ShieldAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
-              <div>
-                <h2 className="font-display text-lg font-semibold text-destructive">
-                  Erase everything
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Deletes all your characters, campaigns, notes, library entries, packs and roll
-                  history. Your account and sign-in stay. This cannot be undone, so you have to
-                  confirm with your Google sign-in first.
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setVerified(false);
-                setWipeOpen(true);
-              }}
-            >
-              Erase all my data
-            </Button>
-          </section>
-        </div>
-      )}
+          </div>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setVerified(false);
+              setWipeOpen(true);
+            }}
+          >
+            Erase all my data
+          </Button>
+        </section>
+      </div>
 
       <AlertDialog
         open={wipeOpen}
@@ -331,9 +173,7 @@ function SettingsPage() {
                 disabled={wipe.isPending}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {wipe.isPending ? (
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                ) : null}
+                {wipe.isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
                 Delete everything
               </AlertDialogAction>
             ) : (
@@ -346,6 +186,5 @@ function SettingsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-
   );
 }

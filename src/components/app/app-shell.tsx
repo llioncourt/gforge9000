@@ -23,6 +23,8 @@ import { DiceTray } from "@/components/app/dice-tray";
 import { DiceOverlay } from "@/components/app/dice-overlay";
 import { CampaignSoundtrackProvider } from "@/components/campaign/campaign-soundtrack-player";
 import { AmbientBackground } from "@/components/app/ambient-background";
+import { NotificationBell } from "@/components/app/notification-bell";
+import { ProfileMenu } from "@/components/app/profile-menu";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -186,6 +188,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Dices className="h-4 w-4" />
             <span className="hidden sm:inline">Roll</span>
           </Button>
+          <NotificationBell />
+          <ProfileMenu onSignOut={signOut} />
         </header>
 
         <main className="safe-b min-h-[calc(100vh-4rem)] px-3 py-5 sm:px-6 sm:py-6 lg:px-8">

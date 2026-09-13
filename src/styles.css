@@ -264,7 +264,7 @@
 .ambient-field {
   position: fixed;
   inset: -20vh -10vw;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
   contain: strict;

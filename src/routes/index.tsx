@@ -97,7 +97,7 @@ function Landing() {
         </div>
       </header>
 
-      <section ref={heroRef} className="relative overflow-hidden border-y border-border/60">
+      <section ref={heroRef} className="relative z-10 overflow-hidden border-y border-border/60">
         <div
           className="parallax-layer pointer-events-none absolute inset-x-0 -top-24 h-[140%] grid-noise opacity-70"
           style={{ "--speed": 0.12 } as React.CSSProperties}
@@ -128,7 +128,7 @@ function Landing() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-16 sm:px-6 sm:py-20">
+      <section className="relative z-10 mx-auto max-w-6xl px-5 py-16 sm:px-6 sm:py-20">
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, body }) => (
             <div key={title} className="glass hover-lift p-6">
@@ -140,7 +140,7 @@ function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-border px-6 py-10 text-center text-xs leading-relaxed text-muted-foreground">
+      <footer className="relative z-10 border-t border-border px-6 py-10 text-center text-xs leading-relaxed text-muted-foreground">
         GURPS is a trademark of Steve Jackson Games Incorporated. Universal Character Forge is an
         unofficial, independent tool and is not affiliated with, endorsed or sponsored by Steve
         Jackson Games. No rulebook text, tables or artwork are reproduced.{" "}

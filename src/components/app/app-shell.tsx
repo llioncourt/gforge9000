@@ -127,7 +127,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="lg:pl-64">
+      <div className="relative z-10 lg:pl-64">
         <header className="glass-bar no-print sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border/70 px-3 sm:gap-3 sm:px-4">
           <button
             className="-ml-1 grid h-10 w-10 shrink-0 place-content-center rounded-md text-foreground transition-colors hover:bg-secondary lg:hidden"

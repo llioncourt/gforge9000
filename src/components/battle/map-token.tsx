@@ -24,7 +24,7 @@ function initials(name: string) {
 
 /**
  * Token visual, in order of preference:
- * 3D model of the character → portrait → plain name token.
+ * PC: 3D model → portrait → name token. NPC/marker: stored image → name token.
  */
 export function MapToken({
   object,
@@ -47,6 +47,13 @@ export function MapToken({
     queryKey: ["portrait-url", character?.portrait_path],
     queryFn: () => portraitUrl(character?.portrait_path),
     enabled: Boolean(character?.portrait_path),
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const npcImage = useQuery({
+    queryKey: ["entity-photo", object.image_url],
+    queryFn: () => portraitUrl(object.image_url),
+    enabled: !character && Boolean(object.image_url),
     staleTime: 1000 * 60 * 30,
   });
 
@@ -80,9 +87,9 @@ export function MapToken({
             <ModelViewer url={model.data} autoRotate={false} transform={transform} />
           </Suspense>
         </ClientOnly>
-      ) : portrait.data ? (
+      ) : portrait.data || npcImage.data ? (
         <img
-          src={portrait.data}
+          src={portrait.data ?? npcImage.data}
           alt={label}
           className="h-full w-full object-cover object-top"
           draggable={false}

@@ -1,0 +1,1 @@
+alter table public.campaign_intro_views drop constraint if exists campaign_intro_views_user_id_fkey;

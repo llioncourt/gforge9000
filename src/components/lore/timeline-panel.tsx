@@ -47,7 +47,9 @@ export function calendarOf(settings: unknown): WorldCalendar {
 }
 
 function num(value: unknown): number | null {
-  const parsed = Number(String(value ?? "").trim());
+  const text = String(value ?? "").trim();
+  if (!text) return null;
+  const parsed = Number(text);
   return Number.isFinite(parsed) ? parsed : null;
 }
 

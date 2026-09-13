@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { listContentPacks, listLibrary, type LibraryRow } from "@/lib/api";
-import { matchesSearch } from "@/lib/search";
+import { rankSearch } from "@/lib/search";
 
 
 /** Pack names that exist for this user: declared packs plus packs seen on entries. */

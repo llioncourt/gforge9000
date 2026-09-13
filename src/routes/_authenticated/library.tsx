@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { allowedPacksOf, packGateReason, DEFAULT_PACK_NAME } from "@/lib/packs";
-import { matchesSearch } from "@/lib/search";
+import { rankSearch } from "@/lib/search";
 
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";

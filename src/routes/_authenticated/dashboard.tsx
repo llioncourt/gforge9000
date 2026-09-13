@@ -114,16 +114,17 @@ function Dashboard() {
                     key={c.id}
                     to="/characters/$id"
                     params={{ id: c.id }}
-                    className="panel flex items-center gap-4 p-4 transition-colors hover:border-ring"
+                    className="panel relative flex items-center gap-4 overflow-hidden p-4 transition-colors hover:border-ring"
                   >
-                    <div className="min-w-0 flex-1">
+                    <CardPortraitBg path={c.portrait_path} />
+                    <div className="relative min-w-0 flex-1">
                       <p className="truncate font-medium">{c.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
                         {c.concept || "No concept set"} · TL {c.tech_level}
                       </p>
                     </div>
-                    {c.is_npc ? <Badge variant="outline">NPC</Badge> : null}
-                    <span className="stat-value shrink-0 text-sm">{c.point_budget} pts</span>
+                    {c.is_npc ? <Badge variant="outline" className="relative">NPC</Badge> : null}
+                    <span className="stat-value relative shrink-0 text-sm">{c.point_budget} pts</span>
                   </Link>
                 ))}
           </div>

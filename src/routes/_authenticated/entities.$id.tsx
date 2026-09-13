@@ -98,6 +98,45 @@ function EntityPage() {
     enabled: !!campaignId,
   });
   const grants = useQuery({ queryKey: ["lore-grants", id], queryFn: () => listGrants(id) });
+  const campaignCharacters = useQuery({
+    queryKey: ["campaign-characters", campaignId],
+    queryFn: () => listCampaignCharacters(campaignId!),
+    enabled: !!campaignId,
+  });
+  const photoUrl = useQuery({
+    queryKey: ["entity-photo", form?.image_url],
+    queryFn: () => portraitUrl(form?.image_url),
+    enabled: !!form?.image_url,
+  });
+
+  const uploadPhoto = useMutation({
+    mutationFn: async (file: File) => {
+      const path = await uploadPortrait(id, file);
+      await updateEntity(id, { image_url: path });
+      return path;
+    },
+    onSuccess: async (path) => {
+      setForm((prev) => (prev ? ({ ...prev, image_url: path } as EntityRow) : prev));
+      await queryClient.invalidateQueries({ queryKey: ["entity", id] });
+      await queryClient.invalidateQueries({ queryKey: ["entity-photo"] });
+      await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+      toast.success("Photo updated.");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+  const removePhoto = useMutation({
+    mutationFn: async (path: string) => {
+      await updateEntity(id, { image_url: null });
+      await removePortrait(path).catch(() => undefined);
+    },
+    onSuccess: async () => {
+      setForm((prev) => (prev ? ({ ...prev, image_url: null } as EntityRow) : prev));
+      await queryClient.invalidateQueries({ queryKey: ["entity", id] });
+      await queryClient.invalidateQueries({ queryKey: ["entity-photo"] });
+      await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
 
   const isGm = !!campaign.data && campaign.data.gm_id === user?.id;
   const canEdit = isGm || entity.data?.owner_user_id === user?.id;

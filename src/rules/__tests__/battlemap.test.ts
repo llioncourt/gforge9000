@@ -3,6 +3,7 @@ import {
   cellDistance,
   cellToPixel,
   formatDistance,
+  tokenDimensions,
   mapImagePathFor,
   pixelToCell,
   validateMapFile,
@@ -77,6 +78,18 @@ describe("gridless maps", () => {
 });
 
 describe("helpers", () => {
+  it("fits a one-cell token inside a pointy-top hex", () => {
+    expect(tokenDimensions(hex, 1)).toEqual({
+      width: 50 * Math.sqrt(3) / 2,
+      height: 50,
+      diameter: 50 * Math.sqrt(3) / 2,
+    });
+  });
+
+  it("keeps square tokens sized to their occupied cells", () => {
+    expect(tokenDimensions(square, 2)).toEqual({ width: 100, height: 100, diameter: 100 });
+  });
+
   it("formats distance to one decimal", () => {
     expect(formatDistance(square, 3.14159)).toBe("3.1 yd");
   });

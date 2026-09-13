@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Tables } from "@/integrations/supabase/types";
+import type { EntityRow } from "@/lib/lore";
 import {
   cellDistance,
   cellToPixel,
   formatDistance,
   pixelToCell,
+  tokenDimensions,
   type MapObjectRow,
   type MapRow,
 } from "@/lib/battlemap";
@@ -40,6 +42,7 @@ export function BattleGrid({
   imageUrl,
   objects,
   characters,
+  npcs,
   isGm,
   userId,
   show3d,
@@ -53,6 +56,7 @@ export function BattleGrid({
   imageUrl: string | null;
   objects: MapObjectRow[];
   characters: CharacterRow[];
+  npcs: EntityRow[];
   isGm: boolean;
   userId: string | null;
   show3d: boolean;
@@ -76,8 +80,6 @@ export function BattleGrid({
 
   const grid = map;
   const fog = useMemo(() => fogCells(map), [map]);
-  const fogKeys = useMemo(() => new Set(fog.map((c) => `${c.x},${c.y}`)), [fog]);
-
   const toImage = useCallback(
     (clientX: number, clientY: number) => {
       const rect = containerRef.current?.getBoundingClientRect();
@@ -119,6 +121,19 @@ export function BattleGrid({
       window.removeEventListener("pointerup", up);
     };
   }, [drag, panning, toImage, grid, onMove, tool]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const zoomMap = (event: WheelEvent) => {
+      if (!event.ctrlKey) return;
+      event.preventDefault();
+      const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
+      setZoom((value) => Math.min(4, Math.max(0.15, value * factor)));
+    };
+    container.addEventListener("wheel", zoomMap, { passive: false });
+    return () => container.removeEventListener("wheel", zoomMap);
+  }, []);
 
   const canMove = useCallback(
     (object: MapObjectRow) =>
@@ -164,12 +179,6 @@ export function BattleGrid({
           "bg-muted/20 relative h-[70vh] w-full touch-none overflow-hidden rounded-lg border",
           panning ? "cursor-grabbing" : tool === "move" ? "cursor-grab" : "cursor-crosshair",
         )}
-        onWheel={(event) => {
-          if (!event.ctrlKey) return;
-          event.preventDefault();
-          const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
-          setZoom((z) => Math.min(4, Math.max(0.15, z * factor)));
-        }}
         onPointerDown={(event) => {
           if (event.button !== 0) return;
           const p = toImage(event.clientX, event.clientY);
@@ -300,22 +309,38 @@ export function BattleGrid({
 
           {objects.map((object) => {
             const character = characters.find((c) => c.id === object.character_id) ?? null;
+            const objectData =
+              object.data && typeof object.data === "object" && !Array.isArray(object.data)
+                ? object.data
+                : null;
+            const entityId =
+              objectData && typeof objectData["entity_id"] === "string"
+                ? objectData["entity_id"]
+                : null;
+            const npc = character
+              ? null
+              : npcs.find((candidate) => candidate.id === entityId) ??
+                npcs.find((candidate) => candidate.name === object.label) ??
+                null;
             const dragging = drag?.id === object.id;
             const base = dragging
               ? { x: drag.x, y: drag.y }
               : cellToPixel(grid, Number(object.x), Number(object.y));
-            const tokenSize = cellPx * (Number(object.size) || 1);
+            const dimensions = tokenDimensions(grid, Number(object.size));
+            const tokenWidth = dimensions.width;
+            const tokenHeight = dimensions.height;
+            const tokenSize = dimensions.diameter;
             const hiddenForPlayers = object.hidden;
             const movable = canMove(object) && tool === "move";
             return (
               <div
                 key={object.id}
-                className="absolute"
+                className="absolute flex items-center justify-center"
                 style={{
-                  left: base.x - tokenSize / 2,
-                  top: base.y - tokenSize / 2,
-                  width: tokenSize,
-                  height: tokenSize,
+                  left: base.x - tokenWidth / 2,
+                  top: base.y - tokenHeight / 2,
+                  width: tokenWidth,
+                  height: tokenHeight,
                   cursor: movable ? "grab" : "default",
                   zIndex: dragging ? 20 : 10,
                 }}
@@ -331,6 +356,7 @@ export function BattleGrid({
                 <MapToken
                   object={object}
                   character={character}
+                  fallbackImagePath={npc?.image_url ?? null}
                   sizePx={tokenSize}
                   selected={selectedId === object.id}
                   dimmed={hiddenForPlayers}

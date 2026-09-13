@@ -29,4 +29,5 @@ Order agreed with the user: lore first, battle grid after.
 - [x] Draggable tokens, distance measurement
 - [x] Realtime sync GM/players
 - [x] Token visual: 3D .glb model if the character has one, else portrait, else simple 2D name token
+- [x] Token polish: current NPC photos remain visible, tokens fit hex cells, and map zoom scales tokens with the grid
 

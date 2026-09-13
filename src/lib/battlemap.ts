@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { AVIF_MIME, convertToAvif } from "@/lib/image-avif";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type MapRow = Tables<"maps">;
@@ -179,10 +180,11 @@ export async function uploadMapImage(campaignId: string, file: File): Promise<st
   if (invalid) throw new Error(invalid);
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("You need to be signed in to upload a map.");
-  const path = mapImagePathFor(auth.user.id, campaignId, file.name);
+  const avif = await convertToAvif(file, { maxDimension: 4096 });
+  const path = mapImagePathFor(auth.user.id, campaignId, avif.name);
   const { error } = await supabase.storage
     .from(MAP_BUCKET)
-    .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type || "image/png" });
+    .upload(path, avif, { cacheControl: "3600", upsert: false, contentType: AVIF_MIME });
   if (error) throw new Error(error.message);
   return path;
 }

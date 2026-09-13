@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { AVIF_MIME, convertToAvif } from "@/lib/image-avif";
 
 export const PORTRAIT_BUCKET = "portraits";
 export const PORTRAIT_MAX_BYTES = 5 * 1024 * 1024;
@@ -38,10 +39,11 @@ export async function uploadPortrait(characterId: string, file: File): Promise<s
   if (invalid) throw new Error(invalid);
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("You need to be signed in to upload a portrait.");
-  const path = portraitPathFor(auth.user.id, characterId, file);
+  const avif = await convertToAvif(file);
+  const path = portraitPathFor(auth.user.id, characterId, avif);
   const { error } = await supabase.storage
     .from(PORTRAIT_BUCKET)
-    .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type || "image/png" });
+    .upload(path, avif, { cacheControl: "3600", upsert: false, contentType: AVIF_MIME });
 
   if (error) throw new Error(error.message);
   return path;

@@ -64,13 +64,13 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
       }
       setPending(files.map((f) => f.name));
       for (const file of files) {
-        const path = await uploadAssetFile(campaignId, file);
+        const stored = await uploadAssetFile(campaignId, file);
         await createAsset({
           campaign_id: campaignId,
           title: file.name.replace(/\.[a-z0-9]+$/i, ""),
-          storage_path: path,
-          mime_type: file.type || "application/octet-stream",
-          byte_size: file.size,
+          storage_path: stored.path,
+          mime_type: stored.mimeType,
+          byte_size: stored.byteSize,
         });
       }
     },

@@ -318,7 +318,7 @@ export function BattleGrid({
             return (
               <div
                 key={object.id}
-                className="absolute"
+                className="absolute flex items-center justify-center"
                 style={{
                   left: base.x - tokenWidth / 2,
                   top: base.y - tokenHeight / 2,

@@ -28,6 +28,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { listCampaignCharacters } from "@/lib/api";
+import { listEntities } from "@/lib/lore";
 import {
   createMap,
   createMapObject,
@@ -62,6 +63,12 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
   const characters = useQuery({
     queryKey: ["campaign-characters", campaignId],
     queryFn: () => listCampaignCharacters(campaignId),
+  });
+
+  const npcs = useQuery({
+    queryKey: ["lore-entities", campaignId],
+    queryFn: () => listEntities(campaignId),
+    select: (rows) => rows.filter((row) => row.kind === "NPC"),
   });
 
   const current: MapRow | null = useMemo(() => {

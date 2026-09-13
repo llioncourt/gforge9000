@@ -24,7 +24,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { KINDS, kindDef, VISIBILITIES } from "@/lib/entity-kinds";
-import { createEntity, listEntities, type EntityRow } from "@/lib/lore";
+import { createEntity, listEntities, listRelationships, type EntityRow } from "@/lib/lore";
+import { getCampaign } from "@/lib/api";
+import { download } from "@/lib/portable";
+import { parsePortableLore, toPortableLore } from "@/lib/lore-portable";
+import { importLore } from "@/lib/lore-import";
+import { FileDropzone } from "@/components/ui/FileDropzone";
 
 const GROUPS: { group: string; label: string }[] = [
   { group: "world", label: "World" },
@@ -39,8 +44,39 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
   const [group, setGroup] = useState("world");
   const [kindFilter, setKindFilter] = useState("ALL");
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [newKind, setNewKind] = useState("NPC");
   const [newName, setNewName] = useState("");
+
+  const exportLore = useMutation({
+    mutationFn: async () => {
+      const [campaign, rows, rels] = await Promise.all([
+        getCampaign(campaignId),
+        listEntities(campaignId),
+        listRelationships(campaignId),
+      ]);
+      const file = toPortableLore(campaign.name, rows, rels);
+      const slug = campaign.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      download(`${slug || "campaign"}-lore.json`, JSON.stringify(file, null, 2));
+      return file.entities.length;
+    },
+    onSuccess: (count) => toast.success(`Exported ${count} entries`),
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const runImport = useMutation({
+    mutationFn: async (file: File) => {
+      const parsed = parsePortableLore(await file.text());
+      return importLore(campaignId, parsed);
+    },
+    onSuccess: async (result) => {
+      setImporting(false);
+      toast.success(`Imported ${result.entities} entries and ${result.relationships} links`);
+      await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
 
   const entities = useQuery({
     queryKey: ["lore-entities", campaignId],

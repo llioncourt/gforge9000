@@ -48,6 +48,7 @@ import {
   listMembers,
   removeMember,
   transferCampaignGm,
+  transferCharacterOwner,
   listNotes,
   setCharacterCampaign,
   toCharacterRecord,
@@ -185,6 +186,17 @@ function CampaignPage() {
     mutationFn: ({ cid, name }: { cid: string; name: string | null }) =>
       updateCharacter(cid, { player_name: name }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const transferOwner = useMutation({
+    mutationFn: ({ cid, userId }: { cid: string; userId: string }) =>
+      transferCharacterOwner(cid, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
+      queryClient.invalidateQueries({ queryKey: ["characters"] });
+      toast.success("Character ownership transferred.");
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 

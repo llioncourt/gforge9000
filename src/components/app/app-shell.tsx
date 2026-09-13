@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/app/command-palette";
 import { DiceTray } from "@/components/app/dice-tray";
 import { DiceOverlay } from "@/components/app/dice-overlay";
+import { CampaignSoundtrackProvider } from "@/components/campaign/campaign-soundtrack-player";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -60,6 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
+    <CampaignSoundtrackProvider pathname={pathname}>
     <div className="min-h-screen bg-background">
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <DiceTray open={trayOpen} onOpenChange={setTrayOpen} />
@@ -169,5 +171,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
       ) : null}
     </div>
+    </CampaignSoundtrackProvider>
   );
 }

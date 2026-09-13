@@ -12,6 +12,7 @@ import {
   Printer,
   Save,
   Copy,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 import {

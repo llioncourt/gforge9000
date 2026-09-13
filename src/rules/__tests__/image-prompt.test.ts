@@ -30,6 +30,7 @@ describe("buildImagePrompt", () => {
     expect(a).not.toContain("Notable traits");
     expect(a).not.toContain("Equipment");
     expect(a).not.toContain("Tech level");
-    expect(a).toContain("a character");
+    expect(a).toContain("of Solo.");
+    expect(buildImagePrompt({ name: " " })).toContain("of a character.");
   });
 });

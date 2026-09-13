@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pause, Play, Trash2 } from "lucide-react";
-import { unzipSync } from "fflate";
+import { Download, Pause, Play, Sparkles, Trash2 } from "lucide-react";
+import { strToU8, unzipSync, zipSync } from "fflate";
 import { toast } from "sonner";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Button } from "@/components/ui/button";

@@ -165,6 +165,7 @@ export function BattleGrid({
           panning ? "cursor-grabbing" : tool === "move" ? "cursor-grab" : "cursor-crosshair",
         )}
         onWheel={(event) => {
+          if (!event.ctrlKey) return;
           event.preventDefault();
           const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
           setZoom((z) => Math.min(4, Math.max(0.15, z * factor)));

@@ -59,6 +59,8 @@ import { GraphPanel } from "@/components/lore/graph-panel";
 import { PlayersPanel } from "@/components/lore/players-panel";
 import { SessionsPanel } from "@/components/lore/sessions-panel";
 import { TimelinePanel } from "@/components/lore/timeline-panel";
+import { AssetsPanel } from "@/components/lore/assets-panel";
+
 import { BattlePanel } from "@/components/battle/battle-panel";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
@@ -256,6 +258,8 @@ function CampaignPage() {
           <TabsTrigger value="sessions">Sessions</TabsTrigger>
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="battle">Battle grid</TabsTrigger>
+          <TabsTrigger value="library">Library</TabsTrigger>
+
           <TabsTrigger value="notes">Notes &amp; handouts</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="rules">House rules</TabsTrigger>

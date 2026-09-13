@@ -1,0 +1,1 @@
+CREATE POLICY "characters_update_unlink" ON public.characters FOR UPDATE TO authenticated USING (campaign_id IS NOT NULL AND private.is_campaign_gm(campaign_id, auth.uid())) WITH CHECK (campaign_id IS NULL);

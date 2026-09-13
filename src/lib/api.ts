@@ -231,7 +231,20 @@ export async function listEntriesForCharacters(ids: string[]) {
 }
 
 export async function setCharacterCampaign(characterId: string, campaignId: string | null) {
-  return updateCharacter(characterId, { campaign_id: campaignId });
+  if (campaignId === null) {
+    // Unlinking goes through a security-definer RPC: the GM must be allowed to
+    // detach a character even though the row leaves their RLS visibility.
+    const { error } = await supabase.rpc("remove_character_from_campaign", {
+      _character: characterId,
+    });
+    if (error) throw new Error(error.message);
+    return;
+  }
+  const { error } = await supabase
+    .from("characters")
+    .update({ campaign_id: campaignId })
+    .eq("id", characterId);
+  if (error) throw new Error(error.message);
 }
 
 export async function listNotes(campaignId: string) {

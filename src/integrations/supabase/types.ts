@@ -1071,6 +1071,10 @@ export type Database = {
     }
     Functions: {
       join_campaign: { Args: { _code: string }; Returns: string }
+      remove_character_from_campaign: {
+        Args: { _character: string }
+        Returns: undefined
+      }
       transfer_campaign_gm: {
         Args: { _campaign: string; _new_gm: string }
         Returns: undefined

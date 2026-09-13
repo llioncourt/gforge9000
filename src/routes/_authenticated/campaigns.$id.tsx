@@ -382,7 +382,7 @@ function CampaignPage() {
                     ) : null}
 
                     {isGm ? (
-                      <div className="mt-4 flex gap-2">
+                      <div className="mt-4 flex flex-wrap gap-2">
                         <Button
                           size="sm"
                           variant={c.approved ? "outline" : "default"}

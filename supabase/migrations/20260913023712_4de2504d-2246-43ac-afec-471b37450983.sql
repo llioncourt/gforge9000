@@ -1,0 +1,2 @@
+DROP POLICY "characters_update_unlink" ON public.characters;
+ALTER POLICY "characters_update" ON public.characters WITH CHECK (owner_id = auth.uid() OR campaign_id IS NULL OR (campaign_id IS NOT NULL AND private.is_campaign_gm(campaign_id, auth.uid())));

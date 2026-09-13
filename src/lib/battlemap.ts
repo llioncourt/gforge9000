@@ -117,12 +117,16 @@ export function formatDistance(grid: GridSpec, value: number): string {
   return `${rounded} ${grid.unit_name}`;
 }
 
-/** Unscaled token bounds; the map transform scales these with the grid and image. */
+/** Unscaled token bounds; the map transform scales these with the grid and image.
+ *  The token is a circle sized to sit clearly inside its cell — for hex grids
+ *  that means ~80% of the inscribed circle (flat-to-flat width), so it never
+ *  spills over the hex edges. */
 export function tokenDimensions(grid: GridSpec, cells = 1) {
   const scale = Number.isFinite(cells) && cells > 0 ? cells : 1;
-  const height = (grid.grid_size || 50) * scale;
-  const width = height * (grid.grid_type === "hex" ? HEX_W : 1);
-  return { width, height, diameter: Math.min(width, height) };
+  const cell = (grid.grid_size || 50) * scale;
+  const inscribed = grid.grid_type === "hex" ? cell * HEX_W : cell;
+  const diameter = inscribed * 0.8;
+  return { width: diameter, height: diameter, diameter };
 }
 
 /* ---------------------------------------------------------------- data */

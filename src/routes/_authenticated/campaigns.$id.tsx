@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -64,17 +64,43 @@ import { buildSheet } from "@/rules";
 import { useSession } from "@/hooks/use-session";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
 import { UserAvatar } from "@/components/app/user-avatar";
-import { LorePanel } from "@/components/lore/lore-panel";
-import { StoryPanel } from "@/components/lore/story-panel";
-import { GraphPanel } from "@/components/lore/graph-panel";
-import { PlayersPanel } from "@/components/lore/players-panel";
-import { SessionsPanel } from "@/components/lore/sessions-panel";
-import { TimelinePanel } from "@/components/lore/timeline-panel";
-import { AssetsPanel } from "@/components/lore/assets-panel";
 
-import { BattlePanel } from "@/components/battle/battle-panel";
-import { SoundtrackPanel } from "@/components/campaign/soundtrack-panel";
 import { CampaignIntroExperience } from "@/components/campaign/intro-panel";
+
+// Heavy campaign tabs load on demand — the campaign page ships a much
+// smaller first bundle and each panel is fetched only when its tab opens.
+const LorePanel = lazy(() =>
+  import("@/components/lore/lore-panel").then((mod) => ({ default: mod.LorePanel })),
+);
+const StoryPanel = lazy(() =>
+  import("@/components/lore/story-panel").then((mod) => ({ default: mod.StoryPanel })),
+);
+const GraphPanel = lazy(() =>
+  import("@/components/lore/graph-panel").then((mod) => ({ default: mod.GraphPanel })),
+);
+const PlayersPanel = lazy(() =>
+  import("@/components/lore/players-panel").then((mod) => ({ default: mod.PlayersPanel })),
+);
+const SessionsPanel = lazy(() =>
+  import("@/components/lore/sessions-panel").then((mod) => ({ default: mod.SessionsPanel })),
+);
+const TimelinePanel = lazy(() =>
+  import("@/components/lore/timeline-panel").then((mod) => ({ default: mod.TimelinePanel })),
+);
+const AssetsPanel = lazy(() =>
+  import("@/components/lore/assets-panel").then((mod) => ({ default: mod.AssetsPanel })),
+);
+const BattlePanel = lazy(() =>
+  import("@/components/battle/battle-panel").then((mod) => ({ default: mod.BattlePanel })),
+);
+const SoundtrackPanel = lazy(() =>
+  import("@/components/campaign/soundtrack-panel").then((mod) => ({ default: mod.SoundtrackPanel })),
+);
+
+
+function PanelFallback() {
+  return <Skeleton className="h-64 w-full rounded-lg" />;
+}
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   head: () => ({
@@ -628,39 +654,57 @@ function CampaignPage() {
         </TabsContent>
 
         <TabsContent value="lore" className="mt-6">
-          <LorePanel campaignId={id} isGm={isGm} />
+          <Suspense fallback={<PanelFallback />}>
+            <LorePanel campaignId={id} isGm={isGm} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="story" className="mt-6">
-          <StoryPanel campaignId={id} isGm={isGm} />
+          <Suspense fallback={<PanelFallback />}>
+            <StoryPanel campaignId={id} isGm={isGm} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="graph" className="mt-6">
-          <GraphPanel campaignId={id} />
+          <Suspense fallback={<PanelFallback />}>
+            <GraphPanel campaignId={id} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="reveals" className="mt-6">
-          <PlayersPanel campaignId={id} isGm={isGm} />
+          <Suspense fallback={<PanelFallback />}>
+            <PlayersPanel campaignId={id} isGm={isGm} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="sessions" className="mt-6">
-          <SessionsPanel campaignId={id} isGm={isGm} />
+          <Suspense fallback={<PanelFallback />}>
+            <SessionsPanel campaignId={id} isGm={isGm} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="timeline" className="mt-6">
-          <TimelinePanel campaignId={id} isGm={isGm} />
+          <Suspense fallback={<PanelFallback />}>
+            <TimelinePanel campaignId={id} isGm={isGm} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="battle" className="mt-6">
-          <BattlePanel campaignId={id} isGm={isGm} />
+          <Suspense fallback={<PanelFallback />}>
+            <BattlePanel campaignId={id} isGm={isGm} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="library" className="mt-6">
-          <AssetsPanel campaignId={id} isGm={isGm} />
+          <Suspense fallback={<PanelFallback />}>
+            <AssetsPanel campaignId={id} isGm={isGm} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="soundtrack" className="mt-6">
-          <SoundtrackPanel campaignId={id} isGm={isGm} />
+          <Suspense fallback={<PanelFallback />}>
+            <SoundtrackPanel campaignId={id} isGm={isGm} />
+          </Suspense>
         </TabsContent>
 
 

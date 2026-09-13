@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createCharacter, listCampaigns, listCharacters, listLibrary, listRolls } from "@/lib/api";
+import { CardPortraitBg } from "@/components/character/card-portrait-bg";
 import { seedDemoContent } from "@/lib/demo";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({

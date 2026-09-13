@@ -49,6 +49,21 @@ export async function uploadPortrait(characterId: string, file: File): Promise<s
   return path;
 }
 
+/** Profile photos live under `<user id>/avatar/…` in the same bucket. */
+export async function uploadAvatar(file: File): Promise<string> {
+  const invalid = validatePortraitFile(file);
+  if (invalid) throw new Error(invalid);
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) throw new Error("You need to be signed in to upload a photo.");
+  const avif = await convertToAvif(file);
+  const path = `${auth.user.id}/avatar/${crypto.randomUUID()}.avif`;
+  const { error } = await supabase.storage
+    .from(PORTRAIT_BUCKET)
+    .upload(path, avif, { cacheControl: "3600", upsert: false, contentType: AVIF_MIME });
+  if (error) throw new Error(error.message);
+  return path;
+}
+
 export async function removePortrait(path: string) {
   const { error } = await supabase.storage.from(PORTRAIT_BUCKET).remove([path]);
   if (error) throw new Error(error.message);

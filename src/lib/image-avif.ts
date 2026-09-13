@@ -102,10 +102,18 @@ function base64ToBytes(base64: string): Uint8Array {
 }
 
 async function convertOnServer(file: File, max: number, quality: number): Promise<File> {
+  // The browser decodes/resizes (it can decode every common format); the
+  // server only encodes the raw pixels to AVIF.
+  const { ctx, width, height } = await canvasFromFile(file, max);
+  const imageData = ctx.getImageData(0, 0, width, height);
   const formData = new FormData();
-  formData.set("file", file);
-  formData.set("maxDimension", String(max));
+  formData.set("width", String(width));
+  formData.set("height", String(height));
   formData.set("quality", String(Math.round(quality * 100)));
+  formData.set(
+    "pixels",
+    new Blob([imageData.data.buffer as ArrayBuffer], { type: "application/octet-stream" }),
+  );
   const result = await convertImageToAvif({ data: formData });
   const bytes = base64ToBytes(result.base64);
   return new File([bytes.buffer as ArrayBuffer], avifFileName(file.name), { type: AVIF_MIME });

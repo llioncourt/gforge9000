@@ -124,6 +124,7 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
         campaign_id: campaignId,
         name: `Map ${(maps.data?.length ?? 0) + 1}`,
         is_active: (maps.data?.length ?? 0) === 0,
+        grid_type: "hex",
       }),
     onSuccess: async (row) => {
       setMapId(row.id);

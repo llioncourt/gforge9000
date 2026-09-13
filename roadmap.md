@@ -19,8 +19,8 @@ Order agreed with the user: lore first, battle grid after.
 - [x] Player portal / knowledge grants UI
 
 ## Phase 3 — Assets, import/export, AI
-- [ ] Assets library (private storage) + AssetImage
-- [ ] Import/export of campaign lore
+- [x] Assets library (private storage, GM share toggle) + AssetImage
+- [x] Import/export of campaign lore (UCF-LORE v1 JSON)
 - [ ] AI generation helpers (Lovable AI Gateway)
 
 ## Phase 4 — Battle grid (done)

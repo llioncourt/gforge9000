@@ -240,6 +240,21 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
   );
 }
 
+const GREGORIAN_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 function CalendarForm({
   calendar,
   onSave,
@@ -253,8 +268,23 @@ function CalendarForm({
   const [current, setCurrent] = useState(calendar.current);
   const [saving, setSaving] = useState(false);
 
+  const useGregorian = () => {
+    setEra("AD");
+    setMonths(GREGORIAN_MONTHS.join("\n"));
+    setDays("30");
+    if (!current.trim()) {
+      const today = new Date();
+      setCurrent(
+        `${today.getDate()} ${GREGORIAN_MONTHS[today.getMonth()]}, ${today.getFullYear()}`,
+      );
+    }
+  };
+
   return (
     <div className="space-y-3">
+      <Button type="button" variant="outline" size="sm" onClick={useGregorian}>
+        Use Gregorian calendar
+      </Button>
       <div className="space-y-1">
         <Label htmlFor="cal-era">Era name</Label>
         <Input id="cal-era" value={era} onChange={(e) => setEra(e.target.value)} placeholder="Third Age" />

@@ -54,16 +54,16 @@ function resizeImageData(src: RawImage, targetWidth: number, targetHeight: numbe
 
 async function decodeImage(buffer: ArrayBuffer, mime: string): Promise<RawImage> {
   if (mime === "image/jpeg" || mime === "image/jpg") {
-    const { default: decode } = await import("@jsquash/jpeg/decode");
-    return decode(buffer) as Promise<RawImage>;
+    const mod = await import("@jsquash/jpeg");
+    return mod.decode(buffer) as Promise<RawImage>;
   }
   if (mime === "image/png") {
-    const { default: decode } = await import("@jsquash/png/decode");
-    return decode(buffer) as Promise<RawImage>;
+    const mod = await import("@jsquash/png");
+    return mod.decode(buffer) as Promise<RawImage>;
   }
   if (mime === "image/webp") {
-    const { default: decode } = await import("@jsquash/webp/decode");
-    return decode(buffer) as Promise<RawImage>;
+    const mod = await import("@jsquash/webp");
+    return mod.decode(buffer) as Promise<RawImage>;
   }
   throw new Error(`Unsupported image format: ${mime || "unknown"}`);
 }
@@ -92,10 +92,11 @@ export const convertImageToAvif = createServerFn({ method: "POST" })
     const { width, height } = fitWithinSize(decoded.width, decoded.height, maxDimension);
     const pixels = resizeImageData(decoded, width, height);
 
-    const { default: encode } = await import("@jsquash/avif/encode");
-    const encoded = await encode(
-      { data: pixels.data, width, height } as unknown as ImageData,
-      { quality, speed: 8 },
-    );
+    const mod = await import("@jsquash/avif");
+    const encode = mod.encode as unknown as (
+      data: { data: Uint8ClampedArray; width: number; height: number },
+      opts?: Record<string, number>,
+    ) => Promise<ArrayBuffer>;
+    const encoded = await encode(pixels, { quality, speed: 8 });
     return { base64: toBase64(new Uint8Array(encoded)), mime: "image/avif" };
   });

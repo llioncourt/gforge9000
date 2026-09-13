@@ -173,6 +173,47 @@ function SettingsPage() {
         <div className="space-y-6">
           <section className="panel space-y-4 p-6">
             <h2 className="font-display text-lg font-semibold">Profile</h2>
+            <div className="flex items-start gap-4">
+              {avatarPreview ? (
+                <img
+                  src={avatarPreview}
+                  alt="Your profile photo"
+                  className="size-20 shrink-0 rounded-full border border-border object-cover"
+                />
+              ) : (
+                <UserAvatar
+                  name={displayName || user?.email || "?"}
+                  avatarPath={data?.avatar_url}
+                  className="size-20 text-lg"
+                />
+              )}
+              <div className="flex-1 space-y-2">
+                <Label>Profile photo</Label>
+                <FileDropzone
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+                  compact
+                  loading={uploadPhoto.isPending}
+                  loadingLabel="Uploading photo…"
+                  label={
+                    <span className="text-xs text-muted-foreground">
+                      Drop an image here — it is converted to AVIF automatically
+                    </span>
+                  }
+                  onFiles={(files) => files[0] && uploadPhoto.mutate(files[0])}
+                />
+                {data?.avatar_url ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => removePhoto.mutate()}
+                    disabled={removePhoto.isPending}
+                  >
+                    Remove photo
+                  </Button>
+                ) : null}
+              </div>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="display">Display name</Label>
               <Input

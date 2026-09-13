@@ -28,6 +28,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
 import { listCampaignCharacters } from "@/lib/api";
+import { listEntities } from "@/lib/lore";
 import {
   createMap,
   createMapObject,
@@ -62,6 +63,12 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
   const characters = useQuery({
     queryKey: ["campaign-characters", campaignId],
     queryFn: () => listCampaignCharacters(campaignId),
+  });
+
+  const npcs = useQuery({
+    queryKey: ["lore-entities", campaignId],
+    queryFn: () => listEntities(campaignId),
+    select: (rows) => rows.filter((row) => row.kind === "NPC"),
   });
 
   const current: MapRow | null = useMemo(() => {
@@ -218,6 +225,34 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
   }
 
   const selected = (objects.data ?? []).find((o) => o.id === selectedId) ?? null;
+
+  /* Tokens already on the grid leave the picker; NPC tokens match by label. */
+  const placedCharacterIds = new Set(
+    (objects.data ?? []).map((o) => o.character_id).filter(Boolean),
+  );
+  const placedLabels = new Set(
+    (objects.data ?? []).filter((o) => !o.character_id).map((o) => o.label),
+  );
+  const availableCharacters = (characters.data ?? []).filter((c) => !placedCharacterIds.has(c.id));
+  const availableNpcs = (npcs.data ?? []).filter((n) => !placedLabels.has(n.name));
+
+  function addTokenFromPicker(value: string) {
+    if (value === "marker") {
+      addToken.mutate({ characterId: null, label: "Marker" });
+      return;
+    }
+    if (value.startsWith("char:")) {
+      const id = value.slice(5);
+      const character = (characters.data ?? []).find((c) => c.id === id);
+      if (character) addToken.mutate({ characterId: character.id, label: character.name });
+      return;
+    }
+    if (value.startsWith("npc:")) {
+      const id = value.slice(4);
+      const npc = (npcs.data ?? []).find((n) => n.id === id);
+      if (npc) addToken.mutate({ characterId: null, label: npc.name });
+    }
+  }
 
   if (maps.isLoading) {
     return <Skeleton className="h-[70vh] w-full" />;
@@ -402,6 +437,37 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
         />
       ) : null}
 
+      {isGm ? (
+        <div className="flex flex-wrap items-end gap-3 rounded-lg border p-3">
+          <div className="w-72 space-y-1">
+            <Label className="text-xs">Add token</Label>
+            <Select value="" onValueChange={addTokenFromPicker}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pick a character, NPC or marker" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableCharacters.map((c) => (
+                  <SelectItem key={c.id} value={`char:${c.id}`}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+                {availableNpcs.map((n) => (
+                  <SelectItem key={n.id} value={`npc:${n.id}`}>
+                    {n.name} (NPC)
+                  </SelectItem>
+                ))}
+                <SelectItem value="marker">Blank marker</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {availableCharacters.length === 0 && availableNpcs.length === 0 ? (
+            <p className="text-muted-foreground pb-2 text-xs">
+              Every character and NPC is already on the grid.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       <BattleGrid
         map={current}
         imageUrl={image.data ?? null}
@@ -417,30 +483,6 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
         onToggleFog={toggleFog}
       />
 
-      {isGm ? (
-        <div className="space-y-2 rounded-lg border p-3">
-          <h4 className="text-xs font-semibold tracking-wide uppercase">Add tokens</h4>
-          <div className="flex flex-wrap gap-2">
-            {(characters.data ?? []).map((c) => (
-              <Button
-                key={c.id}
-                size="sm"
-                variant="outline"
-                onClick={() => addToken.mutate({ characterId: c.id, label: c.name })}
-              >
-                <Plus className="mr-1 size-3.5" /> {c.name}
-              </Button>
-            ))}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => addToken.mutate({ characterId: null, label: "Marker" })}
-            >
-              <Plus className="mr-1 size-3.5" /> Blank marker
-            </Button>
-          </div>
-        </div>
-      ) : null}
 
       {selected ? (
         <div className="flex flex-wrap items-end gap-3 rounded-lg border p-3">

@@ -10,6 +10,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useCampaignSoundtrack } from "@/components/campaign/campaign-soundtrack-player";
 import { campaignSoundtrackManifestSchema, formatSoundtrackTime, MAX_SOUNDTRACK_COVER_BYTES, MAX_SOUNDTRACK_TRACK_BYTES, soundtrackAudioMime } from "@/lib/campaign-soundtrack-pack";
 import { deleteCampaignSoundtrack, importCampaignSoundtrack, soundtrackSignedUrl, type SoundtrackAlbum } from "@/lib/campaign-soundtrack";
+import { buildSoundtrackPackPrompt, buildSoundtrackPackReadme, SOUNDTRACK_EXAMPLE_MANIFEST } from "@/lib/soundtrack-pack-docs";
+
+async function copySoundtrackPrompt(){try{await navigator.clipboard.writeText(buildSoundtrackPackPrompt());toast.success("AI prompt copied to your clipboard.")}catch{toast.error("Could not copy the prompt.")}}
+function downloadSoundtrackReadme(){const zip=zipSync({"README.md":strToU8(buildSoundtrackPackReadme()),"album.example.json":strToU8(SOUNDTRACK_EXAMPLE_MANIFEST)}),blob=new Blob([zip as BlobPart],{type:"application/zip"}),url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="soundtrack-package-readme.zip";document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url)}
 
 function AlbumCover({album}:{album:SoundtrackAlbum}){const[url,setUrl]=useState<string|null>(null);useEffect(()=>{let live=true;void soundtrackSignedUrl(album.cover_path).then(v=>{if(live)setUrl(v)});return()=>{live=false}},[album.cover_path]);return url?<img src={url} alt={`${album.title} cover`} className="aspect-square h-full w-full object-cover"/>:<div className="aspect-square bg-muted"/>}
 export function SoundtrackPanel({campaignId,isGm}:{campaignId:string;isGm:boolean}){

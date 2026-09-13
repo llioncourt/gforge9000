@@ -278,6 +278,30 @@ function CharacterPage() {
   const [pickerKinds, setPickerKinds] = useState<EntryKind[] | null>(null);
   const linkedPacks = form?.packs ?? [];
 
+  // When the character belongs to a campaign, the campaign's enabled packs are
+  // automatically available on the sheet (unioned with the character's own).
+  const campaignQuery = useQuery({
+    queryKey: ["campaign", form?.campaign_id],
+    queryFn: () => getCampaign(form!.campaign_id!),
+    enabled: !!form?.campaign_id,
+  });
+  const campaignPacks = useMemo(
+    () => allowedPacksOf(campaignQuery.data?.settings),
+    [campaignQuery.data],
+  );
+  const effectivePacks = useMemo(() => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const name of [...linkedPacks, ...campaignPacks]) {
+      const key = name.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        out.push(name);
+      }
+    }
+    return out;
+  }, [linkedPacks, campaignPacks]);
+
   const addFromPack = useMutation({
     mutationFn: async (entry: LibraryRow) => {
       const draftRow = libraryEntryToCharacterDraft({

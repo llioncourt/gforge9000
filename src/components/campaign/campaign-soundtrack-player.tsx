@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pause, Play, Repeat1, SkipBack, SkipForward, Volume2, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Pause, Play, Repeat1, SkipBack, SkipForward, Volume2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getCharacter, getCampaign } from "@/lib/api";
 import { getEntity } from "@/lib/lore";

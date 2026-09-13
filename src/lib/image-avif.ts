@@ -72,7 +72,14 @@ export async function convertToAvif(
   try {
     return await convertInBrowser(file, max, quality);
   } catch {
-    return convertOnServer(file, max, quality);
+    try {
+      return await convertOnServer(file, max, quality);
+    } catch (error) {
+      const reason = error instanceof Error ? ` ${error.message}` : "";
+      throw new Error(
+        `This image could not be converted to AVIF.${reason} Please use a PNG, JPEG or WebP image.`,
+      );
+    }
   }
 }
 

@@ -31,6 +31,7 @@ import { parsePortableLore, toPortableLore } from "@/lib/lore-portable";
 import { importLore } from "@/lib/lore-import";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { AiDraftDialog } from "@/components/lore/ai-draft-dialog";
+import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
 
 const GROUPS: { group: string; label: string }[] = [
   { group: "world", label: "World" },
@@ -225,24 +226,30 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
             </h3>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {list.map((row) => (
-                <Link
-                  key={row.id}
-                  to="/entities/$id"
-                  params={{ id: row.id }}
-                  className="hover:bg-accent/40 rounded-lg border p-3 transition"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="font-medium">{row.name}</span>
-                    <Badge variant="outline">
-                      {VISIBILITIES.find((v) => v.value === row.visibility)?.label ??
-                        row.visibility}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
-                    {row.summary ?? row.player_description ?? "No summary yet."}
-                  </p>
-                  <p className="text-muted-foreground mt-2 text-xs">{row.status}</p>
-                </Link>
+                <div key={row.id} className="relative">
+                  <Link
+                    to="/entities/$id"
+                    params={{ id: row.id }}
+                    className="hover:bg-accent/40 block rounded-lg border p-3 transition"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium">{row.name}</span>
+                      <Badge variant="outline">
+                        {VISIBILITIES.find((v) => v.value === row.visibility)?.label ??
+                          row.visibility}
+                      </Badge>
+                    </div>
+                    <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+                      {row.summary ?? row.player_description ?? "No summary yet."}
+                    </p>
+                    <p className="text-muted-foreground mt-2 text-xs">{row.status}</p>
+                  </Link>
+                  {isGm ? (
+                    <div className="absolute right-2 bottom-2">
+                      <EntityDeleteButton campaignId={campaignId} entityId={row.id} name={row.name} />
+                    </div>
+                  ) : null}
+                </div>
               ))}
             </div>
           </section>

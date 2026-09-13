@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KINDS, kindDef } from "@/lib/entity-kinds";
 import { createEntity, listEntities, type EntityRow } from "@/lib/lore";
+import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
 
 /** Outline spine of the story: each level may hold the next one below it. */
 const OUTLINE = ["ARC", "ADVENTURE", "CHAPTER", "SCENE"] as const;
@@ -128,6 +129,9 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
               {kindDef(child).label}
             </Button>
           ) : null}
+          {isGm ? (
+            <EntityDeleteButton campaignId={campaignId} entityId={row.id} name={row.name} />
+          ) : null}
         </div>
         {isOpen ? kids.map((kid) => renderNode(kid, depth + 1)) : null}
       </div>
@@ -201,7 +205,16 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="truncate font-medium">{row.name}</span>
-                      <span className="text-muted-foreground text-xs">{row.status}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-muted-foreground text-xs">{row.status}</span>
+                        {isGm ? (
+                          <EntityDeleteButton
+                            campaignId={campaignId}
+                            entityId={row.id}
+                            name={row.name}
+                          />
+                        ) : null}
+                      </div>
                     </div>
                     <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
                       {row.summary ?? row.player_description ?? "No summary yet."}

@@ -32,7 +32,7 @@ Order agreed with the user: lore first, battle grid after.
 - [x] Token polish: current NPC photos remain visible, tokens fit hex cells, and map zoom scales tokens with the grid
 
 
-## Phase 5 — Campaign soundtrack (in progress)
-- [ ] Silicon Studios ZIP import with private campaign storage
-- [ ] GM-synchronized persistent player across campaign-related pages
-- [ ] Player teardown outside campaign scope and regression tests
+## Phase 5 — Campaign soundtrack
+- [x] Silicon Studios ZIP import with private campaign storage
+- [x] GM-synchronized persistent player across campaign-related pages
+- [x] Player teardown outside campaign scope and regression tests

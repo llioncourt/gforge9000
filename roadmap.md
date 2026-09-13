@@ -15,8 +15,8 @@ Order agreed with the user: lore first, battle grid after.
 - [x] Story tab (arcs/adventures/chapters/scenes/quests/mysteries)
 - [ ] Sessions prep/recap merged with existing campaign notes
 - [ ] Timeline + in-world calendar
-- [ ] Relationship graph
-- [ ] Player portal / knowledge grants UI
+- [x] Relationship graph
+- [x] Player portal / knowledge grants UI
 
 ## Phase 3 — Assets, import/export, AI
 - [ ] Assets library (private storage) + AssetImage

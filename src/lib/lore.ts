@@ -70,6 +70,12 @@ export async function listGrants(entityId: string): Promise<GrantRow[]> {
   );
 }
 
+export async function listCampaignGrants(campaignId: string): Promise<GrantRow[]> {
+  return unwrap(
+    await supabase.from("knowledge_grants").select("*").eq("campaign_id", campaignId),
+  );
+}
+
 export async function grantKnowledge(input: TablesInsert<"knowledge_grants">): Promise<GrantRow> {
   return unwrap(await supabase.from("knowledge_grants").insert(input).select("*").single());
 }

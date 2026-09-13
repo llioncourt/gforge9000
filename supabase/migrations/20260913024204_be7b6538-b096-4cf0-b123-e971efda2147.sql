@@ -1,0 +1,2 @@
+ALTER TABLE public.campaign_notes DROP CONSTRAINT campaign_notes_kind_check;
+ALTER TABLE public.campaign_notes ADD CONSTRAINT campaign_notes_kind_check CHECK (kind = ANY (ARRAY['note'::text, 'handout'::text, 'session'::text, 'session-prep'::text, 'rule'::text]));

@@ -78,16 +78,17 @@ describe("gridless maps", () => {
 });
 
 describe("helpers", () => {
-  it("fits a one-cell token inside a pointy-top hex", () => {
+  it("fits a one-cell token inside a pointy-top hex at 80% of the inscribed circle", () => {
+    const inscribed = 50 * Math.sqrt(3) / 2;
     expect(tokenDimensions(hex, 1)).toEqual({
-      width: 50 * Math.sqrt(3) / 2,
-      height: 50,
-      diameter: 50 * Math.sqrt(3) / 2,
+      width: inscribed * 0.8,
+      height: inscribed * 0.8,
+      diameter: inscribed * 0.8,
     });
   });
 
-  it("keeps square tokens sized to their occupied cells", () => {
-    expect(tokenDimensions(square, 2)).toEqual({ width: 100, height: 100, diameter: 100 });
+  it("keeps square tokens sized to 80% of their occupied cells", () => {
+    expect(tokenDimensions(square, 2)).toEqual({ width: 80, height: 80, diameter: 80 });
   });
 
   it("formats distance to one decimal", () => {

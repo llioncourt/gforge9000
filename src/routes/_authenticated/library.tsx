@@ -241,16 +241,17 @@ function LibraryPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const rows = useMemo(
-    () =>
-      (data ?? []).filter(
-        (e) =>
-          (kindFilter === "all" || e.kind === kindFilter) &&
-          (packFilter === "all" || (e.pack ?? "") === packFilter) &&
-          matchesSearch(search, [e.name, e.category, e.summary, e.pack, ...(e.tags ?? [])]),
-      ),
-    [data, kindFilter, packFilter, search],
-  );
+  const rows = useMemo(() => {
+    const base = (data ?? []).filter(
+      (e) =>
+        (kindFilter === "all" || e.kind === kindFilter) &&
+        (packFilter === "all" || (e.pack ?? "") === packFilter),
+    );
+    return rankSearch(search, base, (e) => ({
+      name: e.name,
+      fields: [e.category, e.summary, e.pack, ...(e.tags ?? [])],
+    }));
+  }, [data, kindFilter, packFilter, search]);
 
 
   const portable = toPortableLibrary((rows ?? []) as unknown as Record<string, unknown>[]);

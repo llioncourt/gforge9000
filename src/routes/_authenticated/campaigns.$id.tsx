@@ -73,6 +73,7 @@ import { AssetsPanel } from "@/components/lore/assets-panel";
 
 import { BattlePanel } from "@/components/battle/battle-panel";
 import { SoundtrackPanel } from "@/components/campaign/soundtrack-panel";
+import { CampaignIntroExperience } from "@/components/campaign/intro-panel";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   head: () => ({
@@ -363,8 +364,11 @@ function CampaignPage() {
         </DialogContent>
       </Dialog>
 
+      <CampaignIntroExperience campaignId={id} isGm={isGm} display="gate" />
+
       <Tabs defaultValue="roster">
         <TabsList>
+          <TabsTrigger value="intro">Intro</TabsTrigger>
           <TabsTrigger value="roster">Roster</TabsTrigger>
           <TabsTrigger value="lore">World &amp; lore</TabsTrigger>
           <TabsTrigger value="story">Story</TabsTrigger>
@@ -380,6 +384,10 @@ function CampaignPage() {
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="rules">House rules</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="intro" className="mt-6">
+          <CampaignIntroExperience campaignId={id} isGm={isGm} display="panel" />
+        </TabsContent>
 
         <TabsContent value="roster" className="mt-6 space-y-6">
           {roster.isLoading ? (

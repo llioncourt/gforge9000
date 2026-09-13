@@ -240,6 +240,21 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
   );
 }
 
+const GREGORIAN_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 function CalendarForm({
   calendar,
   onSave,
@@ -252,6 +267,18 @@ function CalendarForm({
   const [days, setDays] = useState(String(calendar.days_per_month));
   const [current, setCurrent] = useState(calendar.current);
   const [saving, setSaving] = useState(false);
+
+  const useGregorian = () => {
+    setEra("AD");
+    setMonths(GREGORIAN_MONTHS.join("\n"));
+    setDays("30");
+    if (!current.trim()) {
+      const today = new Date();
+      setCurrent(
+        `${today.getDate()} ${GREGORIAN_MONTHS[today.getMonth()]}, ${today.getFullYear()}`,
+      );
+    }
+  };
 
   return (
     <div className="space-y-3">

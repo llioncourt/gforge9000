@@ -20,7 +20,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { FileDropzone } from "@/components/ui/FileDropzone";
+import { UserAvatar } from "@/components/app/user-avatar";
 import { getProfile, upsertProfile, wipeAllMyData } from "@/lib/api";
+import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/hooks/use-session";
 import { AUDIT_SUMMARY, RULES_AUDIT } from "@/rules/audit";

@@ -16,6 +16,7 @@ export function CampaignIntroExperience({ campaignId, isGm, display = "all" }: {
   const [ended, setEnded] = useState(false);
   const [doNotShowAgain, setDoNotShowAgain] = useState(false);
   const [continuedVersion, setContinuedVersion] = useState<string | null>(null);
+  const gateVideoRef = useRef<HTMLVideoElement>(null);
   const introQuery = useQuery({ queryKey: ["campaign-intro", campaignId], queryFn: () => getCampaignIntro(campaignId) });
   const viewQuery = useQuery({ queryKey: ["campaign-intro-view", campaignId], queryFn: () => getMyCampaignIntroView(campaignId) });
   const intro = introQuery.data;

@@ -162,7 +162,7 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
   });
 
   const addToken = useMutation({
-    mutationFn: (input: { characterId: string | null; label: string }) =>
+    mutationFn: (input: { characterId: string | null; label: string; imagePath?: string | null }) =>
       createMapObject({
         campaign_id: campaignId,
         map_id: current!.id,
@@ -170,6 +170,7 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
         owner_user_id:
           characters.data?.find((c) => c.id === input.characterId)?.owner_id ?? user?.id ?? null,
         label: input.label,
+        image_url: input.imagePath ?? null,
         x: 0,
         y: 0,
       }),
@@ -250,7 +251,7 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
     if (value.startsWith("npc:")) {
       const id = value.slice(4);
       const npc = (npcs.data ?? []).find((n) => n.id === id);
-      if (npc) addToken.mutate({ characterId: null, label: npc.name });
+      if (npc) addToken.mutate({ characterId: null, label: npc.name, imagePath: npc.image_url });
     }
   }
 

@@ -252,6 +252,7 @@ function CampaignPage() {
           <TabsTrigger value="story">Story</TabsTrigger>
           <TabsTrigger value="graph">Graph</TabsTrigger>
           <TabsTrigger value="reveals">Reveals</TabsTrigger>
+          <TabsTrigger value="sessions">Sessions</TabsTrigger>
           <TabsTrigger value="battle">Battle grid</TabsTrigger>
           <TabsTrigger value="notes">Notes &amp; handouts</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>

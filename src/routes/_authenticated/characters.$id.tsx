@@ -105,6 +105,7 @@ import type { LibraryRow } from "@/lib/api";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
 import { ModelPanel } from "@/components/character/model-panel";
 import { parseModelTransform } from "@/lib/model3d";
+import { allowedPacksOf } from "@/lib/packs";
 
 import { PrintSheet } from "@/components/character/print-sheet";
 

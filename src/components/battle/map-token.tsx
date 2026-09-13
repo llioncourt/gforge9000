@@ -90,7 +90,7 @@ export function MapToken({
           </Suspense>
         </ClientOnly>
       ) : portrait.data || npcImage.data ? (
-        <img loading="lazy" decoding="async"
+        <img decoding="async"
           src={portrait.data ?? npcImage.data ?? undefined}
           alt={label}
           className="h-full w-full object-cover object-top"

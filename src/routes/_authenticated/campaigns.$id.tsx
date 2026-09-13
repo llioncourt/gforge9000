@@ -302,6 +302,38 @@ function CampaignPage() {
         }
       />
 
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename campaign</DialogTitle>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const name = renameValue.trim();
+              if (!name) return;
+              renameCampaign.mutate(name);
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="campaign-name">Campaign name</Label>
+              <Input
+                id="campaign-name"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={renameCampaign.isPending || !renameValue.trim()}>
+                Save
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <Tabs defaultValue="roster">
         <TabsList>
           <TabsTrigger value="roster">Roster</TabsTrigger>

@@ -437,6 +437,37 @@ export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: bo
         />
       ) : null}
 
+      {isGm ? (
+        <div className="flex flex-wrap items-end gap-3 rounded-lg border p-3">
+          <div className="w-72 space-y-1">
+            <Label className="text-xs">Add token</Label>
+            <Select value="" onValueChange={addTokenFromPicker}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pick a character, NPC or marker" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableCharacters.map((c) => (
+                  <SelectItem key={c.id} value={`char:${c.id}`}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+                {availableNpcs.map((n) => (
+                  <SelectItem key={n.id} value={`npc:${n.id}`}>
+                    {n.name} (NPC)
+                  </SelectItem>
+                ))}
+                <SelectItem value="marker">Blank marker</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {availableCharacters.length === 0 && availableNpcs.length === 0 ? (
+            <p className="text-muted-foreground pb-2 text-xs">
+              Every character and NPC is already on the grid.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       <BattleGrid
         map={current}
         imageUrl={image.data ?? null}

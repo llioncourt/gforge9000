@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Plus, Search, Upload } from "lucide-react";
+import { Download, Plus, Search, Sparkles, Upload } from "lucide-react";
 
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import { download } from "@/lib/portable";
 import { parsePortableLore, toPortableLore } from "@/lib/lore-portable";
 import { importLore } from "@/lib/lore-import";
 import { FileDropzone } from "@/components/ui/FileDropzone";
+import { AiDraftDialog } from "@/components/lore/ai-draft-dialog";
 
 const GROUPS: { group: string; label: string }[] = [
   { group: "world", label: "World" },
@@ -45,6 +46,8 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
   const [kindFilter, setKindFilter] = useState("ALL");
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [drafting, setDrafting] = useState(false);
+  const [draftKind, setDraftKind] = useState("NPC");
   const [newKind, setNewKind] = useState("NPC");
   const [newName, setNewName] = useState("");
 
@@ -181,6 +184,15 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                 <Upload className="mr-2 size-4" /> Import
               </Button>
               <Button
+                variant="outline"
+                onClick={() => {
+                  setDraftKind(kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"));
+                  setDrafting(true);
+                }}
+              >
+                <Sparkles className="mr-2 size-4" /> AI draft
+              </Button>
+              <Button
                 onClick={() => {
                   setNewKind(kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"));
                   setCreating(true);
@@ -303,6 +315,16 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {isGm ? (
+        <AiDraftDialog
+          key={draftKind}
+          campaignId={campaignId}
+          open={drafting}
+          onOpenChange={setDrafting}
+          initialKind={draftKind}
+        />
+      ) : null}
     </div>
 
   );

@@ -28,6 +28,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { addEntry, createCharacter, deleteCharacter, listCharacters } from "@/lib/api";
 import { parsePortable } from "@/lib/portable";
+import { reconcileImportedEntries } from "@/lib/import-reconcile";
+import type { ImportedEntry } from "@/lib/trait-match";
+
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 

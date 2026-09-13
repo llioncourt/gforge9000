@@ -211,11 +211,12 @@ export async function listMembers(campaignId: string) {
   );
   const ids = members.map((m) => m.user_id);
   const profiles = ids.length
-    ? unwrap(await supabase.from("profiles").select("id, display_name").in("id", ids))
+    ? unwrap(await supabase.from("profiles").select("id, display_name, avatar_url").in("id", ids))
     : [];
   return members.map((m) => ({
     ...m,
     display_name: profiles.find((p) => p.id === m.user_id)?.display_name ?? "Player",
+    avatar_url: profiles.find((p) => p.id === m.user_id)?.avatar_url ?? null,
   }));
 }
 

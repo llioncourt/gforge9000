@@ -83,7 +83,7 @@ export async function deleteCampaignSoundtrack(album: SoundtrackAlbum, tracks: S
 }
 
 export async function setCampaignSoundtrackState(input: {
-  campaignId: string; albumId: string | null; trackId: string | null; isPlaying: boolean; positionSeconds: number;
+  campaignId: string; albumId: string | null; trackId: string | null; isPlaying: boolean; positionSeconds: number; loopOne: boolean;
 }) {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
@@ -91,6 +91,7 @@ export async function setCampaignSoundtrackState(input: {
   const result = await supabase.from("campaign_soundtrack_state").upsert({
     campaign_id: input.campaignId, album_id: input.albumId, track_id: input.trackId,
     is_playing: input.isPlaying, position_seconds: Math.max(0, input.positionSeconds),
+    loop_one: input.loopOne,
     changed_at: new Date().toISOString(), changed_by: user.id,
   });
   fail(result.error);

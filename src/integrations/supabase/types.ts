@@ -292,6 +292,7 @@ export type Database = {
           changed_at: string
           changed_by: string
           is_playing: boolean
+          loop_one: boolean
           position_seconds: number
           track_id: string | null
           updated_at: string
@@ -302,6 +303,7 @@ export type Database = {
           changed_at?: string
           changed_by?: string
           is_playing?: boolean
+          loop_one?: boolean
           position_seconds?: number
           track_id?: string | null
           updated_at?: string
@@ -312,6 +314,7 @@ export type Database = {
           changed_at?: string
           changed_by?: string
           is_playing?: boolean
+          loop_one?: boolean
           position_seconds?: number
           track_id?: string | null
           updated_at?: string

@@ -1,0 +1,1 @@
+alter table public.campaign_soundtrack_state add column loop_one boolean not null default false;

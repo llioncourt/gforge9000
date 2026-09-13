@@ -146,6 +146,177 @@ export type Database = {
           },
         ]
       }
+      campaign_soundtrack_albums: {
+        Row: {
+          campaign_id: string
+          composer: string | null
+          cover_path: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          release_year: number | null
+          slug: string
+          subtitle: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          composer?: string | null
+          cover_path: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          release_year?: number | null
+          slug: string
+          subtitle?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          composer?: string | null
+          cover_path?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          release_year?: number | null
+          slug?: string
+          subtitle?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_soundtrack_albums_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_soundtrack_state: {
+        Row: {
+          album_id: string | null
+          campaign_id: string
+          changed_at: string
+          changed_by: string
+          is_playing: boolean
+          position_seconds: number
+          track_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          album_id?: string | null
+          campaign_id: string
+          changed_at?: string
+          changed_by?: string
+          is_playing?: boolean
+          position_seconds?: number
+          track_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          album_id?: string | null
+          campaign_id?: string
+          changed_at?: string
+          changed_by?: string
+          is_playing?: boolean
+          position_seconds?: number
+          track_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_soundtrack_state_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_soundtrack_albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_soundtrack_state_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_soundtrack_state_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_soundtrack_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_soundtrack_tracks: {
+        Row: {
+          album_id: string
+          byte_size: number
+          campaign_id: string
+          composer: string | null
+          created_at: string
+          duration_seconds: number | null
+          file_name: string
+          id: string
+          mime_type: string
+          position: number
+          storage_path: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          album_id: string
+          byte_size: number
+          campaign_id: string
+          composer?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_name: string
+          id?: string
+          mime_type: string
+          position: number
+          storage_path: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          album_id?: string
+          byte_size?: number
+          campaign_id?: string
+          composer?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          file_name?: string
+          id?: string
+          mime_type?: string
+          position?: number
+          storage_path?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_soundtrack_tracks_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_soundtrack_albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_soundtrack_tracks_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           created_at: string

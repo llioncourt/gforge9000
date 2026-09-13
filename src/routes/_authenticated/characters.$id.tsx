@@ -418,7 +418,7 @@ function CharacterPage() {
 
       <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_360px]">
         <PointsBar sheet={sheet} budget={form.point_budget} />
-        <div className="panel grid grid-cols-4 gap-2 p-4">
+        <div className="panel grid grid-cols-2 gap-2 p-4 sm:grid-cols-4">
           {[
             ["HP", sheet.stats.hp],
             ["Will", sheet.stats.will],

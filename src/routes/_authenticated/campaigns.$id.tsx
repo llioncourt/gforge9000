@@ -480,7 +480,7 @@ function CampaignPage() {
                                   })
                                 }
                               >
-                                <SelectTrigger className="mt-0.5 h-7 w-[180px] text-xs">
+                                <SelectTrigger className="mt-0.5 h-7 w-full max-w-[180px] text-xs">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -516,13 +516,13 @@ function CampaignPage() {
                       </Badge>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-4 gap-2 text-center">
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
                       <Mini label="HP" value={`${c.current_hp ?? sheet?.stats.hp ?? 0}/${sheet?.stats.hp ?? 0}`} />
                       <Mini label="FP" value={`${c.current_fp ?? sheet?.stats.fp ?? 0}/${sheet?.stats.fp ?? 0}`} />
                       <Mini label="Move" value={sheet?.encumbrance.effectiveMove ?? 0} />
                       <Mini label="Dodge" value={sheet?.encumbrance.effectiveDodge ?? 0} />
                     </div>
-                    <div className="mt-2 grid grid-cols-4 gap-2 text-center">
+                    <div className="mt-2 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
                       <Mini label="ST" value={sheet?.stats.st ?? 0} />
                       <Mini label="DX" value={sheet?.stats.dx ?? 0} />
                       <Mini label="IQ" value={sheet?.stats.iq ?? 0} />
@@ -556,7 +556,7 @@ function CampaignPage() {
                           }}
                           disabled={transferOwner.isPending}
                         >
-                          <SelectTrigger className="h-7 w-[180px] text-xs">
+                          <SelectTrigger className="h-7 w-full max-w-[180px] text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>

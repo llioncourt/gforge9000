@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
 /**
  * Server-side image -> AVIF conversion.
  *
@@ -78,6 +80,7 @@ function toBase64(bytes: Uint8Array): string {
 }
 
 export const convertImageToAvif = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: FormData) => data)
   .handler(async ({ data }) => {
     const file = data.get("file");

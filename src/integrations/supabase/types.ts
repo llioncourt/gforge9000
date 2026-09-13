@@ -1238,6 +1238,60 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          campaign_id: string | null
+          created_at: string
+          created_by: string
+          entity_id: string | null
+          id: string
+          kind: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          created_by: string
+          entity_id?: string | null
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          created_by?: string
+          entity_id?: string | null
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_entity_id_fkey"
+            columns: ["entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

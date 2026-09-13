@@ -400,6 +400,105 @@ function EntityPage() {
             </div>
           </div>
 
+          {form.kind === "NPC" ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Photo</Label>
+                {form.image_url ? (
+                  <div className="flex items-start gap-3">
+                    {photoUrl.data ? (
+                      <img
+                        src={photoUrl.data}
+                        alt={`${form.name} portrait`}
+                        className="h-32 w-32 rounded-lg border object-cover"
+                      />
+                    ) : (
+                      <Skeleton className="h-32 w-32 rounded-lg" />
+                    )}
+                    {canEdit ? (
+                      <div className="space-y-2">
+                        <FileDropzone
+                          compact
+                          accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+                          label="Drop a new photo, or click to browse"
+                          loading={uploadPhoto.isPending}
+                          loadingLabel="Uploading photo…"
+                          onFiles={(files) => {
+                            const file = files[0];
+                            if (file) uploadPhoto.mutate(file);
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removePhoto.mutate(form.image_url!)}
+                          disabled={removePhoto.isPending}
+                        >
+                          <Trash2 className="mr-2 size-4" /> Remove photo
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : canEdit ? (
+                  <FileDropzone
+                    accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+                    label={`Drop a photo of ${form.name || "this NPC"}, or click to browse`}
+                    hint="PNG, JPEG, WebP, GIF or AVIF up to 5 MB"
+                    loading={uploadPhoto.isPending}
+                    loadingLabel="Uploading photo…"
+                    onFiles={(files) => {
+                      const file = files[0];
+                      if (file) uploadPhoto.mutate(file);
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-32 w-32 items-center justify-center rounded-lg border bg-muted text-2xl font-semibold text-muted-foreground">
+                    {portraitInitials(form.name)}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="entity-sheet">Character sheet (optional)</Label>
+                <Select
+                  value={dataValue(form, "character_sheet_id") || "none"}
+                  disabled={!canEdit}
+                  onValueChange={(value) => {
+                    const data = withDataValue(
+                      form,
+                      "character_sheet_id",
+                      value === "none" ? "" : value,
+                      false,
+                    );
+                    patch({ data: data as never });
+                    commit({ data: data as never });
+                  }}
+                >
+                  <SelectTrigger id="entity-sheet">
+                    <SelectValue placeholder="No linked sheet" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No linked sheet</SelectItem>
+                    {(campaignCharacters.data ?? []).map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {dataValue(form, "character_sheet_id") ? (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link
+                      to="/characters/$id"
+                      params={{ id: dataValue(form, "character_sheet_id") }}
+                    >
+                      <ExternalLink className="mr-2 size-4" /> Open character sheet
+                    </Link>
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
           <div className="space-y-2">
             <Label htmlFor="entity-summary">Summary</Label>
             <Textarea

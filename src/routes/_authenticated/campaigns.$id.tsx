@@ -432,7 +432,7 @@ function CampaignPage() {
           <TabsTrigger value="notes">Notes &amp; handouts</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="rules">House rules</TabsTrigger>
-        </TabsList>
+        </ScrollableTabsList>
 
         <TabsContent value="intro" className="mt-6">
           <CampaignIntroExperience campaignId={id} isGm={isGm} display="panel" />

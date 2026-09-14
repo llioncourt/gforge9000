@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileDropzone } from "@/components/ui/FileDropzone";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, ScrollableTabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -415,7 +415,7 @@ function CampaignPage() {
       <CampaignIntroExperience campaignId={id} isGm={isGm} display="gate" />
 
       <Tabs defaultValue="roster">
-        <TabsList>
+        <ScrollableTabsList>
           <TabsTrigger value="intro">Intro</TabsTrigger>
           <TabsTrigger value="roster">Roster</TabsTrigger>
           <TabsTrigger value="lore">World &amp; lore</TabsTrigger>
@@ -432,7 +432,7 @@ function CampaignPage() {
           <TabsTrigger value="notes">Notes &amp; handouts</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="rules">House rules</TabsTrigger>
-        </TabsList>
+        </ScrollableTabsList>
 
         <TabsContent value="intro" className="mt-6">
           <CampaignIntroExperience campaignId={id} isGm={isGm} display="panel" />

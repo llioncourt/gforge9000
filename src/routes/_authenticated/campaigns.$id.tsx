@@ -47,6 +47,7 @@ import {
   listCharacters,
   listEntriesForCharacters,
   listMembers,
+  deleteCampaign,
   removeMember,
   transferCampaignGm,
   transferCharacterOwner,
@@ -198,6 +199,16 @@ function CampaignPage() {
       queryClient.invalidateQueries({ queryKey: ["campaign", id] });
       queryClient.invalidateQueries({ queryKey: ["members", id] });
       toast.success("GM role transferred.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteCampaignMut = useMutation({
+    mutationFn: () => deleteCampaign(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      toast.success("Campaign deleted.");
+      void navigate({ to: "/campaigns" });
     },
     onError: (e: Error) => toast.error(e.message),
   });

@@ -1,15 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Dices, Plus, Shield, Sparkles, Users } from "lucide-react";
+import { BookOpen, Dices, Plus, Shield, Users } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createCharacter, listCampaigns, listCharacters, listLibrary, listRolls } from "@/lib/api";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
-import { seedDemoContent } from "@/lib/demo";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({

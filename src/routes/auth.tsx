@@ -128,6 +128,7 @@ function AuthPage() {
               <h1 className="mb-6 font-display text-2xl font-semibold">
                 Sign in to Universal Character Forge
               </h1>
+              <TabsList className="grid w-full grid-cols-2">
 
                 <TabsTrigger value="signin">Sign in</TabsTrigger>
                 <TabsTrigger value="signup">Create account</TabsTrigger>

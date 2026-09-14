@@ -403,6 +403,28 @@ export async function getProfile(userId: string) {
   return unwrap(await supabase.from("profiles").select("*").eq("id", userId).maybeSingle());
 }
 
+export type CharactersViewMode = "list" | "grid";
+
+type ProfilePreferences = { characters_view?: CharactersViewMode } & Record<string, unknown>;
+
+/** Reads the caller's stored UI preferences (generic JSON bag on the profile). */
+export async function getProfilePreferences(userId: string): Promise<ProfilePreferences> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("preferences")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return ((data as { preferences?: ProfilePreferences } | null)?.preferences ??
+    {}) as ProfilePreferences;
+}
+
+/** Merges a patch into the caller's stored UI preferences. */
+export async function setProfilePreferences(userId: string, patch: ProfilePreferences) {
+  const current = await getProfilePreferences(userId);
+  await upsertProfile(userId, { preferences: { ...current, ...patch } } as never);
+}
+
 export async function upsertProfile(userId: string, patch: TablesUpdate<"profiles">) {
   return unwrap(
     await supabase

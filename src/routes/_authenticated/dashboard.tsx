@@ -41,22 +41,6 @@ function Dashboard() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const seed = useMutation({
-    mutationFn: async () => {
-      const { data } = await supabase.auth.getUser();
-      return seedDemoContent(data.user!.id);
-    },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries();
-      toast.success(
-        result.skipped
-          ? "Demo content already exists on this account."
-          : "Demo character and campaign created.",
-      );
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
   const loading = characters.isLoading || campaigns.isLoading;
   const empty = !loading && (characters.data?.length ?? 0) === 0 && (campaigns.data?.length ?? 0) === 0;
 

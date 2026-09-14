@@ -405,7 +405,10 @@ export async function getProfile(userId: string) {
 
 export type CharactersViewMode = "list" | "grid";
 
-type ProfilePreferences = { characters_view?: CharactersViewMode } & Record<string, unknown>;
+type ProfilePreferences = {
+  characters_view?: CharactersViewMode;
+  theme?: "light" | "dark";
+} & Record<string, unknown>;
 
 /** Reads the caller's stored UI preferences (generic JSON bag on the profile). */
 export async function getProfilePreferences(userId: string): Promise<ProfilePreferences> {

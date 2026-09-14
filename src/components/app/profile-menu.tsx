@@ -24,11 +24,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { UserAvatar } from "@/components/app/user-avatar";
-import { getProfile, upsertProfile } from "@/lib/api";
+import { getProfile, setProfilePreferences, upsertProfile } from "@/lib/api";
 import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { useSession } from "@/hooks/use-session";
 
 const THEME_KEY = "ucf:light-theme";
+
+/** Applies the theme by switching the root class (light palette lives under .light). */
+function applyTheme(light: boolean) {
+  document.documentElement.classList.toggle("dark", !light);
+  document.documentElement.classList.toggle("light", light);
+}
 
 /** Header account menu: profile editing, theme switch and sign out. */
 export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
@@ -49,13 +55,29 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
   useEffect(() => {
     const stored = window.localStorage.getItem(THEME_KEY) === "1";
     setLight(stored);
-    document.documentElement.classList.toggle("dark", !stored);
+    applyTheme(stored);
   }, []);
+
+  // The saved profile preference wins over the local value once loaded.
+  useEffect(() => {
+    const saved = (data?.preferences as { theme?: string } | null | undefined)?.theme;
+    if (saved !== "light" && saved !== "dark") return;
+    const next = saved === "light";
+    setLight(next);
+    applyTheme(next);
+    window.localStorage.setItem(THEME_KEY, next ? "1" : "0");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(data?.preferences as { theme?: string } | null | undefined)?.theme]);
 
   function changeTheme(next: boolean) {
     setLight(next);
     window.localStorage.setItem(THEME_KEY, next ? "1" : "0");
-    document.documentElement.classList.toggle("dark", !next);
+    applyTheme(next);
+    if (user) {
+      setProfilePreferences(user.id, { theme: next ? "light" : "dark" })
+        .then(() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] }))
+        .catch((e: Error) => toast.error(e.message));
+    }
   }
 
   useEffect(() => {

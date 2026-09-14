@@ -151,6 +151,12 @@ function CharacterPage() {
   const { roll, history } = useDice();
 
   const characterQuery = useQuery({ queryKey: ["character", id], queryFn: () => getCharacter(id) });
+
+  useEffect(() => {
+    const name = characterQuery.data?.name;
+    if (name) document.title = `${name} — Universal Character Forge`;
+  }, [characterQuery.data?.name]);
+
   const entriesQuery = useQuery({ queryKey: ["entries", id], queryFn: () => listEntries(id) });
   const versionsQuery = useQuery({ queryKey: ["versions", id], queryFn: () => listVersions(id) });
   const weaponStateQuery = useQuery({

@@ -9,6 +9,7 @@ import { useParallax } from "@/hooks/use-parallax";
 import { AmbientBackground } from "@/components/app/ambient-background";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Universal Character Forge — GURPS 4e Character Builder" },

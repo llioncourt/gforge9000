@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { LayoutGrid, List, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { addEntry, createCharacter, deleteCharacter, listCharacters } from "@/lib/api";
+import {
+  addEntry,
+  createCharacter,
+  deleteCharacter,
+  getProfilePreferences,
+  listCharacters,
+  setProfilePreferences,
+  type CharactersViewMode,
+} from "@/lib/api";
+import { portraitUrl } from "@/lib/portrait";
+import { useSession } from "@/hooks/use-session";
+import { CardPortraitBg } from "@/components/character/card-portrait-bg";
+import { cn } from "@/lib/utils";
 import { parsePortable } from "@/lib/portable";
 import { reconcileImportedEntries } from "@/lib/import-reconcile";
 import type { ImportedEntry } from "@/lib/trait-match";

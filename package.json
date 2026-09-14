@@ -62,6 +62,7 @@
     "embla-carousel-react": "^8.6.0",
     "fflate": "^0.8.3",
     "input-otp": "^1.4.2",
+    "js-yaml": "^5.4.2",
     "lucide-react": "^0.575.0",
     "react": "^19.2.0",
     "react-day-picker": "^9.14.0",

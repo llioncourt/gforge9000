@@ -66,7 +66,8 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
     setLight(next);
     applyTheme(next);
     window.localStorage.setItem(THEME_KEY, next ? "1" : "0");
-  }, [data?.preferences?.theme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(data?.preferences as { theme?: string } | null | undefined)?.theme]);
 
   function changeTheme(next: boolean) {
     setLight(next);

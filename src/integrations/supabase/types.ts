@@ -106,57 +106,6 @@ export type Database = {
             referencedRelation: "campaigns"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "campaign_intro_views_member_fk"
-            columns: ["campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaign_intros"
-            referencedColumns: ["campaign_id"]
-          },
-        ]
-      }
-      campaign_intros: {
-        Row: {
-          byte_size: number
-          campaign_id: string
-          created_at: string
-          created_by: string
-          file_name: string
-          mime_type: string
-          storage_path: string
-          updated_at: string
-          version: string
-        }
-        Insert: {
-          byte_size: number
-          campaign_id: string
-          created_at?: string
-          created_by?: string
-          file_name: string
-          mime_type?: string
-          storage_path: string
-          updated_at?: string
-          version?: string
-        }
-        Update: {
-          byte_size?: number
-          campaign_id?: string
-          created_at?: string
-          created_by?: string
-          file_name?: string
-          mime_type?: string
-          storage_path?: string
-          updated_at?: string
-          version?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "campaign_intros_campaign_id_fkey"
-            columns: ["campaign_id"]
-            isOneToOne: true
-            referencedRelation: "campaigns"
-            referencedColumns: ["id"]
-          },
         ]
       }
       campaign_members: {
@@ -228,6 +177,92 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_sound_fx: {
+        Row: {
+          byte_size: number
+          campaign_id: string
+          created_at: string
+          created_by: string
+          file_name: string
+          id: string
+          mime_type: string
+          storage_path: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          byte_size: number
+          campaign_id: string
+          created_at?: string
+          created_by?: string
+          file_name: string
+          id?: string
+          mime_type: string
+          storage_path: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          byte_size?: number
+          campaign_id?: string
+          created_at?: string
+          created_by?: string
+          file_name?: string
+          id?: string
+          mime_type?: string
+          storage_path?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_sound_fx_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_sound_fx_state: {
+        Row: {
+          campaign_id: string
+          changed_at: string
+          changed_by: string
+          effect_id: string | null
+          event_id: string
+        }
+        Insert: {
+          campaign_id: string
+          changed_at?: string
+          changed_by?: string
+          effect_id?: string | null
+          event_id?: string
+        }
+        Update: {
+          campaign_id?: string
+          changed_at?: string
+          changed_by?: string
+          effect_id?: string | null
+          event_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_sound_fx_state_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_sound_fx_state_effect_id_fkey"
+            columns: ["effect_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_sound_fx"
             referencedColumns: ["id"]
           },
         ]
@@ -399,6 +434,59 @@ export type Database = {
           },
           {
             foreignKeyName: "campaign_soundtrack_tracks_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_videos: {
+        Row: {
+          byte_size: number
+          campaign_id: string
+          created_at: string
+          created_by: string
+          file_name: string
+          id: string
+          mime_type: string
+          storage_path: string
+          title: string
+          updated_at: string
+          version: string
+          video_type: string
+        }
+        Insert: {
+          byte_size: number
+          campaign_id: string
+          created_at?: string
+          created_by?: string
+          file_name: string
+          id?: string
+          mime_type?: string
+          storage_path: string
+          title: string
+          updated_at?: string
+          version?: string
+          video_type?: string
+        }
+        Update: {
+          byte_size?: number
+          campaign_id?: string
+          created_at?: string
+          created_by?: string
+          file_name?: string
+          id?: string
+          mime_type?: string
+          storage_path?: string
+          title?: string
+          updated_at?: string
+          version?: string
+          video_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_intros_campaign_id_fkey"
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"

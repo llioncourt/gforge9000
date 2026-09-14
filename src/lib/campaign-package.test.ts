@@ -22,11 +22,13 @@ describe("campaign package format", () => {
   it("lists every referenced file", () => {
     expect(referencedFiles(manifest)).toEqual(
       expect.arrayContaining([
-        "intro/intro.mp4",
+        "videos/intro.mp4",
+        "videos/recap-01.mp4",
         "assets/colony-map.png",
         "maps/landing-pad.png",
         "images/vale.jpg",
         "soundtracks/cover.jpg",
+        "sound-fx/airlock-alarm.ogg",
         "characters/sergeant-vale.json",
       ]),
     );

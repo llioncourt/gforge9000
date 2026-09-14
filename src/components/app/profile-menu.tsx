@@ -24,11 +24,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { UserAvatar } from "@/components/app/user-avatar";
-import { getProfile, upsertProfile } from "@/lib/api";
+import { getProfile, setProfilePreferences, upsertProfile } from "@/lib/api";
 import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { useSession } from "@/hooks/use-session";
 
 const THEME_KEY = "ucf:light-theme";
+
+/** Applies the theme by switching the root class (light palette lives under .light). */
+function applyTheme(light: boolean) {
+  document.documentElement.classList.toggle("dark", !light);
+  document.documentElement.classList.toggle("light", light);
+}
 
 /** Header account menu: profile editing, theme switch and sign out. */
 export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {

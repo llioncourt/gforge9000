@@ -156,7 +156,7 @@ function AuthPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={busy}>
+                  <Button type="submit" className="w-full" disabled={busy} aria-label="Sign in">
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
                   </Button>
                 </form>
@@ -194,7 +194,7 @@ function AuthPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={busy}>
+                  <Button type="submit" className="w-full" disabled={busy} aria-label="Create account">
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create account"}
                   </Button>
                 </form>

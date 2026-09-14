@@ -191,69 +191,130 @@ function CharactersPage() {
         </div>
       </div>
 
-      <div className="panel overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead className="hidden sm:table-cell">Concept</TableHead>
-              <TableHead className="w-20 text-right">Budget</TableHead>
-              <TableHead className="hidden w-16 text-right md:table-cell">TL</TableHead>
-              <TableHead className="w-24">Status</TableHead>
-              <TableHead className="w-12" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              [0, 1, 2, 3].map((i) => (
-                <TableRow key={i}>
-                  <TableCell colSpan={6}>
-                    <Skeleton className="h-6 w-full" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  No characters yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell className="font-medium">
-                    <Link to="/characters/$id" params={{ id: c.id }} className="hover:underline">
-                      {c.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {c.concept || "—"}
-                  </TableCell>
-                  <TableCell className="text-right font-mono">{c.point_budget}</TableCell>
-                  <TableCell className="hidden text-right font-mono md:table-cell">
-                    {c.tech_level}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={c.approved ? "default" : "outline"}>
+      {view === "grid" ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {isLoading ? (
+            [0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-[120px] w-full" />)
+          ) : rows.length === 0 ? (
+            <div className="panel py-10 text-center text-sm text-muted-foreground sm:col-span-2 lg:col-span-3">
+              No characters yet.
+            </div>
+          ) : (
+            rows.map((c) => (
+              <div key={c.id} className="relative">
+                <Link
+                  to="/characters/$id"
+                  params={{ id: c.id }}
+                  className="panel relative flex h-full min-h-[120px] flex-col justify-end gap-1 overflow-hidden p-4 transition-colors hover:border-ring"
+                >
+                  <CardPortraitBg path={c.portrait_path} />
+                  <div className="relative flex items-center justify-between gap-2">
+                    <p className="truncate font-medium">{c.name}</p>
+                    <Badge variant={c.approved ? "default" : "outline"} className="shrink-0">
                       {c.is_npc ? "NPC" : c.approved ? "Approved" : "Draft"}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => setPendingDelete({ id: c.id, name: c.name })}
-                      aria-label={`Delete ${c.name}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  </div>
+                  <p className="relative truncate text-xs text-muted-foreground">
+                    {c.concept || "No concept set"}
+                  </p>
+                  <p className="relative text-xs text-muted-foreground">
+                    <span className="stat-value">{c.point_budget} pts</span> · TL {c.tech_level}
+                  </p>
+                </Link>
+                <div
+                  className="absolute bottom-2 right-2 z-10"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    onClick={() => setPendingDelete({ id: c.id, name: c.name })}
+                    aria-label={`Delete ${c.name}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        <div className="panel overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead className="hidden sm:table-cell">Concept</TableHead>
+                <TableHead className="w-20 text-right">Budget</TableHead>
+                <TableHead className="hidden w-16 text-right md:table-cell">TL</TableHead>
+                <TableHead className="w-24">Status</TableHead>
+                <TableHead className="w-12" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                [0, 1, 2, 3].map((i) => (
+                  <TableRow key={i}>
+                    <TableCell colSpan={6}>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 rounded-md" />
+                        <Skeleton className="h-6 flex-1" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                    No characters yet.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : (
+                rows.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">
+                      <Link
+                        to="/characters/$id"
+                        params={{ id: c.id }}
+                        className="flex items-center gap-3 hover:underline"
+                      >
+                        <PortraitThumb path={c.portrait_path} name={c.name} />
+                        <span className="truncate">{c.name}</span>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="hidden text-muted-foreground sm:table-cell">
+                      {c.concept || "—"}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">{c.point_budget}</TableCell>
+                    <TableCell className="hidden text-right font-mono md:table-cell">
+                      {c.tech_level}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={c.approved ? "default" : "outline"}>
+                        {c.is_npc ? "NPC" : c.approved ? "Approved" : "Draft"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => setPendingDelete({ id: c.id, name: c.name })}
+                        aria-label={`Delete ${c.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <AlertDialog open={pendingDelete !== null} onOpenChange={(o) => !o && setPendingDelete(null)}>
         <AlertDialogContent>

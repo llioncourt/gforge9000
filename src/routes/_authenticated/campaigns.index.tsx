@@ -203,9 +203,44 @@ function CampaignsPage() {
                 <CampaignCoverBg path={coverPath} />
                 <div className="relative flex items-start justify-between gap-2">
                   <h2 className="font-display text-lg font-semibold">{c.name}</h2>
-                  <Badge variant={c.gm_id === user?.id ? "default" : "outline"}>
-                    {c.gm_id === user?.id ? "GM" : "Player"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {c.gm_id === user?.id ? (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            type="button"
+                            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                            aria-label="Delete campaign"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete this campaign?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This permanently removes {c.name} and everything inside it: lore,
+                              maps, notes, soundtrack, intro video, reveals and roll history.
+                              Characters are kept, but they are detached from the campaign. This
+                              cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => remove.mutate(c.id)}
+                              disabled={remove.isPending}
+                            >
+                              Delete campaign
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    ) : null}
+                    <Badge variant={c.gm_id === user?.id ? "default" : "outline"}>
+                      {c.gm_id === user?.id ? "GM" : "Player"}
+                    </Badge>
+                  </div>
                 </div>
                 <p className="relative mt-2 line-clamp-3 text-sm text-muted-foreground">
                   {c.description || "No premise written yet."}

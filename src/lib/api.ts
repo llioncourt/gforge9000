@@ -190,6 +190,11 @@ export async function updateCampaign(id: string, patch: TablesUpdate<"campaigns"
   return unwrap(await supabase.from("campaigns").update(patch).eq("id", id).select().single());
 }
 
+export async function deleteCampaign(id: string) {
+  const { error } = await supabase.from("campaigns").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
 export async function joinCampaign(code: string) {
   const { data, error } = await supabase.rpc("join_campaign", { _code: code });
   if (error) throw new Error(error.message);

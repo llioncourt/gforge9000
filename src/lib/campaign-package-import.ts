@@ -95,11 +95,12 @@ export async function importCampaignPackage(
   };
 
   try {
-    await importCharacters(manifest, archive, campaign.id, user.id, summary, step);
-    await importLoreSection(manifest, archive, campaign.id, user.id, summary, step);
+    const ids: ImportIds = { characters: new Map(), entities: new Map() };
+    await importCharacters(manifest, archive, campaign.id, user.id, summary, step, ids);
+    await importLoreSection(manifest, archive, campaign.id, user.id, summary, step, ids);
     await importNotes(manifest, campaign.id, user.id, summary, step);
     await importAssets(manifest, archive, campaign.id, user.id, summary, step);
-    await importMaps(manifest, archive, campaign.id, user.id, summary, step);
+    await importMaps(manifest, archive, campaign.id, user.id, summary, step, ids);
     await importSoundtracks(manifest, archive, campaign.id, summary, step);
     if (manifest.intro) {
       step("Uploading intro video…");
@@ -116,8 +117,10 @@ export async function importCampaignPackage(
 
 /* ---------- sections ---------- */
 
-const characterIds = new Map<string, string>();
-const entityIds = new Map<string, string>();
+interface ImportIds {
+  characters: Map<string, string>;
+  entities: Map<string, string>;
+}
 
 async function importCharacters(
   manifest: CampaignPackageManifest,
@@ -126,8 +129,8 @@ async function importCharacters(
   userId: string,
   summary: CampaignImportSummary,
   step: (label: string) => void,
+  ids: ImportIds,
 ) {
-  characterIds.clear();
   if (!manifest.characters.length) return;
   step("Importing characters…");
   for (const entry of manifest.characters) {
@@ -166,7 +169,7 @@ async function importCharacters(
       .select("id")
       .single();
     if (error) throw new Error(error.message);
-    characterIds.set(entry.key, created.id);
+    ids.characters.set(entry.key, created.id);
 
     if (portable.entries.length) {
       const rows = portable.entries.map((item, index) => ({
@@ -201,8 +204,8 @@ async function importLoreSection(
   userId: string,
   summary: CampaignImportSummary,
   step: (label: string) => void,
+  ids: ImportIds,
 ) {
-  entityIds.clear();
   const { entities, relationships } = manifest.lore;
   if (!entities.length) return;
   step("Importing lore…");
@@ -213,7 +216,7 @@ async function importLoreSection(
       imagePath = await uploadLoreImage(archive, entity.image_file, campaignId, userId);
     }
     const data: Record<string, unknown> = { ...entity.data };
-    if (entity.character_key) data["character_sheet_id"] = characterIds.get(entity.character_key) ?? null;
+    if (entity.character_key) data["character_sheet_id"] = ids.characters.get(entity.character_key) ?? null;
     const created = await createEntity({
       campaign_id: campaignId,
       kind: entity.kind,
@@ -228,23 +231,23 @@ async function importLoreSection(
       tags: entity.tags,
       sort_order: entity.sort_order,
       image_url: imagePath,
-      character_id: entity.character_key ? (characterIds.get(entity.character_key) ?? null) : null,
+      character_id: entity.character_key ? (ids.characters.get(entity.character_key) ?? null) : null,
       data: data as TablesInsert<"entities">["data"],
     });
-    entityIds.set(entity.key, created.id);
+    ids.entities.set(entity.key, created.id);
     summary.entities += 1;
   }
 
   for (const entity of entities) {
     if (!entity.parent_key) continue;
-    const id = entityIds.get(entity.key);
-    const parentId = entityIds.get(entity.parent_key);
+    const id = ids.entities.get(entity.key);
+    const parentId = ids.entities.get(entity.parent_key);
     if (id && parentId) await updateEntity(id, { parent_id: parentId });
   }
 
   for (const rel of relationships) {
-    const sourceId = entityIds.get(rel.source_key);
-    const targetId = entityIds.get(rel.target_key);
+    const sourceId = ids.entities.get(rel.source_key);
+    const targetId = ids.entities.get(rel.target_key);
     if (!sourceId || !targetId) continue;
     await createRelationship({
       campaign_id: campaignId,
@@ -333,6 +336,7 @@ async function importMaps(
   userId: string,
   summary: CampaignImportSummary,
   step: (label: string) => void,
+  ids: ImportIds,
 ) {
   if (!manifest.maps.length) return;
   step("Importing battle maps…");
@@ -359,7 +363,7 @@ async function importMaps(
         ? await uploadLoreImage(archive, object.image_file, campaignId, userId)
         : null;
       const data: Record<string, unknown> = { ...object.data };
-      if (object.entity_key) data["entity_id"] = entityIds.get(object.entity_key) ?? null;
+      if (object.entity_key) data["entity_id"] = ids.entities.get(object.entity_key) ?? null;
       await createMapObject({
         campaign_id: campaignId,
         map_id: created.id,
@@ -372,7 +376,7 @@ async function importMaps(
         color: object.color ?? null,
         hidden: object.hidden,
         image_url: tokenImage,
-        character_id: object.character_key ? (characterIds.get(object.character_key) ?? null) : null,
+        character_id: object.character_key ? (ids.characters.get(object.character_key) ?? null) : null,
         data: data as TablesInsert<"map_objects">["data"],
         created_by: userId,
       });

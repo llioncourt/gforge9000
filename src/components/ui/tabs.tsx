@@ -117,6 +117,31 @@ const ScrollableTabsList = React.forwardRef<
 
   React.useImperativeHandle(ref, () => listRef.current as never);
 
+  // Glide the active tab into view when it changes.
+  React.useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const bringActiveIntoView = () => {
+      const active = el.querySelector<HTMLElement>('[data-state="active"]');
+      if (!active) return;
+      const ml = active.offsetLeft;
+      const mr = ml + active.offsetWidth;
+      const viewLeft = el.scrollLeft;
+      const viewRight = viewLeft + el.clientWidth;
+      if (ml < viewLeft + 8) {
+        animateScroll(Math.max(0, ml - 24));
+      } else if (mr > viewRight - 8) {
+        animateScroll(mr - el.clientWidth + 24);
+      }
+    };
+    bringActiveIntoView();
+    const mo = new MutationObserver(bringActiveIntoView);
+    Array.from(el.children).forEach((c) =>
+      mo.observe(c, { attributes: true, attributeFilter: ["data-state"] }),
+    );
+    return () => mo.disconnect();
+  }, []);
+
   return (
     <div className="flex items-center gap-1">
       <button

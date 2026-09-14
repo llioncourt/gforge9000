@@ -51,9 +51,6 @@ function Dashboard() {
         description="Everything on your table right now."
         actions={
           <>
-            <Button variant="outline" onClick={() => seed.mutate()} disabled={seed.isPending}>
-              <Sparkles className="mr-2 h-4 w-4" /> Load demo data
-            </Button>
             <Button onClick={() => newCharacter.mutate()} disabled={newCharacter.isPending}>
               <Plus className="mr-2 h-4 w-4" /> New character
             </Button>
@@ -72,14 +69,10 @@ function Dashboard() {
         <div className="panel mt-6 p-10 text-center">
           <h2 className="font-display text-lg font-semibold">Nothing forged yet</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Create a blank character, or load the original demo set — a sample expedition campaign
-            and a fully built character — to see the engine working end to end.
+            Create a blank character to see the engine working end to end.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             <Button onClick={() => newCharacter.mutate()}>New character</Button>
-            <Button variant="outline" onClick={() => seed.mutate()} disabled={seed.isPending}>
-              Load demo data
-            </Button>
           </div>
         </div>
       ) : null}

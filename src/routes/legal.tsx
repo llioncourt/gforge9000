@@ -60,11 +60,6 @@ function LegalPage() {
                 are bundled with this application.
               </li>
               <li>
-                Seed and demo content is original and deliberately generic (for example
-                &quot;Field Medic&quot;, &quot;Quick Reflexes&quot;, &quot;Urban Navigation&quot;)
-                and exists only to demonstrate the engine.
-              </li>
-              <li>
                 Standard stat labels such as ST, DX, IQ, HT, HP, Will, Per and FP are used as
                 short interoperability identifiers, not as reproduced text.
               </li>

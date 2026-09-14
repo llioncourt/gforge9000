@@ -159,9 +159,9 @@ async function importCharacters(
       conditions: record.conditions ?? [],
       wealth: record.wealth,
       status: record.status,
-      notes: record.notes,
-      is_npc: entry.is_npc ?? record.is_npc,
-      approved: record.approved,
+      notes: record.notes ?? null,
+      is_npc: entry.is_npc ?? record.is_npc ?? false,
+      approved: record.approved ?? false,
     };
     const { data: created, error } = await supabase
       .from("characters")
@@ -176,12 +176,12 @@ async function importCharacters(
         character_id: created.id,
         kind: item.kind,
         name: item.name,
-        category: item.category,
+        category: item.category ?? null,
         points: item.points,
         levels: item.levels,
-        data: item.data as TablesInsert<"character_entries">["data"],
-        notes: item.notes,
-        source: item.source as TablesInsert<"character_entries">["source"],
+        data: (item.data ?? {}) as NonNullable<TablesInsert<"character_entries">["data"]>,
+        notes: item.notes ?? null,
+        source: (item.source ?? {}) as NonNullable<TablesInsert<"character_entries">["source"]>,
         sort_order: item.sort_order ?? index,
       }));
       const entriesResult = await supabase.from("character_entries").insert(rows);
@@ -232,7 +232,7 @@ async function importLoreSection(
       sort_order: entity.sort_order,
       image_url: imagePath,
       character_id: entity.character_key ? (ids.characters.get(entity.character_key) ?? null) : null,
-      data: data as TablesInsert<"entities">["data"],
+      data: data as NonNullable<TablesInsert<"entities">["data"]>,
     });
     ids.entities.set(entity.key, created.id);
     summary.entities += 1;
@@ -377,7 +377,7 @@ async function importMaps(
         hidden: object.hidden,
         image_url: tokenImage,
         character_id: object.character_key ? (ids.characters.get(object.character_key) ?? null) : null,
-        data: data as TablesInsert<"map_objects">["data"],
+        data: data as NonNullable<TablesInsert<"map_objects">["data"]>,
         created_by: userId,
       });
       summary.mapObjects += 1;

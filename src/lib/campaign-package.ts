@@ -152,6 +152,21 @@ const characterSchema = z
   })
   .strict();
 
+const videoSchema = z
+  .object({
+    title: text(160).min(1),
+    type: z.enum(["intro", "recap", "cutscene", "trailer", "handout", "vision", "dream", "other"]),
+    file: filePath,
+  })
+  .strict();
+
+const soundFxSchema = z
+  .object({
+    title: text(160).min(1),
+    file: filePath,
+  })
+  .strict();
+
 export const campaignPackageManifestSchema = z
   .object({
     format: z.literal("ucf-campaign-package"),
@@ -174,7 +189,10 @@ export const campaignPackageManifestSchema = z
       .default({ entities: [], relationships: [] }),
     assets: z.array(assetSchema).max(500).default([]),
     maps: z.array(mapSchema).max(100).default([]),
+    videos: z.array(videoSchema).max(100).default([]),
     soundtracks: z.array(soundtrackSchema).max(20).default([]),
+    sound_fx: z.array(soundFxSchema).max(300).default([]),
+    /** Legacy v1 field; new packages should use videos with type "intro". */
     intro: z.object({ file: filePath }).strict().nullish(),
     characters: z.array(characterSchema).max(300).default([]),
   })
@@ -194,6 +212,8 @@ export interface CampaignImportSummary {
   mapObjects: number;
   albums: number;
   tracks: number;
+  videos: number;
+  soundFx: number;
   characters: number;
   intro: boolean;
 }
@@ -220,6 +240,13 @@ export function validateCampaignPackage(manifest: CampaignPackageManifest): stri
   const problems: string[] = [];
   const entityKeys = new Set(manifest.lore.entities.map((e) => e.key));
   const characterKeys = new Set(manifest.characters.map((c) => c.key));
+
+  if (manifest.videos.filter((video) => video.type === "intro").length > 1) {
+    problems.push("Only one video may use the intro type.");
+  }
+  if (manifest.intro && manifest.videos.some((video) => video.type === "intro")) {
+    problems.push("Use either legacy intro or a videos entry with type intro, not both.");
+  }
 
   if (entityKeys.size !== manifest.lore.entities.length) problems.push("Duplicate lore entity keys.");
   if (characterKeys.size !== manifest.characters.length) problems.push("Duplicate character keys.");
@@ -259,6 +286,8 @@ export function validateCampaignPackage(manifest: CampaignPackageManifest): stri
 export function referencedFiles(manifest: CampaignPackageManifest): string[] {
   const files: (string | null | undefined)[] = [
     manifest.intro?.file,
+    ...manifest.videos.map((video) => video.file),
+    ...manifest.sound_fx.map((effect) => effect.file),
     ...manifest.assets.map((a) => a.file),
     ...manifest.maps.flatMap((m) => [m.file, ...m.objects.map((o) => o.image_file)]),
     ...manifest.lore.entities.map((e) => e.image_file),

@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { createCampaign } from "@/lib/api";
 import { createAsset, uploadAssetFile, validateAssetFile } from "@/lib/assets";
 import { createMap, createMapObject, uploadMapImage } from "@/lib/battlemap";
-import { uploadCampaignIntro } from "@/lib/campaign-intro";
+import { uploadCampaignIntro, uploadCampaignVideo } from "@/lib/campaign-intro";
+import { uploadCampaignSoundFx } from "@/lib/campaign-sound-fx";
 import { importCampaignSoundtrack } from "@/lib/campaign-soundtrack";
 import { soundtrackAudioMime } from "@/lib/campaign-soundtrack-pack";
 import {
@@ -96,6 +97,8 @@ export async function importCampaignPackage(
     mapObjects: 0,
     albums: 0,
     tracks: 0,
+    videos: 0,
+    soundFx: 0,
     characters: 0,
     intro: false,
   };
@@ -107,11 +110,27 @@ export async function importCampaignPackage(
     await importNotes(manifest, campaign.id, user.id, summary, step);
     await importAssets(manifest, archive, campaign.id, user.id, summary, step);
     await importMaps(manifest, archive, campaign.id, user.id, summary, step, ids);
+    if (manifest.videos.length) {
+      step("Importing videos…");
+      for (const video of manifest.videos) {
+        await uploadCampaignVideo(campaign.id, fileFromZip(archive, video.file), { title: video.title, videoType: video.type });
+        summary.videos += 1;
+        if (video.type === "intro") summary.intro = true;
+      }
+    }
     await importSoundtracks(manifest, archive, campaign.id, summary, step);
+    if (manifest.sound_fx.length) {
+      step("Importing sound effects…");
+      for (const effect of manifest.sound_fx) {
+        await uploadCampaignSoundFx(campaign.id, effect.title, fileFromZip(archive, effect.file));
+        summary.soundFx += 1;
+      }
+    }
     if (manifest.intro) {
       step("Uploading intro video…");
       await uploadCampaignIntro(campaign.id, fileFromZip(archive, manifest.intro.file));
       summary.intro = true;
+      summary.videos += 1;
     }
   } catch (error) {
     await supabase.from("campaigns").delete().eq("id", campaign.id);

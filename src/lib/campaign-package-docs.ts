@@ -67,6 +67,10 @@ export const CAMPAIGN_PACKAGE_EXAMPLE = `{
       ]
     }
   ],
+  "videos": [
+    { "title": "Welcome to the Frontier", "type": "intro", "file": "videos/intro.mp4" },
+    { "title": "Previously on…", "type": "recap", "file": "videos/recap-01.mp4" }
+  ],
   "soundtracks": [
     {
       "slug": "ashes-of-the-frontier",
@@ -79,7 +83,9 @@ export const CAMPAIGN_PACKAGE_EXAMPLE = `{
       ]
     }
   ],
-  "intro": { "file": "intro/intro.mp4" },
+  "sound_fx": [
+    { "title": "Airlock alarm", "file": "sound-fx/airlock-alarm.ogg" }
+  ],
   "characters": [
     { "key": "char:vale", "file": "characters/sergeant-vale.json", "portrait_file": "images/vale.jpg", "is_npc": true }
   ]
@@ -92,7 +98,7 @@ export function buildCampaignPackageReadme() {
 A campaign package is a single ZIP file you drop on the **New campaign** dialog.
 Importing it creates a brand new campaign owned by you and fills in everything
 the campaign screens can hold: premise and house rules, lore, notes and session
-prep, assets, battle maps and tokens, soundtrack albums, the intro video and
+prep, assets, battle maps and tokens, videos, soundtrack albums, sound effects and
 character sheets.
 
 Maximum package size: ${MAX_MB} MB.
@@ -105,8 +111,9 @@ my-campaign.zip
 ├── images/                 (entity photos — any image format)
 ├── assets/                 (handouts: images or PDF)
 ├── maps/                   (battle map images)
+├── videos/                 (Intro, Recap, Cutscene and other MP4 videos)
 ├── soundtracks/            (cover image + audio tracks)
-├── intro/intro.mp4         (intro video, MP4)
+├── sound-fx/               (one-shot audio effects)
 └── characters/*.json       (character exports)
 \`\`\`
 
@@ -126,8 +133,10 @@ Top level keys:
 | \`lore\` | no | Entities and the relationships between them |
 | \`assets\` | no | Files shown on the Assets tab |
 | \`maps\` | no | Battle maps and their tokens |
-| \`soundtracks\` | no | Albums played by the campaign music player |
-| \`intro\` | no | The intro video every player sees once |
+| \`videos\` | no | Typed videos shown in Media > Videos |
+| \`soundtracks\` | no | Albums played by the persistent campaign music player |
+| \`sound_fx\` | no | One-shot sounds the GM can play for everyone |
+| \`intro\` | no | Legacy Intro field; use \`videos\` for new packages |
 | \`characters\` | no | Character sheets added to the roster |
 
 Unknown keys are rejected so typos surface immediately instead of silently
@@ -237,7 +246,16 @@ PNG, JPEG, WebP, AVIF, GIF or PDF, up to 25 MB each.
 }
 \`\`\`
 
-### soundtracks
+### Media: Videos
+
+Videos must be MP4. Supported types are \`intro\`, \`recap\`, \`cutscene\`,
+\`trailer\`, \`handout\`, \`vision\`, \`dream\`, and \`other\`. A package may
+contain only one \`intro\`; it is the only type that blocks first entry until it
+finishes. All other videos are optional and can be played from Media > Videos.
+
+\`"videos": [{ "title": "Welcome", "type": "intro", "file": "videos/intro.mp4" }]\`
+
+### Media: Soundtracks
 
 One object per album; audio must be MP3, OGG, Opus or M4A, and track positions
 must start at 1 with no gaps. The cover may be any image format.
@@ -258,10 +276,19 @@ must start at 1 with no gaps. The cover may be any image format.
 }
 \`\`\`
 
-### intro
+### Media: Sound FX
 
-\`"intro": { "file": "intro/intro.mp4" }\` — an MP4 shown full screen the first
-time each player opens the campaign.
+Each entry is a one-shot sound the GM can trigger for everyone currently in the
+campaign. Supported files are MP3, OGG, Opus, M4A, WAV, and WebM, up to 40 MB.
+Sound FX do not appear in the persistent soundtrack player.
+
+\`"sound_fx": [{ "title": "Airlock alarm", "file": "sound-fx/alarm.ogg" }]\`
+
+### Legacy intro
+
+\`"intro": { "file": "intro/intro.mp4" }\` remains accepted for older v1 packages.
+New packages should use a \`videos\` entry with \`"type": "intro"\` instead. Do
+not include both forms in the same package.
 
 ### characters
 

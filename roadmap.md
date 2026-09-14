@@ -37,8 +37,8 @@ Order agreed with the user: lore first, battle grid after.
 - [x] GM-synchronized persistent player across campaign-related pages
 - [x] Player teardown outside campaign scope and regression tests
 
-## Phase 6 — Campaign media (in progress)
-- [ ] Consolidate Intro and Soundtrack into Media with Videos, Soundtrack and Sound FX tabs
-- [ ] Expand Videos to typed multi-video uploads while preserving the mandatory Intro gate
-- [ ] Add GM-triggered synchronized one-shot Sound FX
-- [ ] Update campaign ZIP import schema and Markdown instructions for Videos, Soundtracks and Sound FX
+## Phase 6 — Campaign media (verification)
+- [x] Consolidate Intro and Soundtrack into Media with Videos, Soundtrack and Sound FX tabs
+- [x] Expand Videos to typed multi-video uploads while preserving the mandatory Intro gate
+- [x] Add GM-triggered synchronized one-shot Sound FX
+- [x] Update campaign ZIP import schema and Markdown instructions for Videos, Soundtracks and Sound FX

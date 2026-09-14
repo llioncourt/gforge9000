@@ -37,6 +37,7 @@ import {
   listCampaigns,
   listContentPacks,
   listLibrary,
+  deleteContentPack,
 } from "@/lib/api";
 import { parsePortablePack } from "@/lib/portable";
 import {

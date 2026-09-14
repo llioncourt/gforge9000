@@ -145,11 +145,35 @@ function CharactersPage() {
       />
 
       <div className="mb-4 grid gap-4 lg:grid-cols-[1fr_320px]">
-        <Input
-          placeholder="Filter by name or concept…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Filter by name or concept…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <div className="flex shrink-0 overflow-hidden rounded-md border border-border">
+            <Button
+              size="icon"
+              variant="ghost"
+              className={cn("rounded-none", view === "list" && "bg-secondary")}
+              aria-label="List view"
+              aria-pressed={view === "list"}
+              onClick={() => viewMode.mutate("list")}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className={cn("rounded-none", view === "grid" && "bg-secondary")}
+              aria-label="Grid view"
+              aria-pressed={view === "grid"}
+              onClick={() => viewMode.mutate("grid")}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
         <div className="grid gap-2">
           <FileDropzone
             accept="application/json,.json"

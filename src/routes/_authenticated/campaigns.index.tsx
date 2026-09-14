@@ -229,10 +229,6 @@ function CampaignsPage() {
                           type="button"
                           className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                           aria-label="Delete campaign"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>

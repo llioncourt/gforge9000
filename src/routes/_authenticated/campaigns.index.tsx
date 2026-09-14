@@ -33,6 +33,8 @@ import { createCampaign, deleteCampaign, joinCampaign, listCampaigns } from "@/l
 import { useSession } from "@/hooks/use-session";
 import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
 import { CAMPAIGN_COVER_SETTING } from "@/lib/campaign-cover";
+import { CampaignPackageImport } from "@/components/campaign/campaign-package-import";
+
 
 export const Route = createFileRoute("/_authenticated/campaigns/")({
   head: () => ({
@@ -120,6 +122,13 @@ function CampaignsPage() {
                 <DialogTitle>New campaign</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4">
+                <CampaignPackageImport
+                  onImported={(id) => {
+                    setOpen(false);
+                    navigate({ to: "/campaigns/$id", params: { id } });
+                  }}
+                />
+
                 <div className="space-y-1.5">
                   <Label>Name</Label>
                   <Input value={name} onChange={(e) => setName(e.target.value)} />

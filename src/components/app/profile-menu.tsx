@@ -55,13 +55,28 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
   useEffect(() => {
     const stored = window.localStorage.getItem(THEME_KEY) === "1";
     setLight(stored);
-    document.documentElement.classList.toggle("dark", !stored);
+    applyTheme(stored);
   }, []);
+
+  // The saved profile preference wins over the local value once loaded.
+  useEffect(() => {
+    const saved = data?.preferences?.theme;
+    if (saved !== "light" && saved !== "dark") return;
+    const next = saved === "light";
+    setLight(next);
+    applyTheme(next);
+    window.localStorage.setItem(THEME_KEY, next ? "1" : "0");
+  }, [data?.preferences?.theme]);
 
   function changeTheme(next: boolean) {
     setLight(next);
     window.localStorage.setItem(THEME_KEY, next ? "1" : "0");
-    document.documentElement.classList.toggle("dark", !next);
+    applyTheme(next);
+    if (user) {
+      setProfilePreferences(user.id, { theme: next ? "light" : "dark" })
+        .then(() => queryClient.invalidateQueries({ queryKey: ["profile", user.id] }))
+        .catch((e: Error) => toast.error(e.message));
+    }
   }
 
   useEffect(() => {

@@ -140,6 +140,12 @@ function CampaignPage() {
   const navigate = useNavigate();
 
   const campaign = useQuery({ queryKey: ["campaign", id], queryFn: () => getCampaign(id) });
+
+  useEffect(() => {
+    const name = campaign.data?.name;
+    if (name) document.title = `${name} — Universal Character Forge`;
+  }, [campaign.data?.name]);
+
   const roster = useQuery({
     queryKey: ["campaign-characters", id],
     queryFn: () => listCampaignCharacters(id),

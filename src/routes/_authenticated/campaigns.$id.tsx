@@ -415,7 +415,7 @@ function CampaignPage() {
       <CampaignIntroExperience campaignId={id} isGm={isGm} display="gate" />
 
       <Tabs defaultValue="roster">
-        <TabsList>
+        <ScrollableTabsList>
           <TabsTrigger value="intro">Intro</TabsTrigger>
           <TabsTrigger value="roster">Roster</TabsTrigger>
           <TabsTrigger value="lore">World &amp; lore</TabsTrigger>

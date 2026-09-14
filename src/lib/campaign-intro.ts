@@ -3,6 +3,7 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export const CAMPAIGN_INTRO_BUCKET = "campaign-intros";
 export const CAMPAIGN_VIDEO_MAX_BYTES = 250 * 1024 * 1024;
+export const CAMPAIGN_INTRO_MAX_BYTES = CAMPAIGN_VIDEO_MAX_BYTES;
 export const CAMPAIGN_VIDEO_TYPES = [
   "intro",
   "recap",

@@ -104,8 +104,8 @@ const BattlePanel = lazy(() =>
 const RollsPanel = lazy(() =>
   import("@/components/campaign/rolls-panel").then((mod) => ({ default: mod.RollsPanel })),
 );
-const SoundtrackPanel = lazy(() =>
-  import("@/components/campaign/soundtrack-panel").then((mod) => ({ default: mod.SoundtrackPanel })),
+const MediaPanel = lazy(() =>
+  import("@/components/campaign/media-panel").then((mod) => ({ default: mod.MediaPanel })),
 );
 
 
@@ -419,7 +419,7 @@ function CampaignPage() {
 
       <Tabs defaultValue="roster">
         <ScrollableTabsList>
-          <TabsTrigger value="intro">Intro</TabsTrigger>
+          <TabsTrigger value="media">Media</TabsTrigger>
           <TabsTrigger value="roster">Roster</TabsTrigger>
           <TabsTrigger value="lore">World &amp; lore</TabsTrigger>
           <TabsTrigger value="story">Story</TabsTrigger>
@@ -429,7 +429,6 @@ function CampaignPage() {
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="battle">Battle grid</TabsTrigger>
           <TabsTrigger value="library">Library</TabsTrigger>
-          <TabsTrigger value="soundtrack">Soundtrack</TabsTrigger>
           <TabsTrigger value="rolls">Rolls</TabsTrigger>
 
           <TabsTrigger value="notes">Notes &amp; handouts</TabsTrigger>
@@ -437,8 +436,10 @@ function CampaignPage() {
           <TabsTrigger value="rules">House rules</TabsTrigger>
         </ScrollableTabsList>
 
-        <TabsContent value="intro" className="mt-6">
-          <CampaignIntroExperience campaignId={id} isGm={isGm} display="panel" />
+        <TabsContent value="media" className="mt-6">
+          <Suspense fallback={<PanelFallback />}>
+            <MediaPanel campaignId={id} isGm={isGm} />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="roster" className="mt-6 space-y-6">
@@ -714,13 +715,6 @@ function CampaignPage() {
             <AssetsPanel campaignId={id} isGm={isGm} />
           </Suspense>
         </TabsContent>
-
-        <TabsContent value="soundtrack" className="mt-6">
-          <Suspense fallback={<PanelFallback />}>
-            <SoundtrackPanel campaignId={id} isGm={isGm} />
-          </Suspense>
-        </TabsContent>
-
 
         <TabsContent value="rolls" className="mt-6">
           <Suspense fallback={<PanelFallback />}>

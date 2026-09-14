@@ -11,20 +11,20 @@ import { AmbientBackground } from "@/components/app/ambient-background";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Universal Character Forge — GURPS 4e compatible companion" },
+      { title: "Universal Character Forge — GURPS 4e Character Builder" },
       {
         name: "description",
         content:
-          "Build characters, track campaigns and roll dice with a data-driven rules engine. Unofficial companion compatible with GURPS Fourth Edition.",
+          "Build GURPS 4e characters, run campaigns, and roll dice with a data-driven rules engine. Unofficial companion to GURPS Fourth Edition.",
       },
       {
         property: "og:title",
-        content: "Universal Character Forge — GURPS 4e compatible companion",
+        content: "Universal Character Forge — GURPS 4e Character Builder",
       },
       {
         property: "og:description",
         content:
-          "Point budgets, live calculation, combat sheets, campaigns and a custom content library.",
+          "Build GURPS 4e characters, run campaigns, and roll dice with a data-driven rules engine. Unofficial companion to GURPS Fourth Edition.",
       },
     ],
   }),

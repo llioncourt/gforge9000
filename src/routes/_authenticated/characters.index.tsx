@@ -336,3 +336,33 @@ function CharactersPage() {
     </div>
   );
 }
+
+function PortraitThumb({ path, name }: { path: string | null; name: string }) {
+  const { data: url } = useQuery({
+    queryKey: ["portrait", path ?? "none"],
+    queryFn: () => portraitUrl(path),
+    enabled: !!path,
+    staleTime: 1000 * 60 * 30,
+  });
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join("");
+  return (
+    <span className="relative grid h-10 w-10 shrink-0 place-content-center overflow-hidden rounded-md bg-secondary text-xs font-semibold text-muted-foreground">
+      {url ? (
+        <img
+          loading="lazy"
+          decoding="async"
+          src={url}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-top"
+        />
+      ) : (
+        initials || "?"
+      )}
+    </span>
+  );
+}

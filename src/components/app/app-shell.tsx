@@ -177,19 +177,20 @@ export function AppShell({ children }: { children: ReactNode }) {
               ⌘K
             </kbd>
           </button>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="gap-2"
-            aria-label="Roll dice"
-            onClick={() => setTrayOpen(true)}
-          >
-
-            <Dices className="h-4 w-4" />
-            <span className="hidden sm:inline">Roll</span>
-          </Button>
-          <NotificationBell />
-          <ProfileMenu onSignOut={signOut} />
+          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+            <Button
+              size="sm"
+              variant="secondary"
+              className="gap-2"
+              aria-label="Roll dice"
+              onClick={() => setTrayOpen(true)}
+            >
+              <Dices className="h-4 w-4" />
+              <span className="hidden sm:inline">Roll</span>
+            </Button>
+            <NotificationBell />
+            <ProfileMenu onSignOut={signOut} />
+          </div>
         </header>
 
         <main className="safe-b min-h-[calc(100vh-4rem)] px-3 py-5 sm:px-6 sm:py-6 lg:px-8">

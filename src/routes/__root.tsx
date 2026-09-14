@@ -79,17 +79,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Universal Character Forge" },
+      { title: "Universal Character Forge — GURPS 4e Character Builder" },
       {
         name: "description",
         content:
-          "Unofficial character and campaign companion compatible with GURPS Fourth Edition rules.",
+          "Build GURPS 4e characters, run campaigns, and roll dice with a data-driven rules engine. Unofficial companion to GURPS Fourth Edition.",
       },
-      { property: "og:title", content: "Universal Character Forge" },
+      { property: "og:title", content: "Universal Character Forge — GURPS 4e Character Builder" },
       {
         property: "og:description",
         content:
-          "Unofficial character and campaign companion compatible with GURPS Fourth Edition rules.",
+          "Build GURPS 4e characters, run campaigns, and roll dice with a data-driven rules engine. Unofficial companion to GURPS Fourth Edition.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

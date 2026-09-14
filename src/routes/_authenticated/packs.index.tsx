@@ -132,6 +132,16 @@ function PacksPage() {
     onError: (e: Error) => toast.error(`Import failed: ${e.message}`),
   });
 
+  const removePack = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => deleteContentPack(id, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["library"] });
+      queryClient.invalidateQueries({ queryKey: ["content-packs"] });
+      toast.success("Pack deleted.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div>
       <PageHeader

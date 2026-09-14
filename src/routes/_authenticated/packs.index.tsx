@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Boxes, Download, Plus } from "lucide-react";
+import { Boxes, Download, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 import {
@@ -26,6 +37,7 @@ import {
   listCampaigns,
   listContentPacks,
   listLibrary,
+  deleteContentPack,
 } from "@/lib/api";
 import { parsePortablePack } from "@/lib/portable";
 import {
@@ -118,6 +130,16 @@ function PacksPage() {
       toast.success(`Imported ${count} entries into “${pack}”.`);
     },
     onError: (e: Error) => toast.error(`Import failed: ${e.message}`),
+  });
+
+  const removePack = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => deleteContentPack(id, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["library"] });
+      queryClient.invalidateQueries({ queryKey: ["content-packs"] });
+      toast.success("Pack deleted.");
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   return (
@@ -215,6 +237,48 @@ function PacksPage() {
                     ? `Enabled in ${enabledIn.map((c) => c.name).join(", ")}`
                     : "Not enabled in any campaign you run"}
                 </p>
+                {meta && user?.id && meta.owner_id === user.id ? (
+                  <div
+                    className="absolute bottom-3 right-3 z-10"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          type="button"
+                          className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          aria-label="Delete pack"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this pack?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This permanently removes “{g.label}” and every entry inside it.
+                            Campaigns that had this pack enabled will lose access to its content.
+                            This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() =>
+                              removePack.mutate({ id: meta.id, name: g.pack })
+                            }
+                            disabled={removePack.isPending}
+                          >
+                            Delete pack
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                ) : null}
               </Link>
             );
           })}

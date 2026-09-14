@@ -115,17 +115,21 @@ function PanelFallback() {
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   staticData: { sitemap: false },
-  head: () => ({
-    meta: [
-      { title: "Campaign — Universal Character Forge" },
-      {
-        name: "description",
-        content: "Roster, GM tools, shared notes and house rules for this campaign.",
-      },
-      { property: "og:title", content: "Campaign — Universal Character Forge" },
-      { property: "og:description", content: "Roster, GM tools and shared notes." },
-    ],
-  }),
+  head: ({ params }) => {
+    const title = `Campaign ${params.id.slice(0, 8)} — Universal Character Forge`;
+    const description =
+      "Roster, GM tools, shared notes and house rules for this campaign.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { name: "robots", content: "noindex" },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+      ],
+    };
+  },
+
   component: CampaignPage,
 });
 

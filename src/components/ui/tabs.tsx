@@ -86,10 +86,33 @@ const ScrollableTabsList = React.forwardRef<
     };
   }, [update]);
 
+  // Smooth eased scroll so arrow taps glide rather than snap.
+  const tweenRef = React.useRef<number | null>(null);
+  function animateScroll(target: number) {
+    const el = listRef.current;
+    if (!el) return;
+    if (tweenRef.current) cancelAnimationFrame(tweenRef.current);
+    const start = el.scrollLeft;
+    const distance = target - start;
+    const duration = 380;
+    const t0 = performance.now();
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3); // easeOutCubic
+    const step = (now: number) => {
+      const t = Math.min(1, (now - t0) / duration);
+      el.scrollLeft = start + distance * ease(t);
+      if (t < 1) {
+        tweenRef.current = requestAnimationFrame(step);
+      } else {
+        tweenRef.current = null;
+      }
+    };
+    tweenRef.current = requestAnimationFrame(step);
+  }
+
   function scrollBy(dir: number) {
     const el = listRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir * Math.max(el.clientWidth * 0.6, 180), behavior: "smooth" });
+    animateScroll(el.scrollLeft + dir * Math.max(el.clientWidth * 0.7, 200));
   }
 
   React.useImperativeHandle(ref, () => listRef.current as never);

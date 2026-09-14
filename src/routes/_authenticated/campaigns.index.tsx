@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Users } from "lucide-react";
+import { Plus, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogFooter,
@@ -18,7 +29,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { createCampaign, joinCampaign, listCampaigns } from "@/lib/api";
+import { createCampaign, deleteCampaign, joinCampaign, listCampaigns } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
 import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
 import { CAMPAIGN_COVER_SETTING } from "@/lib/campaign-cover";
@@ -81,6 +92,15 @@ function CampaignsPage() {
       navigate({ to: "/campaigns/$id", params: { id } });
     },
     onError: () => toast.error("That invite code didn't match an open campaign."),
+  });
+
+  const remove = useMutation({
+    mutationFn: (cid: string) => deleteCampaign(cid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      toast.success("Campaign deleted.");
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   return (
@@ -183,9 +203,44 @@ function CampaignsPage() {
                 <CampaignCoverBg path={coverPath} />
                 <div className="relative flex items-start justify-between gap-2">
                   <h2 className="font-display text-lg font-semibold">{c.name}</h2>
-                  <Badge variant={c.gm_id === user?.id ? "default" : "outline"}>
-                    {c.gm_id === user?.id ? "GM" : "Player"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {c.gm_id === user?.id ? (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            type="button"
+                            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                            aria-label="Delete campaign"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete this campaign?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This permanently removes {c.name} and everything inside it: lore,
+                              maps, notes, soundtrack, intro video, reveals and roll history.
+                              Characters are kept, but they are detached from the campaign. This
+                              cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => remove.mutate(c.id)}
+                              disabled={remove.isPending}
+                            >
+                              Delete campaign
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    ) : null}
+                    <Badge variant={c.gm_id === user?.id ? "default" : "outline"}>
+                      {c.gm_id === user?.id ? "GM" : "Player"}
+                    </Badge>
+                  </div>
                 </div>
                 <p className="relative mt-2 line-clamp-3 text-sm text-muted-foreground">
                   {c.description || "No premise written yet."}

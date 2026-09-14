@@ -1,15 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Dices, Plus, Shield, Sparkles, Users } from "lucide-react";
+import { BookOpen, Dices, Plus, Shield, Users } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createCharacter, listCampaigns, listCharacters, listLibrary, listRolls } from "@/lib/api";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
-import { seedDemoContent } from "@/lib/demo";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -43,22 +41,6 @@ function Dashboard() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const seed = useMutation({
-    mutationFn: async () => {
-      const { data } = await supabase.auth.getUser();
-      return seedDemoContent(data.user!.id);
-    },
-    onSuccess: (result) => {
-      queryClient.invalidateQueries();
-      toast.success(
-        result.skipped
-          ? "Demo content already exists on this account."
-          : "Demo character and campaign created.",
-      );
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
   const loading = characters.isLoading || campaigns.isLoading;
   const empty = !loading && (characters.data?.length ?? 0) === 0 && (campaigns.data?.length ?? 0) === 0;
 
@@ -69,9 +51,6 @@ function Dashboard() {
         description="Everything on your table right now."
         actions={
           <>
-            <Button variant="outline" onClick={() => seed.mutate()} disabled={seed.isPending}>
-              <Sparkles className="mr-2 h-4 w-4" /> Load demo data
-            </Button>
             <Button onClick={() => newCharacter.mutate()} disabled={newCharacter.isPending}>
               <Plus className="mr-2 h-4 w-4" /> New character
             </Button>
@@ -90,14 +69,10 @@ function Dashboard() {
         <div className="panel mt-6 p-10 text-center">
           <h2 className="font-display text-lg font-semibold">Nothing forged yet</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Create a blank character, or load the original demo set — a sample expedition campaign
-            and a fully built character — to see the engine working end to end.
+            Create a blank character to see the engine working end to end.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             <Button onClick={() => newCharacter.mutate()}>New character</Button>
-            <Button variant="outline" onClick={() => seed.mutate()} disabled={seed.isPending}>
-              Load demo data
-            </Button>
           </div>
         </div>
       ) : null}

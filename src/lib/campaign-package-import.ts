@@ -22,6 +22,12 @@ import type { TablesInsert } from "@/integrations/supabase/types";
 
 type Archive = Record<string, Uint8Array>;
 
+function bytesFromZip(archive: Archive, path: string): Uint8Array {
+  const bytes = archive[path] ?? archive[path.replace(/^\.\//, "")];
+  if (!bytes) throw new Error(`The package is missing "${path}".`);
+  return bytes;
+}
+
 function fileFromZip(archive: Archive, path: string): File {
   const bytes = archive[path] ?? archive[path.replace(/^\.\//, "")];
   if (!bytes) throw new Error(`The package is missing "${path}".`);
@@ -134,14 +140,14 @@ async function importCharacters(
   if (!manifest.characters.length) return;
   step("Importing characters…");
   for (const entry of manifest.characters) {
-    const portable = parsePortable(new TextDecoder().decode(fileFromZip(archive, entry.file)));
+    const portable = parsePortable(new TextDecoder().decode(bytesFromZip(archive, entry.file)));
     const record = portable.character;
     const insert: TablesInsert<"characters"> = {
       owner_id: userId,
       campaign_id: campaignId,
       name: record.name,
-      player_name: record.player_name,
-      concept: record.concept,
+      player_name: record.player_name ?? null,
+      concept: record.concept ?? null,
       point_budget: record.point_budget,
       tech_level: record.tech_level,
       st: record.st,
@@ -154,8 +160,8 @@ async function importCharacters(
       fp_delta: record.fp_delta,
       speed_delta: record.speed_delta,
       move_delta: record.move_delta,
-      current_hp: record.current_hp,
-      current_fp: record.current_fp,
+      current_hp: record.current_hp ?? null,
+      current_fp: record.current_fp ?? null,
       conditions: record.conditions ?? [],
       wealth: record.wealth,
       status: record.status,

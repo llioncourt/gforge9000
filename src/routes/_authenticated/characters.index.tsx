@@ -67,6 +67,24 @@ function CharactersPage() {
   const [search, setSearch] = useState("");
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
   const { data, isLoading } = useQuery({ queryKey: ["characters"], queryFn: listCharacters });
+  const { user } = useSession();
+  const prefsQuery = useQuery({
+    queryKey: ["profile-preferences", user?.id],
+    queryFn: () => getProfilePreferences(user!.id),
+    enabled: !!user?.id,
+    staleTime: 60_000,
+  });
+  const view: CharactersViewMode = prefsQuery.data?.characters_view === "grid" ? "grid" : "list";
+  const viewMode = useMutation({
+    mutationFn: (v: CharactersViewMode) =>
+      setProfilePreferences(user!.id, { characters_view: v }),
+    onMutate: (v) => {
+      queryClient.setQueryData(["profile-preferences", user?.id], {
+        ...(prefsQuery.data ?? {}),
+        characters_view: v,
+      });
+    },
+  });
 
   const create = useMutation({
     mutationFn: () => createCharacter({ name: "Untitled character" }),

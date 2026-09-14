@@ -237,6 +237,48 @@ function PacksPage() {
                     ? `Enabled in ${enabledIn.map((c) => c.name).join(", ")}`
                     : "Not enabled in any campaign you run"}
                 </p>
+                {meta && user?.id && meta.owner_id === user.id ? (
+                  <div
+                    className="absolute bottom-3 right-3 z-10"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          type="button"
+                          className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          aria-label="Delete pack"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this pack?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This permanently removes “{g.label}” and every entry inside it.
+                            Campaigns that had this pack enabled will lose access to its content.
+                            This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() =>
+                              removePack.mutate({ id: meta.id, name: g.pack })
+                            }
+                            disabled={removePack.isPending}
+                          >
+                            Delete pack
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                ) : null}
               </Link>
             );
           })}

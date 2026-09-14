@@ -114,6 +114,7 @@ function PanelFallback() {
 }
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Campaign — Universal Character Forge" },

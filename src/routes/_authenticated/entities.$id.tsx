@@ -53,6 +53,7 @@ import { FileDropzone } from "@/components/ui/FileDropzone";
 import { portraitInitials, portraitUrl, removePortrait, uploadPortrait } from "@/lib/portrait";
 
 export const Route = createFileRoute("/_authenticated/entities/$id")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Lore entry — Universal Character Forge" },

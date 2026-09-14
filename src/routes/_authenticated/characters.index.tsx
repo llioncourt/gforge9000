@@ -47,6 +47,7 @@ import { FileDropzone } from "@/components/ui/FileDropzone";
 import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 
 export const Route = createFileRoute("/_authenticated/characters/")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Characters — Universal Character Forge" },

@@ -113,6 +113,7 @@ import { PrintSheet } from "@/components/character/print-sheet";
 
 
 export const Route = createFileRoute("/_authenticated/characters/$id")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Character sheet — Universal Character Forge" },

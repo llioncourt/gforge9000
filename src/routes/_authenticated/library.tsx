@@ -76,6 +76,7 @@ const KINDS = [
 ] as const;
 
 export const Route = createFileRoute("/_authenticated/library")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Library — Universal Character Forge" },

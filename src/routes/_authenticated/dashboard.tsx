@@ -10,6 +10,7 @@ import { createCharacter, listCampaigns, listCharacters, listLibrary, listRolls 
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Dashboard — Universal Character Forge" },

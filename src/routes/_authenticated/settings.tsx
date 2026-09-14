@@ -24,6 +24,7 @@ const WIPE_INTENT_KEY = "ucf:wipe-intent";
 const WIPE_INTENT_TTL = 5 * 60 * 1000;
 
 export const Route = createFileRoute("/_authenticated/settings")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Settings — Universal Character Forge" },

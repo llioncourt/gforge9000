@@ -47,6 +47,7 @@ import {
   listCharacters,
   listEntriesForCharacters,
   listMembers,
+  deleteCampaign,
   removeMember,
   transferCampaignGm,
   transferCharacterOwner,
@@ -198,6 +199,16 @@ function CampaignPage() {
       queryClient.invalidateQueries({ queryKey: ["campaign", id] });
       queryClient.invalidateQueries({ queryKey: ["members", id] });
       toast.success("GM role transferred.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteCampaignMut = useMutation({
+    mutationFn: () => deleteCampaign(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      toast.success("Campaign deleted.");
+      void navigate({ to: "/campaigns" });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -363,6 +374,35 @@ function CampaignPage() {
             <Copy className="mr-2 h-4 w-4" />
             <span className="font-mono">{campaign.data?.invite_code}</span>
           </Button>
+          {isGm ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="text-destructive hover:text-destructive">
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this campaign?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This permanently removes {campaign.data?.name ?? "this campaign"} and everything
+                    inside it: lore, maps, notes, soundtrack, intro video, reveals and roll history.
+                    Characters are kept, but they are detached from the campaign. This cannot be
+                    undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteCampaignMut.mutate()}
+                    disabled={deleteCampaignMut.isPending}
+                  >
+                    Delete campaign
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : null}
           </>
         }
       />

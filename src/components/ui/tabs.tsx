@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -12,7 +13,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "no-scrollbar glass-soft flex h-auto max-w-full items-center justify-start gap-1 overflow-x-auto rounded-lg p-1 text-muted-foreground sm:h-9 sm:justify-center lg:flex-wrap lg:overflow-visible",
+      "no-scrollbar glass-soft flex h-auto max-w-full items-center justify-start gap-1 overflow-x-auto rounded-lg p-1 text-muted-foreground sm:h-9",
       className,
     )}
     {...props}
@@ -50,4 +51,81 @@ const TabsContent = React.forwardRef<
 ));
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 
-export { Tabs, TabsList, TabsTrigger, TabsContent };
+/**
+ * TabsList that never wraps to a second line. When the available width is
+ * smaller than the content, left/right scroll arrows appear so the user can
+ * reach every tab horizontally.
+ */
+const ScrollableTabsList = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.List>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
+>(({ className, children, ...props }, ref) => {
+  const listRef = React.useRef<HTMLDivElement | null>(null);
+  const [canLeft, setCanLeft] = React.useState(false);
+  const [canRight, setCanRight] = React.useState(false);
+
+  const update = React.useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 1);
+    setCanRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  }, []);
+
+  React.useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    // Observe size changes of the tab triggers themselves.
+    Array.from(el.children).forEach((c) => ro.observe(c));
+    el.addEventListener("scroll", update, { passive: true });
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", update);
+    };
+  }, [update]);
+
+  function scrollBy(dir: number) {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.max(el.clientWidth * 0.6, 180), behavior: "smooth" });
+  }
+
+  React.useImperativeHandle(ref, () => listRef.current as never);
+
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        type="button"
+        aria-label="Scroll tabs left"
+        tabIndex={-1}
+        onClick={() => scrollBy(-1)}
+        className={cn(
+          "grid h-8 w-8 shrink-0 place-content-center rounded-md text-muted-foreground transition-opacity hover:bg-secondary hover:text-foreground",
+          canLeft ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+      <TabsList ref={listRef} className={cn("flex-1", className)} {...props}>
+        {children}
+      </TabsList>
+      <button
+        type="button"
+        aria-label="Scroll tabs right"
+        tabIndex={-1}
+        onClick={() => scrollBy(1)}
+        className={cn(
+          "grid h-8 w-8 shrink-0 place-content-center rounded-md text-muted-foreground transition-opacity hover:bg-secondary hover:text-foreground",
+          canRight ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+});
+ScrollableTabsList.displayName = "ScrollableTabsList";
+
+export { Tabs, TabsList, TabsTrigger, TabsContent, ScrollableTabsList };

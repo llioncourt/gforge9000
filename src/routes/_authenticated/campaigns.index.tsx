@@ -94,6 +94,15 @@ function CampaignsPage() {
     onError: () => toast.error("That invite code didn't match an open campaign."),
   });
 
+  const remove = useMutation({
+    mutationFn: (cid: string) => deleteCampaign(cid),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+      toast.success("Campaign deleted.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <div>
       <PageHeader

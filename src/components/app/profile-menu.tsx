@@ -60,7 +60,7 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
 
   // The saved profile preference wins over the local value once loaded.
   useEffect(() => {
-    const saved = data?.preferences?.theme;
+    const saved = (data?.preferences as { theme?: string } | null | undefined)?.theme;
     if (saved !== "light" && saved !== "dark") return;
     const next = saved === "light";
     setLight(next);

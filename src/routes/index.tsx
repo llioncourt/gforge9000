@@ -9,6 +9,7 @@ import { useParallax } from "@/hooks/use-parallax";
 import { AmbientBackground } from "@/components/app/ambient-background";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Universal Character Forge — GURPS 4e Character Builder" },
@@ -27,7 +28,23 @@ export const Route = createFileRoute("/")({
           "Build GURPS 4e characters, run campaigns, and roll dice with a data-driven rules engine. Unofficial companion to GURPS Fourth Edition.",
       },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "Universal Character Forge",
+          applicationCategory: "GameApplication",
+          operatingSystem: "Web",
+          url: "https://gforge9000.lovable.app/",
+          description:
+            "A modern forge for universal characters: build GURPS 4e characters, run campaigns, and roll dice with a data-driven rules engine. Unofficial companion to GURPS Fourth Edition.",
+        }),
+      },
+    ],
   }),
+
   component: Landing,
 });
 

@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/hooks/use-session";
 
 export const Route = createFileRoute("/auth")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Sign in — Universal Character Forge" },
@@ -124,7 +125,11 @@ function AuthPage() {
             </div>
           ) : (
             <Tabs defaultValue="signin">
+              <h1 className="mb-6 font-display text-2xl font-semibold">
+                Sign in to Universal Character Forge
+              </h1>
               <TabsList className="grid w-full grid-cols-2">
+
                 <TabsTrigger value="signin">Sign in</TabsTrigger>
                 <TabsTrigger value="signup">Create account</TabsTrigger>
               </TabsList>
@@ -151,7 +156,7 @@ function AuthPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={busy}>
+                  <Button type="submit" className="w-full" disabled={busy} aria-label="Sign in">
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
                   </Button>
                 </form>
@@ -189,7 +194,7 @@ function AuthPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={busy}>
+                  <Button type="submit" className="w-full" disabled={busy} aria-label="Create account">
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create account"}
                   </Button>
                 </form>

@@ -113,18 +113,22 @@ import { PrintSheet } from "@/components/character/print-sheet";
 
 
 export const Route = createFileRoute("/_authenticated/characters/$id")({
-  head: () => ({
-    meta: [
-      { title: "Character sheet — Universal Character Forge" },
-      {
-        name: "description",
-        content:
-          "Live point totals, traits, skills, equipment, encumbrance and a rollable combat sheet.",
-      },
-      { property: "og:title", content: "Character sheet — Universal Character Forge" },
-      { property: "og:description", content: "Live point totals and a rollable combat sheet." },
-    ],
-  }),
+  staticData: { sitemap: false },
+  head: ({ params }) => {
+    const title = `Character sheet ${params.id.slice(0, 8)} — Universal Character Forge`;
+    const description =
+      "Live point totals, traits, skills, equipment, encumbrance and a rollable combat sheet for this character.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { name: "robots", content: "noindex" },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+      ],
+    };
+  },
+
   component: CharacterPage,
 });
 
@@ -147,6 +151,12 @@ function CharacterPage() {
   const { roll, history } = useDice();
 
   const characterQuery = useQuery({ queryKey: ["character", id], queryFn: () => getCharacter(id) });
+
+  useEffect(() => {
+    const name = characterQuery.data?.name;
+    if (name) document.title = `${name} — Universal Character Forge`;
+  }, [characterQuery.data?.name]);
+
   const entriesQuery = useQuery({ queryKey: ["entries", id], queryFn: () => listEntries(id) });
   const versionsQuery = useQuery({ queryKey: ["versions", id], queryFn: () => listVersions(id) });
   const weaponStateQuery = useQuery({

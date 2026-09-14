@@ -60,6 +60,7 @@ import { slugify } from "@/lib/portable";
 import { useSession } from "@/hooks/use-session";
 
 export const Route = createFileRoute("/_authenticated/packs/$pack")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Pack detail — Universal Character Forge" },

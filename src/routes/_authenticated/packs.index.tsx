@@ -50,6 +50,7 @@ import { useSession } from "@/hooks/use-session";
 import { packSlug } from "@/lib/pack-slug";
 
 export const Route = createFileRoute("/_authenticated/packs/")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Content packs — Universal Character Forge" },

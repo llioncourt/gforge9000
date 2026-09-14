@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app/app-shell";
 
 export const Route = createFileRoute("/_authenticated")({
+  staticData: { sitemap: "exclude-subtree" },
   ssr: false,
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getUser();

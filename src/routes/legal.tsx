@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/legal")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Legal & content policy — Universal Character Forge" },

@@ -37,6 +37,7 @@ import { CampaignPackageImport } from "@/components/campaign/campaign-package-im
 
 
 export const Route = createFileRoute("/_authenticated/campaigns/")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Campaigns — Universal Character Forge" },

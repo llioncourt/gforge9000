@@ -413,12 +413,13 @@ function EntityPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Image</Label>
-              {(form.image_url ?? inheritedPortrait) ? (
+              {entityImagePath ? (
                 <div className="flex items-start gap-3">
                   {photoUrl.data ? (
                     <img loading="lazy" decoding="async"
                       src={photoUrl.data}
                       alt={`${form.name} image`}
+                      onError={() => setOwnImageBroken(true)}
                       className="h-32 w-32 rounded-lg border object-cover"
                     />
                   ) : (

@@ -309,6 +309,10 @@ const UNIT_KEYS = [
   ["minute", "Minuto / Parte"],
 ] as const;
 
+function blockLeapRule(rule: LeapRule): { block: number; years: number[]; month: number; extraDays: number } {
+  return rule.kind === "block" ? rule : { block: 10, years: [4, 7, 10], month: 0, extraDays: 1 };
+}
+
 function CalendarForm({
   calendar,
   onSave,

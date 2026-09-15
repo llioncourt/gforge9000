@@ -158,16 +158,16 @@ export function calendarOf(settings: unknown): WorldCalendar {
   }
 
   // New (or partial) format
-  const unitsRaw = (value.units ?? {}) as Record<string, unknown>;
+  const unitsRaw = (value["units"] ?? {}) as Record<string, unknown>;
   const units = {
-    era: asUnitName(unitsRaw.era, DEFAULT_UNITS.era),
-    year: asUnitName(unitsRaw.year, DEFAULT_UNITS.year),
-    season: asUnitName(unitsRaw.season, DEFAULT_UNITS.season),
-    month: asUnitName(unitsRaw.month, DEFAULT_UNITS.month),
-    week: asUnitName(unitsRaw.week, DEFAULT_UNITS.week),
-    day: asUnitName(unitsRaw.day, DEFAULT_UNITS.day),
-    hour: asUnitName(unitsRaw.hour, DEFAULT_UNITS.hour),
-    minute: asUnitName(unitsRaw.minute, DEFAULT_UNITS.minute),
+    era: asUnitName(unitsRaw["era"], DEFAULT_UNITS.era),
+    year: asUnitName(unitsRaw["year"], DEFAULT_UNITS.year),
+    season: asUnitName(unitsRaw["season"], DEFAULT_UNITS.season),
+    month: asUnitName(unitsRaw["month"], DEFAULT_UNITS.month),
+    week: asUnitName(unitsRaw["week"], DEFAULT_UNITS.week),
+    day: asUnitName(unitsRaw["day"], DEFAULT_UNITS.day),
+    hour: asUnitName(unitsRaw["hour"], DEFAULT_UNITS.hour),
+    minute: asUnitName(unitsRaw["minute"], DEFAULT_UNITS.minute),
   };
 
   let months: MonthDef[];
@@ -175,7 +175,7 @@ export function calendarOf(settings: unknown): WorldCalendar {
     months = (rawMonths as unknown[]).map((m) => {
       if (typeof m === "string") return { name: m, days: 30 };
       const mo = m as Record<string, unknown>;
-      return { name: String(mo.name ?? ""), days: num(mo.days) ?? 30 };
+      return { name: String(mo["name"] ?? ""), days: num(mo["days"]) ?? 30 };
     });
   } else {
     months = [];

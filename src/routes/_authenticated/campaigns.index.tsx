@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Users } from "lucide-react";
+import { Download, Loader2, Plus, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ import { useSession } from "@/hooks/use-session";
 import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
 import { CAMPAIGN_COVER_SETTING } from "@/lib/campaign-cover";
 import { CampaignPackageImport } from "@/components/campaign/campaign-package-import";
+import { buildCampaignPackageZip } from "@/lib/campaign-package-export";
 
 
 export const Route = createFileRoute("/_authenticated/campaigns/")({
@@ -64,6 +65,30 @@ function CampaignsPage() {
   const [disadvLimit, setDisadvLimit] = useState("-50");
   const [tl, setTl] = useState("8");
   const [code, setCode] = useState("");
+  const [exporting, setExporting] = useState<string | null>(null);
+
+  const exportCampaign = async (campaignId: string) => {
+    setExporting(campaignId);
+    const toastId = toast.loading("Preparing campaign package…");
+    try {
+      const { blob, fileName } = await buildCampaignPackageZip(campaignId, (stepLabel) =>
+        toast.loading(stepLabel, { id: toastId }),
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Campaign package downloaded.", { id: toastId });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Export failed.", { id: toastId });
+    } finally {
+      setExporting(null);
+    }
+  };
 
   const create = useMutation({
     mutationFn: () =>
@@ -227,12 +252,26 @@ function CampaignsPage() {
                 </div>
                 {c.gm_id === user?.id ? (
                   <div
-                    className="absolute bottom-3 right-3 z-10"
+                    className="absolute bottom-3 right-3 z-10 flex items-center gap-1"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                     }}
                   >
+                    <button
+                      type="button"
+                      className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+                      aria-label="Download campaign package"
+                      title="Download campaign package (ZIP)"
+                      disabled={exporting === c.id}
+                      onClick={() => exportCampaign(c.id)}
+                    >
+                      {exporting === c.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Download className="h-3.5 w-3.5" />
+                      )}
+                    </button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <button

@@ -181,66 +181,66 @@ export function calendarOf(settings: unknown): WorldCalendar {
     months = [];
   }
 
-  const seasonsRaw = value.seasons;
+  const seasonsRaw = value["seasons"];
   const seasons: SeasonDef[] = Array.isArray(seasonsRaw)
     ? (seasonsRaw as unknown[]).map((s) => {
         const so = s as Record<string, unknown>;
         return {
-          name: String(so.name ?? ""),
-          subtitle: String(so.subtitle ?? ""),
-          months: Array.isArray(so.months) ? (so.months as unknown[]).map(Number) : [],
+          name: String(so["name"] ?? ""),
+          subtitle: String(so["subtitle"] ?? ""),
+          months: Array.isArray(so["months"]) ? (so["months"] as unknown[]).map(Number) : [],
         };
       })
     : [];
 
-  const weekRaw = (value.week ?? {}) as Record<string, unknown>;
+  const weekRaw = (value["week"] ?? {}) as Record<string, unknown>;
   const week: WeekDef = {
-    daysPerWeek: num(weekRaw.daysPerWeek) ?? DEFAULT_WEEK.daysPerWeek,
-    dayNames: Array.isArray(weekRaw.dayNames) ? (weekRaw.dayNames as unknown[]).map(String) : [...DEFAULT_WEEK.dayNames],
+    daysPerWeek: num(weekRaw["daysPerWeek"]) ?? DEFAULT_WEEK.daysPerWeek,
+    dayNames: Array.isArray(weekRaw["dayNames"]) ? (weekRaw["dayNames"] as unknown[]).map(String) : [...DEFAULT_WEEK.dayNames],
   };
 
-  const daySubRaw = (value.daySubdivision ?? {}) as Record<string, unknown>;
+  const daySubRaw = (value["daySubdivision"] ?? {}) as Record<string, unknown>;
   const daySubdivision: DaySubdivision = {
-    hoursPerDay: num(daySubRaw.hoursPerDay) ?? DEFAULT_DAY_SUB.hoursPerDay,
-    minutesPerHour: num(daySubRaw.minutesPerHour) ?? DEFAULT_DAY_SUB.minutesPerHour,
+    hoursPerDay: num(daySubRaw["hoursPerDay"]) ?? DEFAULT_DAY_SUB.hoursPerDay,
+    minutesPerHour: num(daySubRaw["minutesPerHour"]) ?? DEFAULT_DAY_SUB.minutesPerHour,
   };
 
-  const leapRaw = value.leapRule as Record<string, unknown> | undefined;
+  const leapRaw = value["leapRule"] as Record<string, unknown> | undefined;
   let leapRule: LeapRule = { kind: "none" };
   if (leapRaw && typeof leapRaw === "object") {
-    const lk = String(leapRaw.kind ?? "none");
+    const lk = String(leapRaw["kind"] ?? "none");
     if (lk === "gregorian") {
       leapRule = { kind: "gregorian" };
     } else if (lk === "block") {
       leapRule = {
         kind: "block",
-        block: num(leapRaw.block) ?? 4,
-        years: Array.isArray(leapRaw.years) ? (leapRaw.years as unknown[]).map(Number) : [],
-        month: num(leapRaw.month) ?? 0,
-        extraDays: num(leapRaw.extraDays) ?? 1,
+        block: num(leapRaw["block"]) ?? 4,
+        years: Array.isArray(leapRaw["years"]) ? (leapRaw["years"] as unknown[]).map(Number) : [],
+        month: num(leapRaw["month"]) ?? 0,
+        extraDays: num(leapRaw["extraDays"]) ?? 1,
       };
     }
   }
 
-  const todayRaw = value.today as Record<string, unknown> | null | undefined;
+  const todayRaw = value["today"] as Record<string, unknown> | null | undefined;
   let today: TodayDate | null = null;
   if (todayRaw && typeof todayRaw === "object") {
-    const y = num(todayRaw.year);
-    const mo = num(todayRaw.month);
-    const d = num(todayRaw.day);
+    const y = num(todayRaw["year"]);
+    const mo = num(todayRaw["month"]);
+    const d = num(todayRaw["day"]);
     if (y !== null && mo !== null && d !== null) {
       today = {
         year: y,
         month: mo,
         day: d,
-        hour: num(todayRaw.hour) ?? 0,
-        minute: num(todayRaw.minute) ?? 0,
+        hour: num(todayRaw["hour"]) ?? 0,
+        minute: num(todayRaw["minute"]) ?? 0,
       };
     }
   }
 
   return {
-    era: typeof value.era === "string" ? value.era : "",
+    era: typeof value["era"] === "string" ? value["era"] : "",
     units,
     months,
     seasons,
@@ -248,7 +248,7 @@ export function calendarOf(settings: unknown): WorldCalendar {
     daySubdivision,
     leapRule,
     today,
-    currentText: typeof value.current === "string" ? value.current : "",
+    currentText: typeof value["current"] === "string" ? value["current"] : "",
   };
 }
 

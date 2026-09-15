@@ -468,7 +468,7 @@ function EntityPage() {
                   {portraitInitials(form.name)}
                 </div>
               )}
-              {!form.image_url && inheritedPortrait ? (
+              {!ownImagePath && inheritedPortrait ? (
                 <p className="text-muted-foreground text-xs">
                   Showing the linked character sheet portrait. Drop an image to override it.
                 </p>

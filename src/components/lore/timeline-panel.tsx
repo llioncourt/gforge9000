@@ -347,6 +347,8 @@ function CalendarForm({
     today: calendar.today ? { ...calendar.today } : null,
   }));
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+
 
   const update = (patch: Partial<WorldCalendar>) => setDraft((d) => ({ ...d, ...patch }));
   const updateUnits = (key: keyof WorldCalendar["units"], field: keyof UnitName, value: string) =>

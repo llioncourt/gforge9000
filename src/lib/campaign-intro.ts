@@ -104,16 +104,25 @@ export async function uploadCampaignVideo(
     .from(CAMPAIGN_INTRO_BUCKET)
     .upload(path, file, { contentType: "video/mp4", upsert: false });
   fail(uploadError);
+  let thumbPath: string | null = null;
+  if (input.thumb) {
+    try {
+      thumbPath = await uploadThumbBlob(campaignId, user.id, input.thumb);
+    } catch {
+      thumbPath = null;
+    }
+  }
   if (currentIntro) {
     const removed = await supabase.from("campaign_videos").delete().eq("id", currentIntro.id);
     if (removed.error) {
-      await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([path]);
+      await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(thumbPath ? [path, thumbPath] : [path]);
       throw new Error(removed.error.message);
     }
   }
   const { error } = await supabase.from("campaign_videos").insert({
     campaign_id: campaignId,
     storage_path: path,
+    thumb_path: thumbPath,
     file_name: file.name,
     title,
     video_type: input.videoType,
@@ -123,12 +132,15 @@ export async function uploadCampaignVideo(
     created_by: user.id,
   });
   if (error) {
-    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([path]);
+    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(thumbPath ? [path, thumbPath] : [path]);
     throw new Error(error.message);
   }
   if (currentIntro?.storage_path) {
-    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([currentIntro.storage_path]);
+    const stale = [currentIntro.storage_path];
+    if (currentIntro.thumb_path) stale.push(currentIntro.thumb_path);
+    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(stale);
   }
+
 }
 
 export async function uploadCampaignIntro(campaignId: string, file: File) {

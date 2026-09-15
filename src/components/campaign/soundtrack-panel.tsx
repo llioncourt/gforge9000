@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearch } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Download, Pause, Play, Sparkles, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 import { strToU8, unzipSync, zipSync } from "fflate";
 import { toast } from "sonner";
@@ -27,6 +28,8 @@ function AlbumCover({album}:{album:SoundtrackAlbum}){
 }
 export function SoundtrackPanel({campaignId,isGm}:{campaignId:string;isGm:boolean}){
  const player=useCampaignSoundtrack(),qc=useQueryClient(),[albumIndex,setAlbumIndex]=useState(0);
+ const focusItem=(useSearch({strict:false}) as {item?:string}).item;
+ useEffect(()=>{if(!focusItem)return;const byAlbum=player.albums.findIndex(a=>a.id===focusItem);if(byAlbum>=0){setAlbumIndex(byAlbum);return}const byTrack=player.albums.findIndex(a=>player.tracks.some(t=>t.album_id===a.id&&t.id===focusItem));if(byTrack>=0)setAlbumIndex(byTrack)},[focusItem,player.albums,player.tracks]);
  useEffect(()=>{setAlbumIndex(current=>Math.min(current,Math.max(0,player.albums.length-1)))},[player.albums.length]);
  const importer=useMutation({mutationFn:async(file:File)=>{const archive=unzipSync(new Uint8Array(await file.arrayBuffer())),pick=(p:string)=>archive[p]??archive[p.replace(/^\.\//,"")],raw=archive["album.json"];if(!raw)throw new Error("The package must contain album.json at its root.");const manifest=campaignSoundtrackManifestSchema.parse(JSON.parse(new TextDecoder().decode(raw))),positions=manifest.tracks.map(t=>t.position).sort((a,b)=>a-b);if(positions.some((p,i)=>p!==i+1))throw new Error("Track positions must start at 1 without gaps.");const coverEntry=pick(manifest.album.cover);if(!coverEntry)throw new Error(`Missing cover: ${manifest.album.cover}`);if(coverEntry.length>MAX_SOUNDTRACK_COVER_BYTES)throw new Error("The cover is larger than 3 MB.");const cover=await coverToAvifBytes(manifest.album.cover,coverEntry);const tracks=manifest.tracks.map(meta=>{const bytes=pick(meta.file);if(!bytes)throw new Error(`Missing track: ${meta.file}`);const mime=soundtrackAudioMime(meta.file);if(!mime)throw new Error(`Unsupported audio format: ${meta.file}`);if(bytes.length>MAX_SOUNDTRACK_TRACK_BYTES)throw new Error(`${meta.file} is larger than 40 MB.`);return{position:meta.position,name:meta.file.split("/").pop()??`track-${meta.position}`,bytes,mime}});await importCampaignSoundtrack(campaignId,manifest,{name:manifest.album.cover,bytes:cover},tracks)},onSuccess:async()=>{await qc.invalidateQueries({queryKey:["campaign-soundtrack",campaignId]});toast.success("Soundtrack imported.")},onError:(e:Error)=>toast.error(e.message)});
  const remove=useMutation({mutationFn:(a:SoundtrackAlbum)=>deleteCampaignSoundtrack(a,player.tracks),onSuccess:async()=>{await qc.invalidateQueries({queryKey:["campaign-soundtrack",campaignId]});toast.success("Album removed.")},onError:(e:Error)=>toast.error(e.message)});

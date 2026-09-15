@@ -50,6 +50,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
   const queryClient = useQueryClient();
   const { user } = useSession();
   const [mapId, setMapId] = useState<string | null>(null);
+  useEffect(() => { if (focusMapId) setMapId(focusMapId); }, [focusMapId]);
   const [tool, setTool] = useState<"move" | "measure" | "fog">("move");
   const [show3d, setShow3d] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);

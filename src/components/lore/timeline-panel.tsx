@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, ChevronDown, ChevronUp, Plus, Settings2, Trash2, X } from "lucide-react";
+import {
+  CalendarClock,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Plus,
+  Settings2,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
+
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,6 +52,9 @@ import {
   type UnitName,
   type WorldCalendar,
 } from "@/lib/world-calendar";
+import { buildCalendarPackZip, readCalendarFile } from "@/lib/calendar-pack";
+import { FileDropzone } from "@/components/ui/FileDropzone";
+
 
 export type { WorldCalendar } from "@/lib/world-calendar";
 
@@ -333,6 +347,8 @@ function CalendarForm({
     today: calendar.today ? { ...calendar.today } : null,
   }));
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+
 
   const update = (patch: Partial<WorldCalendar>) => setDraft((d) => ({ ...d, ...patch }));
   const updateUnits = (key: keyof WorldCalendar["units"], field: keyof UnitName, value: string) =>
@@ -353,11 +369,60 @@ function CalendarForm({
     });
   };
 
+  const downloadPack = () => {
+    const url = URL.createObjectURL(buildCalendarPackZip());
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "calendario-modelo.zip";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const importFile = async (file: File) => {
+    try {
+      const next = await readCalendarFile(file);
+      setDraft({ ...next, today: draft.today, era: next.era || draft.era });
+      setImportOpen(false);
+      toast.success("Calendário importado — revise e salve.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
   return (
     <div className="space-y-3">
-      <Button type="button" variant="outline" size="sm" onClick={useGregorian}>
-        Usar calendário gregoriano
-      </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={useGregorian}>
+          Usar calendário gregoriano
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={downloadPack}>
+          <Download className="mr-1 h-4 w-4" /> Baixar modelo (ZIP)
+        </Button>
+        <Dialog open={importOpen} onOpenChange={setImportOpen}>
+          <DialogTrigger asChild>
+            <Button type="button" variant="outline" size="sm">
+              <Upload className="mr-1 h-4 w-4" /> Importar calendário
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Importar calendário</DialogTitle>
+            </DialogHeader>
+            <FileDropzone
+              accept=".json,.zip,application/json,application/zip"
+              onFiles={(files) => {
+                const file = files[0];
+                if (file) void importFile(file);
+              }}
+              label="Solte o calendar.json ou o ZIP aqui"
+              hint="Use o pacote modelo como referência da estrutura."
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
+
 
       <Tabs defaultValue="units" className="w-full">
         <TabsList className="flex gap-1 overflow-x-auto pb-1">

@@ -54,7 +54,7 @@ import {
 } from "@/lib/world-calendar";
 import { buildCalendarPackZip, readCalendarFile } from "@/lib/calendar-pack";
 import { buildTimelinePackZip, readTimelineFile, type TimelineEventInput } from "@/lib/timeline-pack";
-import { FileDropzone } from "@/components/ui/FileDropzone";
+import { ImportDialog, useTransferTask } from "@/components/ui/transfer-dialog";
 
 
 export type { WorldCalendar } from "@/lib/world-calendar";
@@ -88,6 +88,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
   });
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [eventsImportOpen, setEventsImportOpen] = useState(false);
+  const exportTask = useTransferTask();
 
   const campaign = useQuery({ queryKey: ["campaign", campaignId], queryFn: () => getCampaign(campaignId) });
   const entities = useQuery({
@@ -393,6 +394,18 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
           </Button>
         </div>
       </div>
+
+      <ImportDialog
+        open={eventsImportOpen}
+        onOpenChange={setEventsImportOpen}
+        title="Importar eventos da timeline"
+        description="Solte o events.json ou o ZIP do modelo de eventos."
+        accept=".json,.zip,application/json,application/zip"
+        label="Solte o events.json ou o ZIP aqui"
+        hint="Baixe o modelo de eventos para ver a estrutura."
+        run={importEventsFile}
+      />
+      {exportTask.node}
     </div>
   );
 }
@@ -432,6 +445,7 @@ function CalendarForm({
   }));
   const [saving, setSaving] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const calendarTask = useTransferTask();
 
 
   const update = (patch: Partial<WorldCalendar>) => setDraft((d) => ({ ...d, ...patch }));
@@ -453,26 +467,27 @@ function CalendarForm({
     });
   };
 
-  const downloadPack = () => {
-    const url = URL.createObjectURL(buildCalendarPackZip());
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "calendario-modelo.zip";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  };
+  const downloadPack = () =>
+    void calendarTask.run("Baixar modelo de calendário (ZIP)", async (report) => {
+      report("Gerando pacote…", 45);
+      const url = URL.createObjectURL(buildCalendarPackZip());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "calendario-modelo.zip";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      report("Baixando…", 90);
+      return "Modelo baixado.";
+    });
 
-  const importFile = async (file: File) => {
-    try {
-      const next = await readCalendarFile(file);
-      setDraft({ ...next, today: draft.today, era: next.era || draft.era });
-      setImportOpen(false);
-      toast.success("Calendário importado — revise e salve.");
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
+  const importFile = async (file: File, report: (label: string, percent?: number) => void) => {
+    report("Lendo arquivo…", 20);
+    const next = await readCalendarFile(file);
+    report("Aplicando calendário…", 80);
+    setDraft({ ...next, today: draft.today, era: next.era || draft.era });
+    return "Calendário importado — revise e salve.";
   };
 
   return (
@@ -484,27 +499,20 @@ function CalendarForm({
         <Button type="button" variant="outline" size="sm" onClick={downloadPack}>
           <Download className="mr-1 h-4 w-4" /> Baixar modelo (ZIP)
         </Button>
-        <Dialog open={importOpen} onOpenChange={setImportOpen}>
-          <DialogTrigger asChild>
-            <Button type="button" variant="outline" size="sm">
-              <Upload className="mr-1 h-4 w-4" /> Importar calendário
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Importar calendário</DialogTitle>
-            </DialogHeader>
-            <FileDropzone
-              accept=".json,.zip,application/json,application/zip"
-              onFiles={(files) => {
-                const file = files[0];
-                if (file) void importFile(file);
-              }}
-              label="Solte o calendar.json ou o ZIP aqui"
-              hint="Use o pacote modelo como referência da estrutura."
-            />
-          </DialogContent>
-        </Dialog>
+        <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+          <Upload className="mr-1 h-4 w-4" /> Importar calendário
+        </Button>
+        <ImportDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          title="Importar calendário"
+          description="Solte o calendar.json ou o ZIP do modelo."
+          accept=".json,.zip,application/json,application/zip"
+          label="Solte o calendar.json ou o ZIP aqui"
+          hint="Use o pacote modelo como referência da estrutura."
+          run={importFile}
+        />
+        {calendarTask.node}
       </div>
 
 

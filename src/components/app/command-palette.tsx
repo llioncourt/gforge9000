@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -9,7 +10,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { listCampaigns, listCharacters, listLibrary } from "@/lib/api";
+import { globalSearch, type SearchHit, type SearchTarget } from "@/lib/global-search";
 import { useDice } from "@/components/app/dice-context";
 
 export function CommandPalette({
@@ -21,80 +22,104 @@ export function CommandPalette({
 }) {
   const navigate = useNavigate();
   const { roll } = useDice();
-  const { data: characters = [] } = useQuery({
-    queryKey: ["characters"],
-    queryFn: listCharacters,
-    enabled: open,
+  const [term, setTerm] = useState("");
+  const [debounced, setDebounced] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(term), 180);
+    return () => clearTimeout(timer);
+  }, [term]);
+
+  useEffect(() => {
+    if (!open) {
+      setTerm("");
+      setDebounced("");
+    }
+  }, [open]);
+
+  const { data: hits = [], isFetching } = useQuery({
+    queryKey: ["global-search", debounced],
+    queryFn: () => globalSearch(debounced),
+    enabled: open && debounced.trim().length >= 2,
+    staleTime: 30_000,
   });
-  const { data: campaigns = [] } = useQuery({
-    queryKey: ["campaigns"],
-    queryFn: listCampaigns,
-    enabled: open,
-  });
-  const { data: library = [] } = useQuery({
-    queryKey: ["library"],
-    queryFn: listLibrary,
-    enabled: open,
-  });
+
+  const groups = useMemo(() => {
+    const map = new Map<string, SearchHit[]>();
+    for (const hit of hits) {
+      const list = map.get(hit.group) ?? [];
+      list.push(hit);
+      map.set(hit.group, list);
+    }
+    return [...map.entries()];
+  }, [hits]);
 
   const go = (fn: () => void) => {
     onOpenChange(false);
     fn();
   };
 
+  const openTarget = (target: SearchTarget) =>
+    go(() => {
+      if (target.kind === "character") {
+        void navigate({ to: "/characters/$id", params: { id: target.id } });
+      } else if (target.kind === "entity") {
+        void navigate({ to: "/entities/$id", params: { id: target.id }, search: { from: target.from } });
+      } else if (target.kind === "campaign") {
+        void navigate({
+          to: "/campaigns/$id",
+          params: { id: target.id },
+          ...(target.tab ? { search: { tab: target.tab } } : {}),
+        });
+      } else if (target.kind === "library") {
+        void navigate({ to: "/library" });
+      } else {
+        void navigate({ to: "/packs" });
+      }
+    });
+
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput placeholder="Jump to a character, campaign, or library entry…" />
+      <CommandInput
+        value={term}
+        onValueChange={setTerm}
+        placeholder="Search characters, campaigns, lore, media, notes, maps…"
+      />
       <CommandList>
-        <CommandEmpty>Nothing matched.</CommandEmpty>
+        <CommandEmpty>
+          {debounced.trim().length < 2
+            ? "Type at least two letters to search."
+            : isFetching
+              ? "Searching…"
+              : "Nothing matched."}
+        </CommandEmpty>
         <CommandGroup heading="Actions">
-          <CommandItem onSelect={() => go(() => navigate({ to: "/characters" }))}>
+          <CommandItem value="action new character" onSelect={() => go(() => navigate({ to: "/characters" }))}>
             New character
           </CommandItem>
-          <CommandItem onSelect={() => go(() => roll({ label: "Quick 3d6", target: 10 }))}>
+          <CommandItem
+            value="action roll 3d6"
+            onSelect={() => go(() => roll({ label: "Quick 3d6", target: 10 }))}
+          >
             Roll 3d6 vs 10
           </CommandItem>
-          <CommandItem onSelect={() => go(() => navigate({ to: "/campaigns" }))}>
+          <CommandItem value="action campaigns" onSelect={() => go(() => navigate({ to: "/campaigns" }))}>
             Campaigns
           </CommandItem>
         </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="Characters">
-          {characters.slice(0, 8).map((c) => (
-            <CommandItem
-              key={c.id}
-              value={`character ${c.name}`}
-              onSelect={() =>
-                go(() => navigate({ to: "/characters/$id", params: { id: c.id } }))
-              }
-            >
-              {c.name}
-            </CommandItem>
-          ))}
-        </CommandGroup>
-        <CommandGroup heading="Campaigns">
-          {campaigns.slice(0, 8).map((c) => (
-            <CommandItem
-              key={c.id}
-              value={`campaign ${c.name}`}
-              onSelect={() => go(() => navigate({ to: "/campaigns/$id", params: { id: c.id } }))}
-            >
-              {c.name}
-            </CommandItem>
-          ))}
-        </CommandGroup>
-        <CommandGroup heading="Library">
-          {library.slice(0, 8).map((c) => (
-            <CommandItem
-              key={c.id}
-              value={`library ${c.name}`}
-              onSelect={() => go(() => navigate({ to: "/library" }))}
-            >
-              {c.name}
-              <span className="ml-auto text-xs text-muted-foreground">{c.kind}</span>
-            </CommandItem>
-          ))}
-        </CommandGroup>
+        {groups.length ? <CommandSeparator /> : null}
+        {groups.map(([group, items]) => (
+          <CommandGroup key={group} heading={group}>
+            {items.map((hit) => (
+              <CommandItem key={hit.id} value={`${hit.id} ${hit.label}`} onSelect={() => openTarget(hit.target)}>
+                {hit.label}
+                {hit.sublabel ? (
+                  <span className="ml-auto text-xs text-muted-foreground">{hit.sublabel}</span>
+                ) : null}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ))}
       </CommandList>
     </CommandDialog>
   );

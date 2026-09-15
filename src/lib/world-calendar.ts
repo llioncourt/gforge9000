@@ -276,6 +276,9 @@ export function monthLength(calendar: WorldCalendar, monthIndex: number, year: n
   if (calendar.leapRule.kind === "block" && calendar.leapRule.month === monthIndex && isLeapYear(calendar, year)) {
     days += calendar.leapRule.extraDays;
   }
+  if (calendar.leapRule.kind === "gregorian" && monthIndex === 1 && isLeapYear(calendar, year)) {
+    days += 1;
+  }
   return days;
 }
 

@@ -543,10 +543,11 @@ function CalendarForm({
                       onClick={() =>
                         setDraft((d) => {
                           const seasons = [...d.seasons];
+                          const prev = seasons[i]!;
                           const months = checked
-                            ? seasons[i].months.filter((x) => x !== mi)
-                            : [...seasons[i].months, mi];
-                          seasons[i] = { ...seasons[i], months };
+                            ? prev.months.filter((x) => x !== mi)
+                            : [...prev.months, mi];
+                          seasons[i] = { ...prev, months };
                           return { ...d, seasons };
                         })
                       }

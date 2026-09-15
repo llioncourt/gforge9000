@@ -1,10 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { campaignVideoTypeLabel } from "@/lib/campaign-intro";
 
+export type CampaignTab =
+  | "media" | "roster" | "lore" | "story" | "graph" | "reveals" | "sessions"
+  | "timeline" | "battle" | "library" | "rolls" | "notes" | "members" | "rules";
+
 export type SearchTarget =
   | { kind: "character"; id: string }
   | { kind: "entity"; id: string; from: string }
-  | { kind: "campaign"; id: string; tab?: string }
+  | { kind: "campaign"; id: string; tab?: CampaignTab }
   | { kind: "library" }
   | { kind: "packs" };
 

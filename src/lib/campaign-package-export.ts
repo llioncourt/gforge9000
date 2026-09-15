@@ -97,7 +97,24 @@ export async function buildCampaignPackageZip(
   campaignId: string,
   onProgress?: CampaignExportProgress,
 ): Promise<{ blob: Blob; fileName: string }> {
-  const step = (label: string) => onProgress?.(label);
+  let done = 0;
+  let total = 1;
+  let label = "Reading campaign…";
+  const emit = () =>
+    onProgress?.({
+      label,
+      done,
+      total,
+      percent: total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0,
+    });
+  const step = (next: string) => {
+    label = next;
+    emit();
+  };
+  const tick = () => {
+    done = Math.min(done + 1, total);
+    emit();
+  };
   const bundle = new Bundle();
 
   step("Reading campaign…");

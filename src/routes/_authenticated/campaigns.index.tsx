@@ -325,6 +325,48 @@ function CampaignsPage() {
           })}
         </div>
       )}
+
+      <Dialog
+        open={exportStep !== null}
+        onOpenChange={(next) => {
+          if (!next && !exporting) closeExport();
+        }}
+      >
+        <DialogContent
+          className="sm:max-w-md"
+          onInteractOutside={(event) => {
+            if (exporting) event.preventDefault();
+          }}
+          onEscapeKeyDown={(event) => {
+            if (exporting) event.preventDefault();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Exporting {exportName || "campaign"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Progress value={exportError ? 100 : (exportStep?.percent ?? 0)} />
+            <div className="flex items-center justify-between text-sm">
+              <span className={exportError ? "text-destructive" : "text-muted-foreground"}>
+                {exportError ?? (exportDone ? "Package downloaded." : (exportStep?.label ?? ""))}
+              </span>
+              <span className="tabular-nums text-muted-foreground">
+                {exportError ? "" : `${exportStep?.percent ?? 0}%`}
+              </span>
+            </div>
+            {!exportError && exportStep && exportStep.total > 1 ? (
+              <p className="text-xs text-muted-foreground">
+                {exportStep.done} of {exportStep.total} items packed
+              </p>
+            ) : null}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeExport} disabled={Boolean(exporting)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 import type { Tables } from "@/integrations/supabase/types";
 import { portraitUrl } from "@/lib/portrait";
-import { modelUrl, parseModelTransform } from "@/lib/model3d";
+import { DEFAULT_VIEWER_SETTINGS, modelUrl, parseModelTransform } from "@/lib/model3d";
 import type { MapObjectRow } from "@/lib/battlemap";
 import { cn } from "@/lib/utils";
 
@@ -86,7 +86,11 @@ export function MapToken({
       {use3d && model.data ? (
         <ClientOnly fallback={<span className="text-xs font-semibold">{initials(label)}</span>}>
           <Suspense fallback={<span className="text-xs font-semibold">{initials(label)}</span>}>
-            <ModelViewer url={model.data} autoRotate={false} transform={transform} />
+            <ModelViewer
+              url={model.data}
+              transform={transform}
+              settings={{ ...DEFAULT_VIEWER_SETTINGS, autoRotate: false }}
+            />
           </Suspense>
         </ClientOnly>
       ) : portrait.data || npcImage.data ? (

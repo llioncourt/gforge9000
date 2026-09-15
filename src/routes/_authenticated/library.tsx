@@ -595,6 +595,16 @@ function LibraryPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Import library"
+        description="Drop a Universal Character Forge library JSON file."
+        accept="application/json,.json"
+        label="Drop the library JSON here, or click to browse"
+        run={importLibraryFile}
+      />
+      {exportTask.node}
     </div>
   );
 }

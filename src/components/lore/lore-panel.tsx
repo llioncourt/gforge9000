@@ -88,6 +88,20 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
     queryFn: () => listEntities(campaignId),
   });
 
+  const characters = useQuery({
+    queryKey: ["campaign-characters", campaignId],
+    queryFn: () => listCampaignCharacters(campaignId),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  /** Falls back to the portrait of the character sheet a lore entry links to. */
+  const thumbPath = (row: EntityRow) => {
+    if (row.image_url) return row.image_url;
+    const sheetId = dataValue(row, "character_sheet_id");
+    if (!sheetId) return null;
+    return (characters.data ?? []).find((c) => c.id === sheetId)?.portrait_path ?? null;
+  };
+
   const kindsInGroup = useMemo(() => KINDS.filter((k) => k.group === group), [group]);
 
   const rows = useMemo(() => {

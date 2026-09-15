@@ -689,9 +689,9 @@ function CalendarForm({
                 <div className="space-y-1">
                   <Label className="text-xs">{draft.units.month.singular} que recebe dia extra</Label>
                   <Select
-                    value={String(draft.leapRule.month)}
+                    value={draft.leapRule.kind === "block" ? String(draft.leapRule.month) : "0"}
                     onValueChange={(v) =>
-                      update({ leapRule: { ...draft.leapRule, month: Number(v) } })
+                      update({ leapRule: { kind: "block", ...blockLeapRule(draft.leapRule), month: Number(v) } })
                     }
                   >
                     <SelectTrigger className="h-8">

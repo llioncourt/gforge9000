@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { entityImageUrl } from "@/lib/entity-image";
 import { portraitInitials } from "@/lib/portrait";
 import { ImageZoom } from "@/components/ui/image-zoom";
+import { Badge } from "@/components/ui/badge";
 
 /** Small square preview of a lore entry's photo, used on cards. */
 export function EntityThumb({
@@ -29,15 +30,28 @@ export function EntityThumb({
   });
 
   const base = `bg-muted text-muted-foreground size-12 shrink-0 overflow-hidden rounded-md border ${className}`;
+  // True when the displayed image is the linked character sheet portrait
+  // (no own image, or own image broken, falling back to the sheet portrait).
+  const fromChar = !!fallbackPath && (!path || broken);
 
   if (effective && url.data) {
     return (
-      <ImageZoom
-        src={url.data}
-        alt={`${name} photo`}
-        onError={() => setBroken(true)}
-        className={base}
-      />
+      <div className="relative">
+        <ImageZoom
+          src={url.data}
+          alt={`${name} photo`}
+          onError={() => setBroken(true)}
+          className={base}
+        />
+        {fromChar ? (
+          <Badge
+            variant="secondary"
+            className="pointer-events-none absolute top-0.5 left-0.5 px-1 py-0 text-[9px] leading-none shadow"
+          >
+            From Char
+          </Badge>
+        ) : null}
+      </div>
     );
   }
   return (

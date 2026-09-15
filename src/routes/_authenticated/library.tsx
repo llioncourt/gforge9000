@@ -1,4 +1,4 @@
-import { createFileRoute, useLocation, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Pencil, Plus, Trash2, Upload, UserPlus } from "lucide-react";
@@ -163,7 +163,6 @@ function LibraryPage() {
     () => new URLSearchParams(location.searchStr).get("item") ?? undefined,
     [location.searchStr],
   );
-  const navigate = useNavigate();
 
   // Deep-link from global search: clear filters, scroll to the entry and flash it.
   useEffect(() => {
@@ -180,7 +179,13 @@ function LibraryPage() {
       if (el instanceof HTMLElement) {
         window.clearInterval(timer);
         el.scrollIntoView({ behavior: "auto", block: "center" });
+        el.style.outline = "4px solid var(--primary)";
+        el.style.outlineOffset = "4px";
+        el.style.backgroundColor = "color-mix(in oklab, var(--primary) 20%, transparent)";
+        el.style.transform = "scale(1.02)";
+        el.style.boxShadow = "0 0 28px color-mix(in oklab, var(--primary) 55%, transparent)";
         clearTimer = window.setTimeout(() => {
+          el.removeAttribute("style");
           window.history.replaceState(window.history.state, "", "/library");
         }, 5000);
       } else if (attempts > 40) {
@@ -191,7 +196,7 @@ function LibraryPage() {
       window.clearInterval(timer);
       if (clearTimer) window.clearTimeout(clearTimer);
     };
-  }, [itemParam, navigate]);
+  }, [itemParam]);
 
 
   const packs = useMemo(() => {
@@ -409,7 +414,7 @@ function LibraryPage() {
                 key={e.id}
                 id={`library-${e.id}`}
                 data-search-id={e.id}
-                className="panel flex flex-col p-4 transition-all duration-300 target:scale-[1.02] target:animate-pulse target:rounded-lg target:bg-primary/20 target:ring-4 target:ring-primary target:shadow-xl target:shadow-primary/40"
+                className="panel flex flex-col p-4 transition-all duration-300"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

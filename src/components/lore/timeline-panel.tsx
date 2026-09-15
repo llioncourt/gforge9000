@@ -711,9 +711,9 @@ function CalendarForm({
                   <Input
                     className="h-8"
                     type="number"
-                    value={draft.leapRule.extraDays}
+                    value={draft.leapRule.kind === "block" ? draft.leapRule.extraDays : 1}
                     onChange={(e) =>
-                      update({ leapRule: { ...draft.leapRule, extraDays: Number(e.target.value) || 1 } })
+                      update({ leapRule: { kind: "block", ...blockLeapRule(draft.leapRule), extraDays: Number(e.target.value) || 1 } })
                     }
                   />
                 </div>

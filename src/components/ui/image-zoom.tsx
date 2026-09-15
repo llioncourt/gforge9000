@@ -55,6 +55,14 @@ export function ImageZoom({
         <DialogContent
           className="w-auto max-w-[92vw] border-none bg-transparent p-0 shadow-none sm:max-w-[92vw]"
           aria-describedby={undefined}
+          onClick={(event) => {
+            // Dialog portals still bubble React events through the component tree.
+            // Without this, clicking the close button reaches a wrapping card link.
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+          onPointerDown={(event) => event.stopPropagation()}
+          onPointerUp={(event) => event.stopPropagation()}
           onInteractOutside={(event) => {
             // Keep the overlay mounted so the closing click does not fall
             // through to a parent link/card underneath (Radix ghost-click).

@@ -80,18 +80,18 @@ import {
 // After a new deploy the old chunk filenames disappear, so an open tab can
 // fail to fetch a panel. Retry once, then reload the page to pick up the
 // fresh asset manifest (guarded so we never loop).
-function lazyPanel<T extends Record<string, unknown>, K extends keyof T>(
+function lazyPanel<K extends string, T extends Record<K, React.ComponentType<never>>>(
   load: () => Promise<T>,
   name: K,
 ) {
   return lazy(async () => {
     try {
-      return { default: (await load())[name] as never };
+      return { default: (await load())[name] };
     } catch (err) {
       try {
-        return { default: (await load())[name] as never };
+        return { default: (await load())[name] };
       } catch {
-        const key = `chunk-reload:${String(name)}`;
+        const key = `chunk-reload:${name}`;
         if (typeof window !== "undefined" && !sessionStorage.getItem(key)) {
           sessionStorage.setItem(key, "1");
           window.location.reload();
@@ -102,6 +102,7 @@ function lazyPanel<T extends Record<string, unknown>, K extends keyof T>(
     }
   });
 }
+
 
 const LorePanel = lazyPanel(() => import("@/components/lore/lore-panel"), "LorePanel");
 const StoryPanel = lazyPanel(() => import("@/components/lore/story-panel"), "StoryPanel");

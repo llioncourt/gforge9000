@@ -15,7 +15,11 @@ const stripTsdSourceInR3F = {
   transform(code: string, id: string) {
     if (!/src\/components\/(character\/model-viewer|battle\/)[^?]*\.tsx/.test(id)) return null;
     if (!code.includes("data-tsd-source")) return null;
-    return { code: code.replace(/\s*data-tsd-source=(?:"[^"]*"|\{[^}]*\})/g, ""), map: null };
+    const stripped = code
+      .replace(/\s*data-tsd-source=(?:"[^"]*"|\{[^}]*\})/g, "")
+      .replace(/"data-tsd-source":\s*"[^"]*",?\s*/g, "");
+    return { code: stripped, map: null };
+
   },
 };
 

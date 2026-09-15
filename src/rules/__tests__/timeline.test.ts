@@ -96,7 +96,9 @@ describe("event ordering", () => {
     const a = eventOrder(row({ year: "998", month: "Highsun", day: "3", hour: "2", minute: "10" }), cal);
     const b = eventOrder(row({ year: "998", month: "Highsun", day: "3", hour: "1", minute: "50" }), cal);
     expect(a).toEqual([998, 3, 3, 2, 10]);
-    expect(a > b).toBe(false); // a has hour 2 > hour 1, so a should come after b → a > b is true... wait
+    expect(b).toEqual([998, 3, 3, 1, 50]);
+    // a has hour 2 > hour 1, so a should come after b
+    expect(a[3]).toBeGreaterThan(b[3]);
   });
 
   it("pushes undated events to the end", () => {

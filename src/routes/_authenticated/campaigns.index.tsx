@@ -279,7 +279,7 @@ function CampaignsPage() {
                       aria-label="Download campaign package"
                       title="Download campaign package (ZIP)"
                       disabled={exporting === c.id}
-                      onClick={() => exportCampaign(c.id)}
+                      onClick={() => exportCampaign(c.id, c.name)}
                     >
                       {exporting === c.id ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />

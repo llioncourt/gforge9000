@@ -67,13 +67,20 @@ function CampaignsPage() {
   const [tl, setTl] = useState("8");
   const [code, setCode] = useState("");
   const [exporting, setExporting] = useState<string | null>(null);
+  const [exportName, setExportName] = useState("");
+  const [exportStep, setExportStep] = useState<CampaignExportStep | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportDone, setExportDone] = useState(false);
 
-  const exportCampaign = async (campaignId: string) => {
+  const exportCampaign = async (campaignId: string, campaignName: string) => {
     setExporting(campaignId);
-    const toastId = toast.loading("Preparing campaign package…");
+    setExportName(campaignName);
+    setExportError(null);
+    setExportDone(false);
+    setExportStep({ label: "Reading campaign…", done: 0, total: 1, percent: 0 });
     try {
-      const { blob, fileName } = await buildCampaignPackageZip(campaignId, (stepLabel) =>
-        toast.loading(stepLabel, { id: toastId }),
+      const { blob, fileName } = await buildCampaignPackageZip(campaignId, (progress) =>
+        setExportStep(progress),
       );
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -83,12 +90,19 @@ function CampaignsPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      toast.success("Campaign package downloaded.", { id: toastId });
+      setExportStep({ label: "Done", done: 1, total: 1, percent: 100 });
+      setExportDone(true);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Export failed.", { id: toastId });
+      setExportError(error instanceof Error ? error.message : "Export failed.");
     } finally {
       setExporting(null);
     }
+  };
+
+  const closeExport = () => {
+    setExportStep(null);
+    setExportError(null);
+    setExportDone(false);
   };
 
   const create = useMutation({

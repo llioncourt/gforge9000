@@ -10,7 +10,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { globalSearch, type SearchHit, type SearchTarget } from "@/lib/global-search";
+import { globalSearch, type CampaignTab, type SearchHit, type SearchTarget } from "@/lib/global-search";
 import { useDice } from "@/components/app/dice-context";
 
 export function CommandPalette({
@@ -66,11 +66,10 @@ export function CommandPalette({
       } else if (target.kind === "entity") {
         void navigate({ to: "/entities/$id", params: { id: target.id }, search: { from: target.from } });
       } else if (target.kind === "campaign") {
-        void navigate({
-          to: "/campaigns/$id",
-          params: { id: target.id },
-          ...(target.tab ? { search: { tab: target.tab } } : {}),
-        });
+        const search: { tab?: CampaignTab; item?: string } = {};
+        if (target.tab) search.tab = target.tab;
+        if (target.item) search.item = target.item;
+        void navigate({ to: "/campaigns/$id", params: { id: target.id }, search });
       } else if (target.kind === "library") {
         void navigate({ to: "/library" });
       } else {
@@ -83,7 +82,7 @@ export function CommandPalette({
       <CommandInput
         value={term}
         onValueChange={setTerm}
-        placeholder="Search characters, campaigns, lore, media, notes, maps…"
+        placeholder="Search ANYTHING!"
       />
       <CommandList>
         <CommandEmpty>

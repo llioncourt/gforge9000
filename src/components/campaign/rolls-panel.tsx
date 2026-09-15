@@ -71,7 +71,7 @@ export function RollsPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
       ) : (
         <div className="space-y-2">
           {rows.map((r) => (
-            <div key={r.id} className="panel flex items-center gap-3 p-3 text-sm">
+            <div key={r.id} data-search-id={r.id} className="panel flex items-center gap-3 p-3 text-sm">
               <span className="stat-value w-10 shrink-0 text-center text-lg">{r.total}</span>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">

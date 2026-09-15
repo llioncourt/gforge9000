@@ -143,11 +143,13 @@ export type CampaignTab = (typeof CAMPAIGN_TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   staticData: { sitemap: false },
-  validateSearch: (search: Record<string, unknown>): { tab?: CampaignTab } => {
+  validateSearch: (search: Record<string, unknown>): { tab?: CampaignTab; item?: string } => {
     const tab = search["tab"];
-    return typeof tab === "string" && (CAMPAIGN_TABS as readonly string[]).includes(tab)
-      ? { tab: tab as CampaignTab }
-      : {};
+    const item = search["item"];
+    const out: { tab?: CampaignTab; item?: string } = {};
+    if (typeof tab === "string" && (CAMPAIGN_TABS as readonly string[]).includes(tab)) out.tab = tab as CampaignTab;
+    if (typeof item === "string" && item) out.item = item;
+    return out;
   },
   head: ({ params }) => {
     const title = `Campaign ${params.id.slice(0, 8)} — Universal Character Forge`;
@@ -169,7 +171,7 @@ export const Route = createFileRoute("/_authenticated/campaigns/$id")({
 
 function CampaignPage() {
   const { id } = Route.useParams();
-  const { tab: tabParam } = Route.useSearch();
+  const { tab: tabParam, item: itemParam } = Route.useSearch();
   const { user } = useSession();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -180,6 +182,29 @@ function CampaignPage() {
     const name = campaign.data?.name;
     if (name) document.title = `${name} — Universal Character Forge`;
   }, [campaign.data?.name]);
+
+  // Deep-link from global search: scroll to the exact item inside the tab and flash it.
+  useEffect(() => {
+    if (!itemParam) return;
+    const wanted = itemParam;
+    let attempts = 0;
+    const timer = setInterval(() => {
+      const el = document.querySelector(`[data-search-id="${CSS.escape(wanted)}"]`);
+      attempts += 1;
+      if (el instanceof HTMLElement) {
+        clearInterval(timer);
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ring-2", "ring-primary", "rounded-lg");
+        window.setTimeout(() => el.classList.remove("ring-2", "ring-primary", "rounded-lg"), 2600);
+        const next: { tab?: CampaignTab } = {};
+        if (tabParam) next.tab = tabParam;
+        void navigate({ to: "/campaigns/$id", params: { id }, search: next, replace: true });
+      } else if (attempts > 40) {
+        clearInterval(timer);
+      }
+    }, 200);
+    return () => clearInterval(timer);
+  }, [itemParam, tabParam, id, navigate]);
 
   const roster = useQuery({
     queryKey: ["campaign-characters", id],
@@ -762,7 +787,7 @@ function CampaignPage() {
 
         <TabsContent value="battle" className="mt-6">
           <Suspense fallback={<PanelFallback />}>
-            <BattlePanel campaignId={id} isGm={isGm} />
+            <BattlePanel campaignId={id} isGm={isGm} focusMapId={itemParam ?? null} />
           </Suspense>
         </TabsContent>
 
@@ -799,7 +824,7 @@ function CampaignPage() {
               [0, 1].map((i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)
             ) : visibleNotes.length ? (
               visibleNotes.map((n) => (
-                <article key={n.id} className="panel p-4">
+                <article key={n.id} data-search-id={n.id} className="panel p-4">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="font-medium">{n.title}</h3>
                     <div className="flex items-center gap-2">

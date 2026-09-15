@@ -246,14 +246,14 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
             </h3>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {list.map((row) => (
-                <div key={row.id} className="relative">
+                <div key={row.id} className="relative h-full">
                   <Link
                     to="/entities/$id"
                     params={{ id: row.id }}
                     search={{ from: "lore" }}
-                    className="hover:bg-accent/40 block rounded-lg border p-3 transition"
+                    className="hover:bg-accent/40 block h-full rounded-lg border p-3 transition"
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex h-full items-start gap-3">
                       <EntityThumb
                         path={row.image_url}
                         fallbackPath={sheetPortrait(row)}

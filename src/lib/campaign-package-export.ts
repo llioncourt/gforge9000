@@ -180,6 +180,7 @@ export async function buildCampaignPackageZip(
       is_npc: row.is_npc,
       ...(portraitPath ? { portrait_file: portraitPath } : {}),
     });
+    tick();
   }
 
   // --- lore -----------------------------------------------------------------
@@ -209,6 +210,7 @@ export async function buildCampaignPackageZip(
       ...(characterKey ? { character_key: characterKey } : {}),
       ...(imagePath ? { image_file: imagePath } : {}),
     });
+    tick();
   }
   const manifestRelationships: CampaignPackageManifest["lore"]["relationships"] = relationships
     .filter((rel) => entityKeyById.has(rel.source_id) && entityKeyById.has(rel.target_id))
@@ -230,6 +232,7 @@ export async function buildCampaignPackageZip(
   const manifestAssets: CampaignPackageManifest["assets"] = [];
   for (const asset of assets) {
     const file = await copy(bundle, ASSET_BUCKET, asset.storage_path, "assets", asset.title, "bin");
+    tick();
     if (!file) continue;
     manifestAssets.push({
       title: asset.title,
@@ -273,6 +276,7 @@ export async function buildCampaignPackageZip(
         };
       }),
     });
+    tick();
   }
 
   // --- media ----------------------------------------------------------------
@@ -280,6 +284,7 @@ export async function buildCampaignPackageZip(
   const manifestVideos: CampaignPackageManifest["videos"] = [];
   for (const video of videos) {
     const file = await copy(bundle, CAMPAIGN_INTRO_BUCKET, video.storage_path, "videos", video.title, "mp4");
+    tick();
     if (!file) continue;
     const type = (VIDEO_TYPES as readonly string[]).includes(video.video_type)
       ? (video.video_type as VideoType)
@@ -291,6 +296,7 @@ export async function buildCampaignPackageZip(
   const manifestSoundFx: CampaignPackageManifest["sound_fx"] = [];
   for (const effect of soundFx) {
     const file = await copy(bundle, CAMPAIGN_SOUND_FX_BUCKET, effect.storage_path, "sounds", effect.title, "mp3");
+    tick();
     if (file) manifestSoundFx.push({ title: effect.title, file });
   }
 
@@ -305,6 +311,7 @@ export async function buildCampaignPackageZip(
       `${album.slug}-cover`,
       "jpg",
     );
+    tick();
     if (!cover) continue;
     const albumTracks = soundtracks.tracks
       .filter((track) => track.album_id === album.id)
@@ -319,6 +326,7 @@ export async function buildCampaignPackageZip(
         track.title,
         "mp3",
       );
+      tick();
       if (!file) continue;
       tracks.push({
         position: index + 1,

@@ -19,6 +19,30 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
   const upload = useMutation({ mutationFn: (file: File) => uploadCampaignSoundFx(campaignId, title, file), onSuccess: async () => { setTitle(""); await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] }); toast.success("Sound effect uploaded."); }, onError: (error: Error) => toast.error(error.message) });
   const remove = useMutation({ mutationFn: deleteCampaignSoundFx, onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] }); toast.success("Sound effect removed."); }, onError: (error: Error) => toast.error(error.message) });
   const trigger = useMutation({ mutationFn: (effect: CampaignSoundFx) => triggerCampaignSoundFx(campaignId, effect.id), onError: (error: Error) => toast.error(error.message) });
+  const [importOpen, setImportOpen] = useState(false);
+  const importPack = useMutation({
+    mutationFn: async (file: File) => {
+      const items = await readSoundFxPack(file);
+      for (const item of items) await uploadCampaignSoundFx(campaignId, item.title, item.file);
+      return items.length;
+    },
+    onSuccess: async (count) => {
+      setImportOpen(false);
+      await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] });
+      toast.success(`${count} sound effect${count === 1 ? "" : "s"} imported.`);
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+  const downloadPack = () => {
+    const url = URL.createObjectURL(buildSoundFxPackZip());
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "sound-fx-modelo.zip";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
   return <div className="space-y-6">
     {isGm ? <section className="panel p-5"><h2 className="font-display text-lg font-semibold">Upload Sound FX</h2><p className="mt-1 text-sm text-muted-foreground">Effects play once for everyone currently in this campaign.</p><div className="mt-4 space-y-1.5"><Label htmlFor="sound-fx-title">Title</Label><Input id="sound-fx-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Door slam, thunder, sword clash…" /></div><FileDropzone className="mt-4" accept="audio/mpeg,audio/ogg,audio/opus,audio/mp4,audio/x-m4a,audio/wav,audio/x-wav,audio/webm,.mp3,.ogg,.opus,.m4a,.wav,.webm" loading={upload.isPending} loadingLabel="Uploading effect…" label="Drop an audio file here, or click to browse" hint="MP3, OGG, Opus, M4A, WAV, or WebM · up to 40 MB" onFiles={(files) => { const file = files[0]; if (!file) return; if (!title.trim()) { toast.error("Enter a sound effect title first."); return; } upload.mutate(file); }} /></section> : null}
     {effects.isLoading ? <div className="panel divide-y divide-border">{[0, 1, 2].map((item) => <div key={item} className="flex items-center gap-3 p-3"><Skeleton className="size-9 rounded-md" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-40" /><Skeleton className="h-3 w-20" /></div><Skeleton className="size-9 rounded-md" /></div>)}</div> : effects.data?.length ? <div className="panel divide-y divide-border">{effects.data.map((effect) => <div key={effect.id} className="flex items-center gap-3 p-3"><Button type="button" size="icon" disabled={!isGm || trigger.isPending} onClick={() => trigger.mutate(effect)} aria-label={`Play ${effect.title} for everyone`}><Play className="h-4 w-4 fill-current" /></Button><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{effect.title}</p><p className="truncate text-xs text-muted-foreground">{effect.file_name} · {Math.max(1, Math.ceil(effect.byte_size / 1024))} KB</p></div>{isGm ? <AlertDialog><AlertDialogTrigger asChild><Button type="button" variant="ghost" size="icon" className="text-destructive hover:text-destructive" aria-label={`Remove ${effect.title}`}><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Remove this sound effect?</AlertDialogTitle><AlertDialogDescription>{effect.title} will be permanently removed.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => remove.mutate(effect)}>Remove</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog> : null}</div>)}</div> : <div className="panel grid min-h-64 place-items-center p-8 text-center"><div><AudioWaveform className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-3 text-sm text-muted-foreground">No sound effects yet.</p></div></div>}

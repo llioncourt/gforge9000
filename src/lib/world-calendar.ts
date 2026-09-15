@@ -262,8 +262,9 @@ export function isLeapYear(calendar: WorldCalendar, year: number): boolean {
     case "gregorian":
       return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
     case "block": {
-      const remainder = ((year % leapRule.block) + leapRule.block) % leapRule.block;
-      return leapRule.years.includes(remainder);
+      // 1-based position within the block: cycle 10 of 10 → position 10, not 0.
+      const position = (((year - 1) % leapRule.block) + leapRule.block) % leapRule.block + 1;
+      return leapRule.years.includes(position);
     }
   }
 }

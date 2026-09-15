@@ -72,8 +72,11 @@ export function CommandPalette({
         if (target.sub) search.sub = target.sub;
         void navigate({ to: "/campaigns/$id", params: { id: target.id }, search });
       } else if (target.kind === "library") {
-        if (target.item) window.sessionStorage.setItem("library-highlight", target.item);
-        window.location.assign(target.item ? `/library?item=${encodeURIComponent(target.item)}` : "/library");
+        window.location.assign(
+          target.item
+            ? `/library?item=${encodeURIComponent(target.item)}#library-${encodeURIComponent(target.item)}`
+            : "/library",
+        );
       } else {
         void navigate({ to: "/packs" });
       }

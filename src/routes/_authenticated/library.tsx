@@ -164,13 +164,11 @@ function LibraryPage() {
     [location.searchStr],
   );
   const navigate = useNavigate();
-  const [highlightId, setHighlightId] = useState<string | null>(null);
 
   // Deep-link from global search: clear filters, scroll to the entry and flash it.
   useEffect(() => {
-    const requestedId = itemParam ?? window.sessionStorage.getItem("library-highlight") ?? undefined;
+    const requestedId = itemParam;
     if (!requestedId) return;
-    window.sessionStorage.removeItem("library-highlight");
     setSearch("");
     setKindFilter("all");
     setPackFilter("all");
@@ -182,10 +180,8 @@ function LibraryPage() {
       if (el instanceof HTMLElement) {
         window.clearInterval(timer);
         el.scrollIntoView({ behavior: "auto", block: "center" });
-        setHighlightId(requestedId);
         clearTimer = window.setTimeout(() => {
-          setHighlightId(null);
-          void navigate({ to: "/library", search: {}, replace: true });
+          window.history.replaceState(window.history.state, "", "/library");
         }, 5000);
       } else if (attempts > 40) {
         window.clearInterval(timer);
@@ -411,12 +407,9 @@ function LibraryPage() {
             return (
               <div
                 key={e.id}
+                id={`library-${e.id}`}
                 data-search-id={e.id}
-                className={`panel flex flex-col p-4 transition-all duration-300 ${
-                  highlightId === e.id
-                    ? "scale-[1.02] animate-pulse rounded-lg bg-primary/20 ring-4 ring-primary shadow-xl shadow-primary/40"
-                    : ""
-                }`}
+                className="panel flex flex-col p-4 transition-all duration-300 target:scale-[1.02] target:animate-pulse target:rounded-lg target:bg-primary/20 target:ring-4 target:ring-primary target:shadow-xl target:shadow-primary/40"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

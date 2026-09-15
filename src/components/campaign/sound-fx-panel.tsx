@@ -8,7 +8,9 @@ import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { deleteCampaignSoundFx, listCampaignSoundFx, triggerCampaignSoundFx, uploadCampaignSoundFx, type CampaignSoundFx } from "@/lib/campaign-sound-fx";
+import { buildSoundFxPackZip, readSoundFxPack } from "@/lib/sound-fx-pack";
 
 export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
   const queryClient = useQueryClient();

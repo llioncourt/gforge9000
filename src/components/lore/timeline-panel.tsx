@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarClock, Plus, Settings2 } from "lucide-react";
+import { CalendarClock, ChevronDown, ChevronUp, Plus, Settings2, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -20,65 +28,47 @@ import { getCampaign, updateCampaign } from "@/lib/api";
 import { createEntity, listEntities, type EntityRow } from "@/lib/lore";
 import { useSession } from "@/hooks/use-session";
 import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
+import {
+  calendarOf,
+  eventOrder,
+  formatWorldDate,
+  validateWorldDate,
+  GREGORIAN_PRESET,
+  type LeapRule,
+  type MonthDef,
+  type SeasonDef,
+  type TodayDate,
+  type UnitName,
+  type WorldCalendar,
+} from "@/lib/world-calendar";
 
-export interface WorldCalendar {
-  era: string;
-  months: string[];
-  days_per_month: number;
-  current: string;
-}
+export type { WorldCalendar } from "@/lib/world-calendar";
 
-export const DEFAULT_CALENDAR: WorldCalendar = {
-  era: "",
-  months: [],
-  days_per_month: 30,
-  current: "",
-};
-
-/** Reads the in-world calendar out of the campaign settings blob. */
-export function calendarOf(settings: unknown): WorldCalendar {
-  const raw = ((settings ?? {}) as Record<string, unknown>)["calendar"];
-  const value = (raw ?? {}) as Partial<WorldCalendar>;
-  return {
-    era: typeof value.era === "string" ? value.era : "",
-    months: Array.isArray(value.months) ? value.months.map(String) : [],
-    days_per_month: Number(value.days_per_month) > 0 ? Number(value.days_per_month) : 30,
-    current: typeof value.current === "string" ? value.current : "",
-  };
-}
-
-function num(value: unknown): number | null {
-  const text = String(value ?? "").trim();
-  if (!text) return null;
-  const parsed = Number(text);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-/** Sort key for an event: year, then month (calendar order or number), then day. */
-export function eventOrder(row: EntityRow, months: string[]): [number, number, number] {
+function eventLabel(row: EntityRow, calendar: WorldCalendar): string {
   const data = (row.data ?? {}) as Record<string, unknown>;
-  const year = num(data["year"]) ?? Number.POSITIVE_INFINITY;
-  const rawMonth = String(data["month"] ?? "").trim();
-  const byName = months.findIndex((m) => m.toLowerCase() === rawMonth.toLowerCase());
-  const month = byName >= 0 ? byName + 1 : (num(rawMonth) ?? 0);
-  const day = num(data["day"]) ?? 0;
-  return [year, month, day];
-}
-
-function eventLabel(row: EntityRow): string {
-  const data = (row.data ?? {}) as Record<string, unknown>;
-  const parts = [data["day"], data["month"], data["year"]]
-    .map((p) => String(p ?? "").trim())
-    .filter(Boolean);
-  const era = String(data["era"] ?? "").trim();
-  const stamp = parts.join(" ");
-  return [stamp, era].filter(Boolean).join(" · ") || "Undated";
+  return formatWorldDate(calendar, {
+    year: data["year"] ? Number(data["year"]) : undefined,
+    month: data["month"]
+      ? (calendar.months.findIndex(
+          (m) => m.name.toLowerCase() === String(data["month"]).toLowerCase(),
+        ) + 1 || Number(data["month"]) || undefined)
+      : undefined,
+    day: data["day"] ? Number(data["day"]) : undefined,
+  });
 }
 
 export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
   const queryClient = useQueryClient();
   const { user } = useSession();
-  const [form, setForm] = useState({ name: "", year: "", month: "", day: "", summary: "" });
+  const [form, setForm] = useState({
+    name: "",
+    year: "",
+    month: "",
+    day: "",
+    hour: "",
+    minute: "",
+    summary: "",
+  });
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const campaign = useQuery({ queryKey: ["campaign", campaignId], queryFn: () => getCampaign(campaignId) });
@@ -92,15 +82,40 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
   const events = useMemo(() => {
     const rows = (entities.data ?? []).filter((e) => e.kind === "EVENT");
     return rows.sort((a, b) => {
-      const [ay, am, ad] = eventOrder(a, calendar.months);
-      const [by, bm, bd] = eventOrder(b, calendar.months);
-      return ay - by || am - bm || ad - bd || a.name.localeCompare(b.name);
+      const [ay, am, ad, ah, amin] = eventOrder(a, calendar);
+      const [by, bm, bd, bh, bmin] = eventOrder(b, calendar);
+      return ay - by || am - bm || ad - bd || ah - bh || amin - bmin || a.name.localeCompare(b.name);
     });
-  }, [entities.data, calendar.months]);
+  }, [entities.data, calendar]);
+
+  const todayLabel = useMemo(() => {
+    if (calendar.today) return formatWorldDate(calendar, calendar.today);
+    return calendar.currentText || null;
+  }, [calendar]);
 
   const create = useMutation({
-    mutationFn: () =>
-      createEntity({
+    mutationFn: () => {
+      const yearNum = form.year.trim() ? Number(form.year) : undefined;
+      const monthIdx = calendar.months.findIndex(
+        (m) => m.name.toLowerCase() === form.month.toLowerCase(),
+      );
+      const monthValue = monthIdx >= 0 ? form.month : form.month.trim();
+      const dayNum = Number(form.day);
+      const hourNum = form.hour.trim() ? Number(form.hour) : undefined;
+      const minuteNum = form.minute.trim() ? Number(form.minute) : undefined;
+
+      if (form.month && monthIdx >= 0 && form.day) {
+        const err = validateWorldDate(calendar, {
+          year: yearNum,
+          month: monthIdx + 1,
+          day: dayNum,
+          hour: hourNum,
+          minute: minuteNum,
+        });
+        if (err) throw new Error(err);
+      }
+
+      return createEntity({
         campaign_id: campaignId,
         kind: "EVENT",
         name: form.name.trim(),
@@ -110,13 +125,16 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
         created_by: user!.id,
         data: {
           year: form.year.trim(),
-          month: form.month.trim(),
+          month: monthValue,
           day: form.day.trim(),
+          hour: form.hour.trim(),
+          minute: form.minute.trim(),
           era: calendar.era,
         },
-      } as never),
+      } as never);
+    },
     onSuccess: () => {
-      setForm({ name: "", year: "", month: "", day: "", summary: "" });
+      setForm({ name: "", year: "", month: "", day: "", hour: "", minute: "", summary: "" });
       queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
       toast.success("Event added.");
     },
@@ -128,20 +146,20 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
       <div className="panel flex flex-wrap items-center gap-3 p-4">
         <CalendarClock className="h-4 w-4 text-muted-foreground" />
         <p className="flex-1 text-sm text-muted-foreground">
-          {calendar.current
-            ? `Today in the world: ${calendar.current}${calendar.era ? ` (${calendar.era})` : ""}`
-            : "Set an in-world calendar to order events by your own months."}
+          {todayLabel
+            ? `${calendar.units.year.singular} atual: ${todayLabel}${calendar.era ? ` (${calendar.era})` : ""}`
+            : `Defina um ${calendar.units.year.singular.toLowerCase()} atual para ordenar eventos pelo seu calendário.`}
         </p>
         {isGm ? (
           <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
-                <Settings2 className="mr-1 h-4 w-4" /> Calendar
+                <Settings2 className="mr-1 h-4 w-4" /> Calendário
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>In-world calendar</DialogTitle>
+                <DialogTitle>Calendário do mundo</DialogTitle>
               </DialogHeader>
               <CalendarForm
                 calendar={calendar}
@@ -152,7 +170,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
                   });
                   await queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] });
                   setCalendarOpen(false);
-                  toast.success("Calendar saved.");
+                  toast.success("Calendário salvo.");
                 }}
               />
             </DialogContent>
@@ -178,7 +196,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
                       <h3 className="font-medium">{row.name}</h3>
                       <div className="flex items-center gap-1">
                         <Badge variant="outline" className="text-[10px]">
-                          {eventLabel(row)}
+                          {eventLabel(row, calendar)}
                         </Badge>
                         {isGm ? (
                           <EntityDeleteButton
@@ -197,43 +215,71 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
               ))}
             </ol>
           ) : (
-            <p className="text-sm text-muted-foreground">No events on the timeline yet.</p>
+            <p className="text-sm text-muted-foreground">Nenhum evento na timeline ainda.</p>
           )}
         </div>
 
         <div className="panel h-fit space-y-3 p-4">
-          <h3 className="font-display text-sm font-semibold">Add an event</h3>
+          <h3 className="font-display text-sm font-semibold">Adicionar evento</h3>
           <Input
-            placeholder="Event name"
+            placeholder="Nome do evento"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <Input
-              placeholder="Year"
+              placeholder={calendar.units.year.singular}
               value={form.year}
               onChange={(e) => setForm({ ...form, year: e.target.value })}
+              inputMode="numeric"
             />
             <Input
-              placeholder="Month"
-              value={form.month}
-              onChange={(e) => setForm({ ...form, month: e.target.value })}
-              list="world-months"
-            />
-            <Input
-              placeholder="Day"
+              placeholder={calendar.units.day.singular}
               value={form.day}
               onChange={(e) => setForm({ ...form, day: e.target.value })}
+              inputMode="numeric"
             />
           </div>
-          <datalist id="world-months">
-            {calendar.months.map((m) => (
-              <option key={m} value={m} />
-            ))}
-          </datalist>
+          {calendar.months.length > 0 ? (
+            <Select
+              value={form.month}
+              onValueChange={(v) => setForm({ ...form, month: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={calendar.units.month.singular} />
+              </SelectTrigger>
+              <SelectContent>
+                {calendar.months.map((m, i) => (
+                  <SelectItem key={i} value={m.name}>
+                    {m.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              placeholder={calendar.units.month.singular}
+              value={form.month}
+              onChange={(e) => setForm({ ...form, month: e.target.value })}
+            />
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              placeholder={`${calendar.units.hour.singular} (opc.)`}
+              value={form.hour}
+              onChange={(e) => setForm({ ...form, hour: e.target.value })}
+              inputMode="numeric"
+            />
+            <Input
+              placeholder={`${calendar.units.minute.singular} (opc.)`}
+              value={form.minute}
+              onChange={(e) => setForm({ ...form, minute: e.target.value })}
+              inputMode="numeric"
+            />
+          </div>
           <Textarea
             rows={3}
-            placeholder="Short summary"
+            placeholder="Resumo"
             value={form.summary}
             onChange={(e) => setForm({ ...form, summary: e.target.value })}
           />
@@ -242,7 +288,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
             onClick={() => create.mutate()}
             disabled={!form.name.trim() || create.isPending}
           >
-            <Plus className="mr-1 h-4 w-4" /> Add event
+            <Plus className="mr-1 h-4 w-4" /> Adicionar evento
           </Button>
         </div>
       </div>
@@ -250,20 +296,18 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
   );
 }
 
-const GREGORIAN_MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+// ── Calendar editor ───────────────────────────────────────────────
+
+const UNIT_KEYS = [
+  ["era", "Era"],
+  ["year", "Ano / Ciclo"],
+  ["season", "Estação / Quarto"],
+  ["month", "Mês"],
+  ["week", "Semana"],
+  ["day", "Dia / Rota"],
+  ["hour", "Hora / Quarto"],
+  ["minute", "Minuto / Parte"],
+] as const;
 
 function CalendarForm({
   calendar,
@@ -272,76 +316,516 @@ function CalendarForm({
   calendar: WorldCalendar;
   onSave: (next: WorldCalendar) => Promise<void>;
 }) {
-  const [era, setEra] = useState(calendar.era);
-  const [months, setMonths] = useState(calendar.months.join("\n"));
-  const [days, setDays] = useState(String(calendar.days_per_month));
-  const [current, setCurrent] = useState(calendar.current);
+  const [draft, setDraft] = useState<WorldCalendar>(() => ({
+    ...calendar,
+    units: { ...calendar.units },
+    months: calendar.months.map((m) => ({ ...m })),
+    seasons: calendar.seasons.map((s) => ({ ...s, months: [...s.months] })),
+    week: { ...calendar.week, dayNames: [...calendar.week.dayNames] },
+    daySubdivision: { ...calendar.daySubdivision },
+    today: calendar.today ? { ...calendar.today } : null,
+  }));
   const [saving, setSaving] = useState(false);
 
+  const update = (patch: Partial<WorldCalendar>) => setDraft((d) => ({ ...d, ...patch }));
+  const updateUnits = (key: keyof WorldCalendar["units"], field: keyof UnitName, value: string) =>
+    setDraft((d) => ({
+      ...d,
+      units: { ...d.units, [key]: { ...d.units[key], [field]: value } },
+    }));
+
   const useGregorian = () => {
-    setEra("AD");
-    setMonths(GREGORIAN_MONTHS.join("\n"));
-    setDays("30");
-    if (!current.trim()) {
-      const today = new Date();
-      setCurrent(
-        `${today.getDate()} ${GREGORIAN_MONTHS[today.getMonth()]}, ${today.getFullYear()}`,
-      );
-    }
+    setDraft({
+      ...GREGORIAN_PRESET,
+      units: { ...GREGORIAN_PRESET.units },
+      months: GREGORIAN_PRESET.months.map((m) => ({ ...m })),
+      seasons: GREGORIAN_PRESET.seasons.map((s) => ({ ...s, months: [...s.months] })),
+      week: { ...GREGORIAN_PRESET.week, dayNames: [...GREGORIAN_PRESET.week.dayNames] },
+      era: draft.era,
+      today: draft.today,
+    });
   };
 
   return (
     <div className="space-y-3">
       <Button type="button" variant="outline" size="sm" onClick={useGregorian}>
-        Use Gregorian calendar
+        Usar calendário gregoriano
       </Button>
-      <div className="space-y-1">
-        <Label htmlFor="cal-era">Era name</Label>
-        <Input id="cal-era" value={era} onChange={(e) => setEra(e.target.value)} placeholder="Third Age" />
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="cal-months">Months, one per line</Label>
-        <Textarea
-          id="cal-months"
-          rows={6}
-          value={months}
-          onChange={(e) => setMonths(e.target.value)}
-          placeholder={"Frostmoon\nSeedtide\nHighsun"}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label htmlFor="cal-days">Days per month</Label>
-          <Input id="cal-days" value={days} onChange={(e) => setDays(e.target.value)} />
+
+      <Tabs defaultValue="units" className="w-full">
+        <div className="flex gap-1 overflow-x-auto pb-1">
+          <TabsTrigger value="units">Unidades</TabsTrigger>
+          <TabsTrigger value="months">Meses</TabsTrigger>
+          <TabsTrigger value="seasons">Estações</TabsTrigger>
+          <TabsTrigger value="cycle">Ciclo</TabsTrigger>
+          <TabsTrigger value="today">Hoje</TabsTrigger>
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="cal-current">Current date</Label>
-          <Input
-            id="cal-current"
-            value={current}
-            onChange={(e) => setCurrent(e.target.value)}
-            placeholder="12 Highsun, 998"
-          />
-        </div>
-      </div>
+
+        {/* ── Unidades ── */}
+        <TabsContent value="units" className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Nomes canônicos das unidades de tempo (singular / plural).
+          </p>
+          {UNIT_KEYS.map(([key, label]) => (
+            <div key={key} className="grid grid-cols-[100px_1fr_1fr] items-center gap-2">
+              <Label className="text-xs text-muted-foreground">{label}</Label>
+              <Input
+                className="h-8"
+                value={draft.units[key].singular}
+                onChange={(e) => updateUnits(key, "singular", e.target.value)}
+              />
+              <Input
+                className="h-8"
+                value={draft.units[key].plural}
+                onChange={(e) => updateUnits(key, "plural", e.target.value)}
+              />
+            </div>
+          ))}
+          <div className="space-y-1 pt-1">
+            <Label htmlFor="cal-era">Nome da era</Label>
+            <Input
+              id="cal-era"
+              value={draft.era}
+              onChange={(e) => update({ era: e.target.value })}
+              placeholder="Terceira Era"
+            />
+          </div>
+        </TabsContent>
+
+        {/* ── Meses ── */}
+        <TabsContent value="months" className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Cada {draft.units.month.singular.toLowerCase()} com a sua duração em{" "}
+            {draft.units.day.plural.toLowerCase()}.
+          </p>
+          {draft.months.map((m, i) => (
+            <div key={i} className="flex items-center gap-1">
+              <div className="flex flex-col">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5"
+                  disabled={i === 0}
+                  onClick={() =>
+                    setDraft((d) => {
+                      const months = [...d.months];
+                      [months[i - 1], months[i]] = [months[i], months[i - 1]];
+                      return { ...d, months };
+                    })
+                  }
+                >
+                  <ChevronUp className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5"
+                  disabled={i === draft.months.length - 1}
+                  onClick={() =>
+                    setDraft((d) => {
+                      const months = [...d.months];
+                      [months[i + 1], months[i]] = [months[i], months[i + 1]];
+                      return { ...d, months };
+                    })
+                  }
+                >
+                  <ChevronDown className="h-3 w-3" />
+                </Button>
+              </div>
+              <Input
+                className="h-8 flex-1"
+                value={m.name}
+                onChange={(e) =>
+                  setDraft((d) => {
+                    const months = [...d.months];
+                    months[i] = { ...months[i], name: e.target.value };
+                    return { ...d, months };
+                  })
+                }
+              />
+              <Input
+                className="h-8 w-20"
+                type="number"
+                value={m.days}
+                onChange={(e) =>
+                  setDraft((d) => {
+                    const months = [...d.months];
+                    months[i] = { ...months[i], days: Number(e.target.value) || 0 };
+                    return { ...d, months };
+                  })
+                }
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() =>
+                  setDraft((d) => {
+                    const months = d.months.filter((_, j) => j !== i);
+                    return { ...d, months };
+                  })
+                }
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setDraft((d) => ({
+                ...d,
+                months: [...d.months, { name: `Mês ${d.months.length + 1}`, days: 30 }],
+              }))
+            }
+          >
+            <Plus className="mr-1 h-4 w-4" /> Adicionar {draft.units.month.singular.toLowerCase()}
+          </Button>
+        </TabsContent>
+
+        {/* ── Estações ── */}
+        <TabsContent value="seasons" className="space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Agrupe {draft.units.month.plural.toLowerCase()} em{" "}
+            {draft.units.season.plural.toLowerCase()} / quartos.
+          </p>
+          {draft.seasons.map((s, i) => (
+            <div key={i} className="panel space-y-2 p-2">
+              <div className="flex items-center gap-2">
+                <Input
+                  className="h-8 flex-1"
+                  placeholder="Nome"
+                  value={s.name}
+                  onChange={(e) =>
+                    setDraft((d) => {
+                      const seasons = [...d.seasons];
+                      seasons[i] = { ...seasons[i], name: e.target.value };
+                      return { ...d, seasons };
+                    })
+                  }
+                />
+                <Input
+                  className="h-8 flex-1"
+                  placeholder="Lema (opc.)"
+                  value={s.subtitle}
+                  onChange={(e) =>
+                    setDraft((d) => {
+                      const seasons = [...d.seasons];
+                      seasons[i] = { ...seasons[i], subtitle: e.target.value };
+                      return { ...d, seasons };
+                    })
+                  }
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() =>
+                    setDraft((d) => ({
+                      ...d,
+                      seasons: d.seasons.filter((_, j) => j !== i),
+                    }))
+                  }
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {draft.months.map((m, mi) => {
+                  const checked = s.months.includes(mi);
+                  return (
+                    <Button
+                      key={mi}
+                      variant={checked ? "default" : "outline"}
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() =>
+                        setDraft((d) => {
+                          const seasons = [...d.seasons];
+                          const months = checked
+                            ? seasons[i].months.filter((x) => x !== mi)
+                            : [...seasons[i].months, mi];
+                          seasons[i] = { ...seasons[i], months };
+                          return { ...d, seasons };
+                        })
+                      }
+                    >
+                      {m.name || `Mês ${mi + 1}`}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setDraft((d) => ({
+                ...d,
+                seasons: [...d.seasons, { name: `Estação ${d.seasons.length + 1}`, subtitle: "", months: [] }],
+              }))
+            }
+          >
+            <Plus className="mr-1 h-4 w-4" /> Adicionar {draft.units.season.singular.toLowerCase()}
+          </Button>
+        </TabsContent>
+
+        {/* ── Ciclo ── */}
+        <TabsContent value="cycle" className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">{draft.units.day.plural} por {draft.units.week.singular.toLowerCase()}</Label>
+              <Input
+                className="h-8"
+                type="number"
+                value={draft.week.daysPerWeek}
+                onChange={(e) =>
+                  update({ week: { ...draft.week, daysPerWeek: Number(e.target.value) || 0 } })
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">{draft.units.hour.plural} por {draft.units.day.singular.toLowerCase()}</Label>
+              <Input
+                className="h-8"
+                type="number"
+                value={draft.daySubdivision.hoursPerDay}
+                onChange={(e) =>
+                  update({
+                    daySubdivision: { ...draft.daySubdivision, hoursPerDay: Number(e.target.value) || 0 },
+                  })
+                }
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">{draft.units.minute.plural} por {draft.units.hour.singular.toLowerCase()}</Label>
+            <Input
+              className="h-8"
+              type="number"
+              value={draft.daySubdivision.minutesPerHour}
+              onChange={(e) =>
+                update({
+                  daySubdivision: { ...draft.daySubdivision, minutesPerHour: Number(e.target.value) || 0 },
+                })
+              }
+            />
+          </div>
+          {draft.week.daysPerWeek > 0 ? (
+            <div className="space-y-1">
+              <Label className="text-xs">Nomes dos {draft.units.day.plural.toLowerCase()} da semana</Label>
+              <Textarea
+                rows={Math.max(2, draft.week.dayNames.length)}
+                value={draft.week.dayNames.join("\n")}
+                onChange={(e) =>
+                  update({
+                    week: { ...draft.week, dayNames: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) },
+                  })
+                }
+                placeholder={"Domingo\nSegunda\nTerça"}
+              />
+            </div>
+          ) : null}
+
+          {/* Leap rule */}
+          <div className="space-y-2">
+            <Label className="text-xs">{draft.units.year.singular} bissexto</Label>
+            <Select
+              value={draft.leapRule.kind}
+              onValueChange={(v) => {
+                let leapRule: LeapRule;
+                if (v === "gregorian") leapRule = { kind: "gregorian" };
+                else if (v === "block")
+                  leapRule = { kind: "block", block: 10, years: [4, 7, 10], month: 0, extraDays: 1 };
+                else leapRule = { kind: "none" };
+                update({ leapRule });
+              }}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Nenhum</SelectItem>
+                <SelectItem value="gregorian">Gregoriano (a cada 4, exceto 100)</SelectItem>
+                <SelectItem value="block">Por bloco (ex.: 4, 7, 10 de cada 10)</SelectItem>
+              </SelectContent>
+            </Select>
+            {draft.leapRule.kind === "block" ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Tamanho do bloco</Label>
+                  <Input
+                    className="h-8"
+                    type="number"
+                    value={draft.leapRule.block}
+                    onChange={(e) =>
+                      update({ leapRule: { ...draft.leapRule, block: Number(e.target.value) || 1 } })
+                    }
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Anos bissextos no bloco</Label>
+                  <Input
+                    className="h-8"
+                    value={draft.leapRule.years.join(", ")}
+                    onChange={(e) =>
+                      update({
+                        leapRule: {
+                          ...draft.leapRule,
+                          years: e.target.value
+                            .split(",")
+                            .map((s) => Number(s.trim()))
+                            .filter((n) => Number.isFinite(n)),
+                        },
+                      })
+                    }
+                    placeholder="4, 7, 10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">{draft.units.month.singular} que recebe dia extra</Label>
+                  <Select
+                    value={String(draft.leapRule.month)}
+                    onValueChange={(v) =>
+                      update({ leapRule: { ...draft.leapRule, month: Number(v) } })
+                    }
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {draft.months.map((m, i) => (
+                        <SelectItem key={i} value={String(i)}>
+                          {m.name || `Mês ${i + 1}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">{draft.units.day.plural} extras</Label>
+                  <Input
+                    className="h-8"
+                    type="number"
+                    value={draft.leapRule.extraDays}
+                    onChange={(e) =>
+                      update({ leapRule: { ...draft.leapRule, extraDays: Number(e.target.value) || 1 } })
+                    }
+                  />
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </TabsContent>
+
+        {/* ── Hoje ── */}
+        <TabsContent value="today" className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Data atual do mundo. Usada para mostrar "hoje" e ordenar eventos próximos.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">{draft.units.year.singular}</Label>
+              <Input
+                className="h-8"
+                type="number"
+                value={draft.today?.year ?? ""}
+                onChange={(e) => {
+                  const v = Number(e.target.value);
+                  update({ today: { ...(draft.today ?? { year: 0, month: 1, day: 1, hour: 0, minute: 0 }), year: v } });
+                }}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">{draft.units.month.singular}</Label>
+              <Select
+                value={draft.today ? String(draft.today.month) : ""}
+                onValueChange={(v) => {
+                  const m = Number(v);
+                  update({ today: { ...(draft.today ?? { year: 0, month: m, day: 1, hour: 0, minute: 0 }), month: m } });
+                }}
+              >
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="—" />
+                </SelectTrigger>
+                <SelectContent>
+                  {draft.months.map((m, i) => (
+                    <SelectItem key={i} value={String(i + 1)}>
+                      {m.name || `Mês ${i + 1}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">{draft.units.day.singular}</Label>
+              <Input
+                className="h-8"
+                type="number"
+                value={draft.today?.day ?? ""}
+                onChange={(e) => {
+                  const d = Number(e.target.value);
+                  update({ today: { ...(draft.today ?? { year: 0, month: 1, day: d, hour: 0, minute: 0 }), day: d } });
+                }}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">{draft.units.hour.singular} (opc.)</Label>
+              <Input
+                className="h-8"
+                type="number"
+                value={draft.today?.hour ?? ""}
+                onChange={(e) => {
+                  const h = Number(e.target.value);
+                  update({ today: { ...(draft.today ?? { year: 0, month: 1, day: 1, hour: h, minute: 0 }), hour: h } });
+                }}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">{draft.units.minute.singular} (opc.)</Label>
+              <Input
+                className="h-8"
+                type="number"
+                value={draft.today?.minute ?? ""}
+                onChange={(e) => {
+                  const m = Number(e.target.value);
+                  update({ today: { ...(draft.today ?? { year: 0, month: 1, day: 1, hour: 0, minute: m }), minute: m } });
+                }}
+              />
+            </div>
+          </div>
+          {draft.today ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => update({ today: null })}
+            >
+              Limpar data atual
+            </Button>
+          ) : null}
+        </TabsContent>
+      </Tabs>
+
       <Button
         className="w-full"
         disabled={saving}
         onClick={async () => {
           setSaving(true);
           try {
-            await onSave({
-              era: era.trim(),
-              months: months.split("\n").map((m) => m.trim()).filter(Boolean),
-              days_per_month: Number(days) > 0 ? Number(days) : 30,
-              current: current.trim(),
-            });
+            // Strip legacy currentText if today is set
+            const next: WorldCalendar = {
+              ...draft,
+              currentText: draft.today ? "" : draft.currentText,
+            };
+            await onSave(next);
           } finally {
             setSaving(false);
           }
         }}
       >
-        Save calendar
+        Salvar calendário
       </Button>
     </div>
   );

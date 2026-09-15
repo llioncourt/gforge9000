@@ -24,9 +24,16 @@ export function validateSoundFxFile(file: Pick<File, "name" | "size" | "type">) 
 }
 
 export async function listCampaignSoundFx(campaignId: string) {
-  const { data, error } = await supabase.from("campaign_sound_fx").select("*").eq("campaign_id", campaignId).order("created_at");
+  const { data, error } = await supabase.from("campaign_sound_fx").select("*").eq("campaign_id", campaignId).order("sort_order").order("created_at");
   fail(error);
   return data ?? [];
+}
+
+/** Persist a new ordering for the campaign's sound effects. */
+export async function reorderCampaignSoundFx(campaignId: string, orderedIds: string[]) {
+  const updates = orderedIds.map((id, index) => ({ id, sort_order: index }));
+  const { error } = await supabase.from("campaign_sound_fx").upsert(updates, { onConflict: "id" });
+  fail(error);
 }
 
 export async function soundFxSignedUrl(path: string) {

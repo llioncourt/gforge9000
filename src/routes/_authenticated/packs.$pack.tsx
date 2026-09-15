@@ -208,10 +208,11 @@ function PackDetailPage() {
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
+              disabled={exportTask.busy}
               onClick={() =>
-                download(
-                  `${slugify(group.label)}-pack.json`,
-                  JSON.stringify(
+                void exportTask.run("Exporting pack", async (report) => {
+                  report("Building file…", 40);
+                  const contents = JSON.stringify(
                     toPortablePack(
                       {
                         name: packName,
@@ -225,8 +226,11 @@ function PackDetailPage() {
                     ),
                     null,
                     2,
-                  ),
-                )
+                  );
+                  report("Downloading…", 85);
+                  download(`${slugify(group.label)}-pack.json`, contents);
+                  return `Exported ${rows.length} entries from “${packName}”.`;
+                })
               }
             >
               <Download className="mr-2 h-4 w-4" /> Export pack

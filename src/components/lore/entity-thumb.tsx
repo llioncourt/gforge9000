@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { entityImageUrl } from "@/lib/entity-image";
 import { portraitInitials } from "@/lib/portrait";
+import { ImageZoom } from "@/components/ui/image-zoom";
 
 /** Small square preview of a lore entry's photo, used on cards. */
 export function EntityThumb({
@@ -31,12 +32,11 @@ export function EntityThumb({
 
   if (effective && url.data) {
     return (
-      <img
+      <ImageZoom
         src={url.data}
         alt={`${name} photo`}
-        loading="lazy"
         onError={() => setBroken(true)}
-        className={`${base} object-cover`}
+        className={base}
       />
     );
   }

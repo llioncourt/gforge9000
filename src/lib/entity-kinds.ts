@@ -477,6 +477,8 @@ export const KINDS: KindDef[] = [
       t("year", "Year"),
       t("month", "Month"),
       t("day", "Day"),
+      t("hour", "Hour (optional)"),
+      t("minute", "Minute (optional)"),
       t("era", "Era / calendar"),
       ta("what_happened", "What happened"),
       ta("consequences", "Consequences"),

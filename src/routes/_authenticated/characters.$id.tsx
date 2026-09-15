@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTransferTask } from "@/components/ui/transfer-dialog";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -169,6 +170,7 @@ function CharacterPage() {
   const [saveError, setSaveError] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<VersionRow | null>(null);
   const dirty = useRef(false);
+  const exportTask = useTransferTask();
   const printPortraitUrl = usePortraitUrl(form?.portrait_path ?? null);
 
 
@@ -1171,6 +1173,7 @@ function CharacterPage() {
         entries={entries}
         portraitUrl={printPortraitUrl}
       />
+      {exportTask.node}
     </div>
 
   );

@@ -71,16 +71,16 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
       ]);
       report("Building file…", 60);
       const file = toPortableLore(campaign.name, rows, rels);
-      const slug = campaign.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const slug = campaign.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
       report("Downloading…", 90);
       download(`${slug || "campaign"}-lore.json`, JSON.stringify(file, null, 2));
       return `Exported ${file.entities.length} entries.`;
     });
 
-  const runImportLore = async (
-    file: File,
-    report: (label: string, percent?: number) => void,
-  ) => {
+  const runImportLore = async (file: File, report: (label: string, percent?: number) => void) => {
     report("Reading file…", 10);
     const parsed = parsePortableLore(await file.text());
     report("Importing entries and links…", 45);
@@ -89,7 +89,6 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
     await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
     return `Imported ${result.entities} entries and ${result.relationships} links.`;
   };
-
 
   const entities = useQuery({
     queryKey: ["lore-entities", campaignId],
@@ -196,11 +195,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
           </Select>
           {isGm ? (
             <>
-              <Button
-                variant="outline"
-                onClick={runExportLore}
-                disabled={exportTask.busy}
-              >
+              <Button variant="outline" onClick={runExportLore} disabled={exportTask.busy}>
                 <Download className="mr-2 size-4" /> Export
               </Button>
               <Button variant="outline" onClick={() => setImporting(true)}>
@@ -209,7 +204,9 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
               <Button
                 variant="outline"
                 onClick={() => {
-                  setDraftKind(kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"));
+                  setDraftKind(
+                    kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"),
+                  );
                   setDrafting(true);
                 }}
               >
@@ -225,7 +222,6 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
               </Button>
             </>
           ) : null}
-
         </div>
       </div>
 
@@ -278,7 +274,11 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                   </Link>
                   {isGm ? (
                     <div className="absolute right-2 bottom-2">
-                      <EntityDeleteButton campaignId={campaignId} entityId={row.id} name={row.name} />
+                      <EntityDeleteButton
+                        campaignId={campaignId}
+                        entityId={row.id}
+                        name={row.name}
+                      />
                     </div>
                   ) : null}
                 </div>
@@ -352,6 +352,5 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
         />
       ) : null}
     </div>
-
   );
 }

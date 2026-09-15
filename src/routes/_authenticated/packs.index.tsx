@@ -40,12 +40,7 @@ import {
   deleteContentPack,
 } from "@/lib/api";
 import { parsePortablePack } from "@/lib/portable";
-import {
-  campaignsEnablingPack,
-  groupEntriesByPack,
-  makeGroup,
-  type PackGroup,
-} from "@/lib/packs";
+import { campaignsEnablingPack, groupEntriesByPack, makeGroup, type PackGroup } from "@/lib/packs";
 import { useSession } from "@/hooks/use-session";
 import { packSlug } from "@/lib/pack-slug";
 
@@ -113,10 +108,7 @@ function PacksPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const importPackFile = async (
-    file: File,
-    report: (label: string, percent?: number) => void,
-  ) => {
+  const importPackFile = async (file: File, report: (label: string, percent?: number) => void) => {
     report("Reading file…", 10);
     const parsed = parsePortablePack(await file.text());
     report(`Creating pack “${parsed.pack.name}”…`, 35);
@@ -156,7 +148,6 @@ function PacksPage() {
           </Button>
         }
       />
-
 
       <div className="mb-4 grid gap-3 lg:grid-cols-[1fr_320px]">
         <Input
@@ -223,7 +214,9 @@ function PacksPage() {
                   ))}
                 </div>
                 <p className="mt-3 text-[11px] text-muted-foreground">
-                  {g.sources.length ? g.sources.join(" · ") : meta?.source_label ?? "User content"}
+                  {g.sources.length
+                    ? g.sources.join(" · ")
+                    : (meta?.source_label ?? "User content")}
                   {g.visibilities.length ? ` · ${g.visibilities.join(", ")}` : ""}
                 </p>
                 <p className="mt-auto pt-3 text-[11px] text-muted-foreground">
@@ -261,9 +254,7 @@ function PacksPage() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() =>
-                              removePack.mutate({ id: meta.id, name: g.pack })
-                            }
+                            onClick={() => removePack.mutate({ id: meta.id, name: g.pack })}
                             disabled={removePack.isPending}
                           >
                             Delete pack

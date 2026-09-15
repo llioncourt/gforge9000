@@ -27,7 +27,11 @@ function downloadText(fileName: string, contents: string, mime: string) {
 }
 
 /** ZIP import + format documentation, shown inside the New campaign dialog. */
-export function CampaignPackageImport({ onImported }: { onImported: (campaignId: string) => void }) {
+export function CampaignPackageImport({
+  onImported,
+}: {
+  onImported: (campaignId: string) => void;
+}) {
   const queryClient = useQueryClient();
   const [importOpen, setImportOpen] = useState(false);
 
@@ -44,12 +48,7 @@ export function CampaignPackageImport({ onImported }: { onImported: (campaignId:
   return (
     <div className="space-y-3 rounded-lg border border-dashed border-border p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setImportOpen(true)}
-        >
+        <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(true)}>
           <Upload className="mr-2 h-4 w-4" /> Import package
         </Button>
         <Dialog>
@@ -71,7 +70,11 @@ export function CampaignPackageImport({ onImported }: { onImported: (campaignId:
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  downloadText("campaign-package-format.md", buildCampaignPackageReadme(), "text/markdown")
+                  downloadText(
+                    "campaign-package-format.md",
+                    buildCampaignPackageReadme(),
+                    "text/markdown",
+                  )
                 }
               >
                 <Download className="mr-2 h-4 w-4" /> Download the guide
@@ -81,7 +84,11 @@ export function CampaignPackageImport({ onImported }: { onImported: (campaignId:
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  downloadText("campaign.example.json", CAMPAIGN_PACKAGE_EXAMPLE, "application/json")
+                  downloadText(
+                    "campaign.example.json",
+                    CAMPAIGN_PACKAGE_EXAMPLE,
+                    "application/json",
+                  )
                 }
               >
                 <Download className="mr-2 h-4 w-4" /> Example campaign.json

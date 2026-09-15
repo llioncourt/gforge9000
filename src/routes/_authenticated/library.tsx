@@ -257,7 +257,6 @@ function LibraryPage() {
     }));
   }, [data, kindFilter, packFilter, search]);
 
-
   const portable = toPortableLibrary((rows ?? []) as unknown as Record<string, unknown>[]);
 
   return (
@@ -267,10 +266,7 @@ function LibraryPage() {
         description="Your own traits, skills and gear, grouped into content packs with full provenance."
         actions={
           <>
-            <Button
-              variant="outline"
-              onClick={() => setImportOpen(true)}
-            >
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
               <Upload className="mr-2 h-4 w-4" /> Import
             </Button>
             <Button
@@ -446,7 +442,10 @@ function LibraryPage() {
           <div className="grid gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Name">
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
               </Field>
               <Field label="Kind">
                 <Select value={form.kind} onValueChange={(v) => setForm({ ...form, kind: v })}>
@@ -498,7 +497,10 @@ function LibraryPage() {
               />
             </Field>
             <Field label="Tags (comma separated)">
-              <Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} />
+              <Input
+                value={form.tags}
+                onChange={(e) => setForm({ ...form, tags: e.target.value })}
+              />
             </Field>
             <div className="grid gap-4 sm:grid-cols-3">
               <Field label="Source label">
@@ -559,10 +561,7 @@ function LibraryPage() {
                   key={c.id}
                   variant="outline"
                   className="w-full justify-between"
-                  disabled={
-                    addToCharacter.isPending ||
-                    !!gateFor(c.id, addTarget?.pack ?? null)
-                  }
+                  disabled={addToCharacter.isPending || !!gateFor(c.id, addTarget?.pack ?? null)}
                   onClick={() =>
                     addTarget && addToCharacter.mutate({ entry: addTarget, characterId: c.id })
                   }

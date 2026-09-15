@@ -78,8 +78,7 @@ function CharactersPage() {
   });
   const view: CharactersViewMode = prefsQuery.data?.characters_view === "grid" ? "grid" : "list";
   const viewMode = useMutation({
-    mutationFn: (v: CharactersViewMode) =>
-      setProfilePreferences(user!.id, { characters_view: v }),
+    mutationFn: (v: CharactersViewMode) => setProfilePreferences(user!.id, { characters_view: v }),
     onMutate: (v) => {
       queryClient.setQueryData(["profile-preferences", user?.id], {
         ...(prefsQuery.data ?? {}),
@@ -268,7 +267,10 @@ function CharactersPage() {
                 ))
               ) : rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                  <TableCell
+                    colSpan={6}
+                    className="py-10 text-center text-sm text-muted-foreground"
+                  >
                     No characters yet.
                   </TableCell>
                 </TableRow>

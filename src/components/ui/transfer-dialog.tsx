@@ -29,11 +29,7 @@ function TransferBody({ state }: { state: TransferState }) {
     <div className="space-y-3">
       <Progress value={state.phase === "error" ? 100 : state.percent} />
       <div className="flex items-center justify-between gap-3 text-sm">
-        <span
-          className={
-            state.phase === "error" ? "text-destructive" : "text-muted-foreground"
-          }
-        >
+        <span className={state.phase === "error" ? "text-destructive" : "text-muted-foreground"}>
           {state.phase === "running" ? (
             <span className="inline-flex items-center gap-2">
               <Loader2 className="h-3.5 w-3.5 animate-spin" /> {state.label}

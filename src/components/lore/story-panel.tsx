@@ -113,6 +113,7 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
           <Link
             to="/entities/$id"
             params={{ id: row.id }}
+            search={{ from: "story" }}
             className="flex-1 truncate font-medium hover:underline"
           >
             {row.name}
@@ -201,6 +202,7 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
                     key={row.id}
                     to="/entities/$id"
                     params={{ id: row.id }}
+                    search={{ from: "story" }}
                     className="hover:bg-accent/40 rounded-md border p-2 transition"
                   >
                     <div className="flex items-center justify-between gap-2">

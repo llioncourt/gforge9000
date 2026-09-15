@@ -183,6 +183,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                       <Link
                         to="/entities/$id"
                         params={{ id: grant.entity_id }}
+                        search={{ from: "reveals" }}
                         className="hover:underline"
                       >
                         {entity?.name ?? "Record"}

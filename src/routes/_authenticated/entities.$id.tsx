@@ -174,6 +174,7 @@ function EntityPage() {
   const isGm = !!campaign.data && campaign.data.gm_id === user?.id;
   const canEdit = isGm || entity.data?.owner_user_id === user?.id;
   const def = useMemo(() => kindDef(entity.data?.kind ?? "CUSTOM"), [entity.data?.kind]);
+  const backTab = entity.data?.kind === "EVENT" ? "timeline" : "lore";
 
   const [form, setForm] = useState<EntityRow | null>(null);
   useEffect(() => {

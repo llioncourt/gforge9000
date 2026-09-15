@@ -77,36 +77,46 @@ import {
 
 // Heavy campaign tabs load on demand — the campaign page ships a much
 // smaller first bundle and each panel is fetched only when its tab opens.
-const LorePanel = lazy(() =>
-  import("@/components/lore/lore-panel").then((mod) => ({ default: mod.LorePanel })),
-);
-const StoryPanel = lazy(() =>
-  import("@/components/lore/story-panel").then((mod) => ({ default: mod.StoryPanel })),
-);
-const GraphPanel = lazy(() =>
-  import("@/components/lore/graph-panel").then((mod) => ({ default: mod.GraphPanel })),
-);
-const PlayersPanel = lazy(() =>
-  import("@/components/lore/players-panel").then((mod) => ({ default: mod.PlayersPanel })),
-);
-const SessionsPanel = lazy(() =>
-  import("@/components/lore/sessions-panel").then((mod) => ({ default: mod.SessionsPanel })),
-);
-const TimelinePanel = lazy(() =>
-  import("@/components/lore/timeline-panel").then((mod) => ({ default: mod.TimelinePanel })),
-);
-const AssetsPanel = lazy(() =>
-  import("@/components/lore/assets-panel").then((mod) => ({ default: mod.AssetsPanel })),
-);
-const BattlePanel = lazy(() =>
-  import("@/components/battle/battle-panel").then((mod) => ({ default: mod.BattlePanel })),
-);
-const RollsPanel = lazy(() =>
-  import("@/components/campaign/rolls-panel").then((mod) => ({ default: mod.RollsPanel })),
-);
-const MediaPanel = lazy(() =>
-  import("@/components/campaign/media-panel").then((mod) => ({ default: mod.MediaPanel })),
-);
+// After a new deploy the old chunk filenames disappear, so an open tab can
+// fail to fetch a panel. Retry once, then reload the page to pick up the
+// fresh asset manifest (guarded so we never loop).
+function lazyPanel<
+  K extends string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<K, React.ComponentType<any>>,
+>(load: () => Promise<T>, name: K) {
+
+  return lazy(async () => {
+    try {
+      return { default: (await load())[name] };
+    } catch (err) {
+      try {
+        return { default: (await load())[name] };
+      } catch {
+        const key = `chunk-reload:${name}`;
+        if (typeof window !== "undefined" && !sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, "1");
+          window.location.reload();
+          await new Promise(() => {});
+        }
+        throw err;
+      }
+    }
+  });
+}
+
+
+const LorePanel = lazyPanel(() => import("@/components/lore/lore-panel"), "LorePanel");
+const StoryPanel = lazyPanel(() => import("@/components/lore/story-panel"), "StoryPanel");
+const GraphPanel = lazyPanel(() => import("@/components/lore/graph-panel"), "GraphPanel");
+const PlayersPanel = lazyPanel(() => import("@/components/lore/players-panel"), "PlayersPanel");
+const SessionsPanel = lazyPanel(() => import("@/components/lore/sessions-panel"), "SessionsPanel");
+const TimelinePanel = lazyPanel(() => import("@/components/lore/timeline-panel"), "TimelinePanel");
+const AssetsPanel = lazyPanel(() => import("@/components/lore/assets-panel"), "AssetsPanel");
+const BattlePanel = lazyPanel(() => import("@/components/battle/battle-panel"), "BattlePanel");
+const RollsPanel = lazyPanel(() => import("@/components/campaign/rolls-panel"), "RollsPanel");
+const MediaPanel = lazyPanel(() => import("@/components/campaign/media-panel"), "MediaPanel");
+
 
 
 function PanelFallback() {

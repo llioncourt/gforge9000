@@ -4,6 +4,7 @@ import { AudioWaveform, Download, Play, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

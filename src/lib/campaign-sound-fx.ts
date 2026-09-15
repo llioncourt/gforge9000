@@ -29,13 +29,12 @@ export async function listCampaignSoundFx(campaignId: string) {
   return data ?? [];
 }
 
-/** Persist a new ordering for the campaign's sound effects. */
+/** Persist a new ordering for the campaign's sound effects (parallel writes). */
 export async function reorderCampaignSoundFx(_campaignId: string, orderedIds: string[]) {
-  for (let i = 0; i < orderedIds.length; i++) {
-    const id = orderedIds[i]!;
-    const { error } = await supabase.from("campaign_sound_fx").update({ sort_order: i }).eq("id", id);
-    fail(error);
-  }
+  const results = await Promise.all(
+    orderedIds.map((id, index) => supabase.from("campaign_sound_fx").update({ sort_order: index }).eq("id", id)),
+  );
+  for (const result of results) fail(result.error);
 }
 
 export async function soundFxSignedUrl(path: string) {

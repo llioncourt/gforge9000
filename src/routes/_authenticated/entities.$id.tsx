@@ -401,63 +401,70 @@ function EntityPage() {
             </div>
           </div>
 
-          {form.kind === "NPC" ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Photo</Label>
-                {form.image_url ? (
-                  <div className="flex items-start gap-3">
-                    {photoUrl.data ? (
-                      <img loading="lazy" decoding="async"
-                        src={photoUrl.data}
-                        alt={`${form.name} portrait`}
-                        className="h-32 w-32 rounded-lg border object-cover"
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Image</Label>
+              {displayPhotoPath ? (
+                <div className="flex items-start gap-3">
+                  {photoUrl.data ? (
+                    <img loading="lazy" decoding="async"
+                      src={photoUrl.data}
+                      alt={`${form.name} image`}
+                      className="h-32 w-32 rounded-lg border object-cover"
+                    />
+                  ) : (
+                    <Skeleton className="h-32 w-32 rounded-lg" />
+                  )}
+                  {canEdit ? (
+                    <div className="space-y-2">
+                      <FileDropzone
+                        compact
+                        accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+                        label="Drop a new image, or click to browse"
+                        loading={uploadPhoto.isPending}
+                        loadingLabel="Uploading image…"
+                        onFiles={(files) => {
+                          const file = files[0];
+                          if (file) uploadPhoto.mutate(file);
+                        }}
                       />
-                    ) : (
-                      <Skeleton className="h-32 w-32 rounded-lg" />
-                    )}
-                    {canEdit ? (
-                      <div className="space-y-2">
-                        <FileDropzone
-                          compact
-                          accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
-                          label="Drop a new photo, or click to browse"
-                          loading={uploadPhoto.isPending}
-                          loadingLabel="Uploading photo…"
-                          onFiles={(files) => {
-                            const file = files[0];
-                            if (file) uploadPhoto.mutate(file);
-                          }}
-                        />
+                      {form.image_url ? (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => removePhoto.mutate(form.image_url!)}
                           disabled={removePhoto.isPending}
                         >
-                          <Trash2 className="mr-2 size-4" /> Remove photo
+                          <Trash2 className="mr-2 size-4" /> Remove image
                         </Button>
-                      </div>
-                    ) : null}
-                  </div>
-                ) : canEdit ? (
-                  <FileDropzone
-                    accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
-                    label={`Drop a photo of ${form.name || "this NPC"}, or click to browse`}
-                    hint="PNG, JPEG, WebP, GIF or AVIF up to 5 MB"
-                    loading={uploadPhoto.isPending}
-                    loadingLabel="Uploading photo…"
-                    onFiles={(files) => {
-                      const file = files[0];
-                      if (file) uploadPhoto.mutate(file);
-                    }}
-                  />
-                ) : (
-                  <div className="flex h-32 w-32 items-center justify-center rounded-lg border bg-muted text-2xl font-semibold text-muted-foreground">
-                    {portraitInitials(form.name)}
-                  </div>
-                )}
-              </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              ) : canEdit ? (
+                <FileDropzone
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+                  label={`Drop an image of ${form.name || "this entry"}, or click to browse`}
+                  hint="PNG, JPEG, WebP, GIF or AVIF up to 5 MB"
+                  loading={uploadPhoto.isPending}
+                  loadingLabel="Uploading image…"
+                  onFiles={(files) => {
+                    const file = files[0];
+                    if (file) uploadPhoto.mutate(file);
+                  }}
+                />
+              ) : (
+                <div className="flex h-32 w-32 items-center justify-center rounded-lg border bg-muted text-2xl font-semibold text-muted-foreground">
+                  {portraitInitials(form.name)}
+                </div>
+              )}
+              {!form.image_url && inheritedPortrait ? (
+                <p className="text-muted-foreground text-xs">
+                  Showing the linked character sheet portrait. Drop an image to override it.
+                </p>
+              ) : null}
+            </div>
+            {form.kind === "NPC" ? (
               <div className="space-y-2">
                 <Label htmlFor="entity-sheet">Character sheet (optional)</Label>
                 <Select
@@ -497,7 +504,9 @@ function EntityPage() {
                   </Button>
                 ) : null}
               </div>
-            </div>
+            ) : null}
+          </div>
+
           ) : null}
 
           <div className="space-y-2">

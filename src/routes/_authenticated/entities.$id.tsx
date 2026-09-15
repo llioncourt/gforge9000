@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { ImageZoom } from "@/components/ui/image-zoom";
+import { listAssets } from "@/lib/assets";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -126,6 +128,17 @@ function EntityPage() {
     queryFn: () => entityImageUrl(entityImagePath),
     enabled: !!entityImagePath,
   });
+  // An entry image "from library" points at a campaign_assets file instead of
+  // its own upload — detected by matching the storage path.
+  const libraryAssets = useQuery({
+    queryKey: ["assets", campaignId],
+    queryFn: () => listAssets(campaignId!),
+    enabled: !!campaignId && !!entity.data?.image_url,
+    staleTime: 1000 * 60 * 5,
+  });
+  const isLibraryImage =
+    !!entity.data?.image_url &&
+    (libraryAssets.data ?? []).some((row) => row.storage_path === entity.data?.image_url);
 
   const uploadPhoto = useMutation({
     mutationFn: async (file: File) => {

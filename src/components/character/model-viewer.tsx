@@ -417,7 +417,7 @@ export default function ModelViewer({
       gl={{ antialias: true, preserveDrawingBuffer: true }}
     >
       {bg ? <color attach="background" args={[bg]} /> : null}
-      <Rig onApiHolder={undefined} api={onApi} exposure={settings.exposure} fov={settings.fov} stage={stage} />
+      <Rig api={onApi} exposure={settings.exposure} fov={settings.fov} stage={stage} />
       <Lighting preset={settings.lighting} intensity={settings.lightIntensity} />
       {settings.lighting === "studio" && stage ? (
         <Environment resolution={64}>
@@ -480,7 +480,6 @@ export default function ModelViewer({
           target={[0, 1, 0]}
         />
       )}
-      {progress > 0 && !loaded ? null : null}
     </Canvas>
   );
 }

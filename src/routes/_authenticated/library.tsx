@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Pencil, Plus, Trash2, Upload, UserPlus } from "lucide-react";
@@ -158,13 +158,16 @@ function LibraryPage() {
   const [addTarget, setAddTarget] = useState<LibraryRow | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const exportTask = useTransferTask();
-  const { item: itemParam } = Route.useSearch();
-  const navigate = useNavigate();
-  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const location = useLocation();
+  const itemParam = useMemo(
+    () => new URLSearchParams(location.searchStr).get("item") ?? undefined,
+    [location.searchStr],
+  );
 
   // Deep-link from global search: clear filters, scroll to the entry and flash it.
   useEffect(() => {
-    if (!itemParam) return;
+    const requestedId = itemParam;
+    if (!requestedId) return;
     setSearch("");
     setKindFilter("all");
     setPackFilter("all");
@@ -172,13 +175,19 @@ function LibraryPage() {
     let clearTimer = 0;
     const timer = window.setInterval(() => {
       attempts += 1;
-      const el = document.querySelector(`[data-search-id="${CSS.escape(itemParam)}"]`);
+      const el = document.querySelector(`[data-search-id="${CSS.escape(requestedId)}"]`);
       if (el instanceof HTMLElement) {
         window.clearInterval(timer);
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        setHighlightId(itemParam);
-        clearTimer = window.setTimeout(() => setHighlightId(null), 2600);
-        void navigate({ to: "/library", search: {}, replace: true });
+        el.scrollIntoView({ behavior: "auto", block: "center" });
+        el.style.outline = "4px solid var(--primary)";
+        el.style.outlineOffset = "4px";
+        el.style.backgroundColor = "color-mix(in oklab, var(--primary) 20%, transparent)";
+        el.style.transform = "scale(1.02)";
+        el.style.boxShadow = "0 0 28px color-mix(in oklab, var(--primary) 55%, transparent)";
+        clearTimer = window.setTimeout(() => {
+          el.removeAttribute("style");
+          window.history.replaceState(window.history.state, "", "/library");
+        }, 5000);
       } else if (attempts > 40) {
         window.clearInterval(timer);
       }
@@ -187,7 +196,7 @@ function LibraryPage() {
       window.clearInterval(timer);
       if (clearTimer) window.clearTimeout(clearTimer);
     };
-  }, [itemParam, navigate]);
+  }, [itemParam]);
 
 
   const packs = useMemo(() => {
@@ -403,12 +412,9 @@ function LibraryPage() {
             return (
               <div
                 key={e.id}
+                id={`library-${e.id}`}
                 data-search-id={e.id}
-                className={`panel flex flex-col p-4 transition-shadow ${
-                  highlightId === e.id
-                    ? "ring-2 ring-primary rounded-lg shadow-lg shadow-primary/30"
-                    : ""
-                }`}
+                className="panel flex flex-col p-4 transition-all duration-300"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

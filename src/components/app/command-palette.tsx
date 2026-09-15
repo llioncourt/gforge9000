@@ -56,7 +56,7 @@ export function CommandPalette({
 
   const go = (fn: () => void) => {
     onOpenChange(false);
-    fn();
+    window.setTimeout(fn, 200);
   };
 
   const openTarget = (target: SearchTarget) =>
@@ -72,10 +72,11 @@ export function CommandPalette({
         if (target.sub) search.sub = target.sub;
         void navigate({ to: "/campaigns/$id", params: { id: target.id }, search });
       } else if (target.kind === "library") {
-        void navigate({
-          to: "/library",
-          search: target.item ? { item: target.item } : {},
-        });
+        window.location.assign(
+          target.item
+            ? `/library?item=${encodeURIComponent(target.item)}#library-${encodeURIComponent(target.item)}`
+            : "/library",
+        );
       } else {
         void navigate({ to: "/packs" });
       }

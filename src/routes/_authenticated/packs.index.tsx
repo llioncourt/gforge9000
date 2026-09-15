@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Boxes, Download, Plus, Trash2 } from "lucide-react";
+import { Boxes, Download, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { FileDropzone } from "@/components/ui/FileDropzone";
+import { ImportDialog } from "@/components/ui/transfer-dialog";
 import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 import {
   createContentPack,
@@ -40,12 +40,7 @@ import {
   deleteContentPack,
 } from "@/lib/api";
 import { parsePortablePack } from "@/lib/portable";
-import {
-  campaignsEnablingPack,
-  groupEntriesByPack,
-  makeGroup,
-  type PackGroup,
-} from "@/lib/packs";
+import { campaignsEnablingPack, groupEntriesByPack, makeGroup, type PackGroup } from "@/lib/packs";
 import { useSession } from "@/hooks/use-session";
 import { packSlug } from "@/lib/pack-slug";
 
@@ -78,6 +73,7 @@ function PacksPage() {
   const packsQuery = useQuery({ queryKey: ["content-packs"], queryFn: listContentPacks });
   const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: listCampaigns });
   const [search, setSearch] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -112,26 +108,24 @@ function PacksPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const importPack = useMutation({
-    mutationFn: async (file: File) => {
-      const parsed = parsePortablePack(await file.text());
-      await createContentPack({
-        name: parsed.pack.name,
-        description: parsed.pack.description,
-        source_label: parsed.pack.source_label,
-        source_edition: parsed.pack.source_edition,
-        source_type: parsed.pack.source_type,
-      }).catch(() => undefined);
-      const rows = await importLibraryEntries(parsed.entries as never);
-      return { pack: parsed.pack.name, count: rows.length };
-    },
-    onSuccess: ({ pack, count }) => {
-      queryClient.invalidateQueries({ queryKey: ["library"] });
-      queryClient.invalidateQueries({ queryKey: ["content-packs"] });
-      toast.success(`Imported ${count} entries into “${pack}”.`);
-    },
-    onError: (e: Error) => toast.error(`Import failed: ${e.message}`),
-  });
+  const importPackFile = async (file: File, report: (label: string, percent?: number) => void) => {
+    report("Reading file…", 10);
+    const parsed = parsePortablePack(await file.text());
+    report(`Creating pack “${parsed.pack.name}”…`, 35);
+    await createContentPack({
+      name: parsed.pack.name,
+      description: parsed.pack.description,
+      source_label: parsed.pack.source_label,
+      source_edition: parsed.pack.source_edition,
+      source_type: parsed.pack.source_type,
+    }).catch(() => undefined);
+    report(`Importing ${parsed.entries.length} entries…`, 55);
+    const rows = await importLibraryEntries(parsed.entries as never);
+    report("Refreshing packs…", 90);
+    await queryClient.invalidateQueries({ queryKey: ["library"] });
+    await queryClient.invalidateQueries({ queryKey: ["content-packs"] });
+    return `Imported ${rows.length} entries into “${parsed.pack.name}”.`;
+  };
 
   const removePack = useMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) => deleteContentPack(id, name),
@@ -155,7 +149,6 @@ function PacksPage() {
         }
       />
 
-
       <div className="mb-4 grid gap-3 lg:grid-cols-[1fr_320px]">
         <Input
           className="max-w-xs"
@@ -164,18 +157,9 @@ function PacksPage() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <div className="grid gap-2">
-          <FileDropzone
-            accept="application/json"
-            compact
-            loading={importPack.isPending}
-            loadingLabel="Importing pack…"
-            label="Import a pack"
-            hint="Drop a Universal Character Forge pack JSON file"
-            onFiles={(files) => {
-              const file = files[0];
-              if (file) importPack.mutate(file);
-            }}
-          />
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" /> Import a pack
+          </Button>
           <AiConversionGuideButton kind="pack" />
         </div>
       </div>
@@ -230,7 +214,9 @@ function PacksPage() {
                   ))}
                 </div>
                 <p className="mt-3 text-[11px] text-muted-foreground">
-                  {g.sources.length ? g.sources.join(" · ") : meta?.source_label ?? "User content"}
+                  {g.sources.length
+                    ? g.sources.join(" · ")
+                    : (meta?.source_label ?? "User content")}
                   {g.visibilities.length ? ` · ${g.visibilities.join(", ")}` : ""}
                 </p>
                 <p className="mt-auto pt-3 text-[11px] text-muted-foreground">
@@ -268,9 +254,7 @@ function PacksPage() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() =>
-                              removePack.mutate({ id: meta.id, name: g.pack })
-                            }
+                            onClick={() => removePack.mutate({ id: meta.id, name: g.pack })}
                             disabled={removePack.isPending}
                           >
                             Delete pack
@@ -320,6 +304,16 @@ function PacksPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Import pack"
+        description="Drop a Universal Character Forge pack JSON file."
+        accept="application/json,.json"
+        label="Drop the pack JSON here, or click to browse"
+        run={importPackFile}
+      />
     </div>
   );
 }

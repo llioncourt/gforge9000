@@ -35,7 +35,7 @@ import { getCampaign, listCampaignCharacters } from "@/lib/api";
 import { download } from "@/lib/portable";
 import { parsePortableLore, toPortableLore } from "@/lib/lore-portable";
 import { importLore } from "@/lib/lore-import";
-import { FileDropzone } from "@/components/ui/FileDropzone";
+import { ImportDialog, useTransferTask } from "@/components/ui/transfer-dialog";
 import { AiDraftDialog } from "@/components/lore/ai-draft-dialog";
 import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
 import { EntityThumb } from "@/components/lore/entity-thumb";
@@ -59,35 +59,36 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
   const [newKind, setNewKind] = useState("NPC");
   const [newName, setNewName] = useState("");
 
-  const exportLore = useMutation({
-    mutationFn: async () => {
+  const exportTask = useTransferTask();
+
+  const runExportLore = () =>
+    void exportTask.run("Exporting world & lore", async (report) => {
+      report("Reading campaign…", 15);
       const [campaign, rows, rels] = await Promise.all([
         getCampaign(campaignId),
         listEntities(campaignId),
         listRelationships(campaignId),
       ]);
+      report("Building file…", 60);
       const file = toPortableLore(campaign.name, rows, rels);
-      const slug = campaign.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const slug = campaign.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      report("Downloading…", 90);
       download(`${slug || "campaign"}-lore.json`, JSON.stringify(file, null, 2));
-      return file.entities.length;
-    },
-    onSuccess: (count) => toast.success(`Exported ${count} entries`),
-    onError: (error: Error) => toast.error(error.message),
-  });
+      return `Exported ${file.entities.length} entries.`;
+    });
 
-  const runImport = useMutation({
-    mutationFn: async (file: File) => {
-      const parsed = parsePortableLore(await file.text());
-      return importLore(campaignId, parsed);
-    },
-    onSuccess: async (result) => {
-      setImporting(false);
-      toast.success(`Imported ${result.entities} entries and ${result.relationships} links`);
-      await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
-
+  const runImportLore = async (file: File, report: (label: string, percent?: number) => void) => {
+    report("Reading file…", 10);
+    const parsed = parsePortableLore(await file.text());
+    report("Importing entries and links…", 45);
+    const result = await importLore(campaignId, parsed);
+    report("Refreshing world & lore…", 90);
+    await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+    return `Imported ${result.entities} entries and ${result.relationships} links.`;
+  };
 
   const entities = useQuery({
     queryKey: ["lore-entities", campaignId],
@@ -194,11 +195,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
           </Select>
           {isGm ? (
             <>
-              <Button
-                variant="outline"
-                onClick={() => exportLore.mutate()}
-                disabled={exportLore.isPending}
-              >
+              <Button variant="outline" onClick={runExportLore} disabled={exportTask.busy}>
                 <Download className="mr-2 size-4" /> Export
               </Button>
               <Button variant="outline" onClick={() => setImporting(true)}>
@@ -207,7 +204,9 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
               <Button
                 variant="outline"
                 onClick={() => {
-                  setDraftKind(kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"));
+                  setDraftKind(
+                    kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"),
+                  );
                   setDrafting(true);
                 }}
               >
@@ -223,7 +222,6 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
               </Button>
             </>
           ) : null}
-
         </div>
       </div>
 
@@ -276,7 +274,11 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                   </Link>
                   {isGm ? (
                     <div className="absolute right-2 bottom-2">
-                      <EntityDeleteButton campaignId={campaignId} entityId={row.id} name={row.name} />
+                      <EntityDeleteButton
+                        campaignId={campaignId}
+                        entityId={row.id}
+                        name={row.name}
+                      />
                     </div>
                   ) : null}
                 </div>
@@ -328,30 +330,17 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
         </DialogContent>
       </Dialog>
 
-      <Dialog open={importing} onOpenChange={setImporting}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Import lore</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-muted-foreground text-sm">
-              Adds the entries and their links from an exported file to this campaign. Existing
-              entries are kept; nothing is overwritten. Player reveals and history are not included.
-            </p>
-            <FileDropzone
-              accept="application/json,.json"
-              onFiles={(files) => files[0] && runImport.mutate(files[0])}
-              label={runImport.isPending ? "Importing…" : "Drop a lore export here, or click to browse"}
-              hint="JSON file exported from a campaign"
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setImporting(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ImportDialog
+        open={importing}
+        onOpenChange={setImporting}
+        title="Import lore"
+        description="Adds the entries and their links from an exported file to this campaign. Existing entries are kept; nothing is overwritten."
+        accept="application/json,.json"
+        label="Drop a lore export here, or click to browse"
+        hint="JSON file exported from a campaign"
+        run={runImportLore}
+      />
+      {exportTask.node}
 
       {isGm ? (
         <AiDraftDialog
@@ -363,6 +352,5 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
         />
       ) : null}
     </div>
-
   );
 }

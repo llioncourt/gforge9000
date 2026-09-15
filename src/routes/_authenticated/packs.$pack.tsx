@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useTransferTask } from "@/components/ui/transfer-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Download, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -66,7 +67,8 @@ export const Route = createFileRoute("/_authenticated/packs/$pack")({
       { title: "Pack detail — Universal Character Forge" },
       {
         name: "description",
-        content: "Every entry in this content pack, grouped by kind, with provenance and campaign use.",
+        content:
+          "Every entry in this content pack, grouped by kind, with provenance and campaign use.",
       },
       { property: "og:title", content: "Pack detail — Universal Character Forge" },
       { property: "og:description", content: "Curate a content pack and enable it per campaign." },
@@ -92,6 +94,7 @@ function PackDetailPage() {
   const [nextName, setNextName] = useState(packName ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [addId, setAddId] = useState("");
+  const exportTask = useTransferTask();
 
   const rows = useMemo(
     () => (library.data ?? []).filter((e) => (e.pack ?? "") === packName),
@@ -104,9 +107,7 @@ function PackDetailPage() {
 
   const unpacked = useMemo(
     () =>
-      (library.data ?? []).filter(
-        (e) => (e.pack ?? "") !== packName && e.owner_id === user?.id,
-      ),
+      (library.data ?? []).filter((e) => (e.pack ?? "") !== packName && e.owner_id === user?.id),
     [library.data, packName, user?.id],
   );
 
@@ -172,9 +173,9 @@ function PackDetailPage() {
       // turn that into an explicit list of the remaining packs.
       const base =
         !enabled && current.length === 0
-          ? (allPackNames.filter((n) => n.toLowerCase() !== packName.toLowerCase()).length
-              ? allPackNames.filter((n) => n.toLowerCase() !== packName.toLowerCase())
-              : [NO_PACKS_MARKER])
+          ? allPackNames.filter((n) => n.toLowerCase() !== packName.toLowerCase()).length
+            ? allPackNames.filter((n) => n.toLowerCase() !== packName.toLowerCase())
+            : [NO_PACKS_MARKER]
           : current;
       const next = togglePackInList(base, packName, enabled);
       await updateCampaign(id, { settings: { ...settings, allowed_packs: next } as never });
@@ -182,7 +183,6 @@ function PackDetailPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaigns"] }),
     onError: (e: Error) => toast.error(e.message),
   });
-
 
   if (library.isLoading) {
     return (
@@ -208,10 +208,11 @@ function PackDetailPage() {
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
+              disabled={exportTask.busy}
               onClick={() =>
-                download(
-                  `${slugify(group.label)}-pack.json`,
-                  JSON.stringify(
+                void exportTask.run("Exporting pack", async (report) => {
+                  report("Building file…", 40);
+                  const contents = JSON.stringify(
                     toPortablePack(
                       {
                         name: packName,
@@ -225,8 +226,11 @@ function PackDetailPage() {
                     ),
                     null,
                     2,
-                  ),
-                )
+                  );
+                  report("Downloading…", 85);
+                  download(`${slugify(group.label)}-pack.json`, contents);
+                  return `Exported ${rows.length} entries from “${packName}”.`;
+                })
               }
             >
               <Download className="mr-2 h-4 w-4" /> Export pack
@@ -255,7 +259,9 @@ function PackDetailPage() {
         <div className="panel p-4">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">Provenance</p>
           <p className="mt-2 text-sm">
-            {group.sources.length ? group.sources.join(" · ") : (meta?.source_label ?? "User content")}
+            {group.sources.length
+              ? group.sources.join(" · ")
+              : (meta?.source_label ?? "User content")}
             {meta?.source_edition ? ` · ${meta.source_edition}` : ""} ·{" "}
             {meta?.source_type ?? "user"} content
           </p>
@@ -362,7 +368,11 @@ function PackDetailPage() {
                     </div>
                     <span className="stat-value text-sm">{e.base_points}</span>
                     {(e.tags ?? []).slice(0, 2).map((t) => (
-                      <Badge key={t} variant="outline" className="hidden text-[10px] sm:inline-flex">
+                      <Badge
+                        key={t}
+                        variant="outline"
+                        className="hidden text-[10px] sm:inline-flex"
+                      >
                         {t}
                       </Badge>
                     ))}
@@ -412,8 +422,8 @@ function PackDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this pack?</AlertDialogTitle>
             <AlertDialogDescription>
-              Every entry inside this pack is deleted with it. Anything already added to a
-              character stays on the sheet and becomes a custom entry.
+              Every entry inside this pack is deleted with it. Anything already added to a character
+              stays on the sheet and becomes a custom entry.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -422,6 +432,7 @@ function PackDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {exportTask.node}
     </div>
   );
 }

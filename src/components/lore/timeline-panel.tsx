@@ -53,9 +53,12 @@ import {
   type WorldCalendar,
 } from "@/lib/world-calendar";
 import { buildCalendarPackZip, readCalendarFile } from "@/lib/calendar-pack";
-import { buildTimelinePackZip, readTimelineFile, type TimelineEventInput } from "@/lib/timeline-pack";
-import { FileDropzone } from "@/components/ui/FileDropzone";
-
+import {
+  buildTimelinePackZip,
+  readTimelineFile,
+  type TimelineEventInput,
+} from "@/lib/timeline-pack";
+import { ImportDialog, useTransferTask } from "@/components/ui/transfer-dialog";
 
 export type { WorldCalendar } from "@/lib/world-calendar";
 
@@ -88,8 +91,12 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
   });
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [eventsImportOpen, setEventsImportOpen] = useState(false);
+  const exportTask = useTransferTask();
 
-  const campaign = useQuery({ queryKey: ["campaign", campaignId], queryFn: () => getCampaign(campaignId) });
+  const campaign = useQuery({
+    queryKey: ["campaign", campaignId],
+    queryFn: () => getCampaign(campaignId),
+  });
   const entities = useQuery({
     queryKey: ["lore-entities", campaignId],
     queryFn: () => listEntities(campaignId),
@@ -102,7 +109,9 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
     return rows.sort((a, b) => {
       const [ay, am, ad, ah, amin] = eventOrder(a, calendar);
       const [by, bm, bd, bh, bmin] = eventOrder(b, calendar);
-      return ay - by || am - bm || ad - bd || ah - bh || amin - bmin || a.name.localeCompare(b.name);
+      return (
+        ay - by || am - bm || ad - bd || ah - bh || amin - bmin || a.name.localeCompare(b.name)
+      );
     });
   }, [entities.data, calendar]);
 
@@ -160,67 +169,76 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const importEvents = useMutation({
-    mutationFn: async (rows: TimelineEventInput[]) => {
-      rows.forEach((row, i) => {
-        const monthIdx = calendar.months.findIndex(
-          (m) => m.name.toLowerCase() === (row.month ?? "").toLowerCase(),
-        );
-        if (row.month && monthIdx >= 0 && row.day) {
-          const check: Parameters<typeof validateWorldDate>[1] = {
-            month: monthIdx + 1,
-            day: Number(row.day),
-          };
-          if (row.year) check.year = Number(row.year);
-          if (row.hour) check.hour = Number(row.hour);
-          if (row.minute) check.minute = Number(row.minute);
-          const err = validateWorldDate(calendar, check);
-          if (err) throw new Error(`Evento ${i + 1} ("${row.name}"): ${err}`);
-        }
-      });
-
-      for (const row of rows) {
-        await createEntity({
-          campaign_id: campaignId,
-          kind: "EVENT",
-          name: row.name,
-          status: row.status || "Historical",
-          visibility: row.visibility ?? (isGm ? "GM_ONLY" : "ALL_PLAYERS"),
-          summary: row.summary || null,
-          created_by: user!.id,
-          data: {
-            year: row.year ?? "",
-            month: row.month ?? "",
-            day: row.day ?? "",
-            hour: row.hour ?? "",
-            minute: row.minute ?? "",
-            era: row.era || calendar.era,
-            what_happened: row.what_happened ?? "",
-            consequences: row.consequences ?? "",
-            gm_truth: row.gm_truth ?? "",
-          },
-        } as never);
+  const importEventsFile = async (
+    file: File,
+    report: (label: string, percent?: number) => void,
+  ) => {
+    report("Lendo arquivo…", 8);
+    const rows = await readTimelineFile(file);
+    report("Validando datas…", 18);
+    rows.forEach((row, i) => {
+      const monthIdx = calendar.months.findIndex(
+        (m) => m.name.toLowerCase() === (row.month ?? "").toLowerCase(),
+      );
+      if (row.month && monthIdx >= 0 && row.day) {
+        const check: Parameters<typeof validateWorldDate>[1] = {
+          month: monthIdx + 1,
+          day: Number(row.day),
+        };
+        if (row.year) check.year = Number(row.year);
+        if (row.hour) check.hour = Number(row.hour);
+        if (row.minute) check.minute = Number(row.minute);
+        const err = validateWorldDate(calendar, check);
+        if (err) throw new Error(`Evento ${i + 1} ("${row.name}"): ${err}`);
       }
-      return rows.length;
-    },
-    onSuccess: (count) => {
-      setEventsImportOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
-      toast.success(`${count} evento(s) importado(s).`);
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+    });
 
-  const downloadEventsPack = () => {
-    const url = URL.createObjectURL(buildTimelinePackZip());
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "timeline-eventos-modelo.zip";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    let done = 0;
+    for (const row of rows) {
+      await createEntity({
+        campaign_id: campaignId,
+        kind: "EVENT",
+        name: row.name,
+        status: row.status || "Historical",
+        visibility: row.visibility ?? (isGm ? "GM_ONLY" : "ALL_PLAYERS"),
+        summary: row.summary || null,
+        created_by: user!.id,
+        data: {
+          year: row.year ?? "",
+          month: row.month ?? "",
+          day: row.day ?? "",
+          hour: row.hour ?? "",
+          minute: row.minute ?? "",
+          era: row.era || calendar.era,
+          what_happened: row.what_happened ?? "",
+          consequences: row.consequences ?? "",
+          gm_truth: row.gm_truth ?? "",
+        },
+      } as never);
+      done += 1;
+      report(
+        `Importando eventos (${done}/${rows.length})…`,
+        20 + Math.round((done / Math.max(1, rows.length)) * 75),
+      );
+    }
+    await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+    return `${rows.length} evento(s) importado(s).`;
   };
+
+  const downloadEventsPack = () =>
+    void exportTask.run("Modelo de eventos (ZIP)", async (report) => {
+      report("Gerando pacote…", 45);
+      const url = URL.createObjectURL(buildTimelinePackZip());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "timeline-eventos-modelo.zip";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      report("Baixando…", 90);
+      return "Modelo baixado.";
+    });
 
   return (
     <div className="space-y-6">
@@ -237,30 +255,9 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
           </Button>
         ) : null}
         {isGm ? (
-          <Dialog open={eventsImportOpen} onOpenChange={setEventsImportOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Upload className="mr-1 h-4 w-4" /> Importar eventos
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Importar eventos da timeline</DialogTitle>
-              </DialogHeader>
-              <FileDropzone
-                accept=".json,.zip,application/json,application/zip"
-                onFiles={(files) => {
-                  const file = files[0];
-                  if (!file) return;
-                  void readTimelineFile(file)
-                    .then((rows) => importEvents.mutate(rows))
-                    .catch((e: Error) => toast.error(e.message));
-                }}
-                label="Solte o events.json ou o ZIP aqui"
-                hint="Baixe o modelo de eventos para ver a estrutura."
-              />
-            </DialogContent>
-          </Dialog>
+          <Button variant="outline" size="sm" onClick={() => setEventsImportOpen(true)}>
+            <Upload className="mr-1 h-4 w-4" /> Importar eventos
+          </Button>
         ) : null}
         {isGm ? (
           <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
@@ -321,7 +318,9 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
                       </div>
                     </div>
                     {row.summary ? (
-                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{row.summary}</p>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                        {row.summary}
+                      </p>
                     ) : null}
                   </Link>
                 </li>
@@ -354,10 +353,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
             />
           </div>
           {calendar.months.length > 0 ? (
-            <Select
-              value={form.month}
-              onValueChange={(v) => setForm({ ...form, month: v })}
-            >
+            <Select value={form.month} onValueChange={(v) => setForm({ ...form, month: v })}>
               <SelectTrigger>
                 <SelectValue placeholder={calendar.units.month.singular} />
               </SelectTrigger>
@@ -405,6 +401,18 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
           </Button>
         </div>
       </div>
+
+      <ImportDialog
+        open={eventsImportOpen}
+        onOpenChange={setEventsImportOpen}
+        title="Importar eventos da timeline"
+        description="Solte o events.json ou o ZIP do modelo de eventos."
+        accept=".json,.zip,application/json,application/zip"
+        label="Solte o events.json ou o ZIP aqui"
+        hint="Baixe o modelo de eventos para ver a estrutura."
+        run={importEventsFile}
+      />
+      {exportTask.node}
     </div>
   );
 }
@@ -422,7 +430,12 @@ const UNIT_KEYS = [
   ["minute", "Minuto / Parte"],
 ] as const;
 
-function blockLeapRule(rule: LeapRule): { block: number; years: number[]; month: number; extraDays: number } {
+function blockLeapRule(rule: LeapRule): {
+  block: number;
+  years: number[];
+  month: number;
+  extraDays: number;
+} {
   return rule.kind === "block" ? rule : { block: 10, years: [4, 7, 10], month: 0, extraDays: 1 };
 }
 
@@ -444,7 +457,7 @@ function CalendarForm({
   }));
   const [saving, setSaving] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-
+  const calendarTask = useTransferTask();
 
   const update = (patch: Partial<WorldCalendar>) => setDraft((d) => ({ ...d, ...patch }));
   const updateUnits = (key: keyof WorldCalendar["units"], field: keyof UnitName, value: string) =>
@@ -465,26 +478,27 @@ function CalendarForm({
     });
   };
 
-  const downloadPack = () => {
-    const url = URL.createObjectURL(buildCalendarPackZip());
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "calendario-modelo.zip";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  };
+  const downloadPack = () =>
+    void calendarTask.run("Baixar modelo de calendário (ZIP)", async (report) => {
+      report("Gerando pacote…", 45);
+      const url = URL.createObjectURL(buildCalendarPackZip());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "calendario-modelo.zip";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      report("Baixando…", 90);
+      return "Modelo baixado.";
+    });
 
-  const importFile = async (file: File) => {
-    try {
-      const next = await readCalendarFile(file);
-      setDraft({ ...next, today: draft.today, era: next.era || draft.era });
-      setImportOpen(false);
-      toast.success("Calendário importado — revise e salve.");
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
+  const importFile = async (file: File, report: (label: string, percent?: number) => void) => {
+    report("Lendo arquivo…", 20);
+    const next = await readCalendarFile(file);
+    report("Aplicando calendário…", 80);
+    setDraft({ ...next, today: draft.today, era: next.era || draft.era });
+    return "Calendário importado — revise e salve.";
   };
 
   return (
@@ -496,29 +510,21 @@ function CalendarForm({
         <Button type="button" variant="outline" size="sm" onClick={downloadPack}>
           <Download className="mr-1 h-4 w-4" /> Baixar modelo (ZIP)
         </Button>
-        <Dialog open={importOpen} onOpenChange={setImportOpen}>
-          <DialogTrigger asChild>
-            <Button type="button" variant="outline" size="sm">
-              <Upload className="mr-1 h-4 w-4" /> Importar calendário
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Importar calendário</DialogTitle>
-            </DialogHeader>
-            <FileDropzone
-              accept=".json,.zip,application/json,application/zip"
-              onFiles={(files) => {
-                const file = files[0];
-                if (file) void importFile(file);
-              }}
-              label="Solte o calendar.json ou o ZIP aqui"
-              hint="Use o pacote modelo como referência da estrutura."
-            />
-          </DialogContent>
-        </Dialog>
+        <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(true)}>
+          <Upload className="mr-1 h-4 w-4" /> Importar calendário
+        </Button>
+        <ImportDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          title="Importar calendário"
+          description="Solte o calendar.json ou o ZIP do modelo."
+          accept=".json,.zip,application/json,application/zip"
+          label="Solte o calendar.json ou o ZIP aqui"
+          hint="Use o pacote modelo como referência da estrutura."
+          run={importFile}
+        />
+        {calendarTask.node}
       </div>
-
 
       <Tabs defaultValue="units" className="w-full">
         <TabsList className="flex gap-1 overflow-x-auto pb-1">
@@ -739,7 +745,10 @@ function CalendarForm({
             onClick={() =>
               setDraft((d) => ({
                 ...d,
-                seasons: [...d.seasons, { name: `Estação ${d.seasons.length + 1}`, subtitle: "", months: [] }],
+                seasons: [
+                  ...d.seasons,
+                  { name: `Estação ${d.seasons.length + 1}`, subtitle: "", months: [] },
+                ],
               }))
             }
           >
@@ -751,7 +760,9 @@ function CalendarForm({
         <TabsContent value="cycle" className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs">{draft.units.day.plural} por {draft.units.week.singular.toLowerCase()}</Label>
+              <Label className="text-xs">
+                {draft.units.day.plural} por {draft.units.week.singular.toLowerCase()}
+              </Label>
               <Input
                 className="h-8"
                 type="number"
@@ -762,41 +773,59 @@ function CalendarForm({
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">{draft.units.hour.plural} por {draft.units.day.singular.toLowerCase()}</Label>
+              <Label className="text-xs">
+                {draft.units.hour.plural} por {draft.units.day.singular.toLowerCase()}
+              </Label>
               <Input
                 className="h-8"
                 type="number"
                 value={draft.daySubdivision.hoursPerDay}
                 onChange={(e) =>
                   update({
-                    daySubdivision: { ...draft.daySubdivision, hoursPerDay: Number(e.target.value) || 0 },
+                    daySubdivision: {
+                      ...draft.daySubdivision,
+                      hoursPerDay: Number(e.target.value) || 0,
+                    },
                   })
                 }
               />
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">{draft.units.minute.plural} por {draft.units.hour.singular.toLowerCase()}</Label>
+            <Label className="text-xs">
+              {draft.units.minute.plural} por {draft.units.hour.singular.toLowerCase()}
+            </Label>
             <Input
               className="h-8"
               type="number"
               value={draft.daySubdivision.minutesPerHour}
               onChange={(e) =>
                 update({
-                  daySubdivision: { ...draft.daySubdivision, minutesPerHour: Number(e.target.value) || 0 },
+                  daySubdivision: {
+                    ...draft.daySubdivision,
+                    minutesPerHour: Number(e.target.value) || 0,
+                  },
                 })
               }
             />
           </div>
           {draft.week.daysPerWeek > 0 ? (
             <div className="space-y-1">
-              <Label className="text-xs">Nomes dos {draft.units.day.plural.toLowerCase()} da semana</Label>
+              <Label className="text-xs">
+                Nomes dos {draft.units.day.plural.toLowerCase()} da semana
+              </Label>
               <Textarea
                 rows={Math.max(2, draft.week.dayNames.length)}
                 value={draft.week.dayNames.join("\n")}
                 onChange={(e) =>
                   update({
-                    week: { ...draft.week, dayNames: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) },
+                    week: {
+                      ...draft.week,
+                      dayNames: e.target.value
+                        .split("\n")
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    },
                   })
                 }
                 placeholder={"Domingo\nSegunda\nTerça"}
@@ -813,7 +842,13 @@ function CalendarForm({
                 let leapRule: LeapRule;
                 if (v === "gregorian") leapRule = { kind: "gregorian" };
                 else if (v === "block")
-                  leapRule = { kind: "block", block: 10, years: [4, 7, 10], month: 0, extraDays: 1 };
+                  leapRule = {
+                    kind: "block",
+                    block: 10,
+                    years: [4, 7, 10],
+                    month: 0,
+                    extraDays: 1,
+                  };
                 else leapRule = { kind: "none" };
                 update({ leapRule });
               }}
@@ -836,7 +871,13 @@ function CalendarForm({
                     type="number"
                     value={draft.leapRule.kind === "block" ? draft.leapRule.block : 10}
                     onChange={(e) =>
-                      update({ leapRule: { kind: "block", ...blockLeapRule(draft.leapRule), block: Number(e.target.value) || 1 } })
+                      update({
+                        leapRule: {
+                          kind: "block",
+                          ...blockLeapRule(draft.leapRule),
+                          block: Number(e.target.value) || 1,
+                        },
+                      })
                     }
                   />
                 </div>
@@ -844,7 +885,9 @@ function CalendarForm({
                   <Label className="text-xs">Anos bissextos no bloco</Label>
                   <Input
                     className="h-8"
-                    value={draft.leapRule.kind === "block" ? draft.leapRule.years.join(", ") : "4, 7, 10"}
+                    value={
+                      draft.leapRule.kind === "block" ? draft.leapRule.years.join(", ") : "4, 7, 10"
+                    }
                     onChange={(e) =>
                       update({
                         leapRule: {
@@ -861,11 +904,19 @@ function CalendarForm({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">{draft.units.month.singular} que recebe dia extra</Label>
+                  <Label className="text-xs">
+                    {draft.units.month.singular} que recebe dia extra
+                  </Label>
                   <Select
                     value={draft.leapRule.kind === "block" ? String(draft.leapRule.month) : "0"}
                     onValueChange={(v) =>
-                      update({ leapRule: { kind: "block", ...blockLeapRule(draft.leapRule), month: Number(v) } })
+                      update({
+                        leapRule: {
+                          kind: "block",
+                          ...blockLeapRule(draft.leapRule),
+                          month: Number(v),
+                        },
+                      })
                     }
                   >
                     <SelectTrigger className="h-8">
@@ -887,7 +938,13 @@ function CalendarForm({
                     type="number"
                     value={draft.leapRule.kind === "block" ? draft.leapRule.extraDays : 1}
                     onChange={(e) =>
-                      update({ leapRule: { kind: "block", ...blockLeapRule(draft.leapRule), extraDays: Number(e.target.value) || 1 } })
+                      update({
+                        leapRule: {
+                          kind: "block",
+                          ...blockLeapRule(draft.leapRule),
+                          extraDays: Number(e.target.value) || 1,
+                        },
+                      })
                     }
                   />
                 </div>
@@ -910,7 +967,12 @@ function CalendarForm({
                 value={draft.today?.year ?? ""}
                 onChange={(e) => {
                   const v = Number(e.target.value);
-                  update({ today: { ...(draft.today ?? { year: 0, month: 1, day: 1, hour: 0, minute: 0 }), year: v } });
+                  update({
+                    today: {
+                      ...(draft.today ?? { year: 0, month: 1, day: 1, hour: 0, minute: 0 }),
+                      year: v,
+                    },
+                  });
                 }}
               />
             </div>
@@ -920,7 +982,12 @@ function CalendarForm({
                 value={draft.today ? String(draft.today.month) : ""}
                 onValueChange={(v) => {
                   const m = Number(v);
-                  update({ today: { ...(draft.today ?? { year: 0, month: m, day: 1, hour: 0, minute: 0 }), month: m } });
+                  update({
+                    today: {
+                      ...(draft.today ?? { year: 0, month: m, day: 1, hour: 0, minute: 0 }),
+                      month: m,
+                    },
+                  });
                 }}
               >
                 <SelectTrigger className="h-8">
@@ -943,7 +1010,12 @@ function CalendarForm({
                 value={draft.today?.day ?? ""}
                 onChange={(e) => {
                   const d = Number(e.target.value);
-                  update({ today: { ...(draft.today ?? { year: 0, month: 1, day: d, hour: 0, minute: 0 }), day: d } });
+                  update({
+                    today: {
+                      ...(draft.today ?? { year: 0, month: 1, day: d, hour: 0, minute: 0 }),
+                      day: d,
+                    },
+                  });
                 }}
               />
             </div>
@@ -955,7 +1027,12 @@ function CalendarForm({
                 value={draft.today?.hour ?? ""}
                 onChange={(e) => {
                   const h = Number(e.target.value);
-                  update({ today: { ...(draft.today ?? { year: 0, month: 1, day: 1, hour: h, minute: 0 }), hour: h } });
+                  update({
+                    today: {
+                      ...(draft.today ?? { year: 0, month: 1, day: 1, hour: h, minute: 0 }),
+                      hour: h,
+                    },
+                  });
                 }}
               />
             </div>
@@ -967,17 +1044,18 @@ function CalendarForm({
                 value={draft.today?.minute ?? ""}
                 onChange={(e) => {
                   const m = Number(e.target.value);
-                  update({ today: { ...(draft.today ?? { year: 0, month: 1, day: 1, hour: 0, minute: m }), minute: m } });
+                  update({
+                    today: {
+                      ...(draft.today ?? { year: 0, month: 1, day: 1, hour: 0, minute: m }),
+                      minute: m,
+                    },
+                  });
                 }}
               />
             </div>
           </div>
           {draft.today ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => update({ today: null })}
-            >
+            <Button variant="ghost" size="sm" onClick={() => update({ today: null })}>
               Limpar data atual
             </Button>
           ) : null}

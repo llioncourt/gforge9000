@@ -448,7 +448,7 @@ function CalendarForm({
                 onChange={(e) =>
                   setDraft((d) => {
                     const months = [...d.months];
-                    months[i] = { ...months[i], name: e.target.value };
+                    months[i] = { ...months[i]!, name: e.target.value };
                     return { ...d, months };
                   })
                 }

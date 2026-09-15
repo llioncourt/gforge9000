@@ -41,7 +41,7 @@ export function MediaPanel({
       </TabsContent>
       <TabsContent value="soundtrack" className="mt-6">
         <Suspense fallback={<MediaFallback />}>
-          <SoundtrackPanel campaignId={campaignId} isGm={isGm} focusId={focusId} />
+          <SoundtrackPanel campaignId={campaignId} isGm={isGm} />
         </Suspense>
       </TabsContent>
       <TabsContent value="sound-fx" className="mt-6">

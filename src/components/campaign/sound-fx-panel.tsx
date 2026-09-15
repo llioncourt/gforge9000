@@ -19,6 +19,21 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
   const upload = useMutation({ mutationFn: (file: File) => uploadCampaignSoundFx(campaignId, title, file), onSuccess: async () => { setTitle(""); await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] }); toast.success("Sound effect uploaded."); }, onError: (error: Error) => toast.error(error.message) });
   const remove = useMutation({ mutationFn: deleteCampaignSoundFx, onSuccess: async () => { await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] }); toast.success("Sound effect removed."); }, onError: (error: Error) => toast.error(error.message) });
   const trigger = useMutation({ mutationFn: (effect: CampaignSoundFx) => triggerCampaignSoundFx(campaignId, effect.id), onError: (error: Error) => toast.error(error.message) });
+  const [selected, setSelected] = useState<string[]>([]);
+  const toggleSelected = (id: string, checked: boolean) => setSelected((current) => (checked ? [...new Set([...current, id])] : current.filter((item) => item !== id)));
+  const removeSelected = useMutation({
+    mutationFn: async () => {
+      const items = (effects.data ?? []).filter((effect) => selected.includes(effect.id));
+      for (const item of items) await deleteCampaignSoundFx(item);
+      return items.length;
+    },
+    onSuccess: async (count) => {
+      setSelected([]);
+      await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] });
+      toast.success(`${count} sound effect${count === 1 ? "" : "s"} removed.`);
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
   const [importOpen, setImportOpen] = useState(false);
   const importPack = useMutation({
     mutationFn: async (file: File) => {

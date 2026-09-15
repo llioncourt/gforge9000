@@ -670,11 +670,12 @@ function CalendarForm({
                   <Label className="text-xs">Anos bissextos no bloco</Label>
                   <Input
                     className="h-8"
-                    value={draft.leapRule.years.join(", ")}
+                    value={draft.leapRule.kind === "block" ? draft.leapRule.years.join(", ") : "4, 7, 10"}
                     onChange={(e) =>
                       update({
                         leapRule: {
-                          ...draft.leapRule,
+                          kind: "block",
+                          ...blockLeapRule(draft.leapRule),
                           years: e.target.value
                             .split(",")
                             .map((s) => Number(s.trim()))

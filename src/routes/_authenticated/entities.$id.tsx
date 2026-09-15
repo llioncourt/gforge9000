@@ -407,7 +407,7 @@ function EntityPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Image</Label>
-              {displayPhotoPath ? (
+              {(form.image_url ?? inheritedPortrait) ? (
                 <div className="flex items-start gap-3">
                   {photoUrl.data ? (
                     <img loading="lazy" decoding="async"

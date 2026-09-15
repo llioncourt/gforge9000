@@ -116,7 +116,7 @@ function EntityPage() {
   }, [entity.data?.image_url]);
   const photoUrl = useQuery({
     queryKey: ["entity-photo", entityImagePath],
-    queryFn: () => portraitUrl(entityImagePath),
+    queryFn: () => entityImageUrl(entityImagePath),
     enabled: !!entityImagePath,
   });
 

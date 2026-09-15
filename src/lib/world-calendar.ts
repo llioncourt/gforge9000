@@ -346,8 +346,9 @@ export function validateWorldDate(
     return `${u.month.singular} inválido`;
   }
   const maxDay = monthLength(calendar, monthIdx, date.year ?? 0);
+  const monthDef = calendar.months[monthIdx];
   if (date.day < 1 || date.day > maxDay) {
-    return `${u.day.singular} deve estar entre 1 e ${maxDay} em ${calendar.months[monthIdx].name}`;
+    return `${u.day.singular} deve estar entre 1 e ${maxDay} em ${monthDef?.name ?? ""}`;
   }
   if (date.hour !== undefined && (date.hour < 0 || date.hour >= calendar.daySubdivision.hoursPerDay)) {
     return `${u.hour.singular} deve estar entre 0 e ${calendar.daySubdivision.hoursPerDay - 1}`;

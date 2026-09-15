@@ -100,9 +100,8 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
     staleTime: 1000 * 60 * 5,
   });
 
-  /** Falls back to the portrait of the character sheet a lore entry links to. */
-  const thumbPath = (row: EntityRow) => {
-    if (row.image_url) return row.image_url;
+  /** Portrait of the character sheet a lore entry links to, used as image fallback. */
+  const sheetPortrait = (row: EntityRow) => {
     const sheetId = dataValue(row, "character_sheet_id");
     if (!sheetId) return null;
     return (characters.data ?? []).find((c) => c.id === sheetId)?.portrait_path ?? null;
@@ -254,8 +253,12 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                     className="hover:bg-accent/40 block rounded-lg border p-3 transition"
                   >
                     <div className="flex items-start gap-3">
-                      {thumbPath(row) ? (
-                        <EntityThumb path={thumbPath(row)} name={row.name} />
+                      {row.image_url || sheetPortrait(row) ? (
+                        <EntityThumb
+                          path={row.image_url}
+                          fallbackPath={sheetPortrait(row)}
+                          name={row.name}
+                        />
                       ) : null}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">

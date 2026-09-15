@@ -107,7 +107,13 @@ function EntityPage() {
   const linkedSheetId = entity.data ? dataValue(entity.data, "character_sheet_id") : "";
   const linkedCharacter = (campaignCharacters.data ?? []).find((c) => c.id === linkedSheetId);
   const inheritedPortrait = linkedSheetId ? (linkedCharacter?.portrait_path ?? null) : null;
-  const entityImagePath = entity.data?.image_url ?? inheritedPortrait;
+  // Own image wins, but a missing/broken file falls back to the linked sheet portrait.
+  const [ownImageBroken, setOwnImageBroken] = useState(false);
+  const ownImagePath = ownImageBroken ? null : (entity.data?.image_url ?? null);
+  const entityImagePath = ownImagePath ?? inheritedPortrait;
+  useEffect(() => {
+    setOwnImageBroken(false);
+  }, [entity.data?.image_url]);
   const photoUrl = useQuery({
     queryKey: ["entity-photo", entityImagePath],
     queryFn: () => portraitUrl(entityImagePath),
@@ -407,12 +413,13 @@ function EntityPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Image</Label>
-              {(form.image_url ?? inheritedPortrait) ? (
+              {entityImagePath ? (
                 <div className="flex items-start gap-3">
                   {photoUrl.data ? (
                     <img loading="lazy" decoding="async"
                       src={photoUrl.data}
                       alt={`${form.name} image`}
+                      onError={() => setOwnImageBroken(true)}
                       className="h-32 w-32 rounded-lg border object-cover"
                     />
                   ) : (
@@ -461,7 +468,7 @@ function EntityPage() {
                   {portraitInitials(form.name)}
                 </div>
               )}
-              {!form.image_url && inheritedPortrait ? (
+              {!ownImagePath && inheritedPortrait ? (
                 <p className="text-muted-foreground text-xs">
                   Showing the linked character sheet portrait. Drop an image to override it.
                 </p>

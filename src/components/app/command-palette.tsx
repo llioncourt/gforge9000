@@ -66,11 +66,10 @@ export function CommandPalette({
       } else if (target.kind === "entity") {
         void navigate({ to: "/entities/$id", params: { id: target.id }, search: { from: target.from } });
       } else if (target.kind === "campaign") {
-        void navigate({
-          to: "/campaigns/$id",
-          params: { id: target.id },
-          ...(target.tab ? { search: { tab: target.tab } } : {}),
-        });
+        const search: { tab?: string; item?: string } = {};
+        if (target.tab) search.tab = target.tab;
+        if (target.item) search.item = target.item;
+        void navigate({ to: "/campaigns/$id", params: { id: target.id }, search });
       } else if (target.kind === "library") {
         void navigate({ to: "/library" });
       } else {

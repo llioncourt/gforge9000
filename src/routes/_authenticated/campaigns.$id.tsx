@@ -143,11 +143,13 @@ export type CampaignTab = (typeof CAMPAIGN_TABS)[number];
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   staticData: { sitemap: false },
-  validateSearch: (search: Record<string, unknown>): { tab?: CampaignTab } => {
+  validateSearch: (search: Record<string, unknown>): { tab?: CampaignTab; item?: string } => {
     const tab = search["tab"];
-    return typeof tab === "string" && (CAMPAIGN_TABS as readonly string[]).includes(tab)
-      ? { tab: tab as CampaignTab }
-      : {};
+    const item = search["item"];
+    const out: { tab?: CampaignTab; item?: string } = {};
+    if (typeof tab === "string" && (CAMPAIGN_TABS as readonly string[]).includes(tab)) out.tab = tab as CampaignTab;
+    if (typeof item === "string" && item) out.item = item;
+    return out;
   },
   head: ({ params }) => {
     const title = `Campaign ${params.id.slice(0, 8)} — Universal Character Forge`;
@@ -169,7 +171,7 @@ export const Route = createFileRoute("/_authenticated/campaigns/$id")({
 
 function CampaignPage() {
   const { id } = Route.useParams();
-  const { tab: tabParam } = Route.useSearch();
+  const { tab: tabParam, item: itemParam } = Route.useSearch();
   const { user } = useSession();
   const queryClient = useQueryClient();
   const navigate = useNavigate();

@@ -135,6 +135,21 @@ export async function buildCampaignPackageZip(
     .eq("campaign_id", campaignId)
     .order("created_at");
 
+  total =
+    1 +
+    (characterRows?.length ?? 0) +
+    entities.length +
+    assets.length +
+    maps.length +
+    videos.length +
+    soundFx.length +
+    soundtracks.albums.length +
+    soundtracks.tracks.length +
+    1;
+  done = 1;
+  emit();
+
+
   const rawSettings = (campaign.settings ?? {}) as Record<string, unknown>;
   const settings: NonNullable<CampaignPackageManifest["campaign"]["settings"]> = {};
   if (typeof rawSettings["point_limit"] === "number") settings.point_limit = rawSettings["point_limit"];

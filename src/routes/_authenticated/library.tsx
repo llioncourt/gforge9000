@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
+import { Download, Pencil, Plus, Trash2, Upload, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { allowedPacksOf, packGateReason, DEFAULT_PACK_NAME } from "@/lib/packs";
 import { rankSearch } from "@/lib/search";
@@ -39,7 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileDropzone } from "@/components/ui/FileDropzone";
+import { ImportDialog, useTransferTask } from "@/components/ui/transfer-dialog";
 import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 import {
   addEntry,
@@ -154,6 +154,8 @@ function LibraryPage() {
   const [form, setForm] = useState<LibraryForm>(blankForm);
   const [pendingDelete, setPendingDelete] = useState<LibraryRow | null>(null);
   const [addTarget, setAddTarget] = useState<LibraryRow | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const exportTask = useTransferTask();
 
   const packs = useMemo(() => {
     const set = new Set<string>();
@@ -204,17 +206,18 @@ function LibraryPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const importJson = useMutation({
-    mutationFn: async (file: File) => {
-      const parsed = parsePortableLibrary(await file.text());
-      return importLibraryEntries(parsed.entries as never);
-    },
-    onSuccess: (rows) => {
-      queryClient.invalidateQueries({ queryKey: ["library"] });
-      toast.success(`Imported ${rows.length} entr${rows.length === 1 ? "y" : "ies"}.`);
-    },
-    onError: (e: Error) => toast.error(`Import failed: ${e.message}`),
-  });
+  const importLibraryFile = async (
+    file: File,
+    report: (label: string, percent?: number) => void,
+  ) => {
+    report("Reading file…", 10);
+    const parsed = parsePortableLibrary(await file.text());
+    report(`Importing ${parsed.entries.length} entries…`, 45);
+    const rows = await importLibraryEntries(parsed.entries as never);
+    report("Refreshing library…", 90);
+    await queryClient.invalidateQueries({ queryKey: ["library"] });
+    return `Imported ${rows.length} entr${rows.length === 1 ? "y" : "ies"}.`;
+  };
 
   const gateFor = (characterId: string, pack: string | null) => {
     const character = (characters.data ?? []).find((c) => c.id === characterId);
@@ -266,15 +269,37 @@ function LibraryPage() {
           <>
             <Button
               variant="outline"
+              onClick={() => setImportOpen(true)}
+            >
+              <Upload className="mr-2 h-4 w-4" /> Import
+            </Button>
+            <Button
+              variant="outline"
+              disabled={exportTask.busy}
               onClick={() =>
-                download("ucf-library.json", JSON.stringify(portable, null, 2))
+                void exportTask.run("Exporting library (JSON)", async (report) => {
+                  report("Building file…", 40);
+                  const contents = JSON.stringify(portable, null, 2);
+                  report("Downloading…", 85);
+                  download("ucf-library.json", contents);
+                  return `Exported ${portable.entries.length} entries.`;
+                })
               }
             >
               <Download className="mr-2 h-4 w-4" /> Export JSON
             </Button>
             <Button
               variant="outline"
-              onClick={() => download("ucf-library.csv", libraryToCsv(portable.entries), "text/csv")}
+              disabled={exportTask.busy}
+              onClick={() =>
+                void exportTask.run("Exporting library (CSV)", async (report) => {
+                  report("Building file…", 40);
+                  const contents = libraryToCsv(portable.entries);
+                  report("Downloading…", 85);
+                  download("ucf-library.csv", contents, "text/csv");
+                  return `Exported ${portable.entries.length} entries.`;
+                })
+              }
             >
               CSV
             </Button>
@@ -326,16 +351,6 @@ function LibraryPage() {
           </Select>
         </div>
         <div className="grid gap-2">
-          <FileDropzone
-            accept="application/json"
-            compact
-            label="Import a library export"
-            hint="Drop a Universal Character Forge library JSON file"
-            onFiles={(files) => {
-              const file = files[0];
-              if (file) importJson.mutate(file);
-            }}
-          />
           <AiConversionGuideButton kind="library" />
         </div>
       </div>

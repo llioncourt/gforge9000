@@ -72,7 +72,10 @@ export function CommandPalette({
         if (target.sub) search.sub = target.sub;
         void navigate({ to: "/campaigns/$id", params: { id: target.id }, search });
       } else if (target.kind === "library") {
-        void navigate({ to: "/library" });
+        void navigate({
+          to: "/library",
+          search: target.item ? { item: target.item } : {},
+        });
       } else {
         void navigate({ to: "/packs" });
       }

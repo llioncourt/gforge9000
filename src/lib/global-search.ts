@@ -11,7 +11,7 @@ export type SearchTarget =
   | { kind: "character"; id: string }
   | { kind: "entity"; id: string; from: string }
   | { kind: "campaign"; id: string; tab?: CampaignTab; item?: string; sub?: MediaSubTab }
-  | { kind: "library" }
+  | { kind: "library"; item?: string }
   | { kind: "packs" };
 
 export type SearchHit = {
@@ -126,7 +126,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       target: { kind: "campaign", id: row.campaign_id, tab: "battle", item: row.id },
     });
   for (const row of library.data ?? [])
-    push({ id: `lib-${row.id}`, group: "Rules library", label: row.name, sublabel: row.kind, target: { kind: "library" } });
+    push({ id: `lib-${row.id}`, group: "Rules library", label: row.name, sublabel: row.kind, target: { kind: "library", item: row.id } });
   for (const row of packs.data ?? [])
     push({
       id: `pack-${row.id}`,

@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Pencil, Plus, Trash2, Upload, UserPlus } from "lucide-react";
 import { toast } from "sonner";
@@ -77,6 +77,8 @@ const KINDS = [
 
 export const Route = createFileRoute("/_authenticated/library")({
   staticData: { sitemap: false },
+  validateSearch: (search: Record<string, unknown>): { item?: string } =>
+    typeof search['item'] === "string" ? { item: search['item'] } : {},
   head: () => ({
     meta: [
       { title: "Library — Universal Character Forge" },
@@ -156,6 +158,31 @@ function LibraryPage() {
   const [addTarget, setAddTarget] = useState<LibraryRow | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const exportTask = useTransferTask();
+  const { item: itemParam } = Route.useSearch();
+  const navigate = useNavigate();
+
+  // Deep-link from global search: clear filters, scroll to the entry and flash it.
+  useEffect(() => {
+    if (!itemParam) return;
+    setSearch("");
+    setKindFilter("all");
+    setPackFilter("all");
+    let attempts = 0;
+    const timer = window.setInterval(() => {
+      attempts += 1;
+      const el = document.querySelector(`[data-search-id="${CSS.escape(itemParam)}"]`);
+      if (el instanceof HTMLElement) {
+        window.clearInterval(timer);
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ring-2", "ring-primary", "rounded-lg");
+        window.setTimeout(() => el.classList.remove("ring-2", "ring-primary", "rounded-lg"), 2600);
+        void navigate({ to: "/library", search: {}, replace: true });
+      } else if (attempts > 40) {
+        window.clearInterval(timer);
+      }
+    }, 200);
+    return () => window.clearInterval(timer);
+  }, [itemParam, navigate]);
 
   const packs = useMemo(() => {
     const set = new Set<string>();
@@ -368,7 +395,7 @@ function LibraryPage() {
           {rows.map((e) => {
             const mine = e.owner_id === user?.id;
             return (
-              <div key={e.id} className="panel flex flex-col p-4">
+              <div key={e.id} data-search-id={e.id} className="panel flex flex-col p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{e.name}</p>

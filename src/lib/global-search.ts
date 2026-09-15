@@ -129,14 +129,16 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       ...(row.source_label ? { sublabel: row.source_label } : {}),
       target: { kind: "packs" },
     });
-  for (const row of rolls.data ?? [])
+  for (const row of rolls.data ?? []) {
+    if (!row.campaign_id) continue;
     push({
       id: `roll-${row.id}`,
       group: "Dice rolls",
       label: row.label,
       sublabel: `Total ${row.total}`,
-      target: row.campaign_id ? { kind: "campaign", id: row.campaign_id, tab: "rolls" } : { kind: "library" },
+      target: { kind: "campaign", id: row.campaign_id, tab: "rolls" },
     });
+  }
 
   return hits;
 }

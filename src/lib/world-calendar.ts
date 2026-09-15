@@ -117,8 +117,8 @@ function asUnitName(value: unknown, fallback: UnitName): UnitName {
   if (value && typeof value === "object") {
     const v = value as Record<string, unknown>;
     return {
-      singular: typeof v.singular === "string" ? v.singular : fallback.singular,
-      plural: typeof v.plural === "string" ? v.plural : fallback.plural,
+      singular: typeof v["singular"] === "string" ? v["singular"] : fallback.singular,
+      plural: typeof v["plural"] === "string" ? v["plural"] : fallback.plural,
     };
   }
   return fallback;
@@ -142,18 +142,18 @@ export function calendarOf(settings: unknown): WorldCalendar {
   const value = (raw ?? {}) as Record<string, unknown>;
 
   // Detect old format: months is string[]
-  const rawMonths = value.months;
+  const rawMonths = value["months"];
   const isOldFormat =
     Array.isArray(rawMonths) && (rawMonths as unknown[]).every((m) => typeof m === "string");
 
   if (isOldFormat) {
-    const daysPerMonth = num(value.days_per_month) ?? 30;
+    const daysPerMonth = num(value["days_per_month"]) ?? 30;
     const months: MonthDef[] = (rawMonths as string[]).map((name) => ({ name, days: daysPerMonth }));
     return {
       ...cloneDefaults(),
-      era: typeof value.era === "string" ? value.era : "",
+      era: typeof value["era"] === "string" ? value["era"] : "",
       months,
-      currentText: typeof value.current === "string" ? value.current : "",
+      currentText: typeof value["current"] === "string" ? value["current"] : "",
     };
   }
 

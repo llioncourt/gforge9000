@@ -66,14 +66,14 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
   const orderedEffects = useMemo(() => effects.data ?? [], [effects.data]);
   const reorder = useMutation({
     mutationFn: (ids: string[]) => reorderCampaignSoundFx(campaignId, ids),
-    onSuccess: async () => {
+    onError: async (error: Error) => {
       await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] });
-      toast.success("Sound effects reordered.");
+      toast.error(error.message);
     },
-    onError: (error: Error) => toast.error(error.message),
   });
-  const commitReorder = (nextIds: string[]) => {
-    reorder.mutate(nextIds);
+  const commitReorder = (next: CampaignSoundFx[]) => {
+    queryClient.setQueryData(["campaign-sound-fx", campaignId], next.map((item, index) => ({ ...item, sort_order: index })));
+    reorder.mutate(next.map((item) => item.id));
   };
 
   return <div className="space-y-6">

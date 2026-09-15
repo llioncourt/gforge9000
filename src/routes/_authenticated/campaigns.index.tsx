@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Users } from "lucide-react";
+import { Download, Loader2, Plus, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ import { useSession } from "@/hooks/use-session";
 import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
 import { CAMPAIGN_COVER_SETTING } from "@/lib/campaign-cover";
 import { CampaignPackageImport } from "@/components/campaign/campaign-package-import";
+import { buildCampaignPackageZip } from "@/lib/campaign-package-export";
 
 
 export const Route = createFileRoute("/_authenticated/campaigns/")({

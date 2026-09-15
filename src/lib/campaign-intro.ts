@@ -89,7 +89,7 @@ export async function campaignIntroUrl(path: string) {
 export async function uploadCampaignVideo(
   campaignId: string,
   file: File,
-  input: { title: string; videoType: CampaignVideoType },
+  input: { title: string; videoType: CampaignVideoType; thumb?: Blob | null },
 ) {
   const validation = validateCampaignVideoFile(file);
   if (validation) throw new Error(validation);
@@ -151,7 +151,9 @@ export async function uploadCampaignIntro(campaignId: string, file: File) {
 export async function removeCampaignVideo(video: CampaignVideo) {
   const { error } = await supabase.from("campaign_videos").delete().eq("id", video.id);
   fail(error);
-  await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([video.storage_path]);
+  const paths = [video.storage_path];
+  if (video.thumb_path) paths.push(video.thumb_path);
+  await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(paths);
 }
 
 export const removeCampaignIntro = removeCampaignVideo;

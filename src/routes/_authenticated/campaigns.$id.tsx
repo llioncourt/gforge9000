@@ -140,6 +140,7 @@ export const CAMPAIGN_TABS = [
   "rules",
 ] as const;
 export type CampaignTab = (typeof CAMPAIGN_TABS)[number];
+export type MediaSubTab = "videos" | "soundtrack" | "sound-fx";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   staticData: { sitemap: false },

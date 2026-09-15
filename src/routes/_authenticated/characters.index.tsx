@@ -42,6 +42,7 @@ import { cn } from "@/lib/utils";
 import { parsePortable } from "@/lib/portable";
 import { reconcileImportedEntries } from "@/lib/import-reconcile";
 import type { ImportedEntry } from "@/lib/trait-match";
+import { ImportDialog } from "@/components/ui/transfer-dialog";
 
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
@@ -66,6 +67,7 @@ function CharactersPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
   const { data, isLoading } = useQuery({ queryKey: ["characters"], queryFn: listCharacters });
   const { user } = useSession();
@@ -106,28 +108,34 @@ function CharactersPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const importJson = useMutation({
-    mutationFn: async (file: File) => {
-      const parsed = parsePortable(await file.text());
-      const { id: _ignored, ...character } = parsed.character;
-      const row = await createCharacter(character as never);
-      // Reconcile trait names against enabled content before saving them.
-      const { entries } = await reconcileImportedEntries(
-        parsed.entries as unknown as ImportedEntry[],
+  const importCharacterFile = async (
+    file: File,
+    report: (label: string, percent?: number) => void,
+  ) => {
+    report("Reading file…", 5);
+    const parsed = parsePortable(await file.text());
+    const { id: _ignored, ...character } = parsed.character;
+    report("Creating character…", 15);
+    const row = await createCharacter(character as never);
+    report("Matching traits against your content…", 25);
+    // Reconcile trait names against enabled content before saving them.
+    const { entries } = await reconcileImportedEntries(
+      parsed.entries as unknown as ImportedEntry[],
+    );
+    let done = 0;
+    for (const entry of entries) {
+      await addEntry({ ...entry, character_id: row.id, data: entry.data ?? {} } as never);
+      done += 1;
+      report(
+        `Importing entries (${done}/${entries.length})…`,
+        30 + Math.round((done / Math.max(1, entries.length)) * 65),
       );
-      for (const entry of entries) {
-        await addEntry({ ...entry, character_id: row.id, data: entry.data ?? {} } as never);
-      }
-      return row;
-    },
-
-    onSuccess: (row) => {
-      queryClient.invalidateQueries({ queryKey: ["characters"] });
-      toast.success("Character imported.");
-      navigate({ to: "/characters/$id", params: { id: row.id } });
-    },
-    onError: (e: Error) => toast.error(`Import failed: ${e.message}`),
-  });
+    }
+    await queryClient.invalidateQueries({ queryKey: ["characters"] });
+    setImportOpen(false);
+    navigate({ to: "/characters/$id", params: { id: row.id } });
+    return `${row.name} imported with ${entries.length} entries.`;
+  };
 
   const rows = (data ?? []).filter((c) =>
     `${c.name} ${c.concept ?? ""}`.toLowerCase().includes(search.toLowerCase()),
@@ -176,18 +184,9 @@ function CharactersPage() {
           </div>
         </div>
         <div className="grid gap-2">
-          <FileDropzone
-            accept="application/json,.json"
-            compact
-            loading={importJson.isPending}
-            loadingLabel="Importing character…"
-            label={
-              <span className="flex items-center gap-2 text-sm">
-                <Upload className="h-4 w-4" /> Drop a Forge JSON export to import
-              </span>
-            }
-            onFiles={(files) => files[0] && importJson.mutate(files[0])}
-          />
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" /> Import character JSON
+          </Button>
           <AiConversionGuideButton kind="character" />
         </div>
       </div>

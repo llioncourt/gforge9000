@@ -173,25 +173,38 @@ function LibraryPage() {
     setPackFilter("all");
     let attempts = 0;
     let clearTimer = 0;
-    const timer = window.setInterval(() => {
-      attempts += 1;
+    const highlight = (el: HTMLElement) => {
+      el.scrollIntoView({ behavior: "auto", block: "center" });
+      el.style.outline = "4px solid var(--primary)";
+      el.style.outlineOffset = "4px";
+      el.style.backgroundColor = "color-mix(in oklab, var(--primary) 20%, transparent)";
+      el.style.transform = "scale(1.02)";
+      el.style.boxShadow = "0 0 28px color-mix(in oklab, var(--primary) 55%, transparent)";
+      clearTimer = window.setTimeout(() => {
+        el.removeAttribute("style");
+        window.history.replaceState(window.history.state, "", "/library");
+      }, 2500);
+    };
+    const find = () => {
       const el = document.querySelector(`[data-search-id="${CSS.escape(requestedId)}"]`);
-      if (el instanceof HTMLElement) {
-        window.clearInterval(timer);
-        el.scrollIntoView({ behavior: "auto", block: "center" });
-        el.style.outline = "4px solid var(--primary)";
-        el.style.outlineOffset = "4px";
-        el.style.backgroundColor = "color-mix(in oklab, var(--primary) 20%, transparent)";
-        el.style.transform = "scale(1.02)";
-        el.style.boxShadow = "0 0 28px color-mix(in oklab, var(--primary) 55%, transparent)";
-        clearTimer = window.setTimeout(() => {
-          el.removeAttribute("style");
-          window.history.replaceState(window.history.state, "", "/library");
-        }, 5000);
-      } else if (attempts > 40) {
-        window.clearInterval(timer);
-      }
-    }, 200);
+      return el instanceof HTMLElement ? el : null;
+    };
+    const immediate = find();
+    let timer = 0;
+    if (immediate) {
+      highlight(immediate);
+    } else {
+      timer = window.setInterval(() => {
+        attempts += 1;
+        const el = find();
+        if (el) {
+          window.clearInterval(timer);
+          highlight(el);
+        } else if (attempts > 120) {
+          window.clearInterval(timer);
+        }
+      }, 25);
+    }
     return () => {
       window.clearInterval(timer);
       if (clearTimer) window.clearTimeout(clearTimer);

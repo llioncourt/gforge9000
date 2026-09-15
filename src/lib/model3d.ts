@@ -62,3 +62,66 @@ export function parseModelTransform(value: unknown): ModelTransform {
     scale: Math.min(4, Math.max(0.25, num(v.scale, 1))),
   };
 }
+
+/* ---- 3D viewer settings (kept three.js-free so the UI can stay lazy) ---- */
+
+export type CameraView = "front" | "back" | "left" | "right" | "top" | "iso";
+
+export type MaterialMode = "original" | "normal" | "clay" | "xray";
+
+export type LightingPreset = "studio" | "dramatic" | "noir" | "sunset" | "flat";
+
+export type BackdropMode = "graphite" | "ink" | "paper" | "void";
+
+export type ModelInfo = {
+  meshes: number;
+  triangles: number;
+  vertices: number;
+  materials: number;
+  animations: string[];
+  size: { x: number; y: number; z: number };
+};
+
+export type ViewerApi = {
+  setView: (view: CameraView) => void;
+  screenshot: () => string | null;
+};
+
+export type ViewerSettings = {
+  autoRotate: boolean;
+  autoRotateSpeed: number;
+  wireframe: boolean;
+  materialMode: MaterialMode;
+  grid: boolean;
+  shadows: boolean;
+  axes: boolean;
+  boundingBox: boolean;
+  lighting: LightingPreset;
+  backdrop: BackdropMode;
+  exposure: number;
+  lightIntensity: number;
+  fov: number;
+  animation: string | null;
+  animationPlaying: boolean;
+  animationSpeed: number;
+};
+
+export const DEFAULT_VIEWER_SETTINGS: ViewerSettings = {
+  autoRotate: true,
+  autoRotateSpeed: 1.2,
+  wireframe: false,
+  materialMode: "original",
+  grid: true,
+  shadows: true,
+  axes: false,
+  boundingBox: false,
+  lighting: "studio",
+  backdrop: "graphite",
+  exposure: 1,
+  lightIntensity: 1,
+  fov: 45,
+  animation: null,
+  animationPlaying: true,
+  animationSpeed: 1,
+};
+

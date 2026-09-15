@@ -29,18 +29,16 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type {
-  BackdropMode,
-  CameraView,
-  LightingPreset,
-  MaterialMode,
-  ModelInfo,
-  ViewerApi,
-  ViewerSettings,
-} from "@/components/character/model-viewer";
-import { DEFAULT_VIEWER_SETTINGS } from "@/components/character/model-viewer";
 import {
   DEFAULT_MODEL_TRANSFORM,
+  DEFAULT_VIEWER_SETTINGS,
+  type BackdropMode,
+  type CameraView,
+  type LightingPreset,
+  type MaterialMode,
+  type ModelInfo,
+  type ViewerApi,
+  type ViewerSettings,
   type ModelTransform,
   modelUrl,
   removeModel,

@@ -156,3 +156,33 @@ export async function saveCampaignIntroView(campaignId: string, introVersion: st
   });
   fail(error);
 }
+export async function campaignVideoThumbUrl(path: string) {
+  const { data, error } = await supabase.storage
+    .from(CAMPAIGN_INTRO_BUCKET)
+    .createSignedUrl(path, 60 * 60 * 8);
+  if (error) return "";
+  return data?.signedUrl ?? "";
+}
+
+async function uploadThumbBlob(campaignId: string, userId: string, blob: Blob) {
+  const path = `${userId}/${campaignId}/${crypto.randomUUID()}.jpg`;
+  const { error } = await supabase.storage
+    .from(CAMPAIGN_INTRO_BUCKET)
+    .upload(path, blob, { contentType: "image/jpeg", upsert: false });
+  fail(error);
+  return path;
+}
+
+/** Replace the stored thumbnail frame of a video. */
+export async function setCampaignVideoThumb(video: CampaignVideo, blob: Blob) {
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) throw new Error("You need to be signed in.");
+  const path = await uploadThumbBlob(video.campaign_id, user.id, blob);
+  const { error } = await supabase.from("campaign_videos").update({ thumb_path: path }).eq("id", video.id);
+  if (error) {
+    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([path]);
+    throw new Error(error.message);
+  }
+  if (video.thumb_path) await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([video.thumb_path]);
+}

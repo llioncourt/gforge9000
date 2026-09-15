@@ -413,7 +413,10 @@ function CalendarForm({
                   onClick={() =>
                     setDraft((d) => {
                       const months = [...d.months];
-                      [months[i - 1], months[i]] = [months[i], months[i - 1]];
+                      const a = months[i - 1]!;
+                      const b = months[i]!;
+                      months[i - 1] = b;
+                      months[i] = a;
                       return { ...d, months };
                     })
                   }
@@ -428,7 +431,10 @@ function CalendarForm({
                   onClick={() =>
                     setDraft((d) => {
                       const months = [...d.months];
-                      [months[i + 1], months[i]] = [months[i], months[i + 1]];
+                      const a = months[i]!;
+                      const b = months[i + 1]!;
+                      months[i] = b;
+                      months[i + 1] = a;
                       return { ...d, months };
                     })
                   }

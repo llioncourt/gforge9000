@@ -1,11 +1,14 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Box,
+  Camera,
   Expand,
   Loader2,
-  Minus,
-  Plus,
+  Maximize2,
+  Minimize2,
+  Pause,
+  Play,
   RotateCcw,
   RotateCw,
   Trash2,
@@ -14,6 +17,28 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FileDropzone } from "@/components/ui/FileDropzone";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type {
+  BackdropMode,
+  CameraView,
+  LightingPreset,
+  MaterialMode,
+  ModelInfo,
+  ViewerApi,
+  ViewerSettings,
+} from "@/components/character/model-viewer";
+import { DEFAULT_VIEWER_SETTINGS } from "@/components/character/model-viewer";
 import {
   DEFAULT_MODEL_TRANSFORM,
   type ModelTransform,
@@ -43,7 +68,62 @@ function ViewerFallback() {
   );
 }
 
-/** Large, interactive viewer: orbit, pan, zoom, auto-rotate and wireframe. */
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-[11px] text-muted-foreground">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+function SliderRow({
+  label,
+  value,
+  min,
+  max,
+  step,
+  format,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  format?: (v: number) => string;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="text-[11px] text-muted-foreground">{label}</span>
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          {format ? format(value) : value}
+        </span>
+      </div>
+      <Slider
+        value={[value]}
+        min={min}
+        max={max}
+        step={step}
+        onValueChange={(v) => onChange(v[0] ?? value)}
+        aria-label={label}
+      />
+    </div>
+  );
+}
+
+const VIEWS: { id: CameraView; label: string }[] = [
+  { id: "front", label: "Front" },
+  { id: "back", label: "Back" },
+  { id: "left", label: "Left" },
+  { id: "right", label: "Right" },
+  { id: "top", label: "Top" },
+  { id: "iso", label: "Iso" },
+];
+
+/** Large, interactive viewer: orbit, pan, zoom, shading, lighting, animation and capture. */
 export function ModelStageDialog({
   url,
   name,
@@ -59,116 +139,415 @@ export function ModelStageDialog({
   transform?: ModelTransform;
   onTransformChange?: ((t: ModelTransform) => void) | undefined;
 }) {
-  const [autoRotate, setAutoRotate] = useState(true);
-  const [wireframe, setWireframe] = useState(false);
+  const [settings, setSettings] = useState<ViewerSettings>(DEFAULT_VIEWER_SETTINGS);
+  const [info, setInfo] = useState<ModelInfo | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const apiRef = useRef<ViewerApi | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+
+  const set = useCallback(
+    <K extends keyof ViewerSettings>(key: K, value: ViewerSettings[K]) =>
+      setSettings((s) => ({ ...s, [key]: value })),
+    [],
+  );
+
+  const onApi = useCallback((api: ViewerApi) => {
+    apiRef.current = api;
+  }, []);
+  const onInfo = useCallback((i: ModelInfo) => setInfo(i), []);
+
+  useEffect(() => {
+    const handler = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+  const toggleFullscreen = () => {
+    const el = stageRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void el.requestFullscreen?.().catch(() => toast.error("Fullscreen is not available."));
+  };
+
+  const capture = () => {
+    const data = apiRef.current?.screenshot();
+    if (!data) {
+      toast.error("Could not capture this view.");
+      return;
+    }
+    const a = document.createElement("a");
+    a.href = data;
+    a.download = `${(name ?? "model").replace(/[^\w-]+/g, "_")}.png`;
+    a.click();
+    toast.success("Snapshot saved.");
+  };
 
   const wrap = (deg: number) => ((deg % 360) + 360) % 360;
   const nudge = (axis: "rx" | "ry" | "rz", by: number) =>
     onTransformChange?.({ ...transform, [axis]: wrap(transform[axis] + by) });
-  const zoom = (by: number) =>
-    onTransformChange?.({
-      ...transform,
-      scale: Math.min(4, Math.max(0.25, Number((transform.scale + by).toFixed(2)))),
-    });
 
+  const dims = useMemo(() => {
+    if (!info) return null;
+    const f = (n: number) => n.toFixed(2);
+    return `${f(info.size.x)} × ${f(info.size.y)} × ${f(info.size.z)}`;
+  }, [info]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl p-0">
+      <DialogContent className="max-w-6xl p-0">
         <DialogHeader className="px-5 pb-2 pt-4">
           <DialogTitle className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
             {name ? `${name} · 3D model` : "3D model"}
           </DialogTitle>
         </DialogHeader>
-        <div className="relative h-[70vh] w-full overflow-hidden rounded-b-lg border-t border-border bg-muted/20">
-          {open ? (
-            <Suspense fallback={<ViewerFallback />}>
-              <ModelViewer
-                url={url}
-                stage
-                autoRotate={autoRotate}
-                wireframe={wireframe}
-                transform={transform}
-              />
-            </Suspense>
-          ) : null}
-          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-border bg-background/85 px-2 py-1 backdrop-blur">
-            <Button
-              size="sm"
-              variant={autoRotate ? "secondary" : "ghost"}
-              onClick={() => setAutoRotate((v) => !v)}
-            >
-              <RotateCw className="mr-1 h-3.5 w-3.5" /> Rotate
-            </Button>
-            <Button
-              size="sm"
-              variant={wireframe ? "secondary" : "ghost"}
-              onClick={() => setWireframe((v) => !v)}
-            >
-              <Box className="mr-1 h-3.5 w-3.5" /> Wireframe
-            </Button>
-            <span className="px-2 text-[11px] text-muted-foreground">
-              Drag to orbit · scroll to zoom · right-drag to pan
-            </span>
-          </div>
+        <div className="grid gap-0 border-t border-border md:grid-cols-[1fr_17rem]">
+          <div
+            ref={stageRef}
+            className="relative h-[60vh] w-full overflow-hidden bg-muted/20 md:h-[72vh]"
+          >
+            {open ? (
+              <Suspense fallback={<ViewerFallback />}>
+                <ModelViewer
+                  url={url}
+                  stage
+                  transform={transform}
+                  settings={settings}
+                  onInfo={onInfo}
+                  onApi={onApi}
+                />
+              </Suspense>
+            ) : null}
 
-          {onTransformChange ? (
-            <div className="absolute right-3 top-3 w-40 space-y-2 rounded-lg border border-border bg-background/90 p-3 backdrop-blur">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Fix orientation
-              </p>
-              {(
-                [
-                  ["rx", "Tilt"],
-                  ["ry", "Turn"],
-                  ["rz", "Roll"],
-                ] as const
-              ).map(([axis, label]) => (
-                <div key={axis} className="flex items-center gap-1">
-                  <span className="w-10 text-[11px] text-muted-foreground">{label}</span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    aria-label={`${label} -90 degrees`}
-                    onClick={() => nudge(axis, -90)}
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    aria-label={`${label} +90 degrees`}
-                    onClick={() => nudge(axis, 90)}
-                  >
-                    <RotateCw className="h-3.5 w-3.5" />
-                  </Button>
-                  <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
-                    {transform[axis]}°
-                  </span>
-                </div>
+            <div className="pointer-events-auto absolute left-3 top-3 flex flex-wrap gap-1 rounded-lg border border-border bg-background/85 p-1 backdrop-blur">
+              {VIEWS.map((v) => (
+                <Button
+                  key={v.id}
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 text-[11px]"
+                  onClick={() => apiRef.current?.setView(v.id)}
+                >
+                  {v.label}
+                </Button>
               ))}
-              <div className="flex items-center gap-1">
-                <span className="w-10 text-[11px] text-muted-foreground">Size</span>
-                <Button size="sm" variant="ghost" aria-label="Smaller" onClick={() => zoom(-0.1)}>
-                  <Minus className="h-3.5 w-3.5" />
-                </Button>
-                <Button size="sm" variant="ghost" aria-label="Bigger" onClick={() => zoom(0.1)}>
-                  <Plus className="h-3.5 w-3.5" />
-                </Button>
-                <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
-                  {transform.scale.toFixed(2)}x
-                </span>
-              </div>
+            </div>
+
+            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 flex-wrap items-center justify-center gap-1 rounded-full border border-border bg-background/85 px-2 py-1 backdrop-blur">
               <Button
                 size="sm"
-                variant="ghost"
-                className="w-full"
-                onClick={() => onTransformChange(DEFAULT_MODEL_TRANSFORM)}
+                variant={settings.autoRotate ? "secondary" : "ghost"}
+                onClick={() => set("autoRotate", !settings.autoRotate)}
               >
-                Reset
+                <RotateCw className="mr-1 h-3.5 w-3.5" /> Turntable
               </Button>
+              <Button size="sm" variant="ghost" onClick={capture}>
+                <Camera className="mr-1 h-3.5 w-3.5" /> Snapshot
+              </Button>
+              <Button size="sm" variant="ghost" onClick={toggleFullscreen}>
+                {fullscreen ? (
+                  <Minimize2 className="mr-1 h-3.5 w-3.5" />
+                ) : (
+                  <Maximize2 className="mr-1 h-3.5 w-3.5" />
+                )}
+                {fullscreen ? "Exit" : "Fullscreen"}
+              </Button>
+              <span className="hidden px-2 text-[11px] text-muted-foreground sm:inline">
+                Drag to orbit · scroll to zoom · right-drag to pan
+              </span>
             </div>
-          ) : null}
+          </div>
+
+          <div className="border-t border-border md:border-l md:border-t-0">
+            <Tabs defaultValue="display">
+              <TabsList className="m-2 grid w-[calc(100%-1rem)] grid-cols-3">
+                <TabsTrigger value="display" className="text-[11px]">
+                  Look
+                </TabsTrigger>
+                <TabsTrigger value="scene" className="text-[11px]">
+                  Scene
+                </TabsTrigger>
+                <TabsTrigger value="model" className="text-[11px]">
+                  Model
+                </TabsTrigger>
+              </TabsList>
+
+              <ScrollArea className="h-[52vh] md:h-[64vh]">
+                <TabsContent value="display" className="space-y-4 px-4 pb-6 pt-1">
+                  <Row label="Shading">
+                    <Select
+                      value={settings.materialMode}
+                      onValueChange={(v) => set("materialMode", v as MaterialMode)}
+                    >
+                      <SelectTrigger className="h-8 w-28 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="original">Original</SelectItem>
+                        <SelectItem value="clay">Clay</SelectItem>
+                        <SelectItem value="normal">Normals</SelectItem>
+                        <SelectItem value="xray">X-ray</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Row>
+                  <Row label="Wireframe">
+                    <Switch
+                      checked={settings.wireframe}
+                      onCheckedChange={(v) => set("wireframe", v)}
+                      aria-label="Wireframe"
+                    />
+                  </Row>
+                  <Row label="Lighting">
+                    <Select
+                      value={settings.lighting}
+                      onValueChange={(v) => set("lighting", v as LightingPreset)}
+                    >
+                      <SelectTrigger className="h-8 w-28 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="studio">Studio</SelectItem>
+                        <SelectItem value="dramatic">Dramatic</SelectItem>
+                        <SelectItem value="noir">Noir</SelectItem>
+                        <SelectItem value="sunset">Sunset</SelectItem>
+                        <SelectItem value="flat">Flat</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Row>
+                  <Row label="Backdrop">
+                    <Select
+                      value={settings.backdrop}
+                      onValueChange={(v) => set("backdrop", v as BackdropMode)}
+                    >
+                      <SelectTrigger className="h-8 w-28 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="graphite">Graphite</SelectItem>
+                        <SelectItem value="ink">Ink</SelectItem>
+                        <SelectItem value="paper">Paper</SelectItem>
+                        <SelectItem value="void">Transparent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Row>
+                  <SliderRow
+                    label="Exposure"
+                    value={settings.exposure}
+                    min={0.2}
+                    max={2.5}
+                    step={0.05}
+                    format={(v) => v.toFixed(2)}
+                    onChange={(v) => set("exposure", v)}
+                  />
+                  <SliderRow
+                    label="Light power"
+                    value={settings.lightIntensity}
+                    min={0.1}
+                    max={3}
+                    step={0.05}
+                    format={(v) => `${v.toFixed(2)}×`}
+                    onChange={(v) => set("lightIntensity", v)}
+                  />
+                </TabsContent>
+
+                <TabsContent value="scene" className="space-y-4 px-4 pb-6 pt-1">
+                  <Row label="Grid">
+                    <Switch
+                      checked={settings.grid}
+                      onCheckedChange={(v) => set("grid", v)}
+                      aria-label="Grid"
+                    />
+                  </Row>
+                  <Row label="Ground shadow">
+                    <Switch
+                      checked={settings.shadows}
+                      onCheckedChange={(v) => set("shadows", v)}
+                      aria-label="Ground shadow"
+                    />
+                  </Row>
+                  <Row label="Axes">
+                    <Switch
+                      checked={settings.axes}
+                      onCheckedChange={(v) => set("axes", v)}
+                      aria-label="Axes"
+                    />
+                  </Row>
+                  <Row label="Bounding box">
+                    <Switch
+                      checked={settings.boundingBox}
+                      onCheckedChange={(v) => set("boundingBox", v)}
+                      aria-label="Bounding box"
+                    />
+                  </Row>
+                  <Separator />
+                  <SliderRow
+                    label="Turntable speed"
+                    value={settings.autoRotateSpeed}
+                    min={0.2}
+                    max={6}
+                    step={0.1}
+                    format={(v) => `${v.toFixed(1)}×`}
+                    onChange={(v) => set("autoRotateSpeed", v)}
+                  />
+                  <SliderRow
+                    label="Field of view"
+                    value={settings.fov}
+                    min={20}
+                    max={80}
+                    step={1}
+                    format={(v) => `${v}°`}
+                    onChange={(v) => set("fov", v)}
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => setSettings(DEFAULT_VIEWER_SETTINGS)}
+                  >
+                    Reset view settings
+                  </Button>
+                </TabsContent>
+
+                <TabsContent value="model" className="space-y-4 px-4 pb-6 pt-1">
+                  {onTransformChange ? (
+                    <div className="space-y-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                        Fix orientation
+                      </p>
+                      {(
+                        [
+                          ["rx", "Tilt"],
+                          ["ry", "Turn"],
+                          ["rz", "Roll"],
+                        ] as const
+                      ).map(([axis, label]) => (
+                        <div key={axis} className="flex items-center gap-1">
+                          <span className="w-10 text-[11px] text-muted-foreground">{label}</span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            aria-label={`${label} -90 degrees`}
+                            onClick={() => nudge(axis, -90)}
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            aria-label={`${label} +90 degrees`}
+                            onClick={() => nudge(axis, 90)}
+                          >
+                            <RotateCw className="h-3.5 w-3.5" />
+                          </Button>
+                          <span className="ml-auto text-[11px] tabular-nums text-muted-foreground">
+                            {transform[axis]}°
+                          </span>
+                        </div>
+                      ))}
+                      <SliderRow
+                        label="Model scale"
+                        value={transform.scale}
+                        min={0.25}
+                        max={4}
+                        step={0.05}
+                        format={(v) => `${v.toFixed(2)}×`}
+                        onChange={(v) =>
+                          onTransformChange({ ...transform, scale: Number(v.toFixed(2)) })
+                        }
+                      />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="w-full"
+                        onClick={() => onTransformChange(DEFAULT_MODEL_TRANSFORM)}
+                      >
+                        Reset orientation
+                      </Button>
+                      <Separator />
+                    </div>
+                  ) : null}
+
+                  {info && info.animations.length ? (
+                    <div className="space-y-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                        Animation
+                      </p>
+                      <Select
+                        value={settings.animation ?? "none"}
+                        onValueChange={(v) => set("animation", v === "none" ? null : v)}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {info.animations.map((a) => (
+                            <SelectItem key={a} value={a}>
+                              {a}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant={settings.animationPlaying ? "secondary" : "ghost"}
+                          onClick={() => set("animationPlaying", !settings.animationPlaying)}
+                          disabled={!settings.animation}
+                        >
+                          {settings.animationPlaying ? (
+                            <Pause className="mr-1 h-3.5 w-3.5" />
+                          ) : (
+                            <Play className="mr-1 h-3.5 w-3.5" />
+                          )}
+                          {settings.animationPlaying ? "Pause" : "Play"}
+                        </Button>
+                      </div>
+                      <SliderRow
+                        label="Speed"
+                        value={settings.animationSpeed}
+                        min={0.1}
+                        max={3}
+                        step={0.1}
+                        format={(v) => `${v.toFixed(1)}×`}
+                        onChange={(v) => set("animationSpeed", v)}
+                      />
+                      <Separator />
+                    </div>
+                  ) : null}
+
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+                      Stats
+                    </p>
+                    {info ? (
+                      <dl className="space-y-1 text-[11px] text-muted-foreground">
+                        <Row label="Meshes">
+                          <span className="tabular-nums">{info.meshes}</span>
+                        </Row>
+                        <Row label="Triangles">
+                          <span className="tabular-nums">{info.triangles.toLocaleString()}</span>
+                        </Row>
+                        <Row label="Vertices">
+                          <span className="tabular-nums">{info.vertices.toLocaleString()}</span>
+                        </Row>
+                        <Row label="Materials">
+                          <span className="tabular-nums">{info.materials}</span>
+                        </Row>
+                        <Row label="Clips">
+                          <span className="tabular-nums">{info.animations.length}</span>
+                        </Row>
+                        <Row label="Bounds">
+                          <span className="tabular-nums">{dims}</span>
+                        </Row>
+                      </dl>
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">Loading model…</p>
+                    )}
+                  </div>
+                </TabsContent>
+              </ScrollArea>
+            </Tabs>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

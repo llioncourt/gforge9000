@@ -15,7 +15,7 @@ export type TimelineEventInput = {
   minute?: string;
   era?: string;
   status?: string;
-  visibility?: "GM_ONLY" | "ALL_PLAYERS";
+  visibility?: "GM_ONLY" | "ALL_PLAYERS" | undefined;
   summary?: string;
   what_happened?: string;
   consequences?: string;

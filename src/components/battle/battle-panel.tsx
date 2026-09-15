@@ -46,7 +46,7 @@ import { BattleGrid } from "./battle-grid";
 
 type Cell = { x: number; y: number };
 
-export function BattlePanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: string; isGm: boolean; focusMapId?: string | null }) {
   const queryClient = useQueryClient();
   const { user } = useSession();
   const [mapId, setMapId] = useState<string | null>(null);

@@ -53,7 +53,7 @@ function VideoRow({ video, isGm, onRemove }: { video: CampaignVideo; isGm: boole
     onError: (error: Error) => toast.error(error.message),
   });
 
-  return <div className="panel flex items-center gap-3 p-3 sm:gap-4">
+  return <div data-search-id={video.id} className="panel flex items-center gap-3 p-3 sm:gap-4">
     <div className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-md border border-border bg-background sm:w-40">
       {thumbUrl ? <img src={thumbUrl} alt={`${video.title} thumbnail`} className="size-full object-cover" /> : null}
       {url ? <video src={url} muted playsInline preload="metadata" onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)} className={thumbUrl ? "hidden" : "size-full object-cover"} aria-label={`${video.title} thumbnail`} /> : thumbUrl ? null : <Skeleton className="size-full rounded-none" />}

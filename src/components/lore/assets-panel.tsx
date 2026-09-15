@@ -149,7 +149,7 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((row) => (
-            <article key={row.id} className="space-y-3 rounded-lg border p-3">
+            <article key={row.id} data-search-id={row.id} className="space-y-3 rounded-lg border p-3">
               {isImageAsset(row) ? (
                 <AssetImage
                   path={row.storage_path}

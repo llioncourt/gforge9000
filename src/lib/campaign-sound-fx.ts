@@ -24,9 +24,18 @@ export function validateSoundFxFile(file: Pick<File, "name" | "size" | "type">) 
 }
 
 export async function listCampaignSoundFx(campaignId: string) {
-  const { data, error } = await supabase.from("campaign_sound_fx").select("*").eq("campaign_id", campaignId).order("created_at");
+  const { data, error } = await supabase.from("campaign_sound_fx").select("*").eq("campaign_id", campaignId).order("sort_order").order("created_at");
   fail(error);
   return data ?? [];
+}
+
+/** Persist a new ordering for the campaign's sound effects. */
+export async function reorderCampaignSoundFx(_campaignId: string, orderedIds: string[]) {
+  for (let i = 0; i < orderedIds.length; i++) {
+    const id = orderedIds[i]!;
+    const { error } = await supabase.from("campaign_sound_fx").update({ sort_order: i }).eq("id", id);
+    fail(error);
+  }
 }
 
 export async function soundFxSignedUrl(path: string) {
@@ -49,7 +58,9 @@ export async function uploadCampaignSoundFx(campaignId: string, title: string, f
   const path = `${user.id}/${campaignId}/${crypto.randomUUID()}.${extension}`;
   const uploaded = await supabase.storage.from(CAMPAIGN_SOUND_FX_BUCKET).upload(path, file, { contentType: mime, upsert: false });
   fail(uploaded.error);
-  const { error } = await supabase.from("campaign_sound_fx").insert({ campaign_id: campaignId, title: cleanTitle, storage_path: path, file_name: file.name, byte_size: file.size, mime_type: mime, created_by: user.id });
+  const { data: last } = await supabase.from("campaign_sound_fx").select("sort_order").eq("campaign_id", campaignId).order("sort_order", { ascending: false }).limit(1);
+  const nextSort = (last?.[0]?.sort_order ?? -1) + 1;
+  const { error } = await supabase.from("campaign_sound_fx").insert({ campaign_id: campaignId, title: cleanTitle, storage_path: path, file_name: file.name, byte_size: file.size, mime_type: mime, created_by: user.id, sort_order: nextSort });
   if (error) {
     await supabase.storage.from(CAMPAIGN_SOUND_FX_BUCKET).remove([path]);
     throw new Error(error.message);

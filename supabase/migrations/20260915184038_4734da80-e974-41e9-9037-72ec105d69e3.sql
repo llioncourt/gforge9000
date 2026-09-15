@@ -1,0 +1,1 @@
+drop function if exists public.campaign_sound_fx_next_sort_order(uuid);

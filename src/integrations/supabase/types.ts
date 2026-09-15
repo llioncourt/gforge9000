@@ -190,6 +190,7 @@ export type Database = {
           file_name: string
           id: string
           mime_type: string
+          sort_order: number
           storage_path: string
           title: string
           updated_at: string
@@ -202,6 +203,7 @@ export type Database = {
           file_name: string
           id?: string
           mime_type: string
+          sort_order?: number
           storage_path: string
           title: string
           updated_at?: string
@@ -214,6 +216,7 @@ export type Database = {
           file_name?: string
           id?: string
           mime_type?: string
+          sort_order?: number
           storage_path?: string
           title?: string
           updated_at?: string

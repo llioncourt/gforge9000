@@ -1,0 +1,1 @@
+ALTER TABLE public.campaign_videos ADD COLUMN IF NOT EXISTS thumb_path TEXT;

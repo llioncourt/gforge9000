@@ -451,6 +451,7 @@ export type Database = {
           id: string
           mime_type: string
           storage_path: string
+          thumb_path: string | null
           title: string
           updated_at: string
           version: string
@@ -465,6 +466,7 @@ export type Database = {
           id?: string
           mime_type?: string
           storage_path: string
+          thumb_path?: string | null
           title: string
           updated_at?: string
           version?: string
@@ -479,6 +481,7 @@ export type Database = {
           id?: string
           mime_type?: string
           storage_path?: string
+          thumb_path?: string | null
           title?: string
           updated_at?: string
           version?: string

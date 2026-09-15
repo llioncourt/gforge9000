@@ -401,7 +401,15 @@ function LibraryPage() {
           {rows.map((e) => {
             const mine = e.owner_id === user?.id;
             return (
-              <div key={e.id} data-search-id={e.id} className="panel flex flex-col p-4">
+              <div
+                key={e.id}
+                data-search-id={e.id}
+                className={`panel flex flex-col p-4 transition-shadow ${
+                  highlightId === e.id
+                    ? "ring-2 ring-primary rounded-lg shadow-lg shadow-primary/30"
+                    : ""
+                }`}
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{e.name}</p>

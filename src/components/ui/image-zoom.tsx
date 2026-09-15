@@ -18,10 +18,10 @@ export function ImageZoom({
   src: string;
   alt: string;
   /** Classes for the trigger wrapper (sizing, rounding, border). */
-  className?: string;
+  className?: string | undefined;
   /** Extra classes for the trigger image itself. */
-  imgClassName?: string;
-  onError?: () => void;
+  imgClassName?: string | undefined;
+  onError?: (() => void) | undefined;
 }) {
   const [open, setOpen] = useState(false);
   return (

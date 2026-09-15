@@ -510,7 +510,7 @@ function CalendarForm({
                   onChange={(e) =>
                     setDraft((d) => {
                       const seasons = [...d.seasons];
-                      seasons[i] = { ...seasons[i], name: e.target.value };
+                      seasons[i] = { ...seasons[i]!, name: e.target.value };
                       return { ...d, seasons };
                     })
                   }

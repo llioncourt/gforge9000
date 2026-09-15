@@ -116,10 +116,10 @@ describe("month lengths and leap years", () => {
   it("adds extra days in leap cycles for Nadrel", () => {
     // Non-leap cycle
     expect(monthLength(NADREL_PRESET, 5, 998)).toBe(36);
-    // Leap cycles: 4, 7, 10 within each block of 10
-    expect(isLeapYear(NADREL_PRESET, 994)).toBe(true); // 994 % 10 = 4
-    expect(isLeapYear(NADREL_PRESET, 997)).toBe(true); // 997 % 10 = 7
-    expect(isLeapYear(NADREL_PRESET, 1000)).toBe(true); // 1000 % 10 = 0... wait
+    // Leap cycles: 4, 7, 10 within each block of 10 (1-based position)
+    expect(isLeapYear(NADREL_PRESET, 994)).toBe(true); // position 4
+    expect(isLeapYear(NADREL_PRESET, 997)).toBe(true); // position 7
+    expect(isLeapYear(NADREL_PRESET, 1000)).toBe(true); // position 10
   });
 
   it("does not leap on non-leap cycles", () => {

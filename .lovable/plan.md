@@ -36,7 +36,7 @@ Quantidade de dias por semana e nomes opcionais dos dias, usados para exibir o d
 Ao registrar um evento, o dia não pode exceder o tamanho do mês escolhido (com o dia extra do bissexto considerado), e hora/minuto respeitam a subdivisão. Mensagens de erro usam os nomes canônicos da campanha.
 
 **8. Presets**
-Botão "Calendário gregoriano" (já existente, atualizado para o novo formato) e um botão "Calendário de Nadrel" que preenche os 8 meses, os 4 quartos, a rota de 16 partes e a regra bissexta.
+Botão "Calendário gregoriano" (já existente, atualizado para o novo formato).
 
 ## Interface
 

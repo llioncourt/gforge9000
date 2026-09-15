@@ -470,6 +470,13 @@ function EntityPage() {
                         >
                           From Library
                         </Badge>
+                      ) : !ownImagePath && inheritedPortrait ? (
+                        <Badge
+                          variant="secondary"
+                          className="pointer-events-none absolute top-1 left-1 shadow"
+                        >
+                          From Char
+                        </Badge>
                       ) : null}
                     </div>
                   ) : (

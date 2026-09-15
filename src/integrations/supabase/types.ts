@@ -1481,10 +1481,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      campaign_sound_fx_next_sort_order: {
-        Args: { campaign: string }
-        Returns: number
-      }
       join_campaign: { Args: { _code: string }; Returns: string }
       remove_character_from_campaign: {
         Args: { _character: string }

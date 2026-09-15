@@ -227,12 +227,26 @@ function CampaignsPage() {
                 </div>
                 {c.gm_id === user?.id ? (
                   <div
-                    className="absolute bottom-3 right-3 z-10"
+                    className="absolute bottom-3 right-3 z-10 flex items-center gap-1"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                     }}
                   >
+                    <button
+                      type="button"
+                      className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+                      aria-label="Download campaign package"
+                      title="Download campaign package (ZIP)"
+                      disabled={exporting === c.id}
+                      onClick={() => exportCampaign(c.id)}
+                    >
+                      {exporting === c.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Download className="h-3.5 w-3.5" />
+                      )}
+                    </button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <button

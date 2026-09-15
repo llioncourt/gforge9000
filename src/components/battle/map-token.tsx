@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ClientOnly } from "@tanstack/react-router";
 import type { Tables } from "@/integrations/supabase/types";
 import { portraitUrl } from "@/lib/portrait";
-import { modelUrl, parseModelTransform } from "@/lib/model3d";
+import { DEFAULT_VIEWER_SETTINGS, modelUrl, parseModelTransform } from "@/lib/model3d";
 import type { MapObjectRow } from "@/lib/battlemap";
 import { cn } from "@/lib/utils";
 

@@ -160,67 +160,76 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const importEvents = useMutation({
-    mutationFn: async (rows: TimelineEventInput[]) => {
-      rows.forEach((row, i) => {
-        const monthIdx = calendar.months.findIndex(
-          (m) => m.name.toLowerCase() === (row.month ?? "").toLowerCase(),
-        );
-        if (row.month && monthIdx >= 0 && row.day) {
-          const check: Parameters<typeof validateWorldDate>[1] = {
-            month: monthIdx + 1,
-            day: Number(row.day),
-          };
-          if (row.year) check.year = Number(row.year);
-          if (row.hour) check.hour = Number(row.hour);
-          if (row.minute) check.minute = Number(row.minute);
-          const err = validateWorldDate(calendar, check);
-          if (err) throw new Error(`Evento ${i + 1} ("${row.name}"): ${err}`);
-        }
-      });
-
-      for (const row of rows) {
-        await createEntity({
-          campaign_id: campaignId,
-          kind: "EVENT",
-          name: row.name,
-          status: row.status || "Historical",
-          visibility: row.visibility ?? (isGm ? "GM_ONLY" : "ALL_PLAYERS"),
-          summary: row.summary || null,
-          created_by: user!.id,
-          data: {
-            year: row.year ?? "",
-            month: row.month ?? "",
-            day: row.day ?? "",
-            hour: row.hour ?? "",
-            minute: row.minute ?? "",
-            era: row.era || calendar.era,
-            what_happened: row.what_happened ?? "",
-            consequences: row.consequences ?? "",
-            gm_truth: row.gm_truth ?? "",
-          },
-        } as never);
+  const importEventsFile = async (
+    file: File,
+    report: (label: string, percent?: number) => void,
+  ) => {
+    report("Lendo arquivo…", 8);
+    const rows = await readTimelineFile(file);
+    report("Validando datas…", 18);
+    rows.forEach((row, i) => {
+      const monthIdx = calendar.months.findIndex(
+        (m) => m.name.toLowerCase() === (row.month ?? "").toLowerCase(),
+      );
+      if (row.month && monthIdx >= 0 && row.day) {
+        const check: Parameters<typeof validateWorldDate>[1] = {
+          month: monthIdx + 1,
+          day: Number(row.day),
+        };
+        if (row.year) check.year = Number(row.year);
+        if (row.hour) check.hour = Number(row.hour);
+        if (row.minute) check.minute = Number(row.minute);
+        const err = validateWorldDate(calendar, check);
+        if (err) throw new Error(`Evento ${i + 1} ("${row.name}"): ${err}`);
       }
-      return rows.length;
-    },
-    onSuccess: (count) => {
-      setEventsImportOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
-      toast.success(`${count} evento(s) importado(s).`);
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+    });
 
-  const downloadEventsPack = () => {
-    const url = URL.createObjectURL(buildTimelinePackZip());
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "timeline-eventos-modelo.zip";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    let done = 0;
+    for (const row of rows) {
+      await createEntity({
+        campaign_id: campaignId,
+        kind: "EVENT",
+        name: row.name,
+        status: row.status || "Historical",
+        visibility: row.visibility ?? (isGm ? "GM_ONLY" : "ALL_PLAYERS"),
+        summary: row.summary || null,
+        created_by: user!.id,
+        data: {
+          year: row.year ?? "",
+          month: row.month ?? "",
+          day: row.day ?? "",
+          hour: row.hour ?? "",
+          minute: row.minute ?? "",
+          era: row.era || calendar.era,
+          what_happened: row.what_happened ?? "",
+          consequences: row.consequences ?? "",
+          gm_truth: row.gm_truth ?? "",
+        },
+      } as never);
+      done += 1;
+      report(
+        `Importando eventos (${done}/${rows.length})…`,
+        20 + Math.round((done / Math.max(1, rows.length)) * 75),
+      );
+    }
+    await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+    return `${rows.length} evento(s) importado(s).`;
   };
+
+  const downloadEventsPack = () =>
+    void exportTask.run("Modelo de eventos (ZIP)", async (report) => {
+      report("Gerando pacote…", 45);
+      const url = URL.createObjectURL(buildTimelinePackZip());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "timeline-eventos-modelo.zip";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      report("Baixando…", 90);
+      return "Modelo baixado.";
+    });
 
   return (
     <div className="space-y-6">
@@ -237,30 +246,9 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
           </Button>
         ) : null}
         {isGm ? (
-          <Dialog open={eventsImportOpen} onOpenChange={setEventsImportOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Upload className="mr-1 h-4 w-4" /> Importar eventos
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Importar eventos da timeline</DialogTitle>
-              </DialogHeader>
-              <FileDropzone
-                accept=".json,.zip,application/json,application/zip"
-                onFiles={(files) => {
-                  const file = files[0];
-                  if (!file) return;
-                  void readTimelineFile(file)
-                    .then((rows) => importEvents.mutate(rows))
-                    .catch((e: Error) => toast.error(e.message));
-                }}
-                label="Solte o events.json ou o ZIP aqui"
-                hint="Baixe o modelo de eventos para ver a estrutura."
-              />
-            </DialogContent>
-          </Dialog>
+          <Button variant="outline" size="sm" onClick={() => setEventsImportOpen(true)}>
+            <Upload className="mr-1 h-4 w-4" /> Importar eventos
+          </Button>
         ) : null}
         {isGm ? (
           <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>

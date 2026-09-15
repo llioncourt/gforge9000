@@ -36,28 +36,38 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     onError: (error: Error) => toast.error(error.message),
   });
   const [importOpen, setImportOpen] = useState(false);
-  const importPack = useMutation({
-    mutationFn: async (file: File) => {
-      const items = await readSoundFxPack(file);
-      for (const item of items) await uploadCampaignSoundFx(campaignId, item.title, item.file);
-      return items.length;
-    },
-    onSuccess: async (count) => {
-      setImportOpen(false);
-      await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] });
-      toast.success(`${count} sound effect${count === 1 ? "" : "s"} imported.`);
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
-  const downloadPack = () => {
-    const url = URL.createObjectURL(buildSoundFxPackZip());
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "sound-fx-modelo.zip";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+  const exportTask = useTransferTask();
+  const importPackFile = async (
+    file: File,
+    report: (label: string, percent?: number) => void,
+  ) => {
+    report("Lendo o ZIP…", 8);
+    const items = await readSoundFxPack(file);
+    let done = 0;
+    for (const item of items) {
+      await uploadCampaignSoundFx(campaignId, item.title, item.file);
+      done += 1;
+      report(
+        `Enviando efeitos (${done}/${items.length})…`,
+        10 + Math.round((done / Math.max(1, items.length)) * 85),
+      );
+    }
+    await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] });
+    return `${items.length} sound effect${items.length === 1 ? "" : "s"} imported.`;
+  };
+  const downloadPack = () =>
+    void exportTask.run("Modelo de Sound FX (ZIP)", async (report) => {
+      report("Gerando pacote…", 45);
+      const url = URL.createObjectURL(buildSoundFxPackZip());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "sound-fx-modelo.zip";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      report("Baixando…", 90);
+      return "Modelo baixado.";
   };
 
   // --- Drag-and-drop reordering (GM only) ---

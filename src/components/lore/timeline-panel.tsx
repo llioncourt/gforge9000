@@ -46,15 +46,17 @@ export type { WorldCalendar } from "@/lib/world-calendar";
 
 function eventLabel(row: EntityRow, calendar: WorldCalendar): string {
   const data = (row.data ?? {}) as Record<string, unknown>;
-  return formatWorldDate(calendar, {
-    year: data["year"] ? Number(data["year"]) : undefined,
-    month: data["month"]
-      ? (calendar.months.findIndex(
-          (m) => m.name.toLowerCase() === String(data["month"]).toLowerCase(),
-        ) + 1 || Number(data["month"]) || undefined)
-      : undefined,
-    day: data["day"] ? Number(data["day"]) : undefined,
-  });
+  const date: Partial<{ year: number; month: number; day: number }> = {};
+  if (data["year"]) date.year = Number(data["year"]);
+  if (data["month"]) {
+    const idx = calendar.months.findIndex(
+      (m) => m.name.toLowerCase() === String(data["month"]).toLowerCase(),
+    );
+    if (idx >= 0) date.month = idx + 1;
+    else if (Number(data["month"])) date.month = Number(data["month"]);
+  }
+  if (data["day"]) date.day = Number(data["day"]);
+  return formatWorldDate(calendar, date);
 }
 
 export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {

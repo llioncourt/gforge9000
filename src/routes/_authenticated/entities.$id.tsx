@@ -104,7 +104,10 @@ function EntityPage() {
     queryFn: () => listCampaignCharacters(campaignId!),
     enabled: !!campaignId,
   });
-  const entityImagePath = entity.data?.image_url;
+  const linkedSheetId = entity.data ? dataValue(entity.data, "character_sheet_id") : "";
+  const linkedCharacter = (campaignCharacters.data ?? []).find((c) => c.id === linkedSheetId);
+  const inheritedPortrait = linkedSheetId ? (linkedCharacter?.portrait_path ?? null) : null;
+  const entityImagePath = entity.data?.image_url ?? inheritedPortrait;
   const photoUrl = useQuery({
     queryKey: ["entity-photo", entityImagePath],
     queryFn: () => portraitUrl(entityImagePath),

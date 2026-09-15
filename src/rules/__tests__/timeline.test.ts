@@ -65,7 +65,7 @@ describe("calendarOf — new format", () => {
       { name: "Frostmoon", days: 44 },
       { name: "Seedtide", days: 42 },
     ]);
-    expect(cal.seasons[0].months).toEqual([0, 1]);
+    expect(cal.seasons[0]?.months).toEqual([0, 1]);
     expect(cal.daySubdivision).toEqual({ hoursPerDay: 4, minutesPerHour: 4 });
     expect(cal.leapRule).toEqual({ kind: "block", block: 10, years: [4, 7, 10], month: 1, extraDays: 1 });
     expect(cal.today).toEqual({ year: 998, month: 2, day: 12, hour: 2, minute: 3 });

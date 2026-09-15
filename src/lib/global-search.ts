@@ -75,7 +75,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       id: `sfx-${row.id}`,
       group: "Sound FX",
       label: row.title,
-      target: { kind: "campaign", id: row.campaign_id, tab: "media" },
+      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id },
     });
   for (const row of albums.data ?? [])
     push({
@@ -83,7 +83,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       group: "Soundtrack",
       label: row.title,
       sublabel: "Album",
-      target: { kind: "campaign", id: row.campaign_id, tab: "media" },
+      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id },
     });
   for (const row of tracks.data ?? [])
     push({
@@ -91,7 +91,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       group: "Soundtrack",
       label: row.title,
       sublabel: "Track",
-      target: { kind: "campaign", id: row.campaign_id, tab: "media" },
+      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id },
     });
   for (const row of videos.data ?? [])
     push({
@@ -99,7 +99,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       group: "Videos",
       label: row.title,
       sublabel: campaignVideoTypeLabel(row.video_type),
-      target: { kind: "campaign", id: row.campaign_id, tab: "media" },
+      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id },
     });
   for (const row of notes.data ?? [])
     push({
@@ -107,21 +107,21 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       group: "Notes & handouts",
       label: row.title,
       sublabel: row.kind,
-      target: { kind: "campaign", id: row.campaign_id, tab: "notes" },
+      target: { kind: "campaign", id: row.campaign_id, tab: "notes", item: row.id },
     });
   for (const row of assets.data ?? [])
     push({
       id: `asset-${row.id}`,
       group: "Campaign library",
       label: row.title,
-      target: { kind: "campaign", id: row.campaign_id, tab: "library" },
+      target: { kind: "campaign", id: row.campaign_id, tab: "library", item: row.id },
     });
   for (const row of maps.data ?? [])
     push({
       id: `map-${row.id}`,
       group: "Battle maps",
       label: row.name,
-      target: { kind: "campaign", id: row.campaign_id, tab: "battle" },
+      target: { kind: "campaign", id: row.campaign_id, tab: "battle", item: row.id },
     });
   for (const row of library.data ?? [])
     push({ id: `lib-${row.id}`, group: "Rules library", label: row.name, sublabel: row.kind, target: { kind: "library" } });
@@ -140,7 +140,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       group: "Dice rolls",
       label: row.label,
       sublabel: `Total ${row.total}`,
-      target: { kind: "campaign", id: row.campaign_id, tab: "rolls" },
+      target: { kind: "campaign", id: row.campaign_id, tab: "rolls", item: row.id },
     });
   }
 

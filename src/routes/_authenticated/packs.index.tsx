@@ -29,7 +29,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { FileDropzone } from "@/components/ui/FileDropzone";
+import { ImportDialog } from "@/components/ui/transfer-dialog";
 import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 import {
   createContentPack,
@@ -134,27 +134,6 @@ function PacksPage() {
     return `Imported ${rows.length} entries into “${parsed.pack.name}”.`;
   };
 
-  const _unusedImportPack = useMutation({
-    mutationFn: async (file: File) => {
-      const parsed = parsePortablePack(await file.text());
-      await createContentPack({
-        name: parsed.pack.name,
-        description: parsed.pack.description,
-        source_label: parsed.pack.source_label,
-        source_edition: parsed.pack.source_edition,
-        source_type: parsed.pack.source_type,
-      }).catch(() => undefined);
-      const rows = await importLibraryEntries(parsed.entries as never);
-      return { pack: parsed.pack.name, count: rows.length };
-    },
-    onSuccess: ({ pack, count }) => {
-      queryClient.invalidateQueries({ queryKey: ["library"] });
-      queryClient.invalidateQueries({ queryKey: ["content-packs"] });
-      toast.success(`Imported ${count} entries into “${pack}”.`);
-    },
-    onError: (e: Error) => toast.error(`Import failed: ${e.message}`),
-  });
-
   const removePack = useMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) => deleteContentPack(id, name),
     onSuccess: () => {
@@ -186,18 +165,9 @@ function PacksPage() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <div className="grid gap-2">
-          <FileDropzone
-            accept="application/json"
-            compact
-            loading={importPack.isPending}
-            loadingLabel="Importing pack…"
-            label="Import a pack"
-            hint="Drop a Universal Character Forge pack JSON file"
-            onFiles={(files) => {
-              const file = files[0];
-              if (file) importPack.mutate(file);
-            }}
-          />
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" /> Import a pack
+          </Button>
           <AiConversionGuideButton kind="pack" />
         </div>
       </div>

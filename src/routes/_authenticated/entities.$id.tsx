@@ -456,12 +456,22 @@ function EntityPage() {
               {entityImagePath ? (
                 <div className="flex items-start gap-3">
                   {photoUrl.data ? (
-                    <img loading="lazy" decoding="async"
-                      src={photoUrl.data}
-                      alt={`${form.name} image`}
-                      onError={() => setOwnImageBroken(true)}
-                      className="h-32 w-32 rounded-lg border object-cover"
-                    />
+                    <div className="relative h-32 w-32">
+                      <ImageZoom
+                        src={photoUrl.data}
+                        alt={`${form.name} image`}
+                        onError={() => setOwnImageBroken(true)}
+                        className="h-32 w-32 rounded-lg border"
+                      />
+                      {isLibraryImage ? (
+                        <Badge
+                          variant="secondary"
+                          className="pointer-events-none absolute top-1 left-1 shadow"
+                        >
+                          From Library
+                        </Badge>
+                      ) : null}
+                    </div>
                   ) : (
                     <Skeleton className="h-32 w-32 rounded-lg" />
                   )}

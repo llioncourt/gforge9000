@@ -393,19 +393,34 @@ function CharacterPage() {
             </Button>
             <Button
               variant="outline"
+              disabled={exportTask.busy}
               onClick={() =>
-                download(
-                  `${slugify(form.name)}.json`,
-                  JSON.stringify(toPortable(toCharacterRecord(form), entries), null, 2),
-                )
+                void exportTask.run("Exporting character (JSON)", async (report) => {
+                  report("Building file…", 40);
+                  const contents = JSON.stringify(
+                    toPortable(toCharacterRecord(form), entries),
+                    null,
+                    2,
+                  );
+                  report("Downloading…", 85);
+                  download(`${slugify(form.name)}.json`, contents);
+                  return `Exported ${form.name} with ${entries.length} entries.`;
+                })
               }
             >
               <Download className="mr-2 h-4 w-4" /> JSON
             </Button>
             <Button
               variant="outline"
+              disabled={exportTask.busy}
               onClick={() =>
-                download(`${slugify(form.name)}.csv`, entriesToCsv(entries, sheet), "text/csv")
+                void exportTask.run("Exporting character (CSV)", async (report) => {
+                  report("Building file…", 40);
+                  const contents = entriesToCsv(entries, sheet);
+                  report("Downloading…", 85);
+                  download(`${slugify(form.name)}.csv`, contents, "text/csv");
+                  return `Exported ${entries.length} entries.`;
+                })
               }
             >
               CSV

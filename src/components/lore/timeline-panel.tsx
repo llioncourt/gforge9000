@@ -460,7 +460,7 @@ function CalendarForm({
                 onChange={(e) =>
                   setDraft((d) => {
                     const months = [...d.months];
-                    months[i] = { ...months[i], days: Number(e.target.value) || 0 };
+                    months[i] = { ...months[i]!, days: Number(e.target.value) || 0 };
                     return { ...d, months };
                   })
                 }

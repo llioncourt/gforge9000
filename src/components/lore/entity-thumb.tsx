@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { portraitInitials, portraitUrl } from "@/lib/portrait";
+import { entityImageUrl } from "@/lib/entity-image";
+import { portraitInitials } from "@/lib/portrait";
 
 /** Small square preview of a lore entry's photo, used on cards. */
 export function EntityThumb({
@@ -21,7 +22,7 @@ export function EntityThumb({
   const effective = broken ? (fallbackPath ?? null) : (path ?? fallbackPath ?? null);
   const url = useQuery({
     queryKey: ["entity-photo", effective],
-    queryFn: () => portraitUrl(effective),
+    queryFn: () => entityImageUrl(effective),
     enabled: !!effective,
     staleTime: 1000 * 60 * 30,
   });

@@ -24,8 +24,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { KINDS, kindDef, VISIBILITIES } from "@/lib/entity-kinds";
-import { createEntity, listEntities, listRelationships, type EntityRow } from "@/lib/lore";
-import { getCampaign } from "@/lib/api";
+import {
+  createEntity,
+  dataValue,
+  listEntities,
+  listRelationships,
+  type EntityRow,
+} from "@/lib/lore";
+import { getCampaign, listCampaignCharacters } from "@/lib/api";
 import { download } from "@/lib/portable";
 import { parsePortableLore, toPortableLore } from "@/lib/lore-portable";
 import { importLore } from "@/lib/lore-import";
@@ -248,8 +254,8 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                     className="hover:bg-accent/40 block rounded-lg border p-3 transition"
                   >
                     <div className="flex items-start gap-3">
-                      {row.image_url ? (
-                        <EntityThumb path={row.image_url} name={row.name} />
+                      {thumbPath(row) ? (
+                        <EntityThumb path={thumbPath(row)} name={row.name} />
                       ) : null}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">

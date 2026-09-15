@@ -112,7 +112,29 @@ function PacksPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const importPack = useMutation({
+  const importPackFile = async (
+    file: File,
+    report: (label: string, percent?: number) => void,
+  ) => {
+    report("Reading file…", 10);
+    const parsed = parsePortablePack(await file.text());
+    report(`Creating pack “${parsed.pack.name}”…`, 35);
+    await createContentPack({
+      name: parsed.pack.name,
+      description: parsed.pack.description,
+      source_label: parsed.pack.source_label,
+      source_edition: parsed.pack.source_edition,
+      source_type: parsed.pack.source_type,
+    }).catch(() => undefined);
+    report(`Importing ${parsed.entries.length} entries…`, 55);
+    const rows = await importLibraryEntries(parsed.entries as never);
+    report("Refreshing packs…", 90);
+    await queryClient.invalidateQueries({ queryKey: ["library"] });
+    await queryClient.invalidateQueries({ queryKey: ["content-packs"] });
+    return `Imported ${rows.length} entries into “${parsed.pack.name}”.`;
+  };
+
+  const _unusedImportPack = useMutation({
     mutationFn: async (file: File) => {
       const parsed = parsePortablePack(await file.text());
       await createContentPack({

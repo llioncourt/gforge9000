@@ -510,8 +510,6 @@ function EntityPage() {
             ) : null}
           </div>
 
-          ) : null}
-
           <div className="space-y-2">
             <Label htmlFor="entity-summary">Summary</Label>
             <Textarea

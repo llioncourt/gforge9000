@@ -89,7 +89,7 @@ export async function campaignIntroUrl(path: string) {
 export async function uploadCampaignVideo(
   campaignId: string,
   file: File,
-  input: { title: string; videoType: CampaignVideoType },
+  input: { title: string; videoType: CampaignVideoType; thumb?: Blob | null },
 ) {
   const validation = validateCampaignVideoFile(file);
   if (validation) throw new Error(validation);
@@ -104,16 +104,25 @@ export async function uploadCampaignVideo(
     .from(CAMPAIGN_INTRO_BUCKET)
     .upload(path, file, { contentType: "video/mp4", upsert: false });
   fail(uploadError);
+  let thumbPath: string | null = null;
+  if (input.thumb) {
+    try {
+      thumbPath = await uploadThumbBlob(campaignId, user.id, input.thumb);
+    } catch {
+      thumbPath = null;
+    }
+  }
   if (currentIntro) {
     const removed = await supabase.from("campaign_videos").delete().eq("id", currentIntro.id);
     if (removed.error) {
-      await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([path]);
+      await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(thumbPath ? [path, thumbPath] : [path]);
       throw new Error(removed.error.message);
     }
   }
   const { error } = await supabase.from("campaign_videos").insert({
     campaign_id: campaignId,
     storage_path: path,
+    thumb_path: thumbPath,
     file_name: file.name,
     title,
     video_type: input.videoType,
@@ -123,12 +132,15 @@ export async function uploadCampaignVideo(
     created_by: user.id,
   });
   if (error) {
-    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([path]);
+    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(thumbPath ? [path, thumbPath] : [path]);
     throw new Error(error.message);
   }
   if (currentIntro?.storage_path) {
-    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([currentIntro.storage_path]);
+    const stale = [currentIntro.storage_path];
+    if (currentIntro.thumb_path) stale.push(currentIntro.thumb_path);
+    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(stale);
   }
+
 }
 
 export async function uploadCampaignIntro(campaignId: string, file: File) {
@@ -139,7 +151,9 @@ export async function uploadCampaignIntro(campaignId: string, file: File) {
 export async function removeCampaignVideo(video: CampaignVideo) {
   const { error } = await supabase.from("campaign_videos").delete().eq("id", video.id);
   fail(error);
-  await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([video.storage_path]);
+  const paths = [video.storage_path];
+  if (video.thumb_path) paths.push(video.thumb_path);
+  await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(paths);
 }
 
 export const removeCampaignIntro = removeCampaignVideo;
@@ -155,4 +169,34 @@ export async function saveCampaignIntroView(campaignId: string, introVersion: st
     do_not_show_again: true,
   });
   fail(error);
+}
+export async function campaignVideoThumbUrl(path: string) {
+  const { data, error } = await supabase.storage
+    .from(CAMPAIGN_INTRO_BUCKET)
+    .createSignedUrl(path, 60 * 60 * 8);
+  if (error) return "";
+  return data?.signedUrl ?? "";
+}
+
+async function uploadThumbBlob(campaignId: string, userId: string, blob: Blob) {
+  const path = `${userId}/${campaignId}/${crypto.randomUUID()}.jpg`;
+  const { error } = await supabase.storage
+    .from(CAMPAIGN_INTRO_BUCKET)
+    .upload(path, blob, { contentType: "image/jpeg", upsert: false });
+  fail(error);
+  return path;
+}
+
+/** Replace the stored thumbnail frame of a video. */
+export async function setCampaignVideoThumb(video: CampaignVideo, blob: Blob) {
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth.user;
+  if (!user) throw new Error("You need to be signed in.");
+  const path = await uploadThumbBlob(video.campaign_id, user.id, blob);
+  const { error } = await supabase.from("campaign_videos").update({ thumb_path: path }).eq("id", video.id);
+  if (error) {
+    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([path]);
+    throw new Error(error.message);
+  }
+  if (video.thumb_path) await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([video.thumb_path]);
 }

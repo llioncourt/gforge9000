@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Film, Play, Trash2 } from "lucide-react";
+import { Film, Image as ImageIcon, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CAMPAIGN_VIDEO_TYPES, campaignIntroUrl, campaignVideoTypeLabel, getCampaignIntro, getMyCampaignIntroView, listCampaignVideos, removeCampaignVideo, saveCampaignIntroView, shouldBlockForCampaignIntro, uploadCampaignVideo, type CampaignVideo, type CampaignVideoType } from "@/lib/campaign-intro";
+import { VideoFramePicker } from "@/components/campaign/video-frame-picker";
+import { CAMPAIGN_VIDEO_TYPES, campaignVideoThumbUrl, setCampaignVideoThumb, campaignIntroUrl, campaignVideoTypeLabel, getCampaignIntro, getMyCampaignIntroView, listCampaignVideos, removeCampaignVideo, saveCampaignIntroView, shouldBlockForCampaignIntro, uploadCampaignVideo, type CampaignVideo, type CampaignVideoType } from "@/lib/campaign-intro";
 
 function formatDuration(seconds: number | null) {
   if (seconds == null || !Number.isFinite(seconds)) return "Duration unavailable";
@@ -26,17 +27,36 @@ function formatDuration(seconds: number | null) {
 }
 
 function VideoRow({ video, isGm, onRemove }: { video: CampaignVideo; isGm: boolean; onRemove: (video: CampaignVideo) => void }) {
+  const queryClient = useQueryClient();
   const [url, setUrl] = useState<string | null>(null);
+  const [thumbUrl, setThumbUrl] = useState<string | null>(null);
   const [duration, setDuration] = useState<number | null>(null);
+  const [thumbOpen, setThumbOpen] = useState(false);
   useEffect(() => {
     let live = true;
     void campaignIntroUrl(video.storage_path).then((value) => { if (live) setUrl(value); });
     return () => { live = false; };
   }, [video.storage_path]);
+  useEffect(() => {
+    let live = true;
+    setThumbUrl(null);
+    if (video.thumb_path) void campaignVideoThumbUrl(video.thumb_path).then((value) => { if (live) setThumbUrl(value || null); });
+    return () => { live = false; };
+  }, [video.thumb_path]);
+  const saveThumb = useMutation({
+    mutationFn: (blob: Blob) => setCampaignVideoThumb(video, blob),
+    onSuccess: async () => {
+      setThumbOpen(false);
+      await queryClient.invalidateQueries({ queryKey: ["campaign-videos", video.campaign_id] });
+      toast.success("Thumbnail updated.");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
 
   return <div className="panel flex items-center gap-3 p-3 sm:gap-4">
     <div className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-md border border-border bg-background sm:w-40">
-      {url ? <video src={url} muted playsInline preload="metadata" onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)} className="size-full object-cover" aria-label={`${video.title} thumbnail"`} /> : <Skeleton className="size-full rounded-none" />}
+      {thumbUrl ? <img src={thumbUrl} alt={`${video.title} thumbnail`} className="size-full object-cover" /> : null}
+      {url ? <video src={url} muted playsInline preload="metadata" onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)} className={thumbUrl ? "hidden" : "size-full object-cover"} aria-label={`${video.title} thumbnail`} /> : thumbUrl ? null : <Skeleton className="size-full rounded-none" />}
       <div className="pointer-events-none absolute inset-0 bg-background/20" />
     </div>
     <div className="min-w-0 flex-1">
@@ -47,6 +67,7 @@ function VideoRow({ video, isGm, onRemove }: { video: CampaignVideo; isGm: boole
       </div>
     </div>
     {url ? <Dialog><DialogTrigger asChild><Button type="button" size="icon" aria-label={`Play ${video.title}`}><Play className="h-4 w-4 fill-current" /></Button></DialogTrigger><DialogContent className="w-[calc(100vw-2rem)] max-w-5xl p-3 sm:p-5"><DialogHeader className="pr-8"><DialogTitle className="truncate">{video.title}</DialogTitle><DialogDescription>{campaignVideoTypeLabel(video.video_type)} · {formatDuration(duration)}</DialogDescription></DialogHeader><video src={url} controls autoPlay playsInline preload="auto" className="aspect-video w-full bg-background object-contain" aria-label={`${video.title} video`} /></DialogContent></Dialog> : null}
+    {isGm && url ? <Dialog open={thumbOpen} onOpenChange={setThumbOpen}><DialogTrigger asChild><Button type="button" variant="ghost" size="icon" className="shrink-0" aria-label={`Edit thumbnail of ${video.title}`}><ImageIcon className="h-4 w-4" /></Button></DialogTrigger><DialogContent className="w-[calc(100vw-2rem)] max-w-3xl"><DialogHeader><DialogTitle>Thumbnail frame</DialogTitle><DialogDescription>Scrub to the frame you want and save it as the thumbnail.</DialogDescription></DialogHeader><VideoFramePicker src={url} crossOrigin busy={saveThumb.isPending} actionLabel="Save thumbnail" onCapture={(blob) => saveThumb.mutate(blob)} /></DialogContent></Dialog> : null}
     {isGm ? <AlertDialog><AlertDialogTrigger asChild><Button type="button" variant="ghost" size="icon" className="shrink-0 text-destructive hover:text-destructive" aria-label={`Remove ${video.title}`}><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Remove this video?</AlertDialogTitle><AlertDialogDescription>{video.video_type === "intro" ? "Members will no longer see this video when entering the campaign." : `${video.title} will be permanently removed.`}</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => onRemove(video)}>Remove</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog> : null}
   </div>;
 }
@@ -56,10 +77,14 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
   const [title, setTitle] = useState("");
   const [videoType, setVideoType] = useState<CampaignVideoType>("intro");
   const videos = useQuery({ queryKey: ["campaign-videos", campaignId], queryFn: () => listCampaignVideos(campaignId) });
+  const [pending, setPending] = useState<{ file: File; url: string } | null>(null);
+  const [thumb, setThumb] = useState<Blob | null>(null);
   const upload = useMutation({
-    mutationFn: (file: File) => uploadCampaignVideo(campaignId, file, { title, videoType }),
+    mutationFn: (file: File) => uploadCampaignVideo(campaignId, file, { title, videoType, thumb }),
     onSuccess: async () => {
       setTitle("");
+      setPending((current) => { if (current) URL.revokeObjectURL(current.url); return null; });
+      setThumb(null);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["campaign-videos", campaignId] }),
         queryClient.invalidateQueries({ queryKey: ["campaign-intro", campaignId] }),
@@ -82,7 +107,7 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
   });
 
   return <div className="space-y-6">
-    {isGm ? <section className="panel p-5"><h2 className="font-display text-lg font-semibold">Upload video</h2><p className="mt-1 text-sm text-muted-foreground">Intro videos welcome players on first entry. Other types are optional campaign media.</p><div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]"><div className="space-y-1.5"><Label htmlFor="campaign-video-title">Title</Label><Input id="campaign-video-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Video title" /></div><div className="space-y-1.5"><Label htmlFor="campaign-video-type">Type</Label><Select value={videoType} onValueChange={(value) => setVideoType(value as CampaignVideoType)}><SelectTrigger id="campaign-video-type"><SelectValue /></SelectTrigger><SelectContent>{CAMPAIGN_VIDEO_TYPES.map((type) => <SelectItem key={type} value={type}>{campaignVideoTypeLabel(type)}</SelectItem>)}</SelectContent></Select></div></div><FileDropzone className="mt-4" accept="video/mp4,.mp4" loading={upload.isPending} loadingLabel="Uploading video…" label="Drop an MP4 here, or click to browse" hint={videoType === "intro" ? "MP4 · up to 250 MB · replaces the current Intro" : "MP4 · up to 250 MB"} onFiles={(files) => { const file = files[0]; if (!file) return; if (!title.trim()) { toast.error("Enter a video title first."); return; } upload.mutate(file); }} /></section> : null}
+    {isGm ? <section className="panel p-5"><h2 className="font-display text-lg font-semibold">Upload video</h2><p className="mt-1 text-sm text-muted-foreground">Intro videos welcome players on first entry. Other types are optional campaign media.</p><div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]"><div className="space-y-1.5"><Label htmlFor="campaign-video-title">Title</Label><Input id="campaign-video-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Video title" /></div><div className="space-y-1.5"><Label htmlFor="campaign-video-type">Type</Label><Select value={videoType} onValueChange={(value) => setVideoType(value as CampaignVideoType)}><SelectTrigger id="campaign-video-type"><SelectValue /></SelectTrigger><SelectContent>{CAMPAIGN_VIDEO_TYPES.map((type) => <SelectItem key={type} value={type}>{campaignVideoTypeLabel(type)}</SelectItem>)}</SelectContent></Select></div></div>{pending ? <div className="mt-4 space-y-3"><p className="text-sm text-muted-foreground">Pick the frame to use as the thumbnail (optional), then upload.</p><VideoFramePicker src={pending.url} actionLabel={thumb ? "Frame selected — pick another" : "Use this frame"} onCapture={(blob) => { setThumb(blob); toast.success("Thumbnail frame selected."); }} /><div className="flex flex-wrap items-center gap-2"><Button type="button" disabled={upload.isPending} onClick={() => { if (!title.trim()) { toast.error("Enter a video title first."); return; } upload.mutate(pending.file); }}>{upload.isPending ? "Uploading…" : "Upload video"}</Button><Button type="button" variant="ghost" disabled={upload.isPending} onClick={() => { URL.revokeObjectURL(pending.url); setPending(null); setThumb(null); }}>Choose another file</Button><span className="text-xs text-muted-foreground">{pending.file.name}</span></div></div> : <FileDropzone className="mt-4" accept="video/mp4,.mp4" label="Drop an MP4 here, or click to browse" hint={videoType === "intro" ? "MP4 · up to 250 MB · replaces the current Intro" : "MP4 · up to 250 MB"} onFiles={(files) => { const file = files[0]; if (!file) return; setThumb(null); setPending({ file, url: URL.createObjectURL(file) }); }} />}</section> : null}
     {videos.isLoading ? <div className="space-y-3">{[0, 1].map((item) => <div key={item} className="panel flex items-center gap-4 p-3"><Skeleton className="aspect-video w-28 shrink-0 rounded-md sm:w-40" /><div className="flex-1 space-y-2"><Skeleton className="h-4 w-44 max-w-full" /><Skeleton className="h-5 w-28" /></div><Skeleton className="size-9 shrink-0 rounded-md" /></div>)}</div> : videos.data?.length ? <div className="space-y-3">{videos.data.map((video) => <VideoRow key={video.id} video={video} isGm={isGm} onRemove={(item) => remove.mutate(item)} />)}</div> : <div className="panel grid min-h-64 place-items-center p-8 text-center"><div><Film className="mx-auto h-8 w-8 text-muted-foreground" /><p className="mt-3 text-sm text-muted-foreground">No campaign videos yet.</p></div></div>}
   </div>;
 }

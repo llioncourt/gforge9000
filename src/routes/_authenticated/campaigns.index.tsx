@@ -64,6 +64,30 @@ function CampaignsPage() {
   const [disadvLimit, setDisadvLimit] = useState("-50");
   const [tl, setTl] = useState("8");
   const [code, setCode] = useState("");
+  const [exporting, setExporting] = useState<string | null>(null);
+
+  const exportCampaign = async (campaignId: string) => {
+    setExporting(campaignId);
+    const toastId = toast.loading("Preparing campaign package…");
+    try {
+      const { blob, fileName } = await buildCampaignPackageZip(campaignId, (stepLabel) =>
+        toast.loading(stepLabel, { id: toastId }),
+      );
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Campaign package downloaded.", { id: toastId });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Export failed.", { id: toastId });
+    } finally {
+      setExporting(null);
+    }
+  };
 
   const create = useMutation({
     mutationFn: () =>

@@ -183,6 +183,29 @@ function CampaignPage() {
     if (name) document.title = `${name} — Universal Character Forge`;
   }, [campaign.data?.name]);
 
+  // Deep-link from global search: scroll to the exact item inside the tab and flash it.
+  useEffect(() => {
+    if (!itemParam) return;
+    const wanted = itemParam;
+    let attempts = 0;
+    const timer = setInterval(() => {
+      const el = document.querySelector(`[data-search-id="${CSS.escape(wanted)}"]`);
+      attempts += 1;
+      if (el instanceof HTMLElement) {
+        clearInterval(timer);
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ring-2", "ring-primary", "rounded-lg");
+        window.setTimeout(() => el.classList.remove("ring-2", "ring-primary", "rounded-lg"), 2600);
+        const next: { tab?: CampaignTab } = {};
+        if (tabParam) next.tab = tabParam;
+        void navigate({ to: "/campaigns/$id", params: { id }, search: next, replace: true });
+      } else if (attempts > 40) {
+        clearInterval(timer);
+      }
+    }, 200);
+    return () => clearInterval(timer);
+  }, [itemParam, tabParam, id, navigate]);
+
   const roster = useQuery({
     queryKey: ["campaign-characters", id],
     queryFn: () => listCampaignCharacters(id),
@@ -764,7 +787,7 @@ function CampaignPage() {
 
         <TabsContent value="battle" className="mt-6">
           <Suspense fallback={<PanelFallback />}>
-            <BattlePanel campaignId={id} isGm={isGm} />
+            <BattlePanel campaignId={id} isGm={isGm} focusMapId={itemParam ?? null} />
           </Suspense>
         </TabsContent>
 
@@ -801,7 +824,7 @@ function CampaignPage() {
               [0, 1].map((i) => <Skeleton key={i} className="h-24 w-full rounded-lg" />)
             ) : visibleNotes.length ? (
               visibleNotes.map((n) => (
-                <article key={n.id} className="panel p-4">
+                <article key={n.id} data-search-id={n.id} className="panel p-4">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="font-medium">{n.title}</h3>
                     <div className="flex items-center gap-2">

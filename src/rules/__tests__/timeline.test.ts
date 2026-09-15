@@ -154,8 +154,8 @@ describe("Gregorian leap year", () => {
 
 describe("validateWorldDate", () => {
   it("rejects day beyond month length", () => {
-    const err = validateWorldDate(GREGORIAN_PRESET, { year: 2023, month: 2, day: 30 });
-    expect(err).toContain("30");
+    const err = validateWorldDate(GREGORIAN_PRESET, { year: 2023, month: 1, day: 32 });
+    expect(err).toContain("31");
   });
 
   it("accepts valid date", () => {

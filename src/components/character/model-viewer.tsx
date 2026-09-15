@@ -82,13 +82,11 @@ type Loaded = {
 function useGlb(url: string) {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setLoaded(null);
     setError(null);
-    setProgress(0);
     const loader = new GLTFLoader();
     loader.load(
       url,
@@ -139,10 +137,7 @@ function useGlb(url: string) {
           },
         });
       },
-      (ev) => {
-        if (cancelled || !ev.total) return;
-        setProgress(Math.min(100, Math.round((ev.loaded / ev.total) * 100)));
-      },
+      undefined,
       () => !cancelled && setError("Could not read that model."),
     );
     return () => {
@@ -150,7 +145,7 @@ function useGlb(url: string) {
     };
   }, [url]);
 
-  return { loaded, error, progress };
+  return { loaded, error };
 }
 
 /** Applies the saved orientation and keeps the model standing on the floor. */
@@ -392,7 +387,7 @@ export default function ModelViewer({
   onInfo?: ((info: ModelInfo) => void) | undefined;
   onApi?: ((api: ViewerApi) => void) | undefined;
 }) {
-  const { loaded, error, progress } = useGlb(url);
+  const { loaded, error } = useGlb(url);
   useMaterialMode(loaded, settings.materialMode, settings.wireframe);
 
   useEffect(() => {

@@ -140,15 +140,18 @@ export const CAMPAIGN_TABS = [
   "rules",
 ] as const;
 export type CampaignTab = (typeof CAMPAIGN_TABS)[number];
+export type MediaSubTab = "videos" | "soundtrack" | "sound-fx";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   staticData: { sitemap: false },
-  validateSearch: (search: Record<string, unknown>): { tab?: CampaignTab; item?: string } => {
+  validateSearch: (search: Record<string, unknown>): { tab?: CampaignTab; item?: string; sub?: MediaSubTab } => {
     const tab = search["tab"];
     const item = search["item"];
-    const out: { tab?: CampaignTab; item?: string } = {};
+    const sub = search["sub"];
+    const out: { tab?: CampaignTab; item?: string; sub?: MediaSubTab } = {};
     if (typeof tab === "string" && (CAMPAIGN_TABS as readonly string[]).includes(tab)) out.tab = tab as CampaignTab;
     if (typeof item === "string" && item) out.item = item;
+    if (sub === "videos" || sub === "soundtrack" || sub === "sound-fx") out.sub = sub;
     return out;
   },
   head: ({ params }) => {
@@ -171,7 +174,7 @@ export const Route = createFileRoute("/_authenticated/campaigns/$id")({
 
 function CampaignPage() {
   const { id } = Route.useParams();
-  const { tab: tabParam, item: itemParam } = Route.useSearch();
+  const { tab: tabParam, item: itemParam, sub: subParam } = Route.useSearch();
   const { user } = useSession();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -196,15 +199,16 @@ function CampaignPage() {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         el.classList.add("ring-2", "ring-primary", "rounded-lg");
         window.setTimeout(() => el.classList.remove("ring-2", "ring-primary", "rounded-lg"), 2600);
-        const next: { tab?: CampaignTab } = {};
+        const next: { tab?: CampaignTab; sub?: MediaSubTab } = {};
         if (tabParam) next.tab = tabParam;
+        if (subParam) next.sub = subParam;
         void navigate({ to: "/campaigns/$id", params: { id }, search: next, replace: true });
       } else if (attempts > 40) {
         clearInterval(timer);
       }
     }, 200);
     return () => clearInterval(timer);
-  }, [itemParam, tabParam, id, navigate]);
+  }, [itemParam, tabParam, subParam, id, navigate]);
 
   const roster = useQuery({
     queryKey: ["campaign-characters", id],
@@ -519,7 +523,7 @@ function CampaignPage() {
 
         <TabsContent value="media" className="mt-6">
           <Suspense fallback={<PanelFallback />}>
-            <MediaPanel campaignId={id} isGm={isGm} />
+            <MediaPanel campaignId={id} isGm={isGm} sub={subParam ?? null} focusId={itemParam ?? null} />
           </Suspense>
         </TabsContent>
 

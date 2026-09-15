@@ -10,7 +10,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { globalSearch, type CampaignTab, type SearchHit, type SearchTarget } from "@/lib/global-search";
+import { globalSearch, type CampaignTab, type MediaSubTab, type SearchHit, type SearchTarget } from "@/lib/global-search";
 import { useDice } from "@/components/app/dice-context";
 
 export function CommandPalette({
@@ -66,9 +66,10 @@ export function CommandPalette({
       } else if (target.kind === "entity") {
         void navigate({ to: "/entities/$id", params: { id: target.id }, search: { from: target.from } });
       } else if (target.kind === "campaign") {
-        const search: { tab?: CampaignTab; item?: string } = {};
+        const search: { tab?: CampaignTab; item?: string; sub?: MediaSubTab } = {};
         if (target.tab) search.tab = target.tab;
         if (target.item) search.item = target.item;
+        if (target.sub) search.sub = target.sub;
         void navigate({ to: "/campaigns/$id", params: { id: target.id }, search });
       } else if (target.kind === "library") {
         void navigate({ to: "/library" });

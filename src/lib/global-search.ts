@@ -5,10 +5,12 @@ export type CampaignTab =
   | "media" | "roster" | "lore" | "story" | "graph" | "reveals" | "sessions"
   | "timeline" | "battle" | "library" | "rolls" | "notes" | "members" | "rules";
 
+export type MediaSubTab = "videos" | "soundtrack" | "sound-fx";
+
 export type SearchTarget =
   | { kind: "character"; id: string }
   | { kind: "entity"; id: string; from: string }
-  | { kind: "campaign"; id: string; tab?: CampaignTab; item?: string }
+  | { kind: "campaign"; id: string; tab?: CampaignTab; item?: string; sub?: MediaSubTab }
   | { kind: "library" }
   | { kind: "packs" };
 
@@ -75,7 +77,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       id: `sfx-${row.id}`,
       group: "Sound FX",
       label: row.title,
-      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id },
+      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id, sub: "sound-fx" },
     });
   for (const row of albums.data ?? [])
     push({
@@ -83,7 +85,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       group: "Soundtrack",
       label: row.title,
       sublabel: "Album",
-      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id },
+      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id, sub: "soundtrack" },
     });
   for (const row of tracks.data ?? [])
     push({
@@ -91,7 +93,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       group: "Soundtrack",
       label: row.title,
       sublabel: "Track",
-      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id },
+      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id, sub: "soundtrack" },
     });
   for (const row of videos.data ?? [])
     push({
@@ -99,7 +101,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       group: "Videos",
       label: row.title,
       sublabel: campaignVideoTypeLabel(row.video_type),
-      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id },
+      target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id, sub: "videos" },
     });
   for (const row of notes.data ?? [])
     push({

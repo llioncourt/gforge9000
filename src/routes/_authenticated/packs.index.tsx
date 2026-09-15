@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Boxes, Download, Plus, Trash2 } from "lucide-react";
+import { Boxes, Download, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -78,6 +78,7 @@ function PacksPage() {
   const packsQuery = useQuery({ queryKey: ["content-packs"], queryFn: listContentPacks });
   const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: listCampaigns });
   const [search, setSearch] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -312,6 +313,16 @@ function PacksPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Import pack"
+        description="Drop a Universal Character Forge pack JSON file."
+        accept="application/json,.json"
+        label="Drop the pack JSON here, or click to browse"
+        run={importPackFile}
+      />
     </div>
   );
 }

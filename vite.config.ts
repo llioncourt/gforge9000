@@ -12,4 +12,13 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    // Pre-bundle the 3D stack at startup. Otherwise the first time the viewer is
+    // opened Vite discovers these deps, re-optimizes, and the mid-session reload
+    // can leave a stale React copy ("Cannot read properties of null (useContext)").
+    optimizeDeps: {
+      include: ["three", "@react-three/fiber", "@react-three/drei"],
+    },
+  },
 });
+

@@ -360,13 +360,13 @@ function CalendarForm({
       </Button>
 
       <Tabs defaultValue="units" className="w-full">
-        <div className="flex gap-1 overflow-x-auto pb-1">
+        <TabsList className="flex gap-1 overflow-x-auto pb-1">
           <TabsTrigger value="units">Unidades</TabsTrigger>
           <TabsTrigger value="months">Meses</TabsTrigger>
           <TabsTrigger value="seasons">Estações</TabsTrigger>
           <TabsTrigger value="cycle">Ciclo</TabsTrigger>
           <TabsTrigger value="today">Hoje</TabsTrigger>
-        </div>
+        </TabsList>
 
         {/* ── Unidades ── */}
         <TabsContent value="units" className="space-y-2">

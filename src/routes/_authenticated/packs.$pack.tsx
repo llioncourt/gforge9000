@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useTransferTask } from "@/components/ui/transfer-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Download, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -92,6 +93,7 @@ function PackDetailPage() {
   const [nextName, setNextName] = useState(packName ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [addId, setAddId] = useState("");
+  const exportTask = useTransferTask();
 
   const rows = useMemo(
     () => (library.data ?? []).filter((e) => (e.pack ?? "") === packName),
@@ -426,6 +428,7 @@ function PackDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {exportTask.node}
     </div>
   );
 }

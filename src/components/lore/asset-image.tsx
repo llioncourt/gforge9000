@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { assetUrl } from "@/lib/assets";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageZoom } from "@/components/ui/image-zoom";
 
 /** Renders a private library image by resolving a short-lived signed URL. */
 export function AssetImage({
@@ -45,5 +46,5 @@ export function AssetImage({
     );
   }
   if (!url) return <Skeleton className={className} />;
-  return <img src={url} alt={alt} loading="lazy" className={className} />;
+  return <ImageZoom src={url} alt={alt} className={className} onError={() => setFailed(true)} />;
 }

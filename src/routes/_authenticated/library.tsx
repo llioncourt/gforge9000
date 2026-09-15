@@ -160,6 +160,7 @@ function LibraryPage() {
   const exportTask = useTransferTask();
   const { item: itemParam } = Route.useSearch();
   const navigate = useNavigate();
+  const [highlightId, setHighlightId] = useState<string | null>(null);
 
   // Deep-link from global search: clear filters, scroll to the entry and flash it.
   useEffect(() => {
@@ -168,21 +169,26 @@ function LibraryPage() {
     setKindFilter("all");
     setPackFilter("all");
     let attempts = 0;
+    let clearTimer = 0;
     const timer = window.setInterval(() => {
       attempts += 1;
       const el = document.querySelector(`[data-search-id="${CSS.escape(itemParam)}"]`);
       if (el instanceof HTMLElement) {
         window.clearInterval(timer);
         el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.add("ring-2", "ring-primary", "rounded-lg");
-        window.setTimeout(() => el.classList.remove("ring-2", "ring-primary", "rounded-lg"), 2600);
+        setHighlightId(itemParam);
+        clearTimer = window.setTimeout(() => setHighlightId(null), 2600);
         void navigate({ to: "/library", search: {}, replace: true });
       } else if (attempts > 40) {
         window.clearInterval(timer);
       }
     }, 200);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      if (clearTimer) window.clearTimeout(clearTimer);
+    };
   }, [itemParam, navigate]);
+
 
   const packs = useMemo(() => {
     const set = new Set<string>();
@@ -395,7 +401,15 @@ function LibraryPage() {
           {rows.map((e) => {
             const mine = e.owner_id === user?.id;
             return (
-              <div key={e.id} data-search-id={e.id} className="panel flex flex-col p-4">
+              <div
+                key={e.id}
+                data-search-id={e.id}
+                className={`panel flex flex-col p-4 transition-shadow ${
+                  highlightId === e.id
+                    ? "ring-2 ring-primary rounded-lg shadow-lg shadow-primary/30"
+                    : ""
+                }`}
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{e.name}</p>

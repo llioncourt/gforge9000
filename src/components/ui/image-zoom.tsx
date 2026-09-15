@@ -55,6 +55,12 @@ export function ImageZoom({
         <DialogContent
           className="w-auto max-w-[92vw] border-none bg-transparent p-0 shadow-none sm:max-w-[92vw]"
           aria-describedby={undefined}
+          onInteractOutside={(event) => {
+            // Keep the overlay mounted so the closing click does not fall
+            // through to a parent link/card underneath (Radix ghost-click).
+            // Users close via Escape or the × button.
+            event.preventDefault();
+          }}
         >
           <DialogTitle className="sr-only">{alt}</DialogTitle>
           <img

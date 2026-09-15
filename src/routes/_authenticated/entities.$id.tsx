@@ -107,7 +107,13 @@ function EntityPage() {
   const linkedSheetId = entity.data ? dataValue(entity.data, "character_sheet_id") : "";
   const linkedCharacter = (campaignCharacters.data ?? []).find((c) => c.id === linkedSheetId);
   const inheritedPortrait = linkedSheetId ? (linkedCharacter?.portrait_path ?? null) : null;
-  const entityImagePath = entity.data?.image_url ?? inheritedPortrait;
+  // Own image wins, but a missing/broken file falls back to the linked sheet portrait.
+  const [ownImageBroken, setOwnImageBroken] = useState(false);
+  const ownImagePath = ownImageBroken ? null : (entity.data?.image_url ?? null);
+  const entityImagePath = ownImagePath ?? inheritedPortrait;
+  useEffect(() => {
+    setOwnImageBroken(false);
+  }, [entity.data?.image_url]);
   const photoUrl = useQuery({
     queryKey: ["entity-photo", entityImagePath],
     queryFn: () => portraitUrl(entityImagePath),

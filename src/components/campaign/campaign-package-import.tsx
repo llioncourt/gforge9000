@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BookOpen, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { FileDropzone } from "@/components/ui/FileDropzone";
+import { ImportDialog } from "@/components/ui/transfer-dialog";
 import {
   Dialog,
   DialogContent,
@@ -29,20 +29,17 @@ function downloadText(fileName: string, contents: string, mime: string) {
 /** ZIP import + format documentation, shown inside the New campaign dialog. */
 export function CampaignPackageImport({ onImported }: { onImported: (campaignId: string) => void }) {
   const queryClient = useQueryClient();
-  const [showDropzone, setShowDropzone] = useState(false);
-  const [progress, setProgress] = useState("Importing…");
+  const [importOpen, setImportOpen] = useState(false);
 
-  const importer = useMutation({
-    mutationFn: (file: File) => importCampaignPackage(file, setProgress),
-    onSuccess: async (summary) => {
-      await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      toast.success(
-        `Campaign imported — ${summary.entities} lore entries, ${summary.characters} characters, ${summary.maps} maps, ${summary.albums} albums.`,
-      );
-      onImported(summary.campaignId);
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
+  const runImport = async (file: File, report: (label: string, percent?: number) => void) => {
+    report("Reading the ZIP…", 5);
+    const summary = await importCampaignPackage(file, (step) => report(step));
+    report("Refreshing campaigns…", 95);
+    await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+    setImportOpen(false);
+    onImported(summary.campaignId);
+    return `Campaign imported — ${summary.entities} lore entries, ${summary.characters} characters, ${summary.maps} maps, ${summary.albums} albums.`;
+  };
 
   return (
     <div className="space-y-3 rounded-lg border border-dashed border-border p-3">
@@ -51,7 +48,7 @@ export function CampaignPackageImport({ onImported }: { onImported: (campaignId:
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => setShowDropzone((current) => !current)}
+          onClick={() => setImportOpen(true)}
         >
           <Upload className="mr-2 h-4 w-4" /> Import package
         </Button>
@@ -100,19 +97,15 @@ export function CampaignPackageImport({ onImported }: { onImported: (campaignId:
         A ZIP can carry the premise, house rules, lore, notes, handouts, battle maps, soundtracks,
         the intro video and character sheets.
       </p>
-      {showDropzone ? (
-        <FileDropzone
-          compact
-          accept=".zip,application/zip"
-          loading={importer.isPending}
-          loadingLabel={progress}
-          label="Drop the campaign ZIP here, or click to browse"
-          hint="campaign.json at the root, plus the files it references"
-          onFiles={(files) => {
-            if (files[0]) importer.mutate(files[0]);
-          }}
-        />
-      ) : null}
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Import campaign package"
+        description="campaign.json at the root, plus the files it references."
+        accept=".zip,application/zip"
+        label="Drop the campaign ZIP here, or click to browse"
+        run={runImport}
+      />
     </div>
   );
 }

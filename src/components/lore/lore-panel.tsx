@@ -253,13 +253,11 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                     className="hover:bg-accent/40 block rounded-lg border p-3 transition"
                   >
                     <div className="flex items-start gap-3">
-                      {row.image_url || sheetPortrait(row) ? (
-                        <EntityThumb
-                          path={row.image_url}
-                          fallbackPath={sheetPortrait(row)}
-                          name={row.name}
-                        />
-                      ) : null}
+                      <EntityThumb
+                        path={row.image_url}
+                        fallbackPath={sheetPortrait(row)}
+                        name={row.name}
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <span className="font-medium">{row.name}</span>

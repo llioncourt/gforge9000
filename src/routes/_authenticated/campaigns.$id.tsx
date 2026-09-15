@@ -123,8 +123,32 @@ function PanelFallback() {
   return <Skeleton className="h-64 w-full rounded-lg" />;
 }
 
+export const CAMPAIGN_TABS = [
+  "media",
+  "roster",
+  "lore",
+  "story",
+  "graph",
+  "reveals",
+  "sessions",
+  "timeline",
+  "battle",
+  "library",
+  "rolls",
+  "notes",
+  "members",
+  "rules",
+] as const;
+export type CampaignTab = (typeof CAMPAIGN_TABS)[number];
+
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   staticData: { sitemap: false },
+  validateSearch: (search: Record<string, unknown>): { tab?: CampaignTab } => {
+    const tab = search["tab"];
+    return typeof tab === "string" && (CAMPAIGN_TABS as readonly string[]).includes(tab)
+      ? { tab: tab as CampaignTab }
+      : {};
+  },
   head: ({ params }) => {
     const title = `Campaign ${params.id.slice(0, 8)} — Universal Character Forge`;
     const description =
@@ -145,6 +169,7 @@ export const Route = createFileRoute("/_authenticated/campaigns/$id")({
 
 function CampaignPage() {
   const { id } = Route.useParams();
+  const { tab: tabParam } = Route.useSearch();
   const { user } = useSession();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -438,7 +463,17 @@ function CampaignPage() {
 
       <CampaignIntroExperience campaignId={id} isGm={isGm} display="gate" />
 
-      <Tabs defaultValue="roster">
+      <Tabs
+        value={tabParam ?? "roster"}
+        onValueChange={(v) =>
+          navigate({
+            to: "/campaigns/$id",
+            params: { id },
+            search: { tab: v as CampaignTab },
+            replace: true,
+          })
+        }
+      >
         <ScrollableTabsList>
           <TabsTrigger value="media">Media</TabsTrigger>
           <TabsTrigger value="roster">Roster</TabsTrigger>

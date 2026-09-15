@@ -44,7 +44,6 @@ import { reconcileImportedEntries } from "@/lib/import-reconcile";
 import type { ImportedEntry } from "@/lib/trait-match";
 import { ImportDialog } from "@/components/ui/transfer-dialog";
 
-import { FileDropzone } from "@/components/ui/FileDropzone";
 import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 
 export const Route = createFileRoute("/_authenticated/characters/")({
@@ -333,6 +332,17 @@ function CharactersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Import character"
+        description="Drop a Universal Character Forge JSON export."
+        accept="application/json,.json"
+        label="Drop the character JSON here, or click to browse"
+        hint="Exports produced by this app or converted with the AI guide"
+        run={importCharacterFile}
+      />
     </div>
   );
 }

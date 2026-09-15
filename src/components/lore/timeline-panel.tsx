@@ -53,6 +53,7 @@ import {
   type WorldCalendar,
 } from "@/lib/world-calendar";
 import { buildCalendarPackZip, readCalendarFile } from "@/lib/calendar-pack";
+import { buildTimelinePackZip, readTimelineFile, type TimelineEventInput } from "@/lib/timeline-pack";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 
 
@@ -86,6 +87,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
     summary: "",
   });
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [eventsImportOpen, setEventsImportOpen] = useState(false);
 
   const campaign = useQuery({ queryKey: ["campaign", campaignId], queryFn: () => getCampaign(campaignId) });
   const entities = useQuery({
@@ -158,6 +160,68 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const importEvents = useMutation({
+    mutationFn: async (rows: TimelineEventInput[]) => {
+      rows.forEach((row, i) => {
+        const monthIdx = calendar.months.findIndex(
+          (m) => m.name.toLowerCase() === (row.month ?? "").toLowerCase(),
+        );
+        if (row.month && monthIdx >= 0 && row.day) {
+          const check: Parameters<typeof validateWorldDate>[1] = {
+            month: monthIdx + 1,
+            day: Number(row.day),
+          };
+          if (row.year) check.year = Number(row.year);
+          if (row.hour) check.hour = Number(row.hour);
+          if (row.minute) check.minute = Number(row.minute);
+          const err = validateWorldDate(calendar, check);
+          if (err) throw new Error(`Evento ${i + 1} ("${row.name}"): ${err}`);
+        }
+      });
+
+      for (const row of rows) {
+        await createEntity({
+          campaign_id: campaignId,
+          kind: "EVENT",
+          name: row.name,
+          status: row.status || "Historical",
+          visibility: row.visibility ?? (isGm ? "GM_ONLY" : "ALL_PLAYERS"),
+          summary: row.summary || null,
+          created_by: user!.id,
+          data: {
+            year: row.year ?? "",
+            month: row.month ?? "",
+            day: row.day ?? "",
+            hour: row.hour ?? "",
+            minute: row.minute ?? "",
+            era: row.era || calendar.era,
+            what_happened: row.what_happened ?? "",
+            consequences: row.consequences ?? "",
+            gm_truth: row.gm_truth ?? "",
+          },
+        } as never);
+      }
+      return rows.length;
+    },
+    onSuccess: (count) => {
+      setEventsImportOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+      toast.success(`${count} evento(s) importado(s).`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const downloadEventsPack = () => {
+    const url = URL.createObjectURL(buildTimelinePackZip());
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "timeline-eventos-modelo.zip";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       <div className="panel flex flex-wrap items-center gap-3 p-4">
@@ -167,6 +231,37 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
             ? `${calendar.units.year.singular} atual: ${todayLabel}${calendar.era ? ` (${calendar.era})` : ""}`
             : `Defina um ${calendar.units.year.singular.toLowerCase()} atual para ordenar eventos pelo seu calendário.`}
         </p>
+        {isGm ? (
+          <Button variant="outline" size="sm" onClick={downloadEventsPack}>
+            <Download className="mr-1 h-4 w-4" /> Modelo de eventos (ZIP)
+          </Button>
+        ) : null}
+        {isGm ? (
+          <Dialog open={eventsImportOpen} onOpenChange={setEventsImportOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Upload className="mr-1 h-4 w-4" /> Importar eventos
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Importar eventos da timeline</DialogTitle>
+              </DialogHeader>
+              <FileDropzone
+                accept=".json,.zip,application/json,application/zip"
+                onFiles={(files) => {
+                  const file = files[0];
+                  if (!file) return;
+                  void readTimelineFile(file)
+                    .then((rows) => importEvents.mutate(rows))
+                    .catch((e: Error) => toast.error(e.message));
+                }}
+                label="Solte o events.json ou o ZIP aqui"
+                hint="Baixe o modelo de eventos para ver a estrutura."
+              />
+            </DialogContent>
+          </Dialog>
+        ) : null}
         {isGm ? (
           <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
             <DialogTrigger asChild>
@@ -207,6 +302,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
                   <Link
                     to="/entities/$id"
                     params={{ id: row.id }}
+                    search={{ from: "timeline" }}
                     className="panel block p-4 transition hover:border-primary/50"
                   >
                     <div className="flex items-center justify-between gap-2">

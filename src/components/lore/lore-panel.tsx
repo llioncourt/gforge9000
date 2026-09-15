@@ -250,6 +250,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                   <Link
                     to="/entities/$id"
                     params={{ id: row.id }}
+                    search={{ from: "lore" }}
                     className="hover:bg-accent/40 block rounded-lg border p-3 transition"
                   >
                     <div className="flex items-start gap-3">

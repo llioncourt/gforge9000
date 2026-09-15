@@ -56,6 +56,10 @@ import { portraitInitials, removePortrait, uploadPortrait } from "@/lib/portrait
 
 export const Route = createFileRoute("/_authenticated/entities/$id")({
   staticData: { sitemap: false },
+  validateSearch: (search: Record<string, unknown>): { from?: string } => {
+    const from = search["from"];
+    return typeof from === "string" && from ? { from } : {};
+  },
   head: () => ({
     meta: [
       { title: "Lore entry — Universal Character Forge" },
@@ -74,6 +78,7 @@ export const Route = createFileRoute("/_authenticated/entities/$id")({
 
 function EntityPage() {
   const { id } = Route.useParams();
+  const { from } = Route.useSearch();
   const { user } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -169,6 +174,7 @@ function EntityPage() {
   const isGm = !!campaign.data && campaign.data.gm_id === user?.id;
   const canEdit = isGm || entity.data?.owner_user_id === user?.id;
   const def = useMemo(() => kindDef(entity.data?.kind ?? "CUSTOM"), [entity.data?.kind]);
+  const backTab = entity.data?.kind === "EVENT" ? "timeline" : "lore";
 
   const [form, setForm] = useState<EntityRow | null>(null);
   useEffect(() => {
@@ -311,7 +317,11 @@ function EntityPage() {
           <div className="flex items-center gap-2">
             {campaignId ? (
               <Button variant="outline" asChild>
-                <Link to="/campaigns/$id" params={{ id: campaignId }}>
+                <Link
+                  to="/campaigns/$id"
+                  params={{ id: campaignId }}
+                  search={{ tab: (from ?? backTab) as never }}
+                >
                   <ArrowLeft className="mr-2 size-4" /> Campaign
                 </Link>
               </Button>

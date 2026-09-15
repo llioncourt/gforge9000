@@ -259,7 +259,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                         fallbackPath={sheetPortrait(row)}
                         name={row.name}
                       />
-                      <div className="min-w-0 flex-1">
+                      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                         <div className="flex items-start justify-between gap-2">
                           <span className="font-medium">{row.name}</span>
                           <Badge variant="outline">
@@ -267,7 +267,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                               row.visibility}
                           </Badge>
                         </div>
-                        <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+                        <p className="text-muted-foreground mt-1 line-clamp-2 min-h-10 flex-1 text-sm">
                           {row.summary ?? row.player_description ?? "No summary yet."}
                         </p>
                         <p className="text-muted-foreground mt-2 text-xs">{row.status}</p>

@@ -86,7 +86,11 @@ export function MapToken({
       {use3d && model.data ? (
         <ClientOnly fallback={<span className="text-xs font-semibold">{initials(label)}</span>}>
           <Suspense fallback={<span className="text-xs font-semibold">{initials(label)}</span>}>
-            <ModelViewer url={model.data} autoRotate={false} transform={transform} />
+            <ModelViewer
+              url={model.data}
+              transform={transform}
+              settings={{ ...DEFAULT_VIEWER_SETTINGS, autoRotate: false }}
+            />
           </Suspense>
         </ClientOnly>
       ) : portrait.data || npcImage.data ? (

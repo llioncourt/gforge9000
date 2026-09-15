@@ -107,13 +107,14 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
       const minuteNum = form.minute.trim() ? Number(form.minute) : undefined;
 
       if (form.month && monthIdx >= 0 && form.day) {
-        const err = validateWorldDate(calendar, {
-          year: yearNum,
+        const check: Parameters<typeof validateWorldDate>[1] = {
           month: monthIdx + 1,
           day: dayNum,
-          hour: hourNum,
-          minute: minuteNum,
-        });
+        };
+        if (yearNum !== undefined) check.year = yearNum;
+        if (hourNum !== undefined) check.hour = hourNum;
+        if (minuteNum !== undefined) check.minute = minuteNum;
+        const err = validateWorldDate(calendar, check);
         if (err) throw new Error(err);
       }
 

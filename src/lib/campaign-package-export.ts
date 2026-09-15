@@ -78,8 +78,15 @@ async function copy(
   return path;
 }
 
+export interface CampaignExportStep {
+  label: string;
+  done: number;
+  total: number;
+  percent: number;
+}
+
 export interface CampaignExportProgress {
-  (step: string): void;
+  (step: CampaignExportStep): void;
 }
 
 /**

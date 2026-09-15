@@ -169,13 +169,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="glass-soft flex h-10 min-w-0 flex-1 max-w-md items-center gap-2 rounded-md px-3 text-sm text-muted-foreground transition-colors hover:border-ring"
           >
             <Search className="h-4 w-4 shrink-0" />
-            <span className="truncate">
-              <span className="sm:hidden">Search…</span>
-              <span className="hidden sm:inline">Search characters, campaigns, library…</span>
-            </span>
-            <kbd className="ml-auto hidden rounded sm:inline-block border border-border px-1.5 py-0.5 font-mono text-[10px]">
-              ⌘K
-            </kbd>
+            <span className="truncate">Search ANYTHING!</span>
           </button>
           <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
             <Button

@@ -8,7 +8,7 @@ export type CampaignTab =
 export type SearchTarget =
   | { kind: "character"; id: string }
   | { kind: "entity"; id: string; from: string }
-  | { kind: "campaign"; id: string; tab?: CampaignTab }
+  | { kind: "campaign"; id: string; tab?: CampaignTab; item?: string }
   | { kind: "library" }
   | { kind: "packs" };
 

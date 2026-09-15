@@ -83,7 +83,7 @@ export function CommandPalette({
       <CommandInput
         value={term}
         onValueChange={setTerm}
-        placeholder="Search characters, campaigns, lore, media, notes, maps…"
+        placeholder="Search ANYTHING!"
       />
       <CommandList>
         <CommandEmpty>

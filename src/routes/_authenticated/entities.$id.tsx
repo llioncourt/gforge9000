@@ -50,6 +50,7 @@ import {
 import { getCampaign, listCampaignCharacters, listMembers } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
 import { FileDropzone } from "@/components/ui/FileDropzone";
+import { LibraryImagePicker } from "@/components/lore/library-image-picker";
 import { entityImageUrl } from "@/lib/entity-image";
 import { portraitInitials, removePortrait, uploadPortrait } from "@/lib/portrait";
 
@@ -133,6 +134,21 @@ function EntityPage() {
       await queryClient.invalidateQueries({ queryKey: ["entity-photo"] });
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
       toast.success("Photo updated.");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+  // Library images are shared files: point at them, never copy or delete them.
+  const pickLibraryImage = useMutation({
+    mutationFn: async (path: string) => {
+      await updateEntity(id, { image_url: path });
+      return path;
+    },
+    onSuccess: async (path) => {
+      setForm((prev) => (prev ? ({ ...prev, image_url: path } as EntityRow) : prev));
+      await queryClient.invalidateQueries({ queryKey: ["entity", id] });
+      await queryClient.invalidateQueries({ queryKey: ["entity-photo"] });
+      await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+      toast.success("Image linked from the campaign library.");
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -439,6 +455,13 @@ function EntityPage() {
                           if (file) uploadPhoto.mutate(file);
                         }}
                       />
+                      {campaignId ? (
+                        <LibraryImagePicker
+                          campaignId={campaignId}
+                          disabled={pickLibraryImage.isPending}
+                          onPick={(path) => pickLibraryImage.mutate(path)}
+                        />
+                      ) : null}
                       {form.image_url ? (
                         <Button
                           variant="ghost"
@@ -453,17 +476,26 @@ function EntityPage() {
                   ) : null}
                 </div>
               ) : canEdit ? (
-                <FileDropzone
-                  accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
-                  label={`Drop an image of ${form.name || "this entry"}, or click to browse`}
-                  hint="PNG, JPEG, WebP, GIF or AVIF up to 5 MB"
-                  loading={uploadPhoto.isPending}
-                  loadingLabel="Uploading image…"
-                  onFiles={(files) => {
-                    const file = files[0];
-                    if (file) uploadPhoto.mutate(file);
-                  }}
-                />
+                <div className="space-y-2">
+                  <FileDropzone
+                    accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
+                    label={`Drop an image of ${form.name || "this entry"}, or click to browse`}
+                    hint="PNG, JPEG, WebP, GIF or AVIF up to 5 MB"
+                    loading={uploadPhoto.isPending}
+                    loadingLabel="Uploading image…"
+                    onFiles={(files) => {
+                      const file = files[0];
+                      if (file) uploadPhoto.mutate(file);
+                    }}
+                  />
+                  {campaignId ? (
+                    <LibraryImagePicker
+                      campaignId={campaignId}
+                      disabled={pickLibraryImage.isPending}
+                      onPick={(path) => pickLibraryImage.mutate(path)}
+                    />
+                  ) : null}
+                </div>
               ) : (
                 <div className="flex h-32 w-32 items-center justify-center rounded-lg border bg-muted text-2xl font-semibold text-muted-foreground">
                   {portraitInitials(form.name)}

@@ -80,10 +80,12 @@ import {
 // After a new deploy the old chunk filenames disappear, so an open tab can
 // fail to fetch a panel. Retry once, then reload the page to pick up the
 // fresh asset manifest (guarded so we never loop).
-function lazyPanel<K extends string, T extends Record<K, React.ComponentType<never>>>(
-  load: () => Promise<T>,
-  name: K,
-) {
+function lazyPanel<
+  K extends string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  T extends Record<K, React.ComponentType<any>>,
+>(load: () => Promise<T>, name: K) {
+
   return lazy(async () => {
     try {
       return { default: (await load())[name] };

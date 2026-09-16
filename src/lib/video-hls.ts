@@ -10,10 +10,9 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { CAMPAIGN_INTRO_BUCKET } from "@/lib/campaign-intro";
-// Same-origin copies of the ffmpeg.wasm core. Loading these from a CDN fails
-// behind the app's content-security policy, so the script ships in /public and
-// the large wasm binary is served as a hosted asset; both become blob URLs at
-// runtime in the browser.
+// The module core is served from the app origin so the FFmpeg worker can import
+// it under the site's content-security policy. The large wasm binary remains a
+// hosted asset and is fetched directly by the core.
 import ffmpegWasmAsset from "@/assets/ffmpeg-core.wasm.asset.json";
 
 const ffmpegCoreUrl = "/ffmpeg/ffmpeg-core.js";
@@ -51,13 +50,13 @@ export async function packageVideoAsHls(
 ): Promise<HlsPackage> {
   const report = options.onProgress ?? (() => undefined);
   const { FFmpeg } = await import("@ffmpeg/ffmpeg");
-  const { fetchFile, toBlobURL } = await import("@ffmpeg/util");
+  const { fetchFile } = await import("@ffmpeg/util");
 
   report({ stage: "loading", percent: 0.02, label: "Preparing the video converter…" });
   const ffmpeg = new FFmpeg();
   await ffmpeg.load({
-    coreURL: await toBlobURL(ffmpegCoreUrl, "text/javascript"),
-    wasmURL: await toBlobURL(ffmpegWasmUrl, "application/wasm"),
+    coreURL: new URL(ffmpegCoreUrl, window.location.origin).href,
+    wasmURL: new URL(ffmpegWasmUrl, window.location.origin).href,
   });
 
   const lowQuality = options.lowQuality ?? false;

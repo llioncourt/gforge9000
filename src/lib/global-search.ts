@@ -64,14 +64,17 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       ...(row.concept ? { sublabel: row.concept } : {}),
       target: { kind: "character", id: row.id },
     });
-  for (const row of entities.data ?? [])
+  for (const row of entities.data ?? []) {
+    const kind = row.kind ?? "LORE";
     push({
       id: `entity-${row.id}`,
       group: "World & lore",
-      label: row.name,
-      sublabel: row.kind,
-      target: { kind: "entity", id: row.id, from: row.kind === "EVENT" ? "timeline" : "lore" },
+      label: row.name ?? "Untitled",
+      sublabel: kind,
+      target: { kind: "entity", id: row.id as string, from: kind === "EVENT" ? "timeline" : "lore" },
     });
+  }
+
   for (const row of sfx.data ?? [])
     push({
       id: `sfx-${row.id}`,

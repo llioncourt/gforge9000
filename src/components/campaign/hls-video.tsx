@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type VideoHTMLAttributes } from "react";
+import { useEffect, useRef, useState, type MutableRefObject, type VideoHTMLAttributes } from "react";
 import { resolveHlsPlaylistUrl } from "@/lib/video-hls";
 
 type HlsVideoProps = VideoHTMLAttributes<HTMLVideoElement> & {
@@ -6,13 +6,14 @@ type HlsVideoProps = VideoHTMLAttributes<HTMLVideoElement> & {
   hlsPath?: string | null;
   /** Progressive MP4 fallback URL. */
   src?: string;
+  videoRef?: MutableRefObject<HTMLVideoElement | null>;
 };
 
 /**
  * Plays a campaign video over HLS when a packaged bundle exists, otherwise falls
  * back to the progressive MP4 source.
  */
-export function HlsVideo({ hlsPath, src, ...props }: HlsVideoProps) {
+export function HlsVideo({ hlsPath, src, videoRef, ...props }: HlsVideoProps) {
   const ref = useRef<HTMLVideoElement>(null);
   const [fallbackOnly, setFallbackOnly] = useState(false);
 

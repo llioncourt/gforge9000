@@ -47,3 +47,7 @@ Order agreed with the user: lore first, battle grid after.
 - [x] Add shared flip-and-zoom feedback to whole-card interactions
 - [x] Add matching zoom entrance to dialogs and confirmations
 - [x] Verify representative cards and dialogs in the live preview
+
+## Character screen controls
+- [ ] Replace top text actions with icon-only buttons and accessible hints
+- [ ] Add a Back button to the character screen

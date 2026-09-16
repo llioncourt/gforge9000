@@ -49,5 +49,5 @@ Order agreed with the user: lore first, battle grid after.
 - [x] Verify representative cards and dialogs in the live preview
 
 ## Character screen controls
-- [ ] Replace top text actions with icon-only buttons and accessible hints
-- [ ] Add a Back button to the character screen
+- [x] Replace top text actions with icon-only buttons and accessible hints
+- [x] Add a Back button to the character screen

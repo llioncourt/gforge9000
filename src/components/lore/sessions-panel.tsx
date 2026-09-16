@@ -131,7 +131,8 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
                   <Badge variant="outline" className="text-[10px]">
                     {new Date(session.createdAt).toLocaleDateString()}
                   </Badge>
-                  <VisibilityBadge visibility="SELECTED_PLAYERS" isGm={isGm} className="normal-case" />
+                  <VisibilityBadge visibility="GM_ONLY" isGm={isGm} />
+                  <VisibilityBadge visibility="ALL_PLAYERS" isGm={isGm} />
                   {isGm ? (
                     <Button
                       size="icon"

@@ -34,7 +34,15 @@ export function HlsVideo({ hlsPath, src, videoRef, ...props }: HlsVideoProps) {
         const video = ref.current;
         if (!video) return;
         if (Hls.isSupported()) {
-          const hls = new Hls({ enableWorker: true, lowLatencyMode: false });
+          // Start on the best rendition; only drop to the small one if the
+          // connection actually cannot keep up.
+          const hls = new Hls({
+            enableWorker: true,
+            lowLatencyMode: false,
+            startLevel: -1,
+            abrEwmaDefaultEstimate: 8_000_000,
+            capLevelToPlayerSize: false,
+          });
           hls.on(Hls.Events.ERROR, (_event, data) => {
             if (data.fatal) {
               hls.destroy();

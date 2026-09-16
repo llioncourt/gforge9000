@@ -191,7 +191,9 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                         <button
                           type="button"
                           aria-label="Remove reveal"
-                          onClick={() => revoke.mutate(grant.id)}
+                          onClick={() =>
+                            revoke.mutate({ grantId: grant.id, entityId: grant.entity_id })
+                          }
                           className="text-muted-foreground hover:text-foreground"
                         >
                           <X className="size-3.5" />

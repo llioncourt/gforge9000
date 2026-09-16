@@ -24,6 +24,7 @@ import { Route as AuthenticatedCharactersIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedEntitiesIdRouteImport } from './routes/_authenticated/entities.$id'
 import { Route as AuthenticatedPacksIndexRouteImport } from './routes/_authenticated/packs.index'
 import { Route as AuthenticatedPacksPackRouteImport } from './routes/_authenticated/packs.$pack'
+import { Route as ApiPublicVersionRouteImport } from './routes/api/public/version'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -103,6 +104,11 @@ const AuthenticatedPacksPackRoute = AuthenticatedPacksPackRouteImport.update({
   path: '/packs/$pack',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicVersionRoute = ApiPublicVersionRouteImport.update({
+  id: '/api/public/version',
+  path: '/api/public/version',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/version': typeof ApiPublicVersionRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/characters/': typeof AuthenticatedCharactersIndexRoute
   '/packs/': typeof AuthenticatedPacksIndexRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/version': typeof ApiPublicVersionRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
   '/characters': typeof AuthenticatedCharactersIndexRoute
   '/packs': typeof AuthenticatedPacksIndexRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/_authenticated/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/_authenticated/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/_authenticated/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/version': typeof ApiPublicVersionRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/_authenticated/characters/': typeof AuthenticatedCharactersIndexRoute
   '/_authenticated/packs/': typeof AuthenticatedPacksIndexRoute
@@ -168,6 +177,7 @@ export interface FileRouteTypes {
     | '/characters/$id'
     | '/entities/$id'
     | '/packs/$pack'
+    | '/api/public/version'
     | '/campaigns/'
     | '/characters/'
     | '/packs/'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/characters/$id'
     | '/entities/$id'
     | '/packs/$pack'
+    | '/api/public/version'
     | '/campaigns'
     | '/characters'
     | '/packs'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/_authenticated/characters/$id'
     | '/_authenticated/entities/$id'
     | '/_authenticated/packs/$pack'
+    | '/api/public/version'
     | '/_authenticated/campaigns/'
     | '/_authenticated/characters/'
     | '/_authenticated/packs/'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   LegalRoute: typeof LegalRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicVersionRoute: typeof ApiPublicVersionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPacksPackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/version': {
+      id: '/api/public/version'
+      path: '/api/public/version'
+      fullPath: '/api/public/version'
+      preLoaderRoute: typeof ApiPublicVersionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -359,6 +379,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   LegalRoute: LegalRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicVersionRoute: ApiPublicVersionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

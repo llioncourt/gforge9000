@@ -6,6 +6,8 @@
  * and detail screens are generated consistently.
  */
 
+import { VISIBILITY_OPTIONS } from "@/lib/visibility";
+
 export type FieldType = "text" | "textarea" | "list" | "select";
 
 export interface FieldDef {

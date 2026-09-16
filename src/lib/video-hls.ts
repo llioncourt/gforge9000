@@ -94,8 +94,22 @@ export async function packageVideoAsHls(
     playlist,
   ];
 
-  // Source-quality rendition: stream copy keeps the original picture untouched.
-  // Only re-encode when copying is impossible, and then stay visually lossless.
+  // Source-quality rendition. Stream copy keeps the original picture untouched,
+  // but it can only cut at existing keyframes: sources with sparse keyframes end
+  // up with huge chunks, which defeats the point of streaming. So we validate the
+  // resulting chunk lengths and re-encode with forced keyframes when needed.
+  const readText = async (name: string) => {
+    const data = await ffmpeg.readFile(name);
+    if (typeof data === "string") return data;
+    return new TextDecoder().decode(data as Uint8Array);
+  };
+  const maxSegmentSeconds = (playlist: string) =>
+    playlist
+      .split("\n")
+      .filter((line) => line.startsWith("#EXTINF:"))
+      .map((line) => Number.parseFloat(line.slice(8)))
+      .reduce((max, value) => (Number.isFinite(value) && value > max ? value : max), 0);
+
   let copied = true;
   try {
     await ffmpeg.exec([
@@ -107,10 +121,14 @@ export async function packageVideoAsHls(
       "h264_mp4toannexb",
       ...hlsArgs("v0", "v0.m3u8"),
     ]);
-    const check = await ffmpeg.readFile("v0.m3u8");
-    if (!check || check.length === 0) throw new Error("empty playlist");
+    const playlistText = await readText("v0.m3u8");
+    if (!playlistText.trim()) throw new Error("empty playlist");
+    if (maxSegmentSeconds(playlistText) > HLS_SEGMENT_SECONDS * 1.6) {
+      throw new Error("chunks too long for streaming");
+    }
   } catch {
     copied = false;
+    report({ stage: "packaging", percent: 0.08, label: "Re-cutting the video for fast start…" });
     await ffmpeg.exec([
       "-i",
       "input.mp4",
@@ -122,6 +140,14 @@ export async function packageVideoAsHls(
       "18",
       "-pix_fmt",
       "yuv420p",
+      "-g",
+      String(HLS_SEGMENT_SECONDS * 30),
+      "-keyint_min",
+      String(HLS_SEGMENT_SECONDS * 30),
+      "-sc_threshold",
+      "0",
+      "-force_key_frames",
+      `expr:gte(t,n_forced*${HLS_SEGMENT_SECONDS})`,
       "-c:a",
       "aac",
       "-b:a",
@@ -129,6 +155,7 @@ export async function packageVideoAsHls(
       ...hlsArgs("v0", "v0.m3u8"),
     ]);
   }
+
 
   const variants: { playlist: string; bandwidth: number; resolution?: string }[] = [
     { playlist: "v0.m3u8", bandwidth: 3_000_000 },

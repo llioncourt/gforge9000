@@ -12,6 +12,7 @@ import { PORTRAIT_BUCKET } from "@/lib/portrait";
 import { toPortable } from "@/lib/portable";
 import { slugify } from "@/lib/portable";
 import type { CampaignPackageManifest } from "@/lib/campaign-package";
+import { toPackageVisibility } from "@/lib/visibility";
 
 type Visibility = "gm" | "players" | "public";
 
@@ -24,7 +25,7 @@ function extensionOf(path: string, fallback: string) {
 }
 
 function visibilityOf(value: string): Visibility {
-  return value === "players" || value === "public" ? value : "gm";
+  return toPackageVisibility(value);
 }
 
 function gridTypeOf(value: string): "square" | "hex" | "none" {

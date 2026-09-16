@@ -6,6 +6,8 @@
  * and detail screens are generated consistently.
  */
 
+import { VISIBILITY_OPTIONS } from "@/lib/visibility";
+
 export type FieldType = "text" | "textarea" | "list" | "select";
 
 export interface FieldDef {
@@ -503,13 +505,8 @@ export function kindDef(kind: string): KindDef {
   return KIND_MAP[kind] ?? KIND_MAP["CUSTOM"]!;
 }
 
-export const VISIBILITIES = [
-  { value: "GM_ONLY", label: "GM only" },
-  { value: "UNREVEALED", label: "Unrevealed" },
-  { value: "SELECTED_PLAYERS", label: "Selected players" },
-  { value: "ALL_PLAYERS", label: "All players" },
-  { value: "PUBLIC", label: "Public" },
-] as const;
+/** Canonical visibility vocabulary lives in `@/lib/visibility`. */
+export const VISIBILITIES = VISIBILITY_OPTIONS;
 
 export const PLAYER_VISIBLE = ["ALL_PLAYERS", "PUBLIC"];
 

@@ -38,12 +38,10 @@ import {
   deleteEntity,
   deleteRelationship,
   getEntity,
-  grantKnowledge,
   listEntities,
   listEntityRevisions,
   listGrants,
   listRelationships,
-  revokeKnowledge,
   snapshotEntity,
   updateEntity,
   withDataValue,
@@ -51,6 +49,9 @@ import {
 } from "@/lib/lore";
 import { getCampaign, listCampaignCharacters, listMembers } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
+import { revealEntityToPlayer, revokeEntityReveal } from "@/lib/reveal";
+import { isPlayerVisible } from "@/lib/visibility";
+import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { LibraryImagePicker } from "@/components/lore/library-image-picker";
 import { entityImageUrl } from "@/lib/entity-image";
@@ -275,11 +276,31 @@ function EntityPage() {
 
   const toggleGrant = useMutation({
     mutationFn: async (userId: string) => {
+      const row = entity.data;
+      if (!row) throw new Error("Record not loaded");
       const existing = (grants.data ?? []).find((g) => g.user_id === userId);
-      if (existing) await revokeKnowledge(existing.id);
-      else await grantKnowledge({ campaign_id: campaignId!, entity_id: id, user_id: userId });
+      if (existing) {
+        const remaining = (grants.data ?? []).filter((g) => g.id !== existing.id).length;
+        const result = await revokeEntityReveal({
+          grantId: existing.id,
+          entity: row,
+          remainingGrants: remaining,
+        });
+        return result.demoted
+          ? "Reveal removed — record is GM only again"
+          : "Reveal removed";
+      }
+      const result = await revealEntityToPlayer({ entity: row, userId, gmId: user!.id });
+      if (result.alreadyPublic) return "Revealed — this record was already visible to every player";
+      if (result.promotedTo) return "Revealed (visibility set to “Selected players”)";
+      return "Revealed to the player";
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["lore-grants", id] }),
+    onSuccess: async (message) => {
+      toast.success(message);
+      await queryClient.invalidateQueries({ queryKey: ["lore-grants", id] });
+      await queryClient.invalidateQueries({ queryKey: ["entity", id] });
+      await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+    },
     onError: (error: Error) => toast.error(error.message),
   });
 
@@ -857,9 +878,14 @@ function EntityPage() {
 
         {isGm ? (
           <TabsContent value="reveals" className="space-y-4 pt-4">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Current visibility:</span>
+              <VisibilityBadge visibility={form.visibility} isGm={isGm} />
+            </div>
             <p className="text-muted-foreground text-sm">
-              With visibility set to “Selected players”, only the players you pick below can see
-              this entry.
+              {isPlayerVisible(form.visibility)
+                ? "This entry is already visible to every player in the campaign."
+                : "Revealing to a player switches this entry to “Selected players”, so only the players you pick below can see it."}
             </p>
             <ul className="divide-y rounded-lg border">
               {(members.data ?? []).map((member) => {

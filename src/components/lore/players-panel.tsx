@@ -16,14 +16,9 @@ import {
 } from "@/components/ui/dialog";
 import { kindDef } from "@/lib/entity-kinds";
 import { listMembers } from "@/lib/api";
-import {
-  grantKnowledge,
-  listCampaignGrants,
-  listEntities,
-  revokeKnowledge,
-  type EntityRow,
-} from "@/lib/lore";
-import { createNotification } from "@/lib/notifications";
+import { listCampaignGrants, listEntities, type EntityRow } from "@/lib/lore";
+import { revealEntityToPlayer, revokeEntityReveal } from "@/lib/reveal";
+import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import { useSession } from "@/hooks/use-session";
 
 /**
@@ -52,40 +47,43 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     return map;
   }, [entities.data]);
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["lore-grants", campaignId] });
+  const invalidate = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["lore-grants", campaignId] });
+    await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+  };
 
   const give = useMutation({
     mutationFn: async (input: { userId: string; entityId: string }) => {
-      const grant = await grantKnowledge({
-        campaign_id: campaignId,
-        entity_id: input.entityId,
-        user_id: input.userId,
-        granted_by: user!.id,
-      });
       const entity = entityById.get(input.entityId);
-      await createNotification({
-        user_id: input.userId,
-        campaign_id: campaignId,
-        entity_id: input.entityId,
-        kind: "reveal",
-        title: entity ? `New record revealed: ${entity.name}` : "A new record was revealed",
-        body: entity ? kindDef(entity.kind).label : null,
-        created_by: user!.id,
-      }).catch(() => undefined);
-      return grant;
+      if (!entity) throw new Error("Record not found");
+      return revealEntityToPlayer({ entity, userId: input.userId, gmId: user!.id });
     },
-    onSuccess: async () => {
-      toast.success("Revealed to the player");
+    onSuccess: async (result) => {
+      if (result.alreadyPublic) {
+        toast.success("Revealed — this record was already visible to every player");
+      } else if (result.promotedTo) {
+        toast.success("Revealed to the player (visibility set to “Selected players”)");
+      } else {
+        toast.success("Revealed to the player");
+      }
       await invalidate();
     },
     onError: (error: Error) => toast.error(error.message),
   });
 
   const revoke = useMutation({
-    mutationFn: (id: string) => revokeKnowledge(id),
-    onSuccess: async () => {
-      toast.success("Reveal removed");
+    mutationFn: async (input: { grantId: string; entityId: string }) => {
+      const remaining = (grants.data ?? []).filter(
+        (g) => g.entity_id === input.entityId && g.id !== input.grantId,
+      ).length;
+      return revokeEntityReveal({
+        grantId: input.grantId,
+        entity: entityById.get(input.entityId),
+        remainingGrants: remaining,
+      });
+    },
+    onSuccess: async (result) => {
+      toast.success(result.demoted ? "Reveal removed — record is GM only again" : "Reveal removed");
       await invalidate();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -160,6 +158,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                           >
                             <Badge variant="outline">{kindDef(row.kind).label}</Badge>
                             <span className="flex-1 truncate">{row.name}</span>
+                            <VisibilityBadge visibility={row.visibility} isGm={isGm} />
                             <Eye className="text-muted-foreground size-4" />
                           </button>
                         ))
@@ -192,7 +191,9 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                         <button
                           type="button"
                           aria-label="Remove reveal"
-                          onClick={() => revoke.mutate(grant.id)}
+                          onClick={() =>
+                            revoke.mutate({ grantId: grant.id, entityId: grant.entity_id })
+                          }
                           className="text-muted-foreground hover:text-foreground"
                         >
                           <X className="size-3.5" />

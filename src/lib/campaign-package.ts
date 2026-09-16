@@ -43,7 +43,7 @@ const entitySchema = z
     kind: text(60).min(1),
     name: text(200).min(1),
     status: text(60).default("active"),
-    visibility: z.enum(VISIBILITIES).default("gm"),
+    visibility: z.string().default("gm"),
     summary: nullableText(2000),
     description: nullableText(50000),
     player_description: nullableText(50000),
@@ -71,7 +71,7 @@ const relationshipSchema = z
     end_label: nullableText(120),
     strength: z.number().int().min(-5).max(5).nullish(),
     is_current: z.boolean().default(true),
-    visibility: z.enum(VISIBILITIES).default("gm"),
+    visibility: z.string().default("gm"),
   })
   .strict();
 

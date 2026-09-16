@@ -20,6 +20,7 @@ import { createEntity, createRelationship, updateEntity } from "@/lib/lore";
 import { uploadPortrait } from "@/lib/portrait";
 import { parsePortable } from "@/lib/portable";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import { normalizeVisibility } from "@/lib/visibility";
 
 type Archive = Record<string, Uint8Array>;
 
@@ -247,7 +248,7 @@ async function importLoreSection(
       kind: entity.kind,
       name: entity.name,
       status: entity.status,
-      visibility: entity.visibility,
+      visibility: normalizeVisibility(entity.visibility),
       summary: entity.summary ?? null,
       description: entity.description ?? null,
       player_description: entity.player_description ?? null,
@@ -285,7 +286,7 @@ async function importLoreSection(
       end_label: rel.end_label ?? null,
       strength: rel.strength ?? null,
       is_current: rel.is_current,
-      visibility: rel.visibility,
+      visibility: normalizeVisibility(rel.visibility),
     });
     summary.relationships += 1;
   }

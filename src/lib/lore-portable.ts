@@ -1,5 +1,6 @@
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { EntityRow, RelationshipRow } from "@/lib/lore";
+import { normalizeVisibility } from "@/lib/visibility";
 
 /**
  * Portable campaign lore (UCF-LORE v1). Pure transforms only — no IO, so the
@@ -134,7 +135,7 @@ export function entityInserts(
       kind: e.kind,
       name: e.name || "Untitled",
       status: e.status,
-      visibility: e.visibility,
+      visibility: normalizeVisibility(e.visibility),
       summary: e.summary,
       description: e.description,
       player_description: e.player_description,
@@ -166,6 +167,6 @@ export function relationshipInserts(
       end_label: rel.end_label,
       strength: rel.strength,
       is_current: rel.is_current ?? true,
-      visibility: rel.visibility,
+      visibility: normalizeVisibility(rel.visibility),
     }));
 }

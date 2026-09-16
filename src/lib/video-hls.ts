@@ -10,11 +10,14 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { CAMPAIGN_INTRO_BUCKET } from "@/lib/campaign-intro";
-// Same-origin copies of the ffmpeg.wasm core, bundled by Vite. Loading these
-// from a CDN fails behind the app's content-security policy, so they ship with
-// the app and are turned into blob URLs at runtime.
-import ffmpegCoreUrl from "@ffmpeg/core/umd/ffmpeg-core.js?url";
-import ffmpegWasmUrl from "@ffmpeg/core/umd/ffmpeg-core.wasm?url";
+// Same-origin copies of the ffmpeg.wasm core. Loading these from a CDN fails
+// behind the app's content-security policy, so the script ships in /public and
+// the large wasm binary is served as a hosted asset; both become blob URLs at
+// runtime in the browser.
+import ffmpegWasmAsset from "@/assets/ffmpeg-core.wasm.asset.json";
+
+const ffmpegCoreUrl = "/ffmpeg/ffmpeg-core.js";
+const ffmpegWasmUrl = ffmpegWasmAsset.url;
 
 export const HLS_SEGMENT_SECONDS = 6;
 

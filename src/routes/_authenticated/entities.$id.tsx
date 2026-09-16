@@ -275,11 +275,31 @@ function EntityPage() {
 
   const toggleGrant = useMutation({
     mutationFn: async (userId: string) => {
+      const row = entity.data;
+      if (!row) throw new Error("Record not loaded");
       const existing = (grants.data ?? []).find((g) => g.user_id === userId);
-      if (existing) await revokeKnowledge(existing.id);
-      else await grantKnowledge({ campaign_id: campaignId!, entity_id: id, user_id: userId });
+      if (existing) {
+        const remaining = (grants.data ?? []).filter((g) => g.id !== existing.id).length;
+        const result = await revokeEntityReveal({
+          grantId: existing.id,
+          entity: row,
+          remainingGrants: remaining,
+        });
+        return result.demoted
+          ? "Reveal removed — record is GM only again"
+          : "Reveal removed";
+      }
+      const result = await revealEntityToPlayer({ entity: row, userId, gmId: userId ? user!.id : user!.id });
+      if (result.alreadyPublic) return "Revealed — this record was already visible to every player";
+      if (result.promotedTo) return "Revealed (visibility set to “Selected players”)";
+      return "Revealed to the player";
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["lore-grants", id] }),
+    onSuccess: async (message) => {
+      toast.success(message);
+      await queryClient.invalidateQueries({ queryKey: ["lore-grants", id] });
+      await queryClient.invalidateQueries({ queryKey: ["lore-entity", id] });
+      await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
+    },
     onError: (error: Error) => toast.error(error.message),
   });
 

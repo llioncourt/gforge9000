@@ -118,17 +118,27 @@ export async function uploadCampaignVideo(
 
   let hlsPath: string | null = null;
   if (input.streaming) {
-    const { packageVideoAsHls, uploadHlsPackage } = await import("@/lib/video-hls");
-    const bundle = await packageVideoAsHls(file, {
-      lowQuality: input.lowQuality ?? false,
-      onProgress: (progress) => report({ percent: Math.round(progress.percent * 70), label: progress.label }),
-    });
-    hlsPath = await uploadHlsPackage(`${user.id}/${campaignId}/hls-${videoId}`, bundle, (progress) =>
-      report({ percent: 70 + Math.round((progress.percent - 0.85) * 100), label: progress.label }),
-    );
+    // Streaming preparation runs in the browser and can fail on unsupported
+    // codecs or low memory. It must never block the plain upload.
+    try {
+      const { packageVideoAsHls, uploadHlsPackage } = await import("@/lib/video-hls");
+      const bundle = await packageVideoAsHls(file, {
+        lowQuality: input.lowQuality ?? false,
+        onProgress: (progress) => report({ percent: Math.round(progress.percent * 70), label: progress.label }),
+      });
+      hlsPath = await uploadHlsPackage(`${user.id}/${campaignId}/hls-${videoId}`, bundle, (progress) =>
+        report({ percent: 70 + Math.round((progress.percent - 0.85) * 100), label: progress.label }),
+      );
+    } catch (error) {
+      hlsPath = null;
+      const detail = error instanceof Error ? error.message : String(error);
+      input.onWarning?.(`The streaming version could not be prepared (${detail}). The video was uploaded as a normal file.`);
+      report({ percent: 80, label: "Streaming preparation failed — uploading the original file…" });
+    }
   }
 
   report({ percent: 88, label: "Uploading the original file…" });
+
   const { error: uploadError } = await supabase.storage
     .from(CAMPAIGN_INTRO_BUCKET)
     .upload(path, file, { contentType: "video/mp4", upsert: false });

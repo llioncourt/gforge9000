@@ -185,11 +185,22 @@ export async function packageVideoAsHls(
 
   report({ stage: "uploading", percent: 0.82, label: "Collecting the streaming chunks…" });
 
+  // Only ship chunks that the final playlists actually reference, so a discarded
+  // stream-copy attempt never leaves orphan segments behind.
+  const referenced = new Set<string>();
+  for (const variant of variants) {
+    referenced.add(variant.playlist);
+    for (const line of (await readText(variant.playlist)).split("\n")) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith("#")) referenced.add(trimmed);
+    }
+  }
   const entries = await ffmpeg.listDir("/");
   const names = entries
     .filter((entry) => !entry.isDir)
     .map((entry) => entry.name)
-    .filter((name) => /^v\d(_\d+\.ts|\.m3u8)$/.test(name));
+    .filter((name) => referenced.has(name));
+
 
   const files: HlsPackageFile[] = [];
   for (const name of names) {

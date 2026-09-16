@@ -15,7 +15,9 @@ import { CAMPAIGN_INTRO_BUCKET } from "@/lib/campaign-intro";
 // hosted asset and is fetched directly by the core.
 import ffmpegWasmAsset from "@/assets/ffmpeg-core.wasm.asset.json";
 
-const ffmpegCoreUrl = "/ffmpeg/ffmpeg-core.js";
+// Version the public filename so a previously cached UMD build can never be
+// reused after switching the worker to the required ESM core.
+const ffmpegCoreUrl = "/ffmpeg/ffmpeg-core-esm-0.12.10.js";
 const ffmpegWasmUrl = ffmpegWasmAsset.url;
 
 export const HLS_SEGMENT_SECONDS = 6;

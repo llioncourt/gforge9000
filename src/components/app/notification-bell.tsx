@@ -1,4 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { BellRing } from "lucide-react";
+import {
+  readNotificationPermission,
+  requestNotificationPermission,
+  showSystemNotification,
+  type NotificationPermissionState,
+} from "@/lib/system-notifications";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check, Trash2 } from "lucide-react";
@@ -13,6 +21,7 @@ import {
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  type NotificationRow,
 } from "@/lib/notifications";
 
 function timeAgo(iso: string) {
@@ -37,6 +46,12 @@ export function NotificationBell() {
     staleTime: 1000 * 30,
   });
 
+  const [permission, setPermission] = useState<NotificationPermissionState>("unsupported");
+
+  useEffect(() => {
+    setPermission(readNotificationPermission());
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -49,8 +64,18 @@ export function NotificationBell() {
           table: "notifications",
           filter: `user_id=eq.${user.id}`,
         },
-        () => {
+        (payload) => {
           queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+          if (payload.eventType !== "INSERT") return;
+          const row = payload.new as NotificationRow;
+          if (row.read_at) return;
+          toast(row.title, { description: row.body ?? undefined });
+          showSystemNotification({
+            title: row.title,
+            body: row.body,
+            tag: row.id,
+            url: row.entity_id ? `/entities/${row.entity_id}` : undefined,
+          });
         },
       )
       .subscribe();
@@ -58,6 +83,20 @@ export function NotificationBell() {
       supabase.removeChannel(channel);
     };
   }, [user, queryClient]);
+
+  const enableAlerts = async () => {
+    const next = await requestNotificationPermission();
+    setPermission(next);
+    if (next === "granted") {
+      showSystemNotification({
+        title: "Alerts enabled",
+        body: "You will be notified when the GM reveals something.",
+        tag: "alerts-enabled",
+      });
+    } else if (next === "denied") {
+      toast.error("Alerts blocked. Allow notifications for this site in your browser settings.");
+    }
+  };
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
@@ -85,6 +124,22 @@ export function NotificationBell() {
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[22rem] p-0">
+        {permission === "default" ? (
+          <div className="flex items-center justify-between gap-2 border-b border-border bg-accent/20 px-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              Get an alert on your device when the GM reveals something.
+            </p>
+            <Button size="sm" className="h-7 shrink-0 px-2 text-xs" onClick={() => void enableAlerts()}>
+              <BellRing className="mr-1 size-3" /> Enable
+            </Button>
+          </div>
+        ) : permission === "open-in-new-tab" ? (
+          <div className="border-b border-border bg-accent/20 px-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              Open the app in its own tab to turn on device alerts.
+            </p>
+          </div>
+        ) : null}
         <div className="flex items-center justify-between border-b border-border px-3 py-2">
           <p className="text-sm font-medium">Notifications</p>
           {unread > 0 ? (

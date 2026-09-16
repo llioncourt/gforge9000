@@ -138,7 +138,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                   to="/entities/$id"
                   params={{ id: grant.entity_id }}
                   search={{ from: "reveals" }}
-                  className="group hover:border-primary/50 hover:bg-accent/30 block rounded-lg border p-3 transition"
+                  className="interactive-card group hover:border-primary/50 hover:bg-accent/30 block rounded-lg border p-3"
                 >
                   <div className="flex items-start gap-3">
                     <EntityThumb

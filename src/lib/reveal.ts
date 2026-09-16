@@ -1,5 +1,6 @@
 import { grantKnowledge, revokeKnowledge, updateEntity, type EntityRow } from "@/lib/lore";
 import { createNotification } from "@/lib/notifications";
+import { sendRevealPush } from "@/lib/push.functions";
 import { kindDef } from "@/lib/entity-kinds";
 import { isPlayerVisible, visibilityForReveal } from "@/lib/visibility";
 
@@ -47,6 +48,22 @@ export async function revealEntityToPlayer(input: {
     body: kindDef(entity.kind).label,
     created_by: gmId,
   });
+
+  // Background alert: reaches the player even with the app closed.
+  try {
+    await sendRevealPush({
+      data: {
+        campaignId: entity.campaign_id,
+        userId,
+        title: `New record revealed: ${entity.name}`,
+        body: kindDef(entity.kind).label,
+        url: `/entities/${entity.id}`,
+        tag: `reveal-${entity.id}`,
+      },
+    });
+  } catch {
+    /* in-app notification already delivered; push is best-effort */
+  }
 
   return { promotedTo: promoteTo, alreadyPublic: isPlayerVisible(entity.visibility) };
 }

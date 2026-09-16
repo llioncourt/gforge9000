@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Film, Image as ImageIcon, Play, Trash2 } from "lucide-react";
+import { Film, Image as ImageIcon, LoaderCircle, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -115,6 +115,8 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
 export function CampaignIntroExperience({ campaignId }: { campaignId: string; isGm?: boolean; display?: "all" | "gate" | "panel" }) {
   const queryClient = useQueryClient();
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [posterUrl, setPosterUrl] = useState<string | null>(null);
+  const [videoReady, setVideoReady] = useState(false);
   const [ended, setEnded] = useState(false);
   const [doNotShowAgain, setDoNotShowAgain] = useState(true);
   const [continuedVersion, setContinuedVersion] = useState<string | null>(null);
@@ -122,10 +124,24 @@ export function CampaignIntroExperience({ campaignId }: { campaignId: string; is
   const introQuery = useQuery({ queryKey: ["campaign-intro", campaignId], queryFn: () => getCampaignIntro(campaignId) });
   const viewQuery = useQuery({ queryKey: ["campaign-intro-view", campaignId], queryFn: () => getMyCampaignIntroView(campaignId) });
   const intro = introQuery.data;
-  useEffect(() => { let live = true; setVideoUrl(null); setEnded(false); setDoNotShowAgain(false); if (intro?.storage_path) void campaignIntroUrl(intro.storage_path).then((url) => { if (live) setVideoUrl(url); }); return () => { live = false; }; }, [intro?.storage_path, intro?.version]);
+  useEffect(() => {
+    let live = true;
+    setVideoUrl(null);
+    setPosterUrl(null);
+    setVideoReady(false);
+    setEnded(false);
+    setDoNotShowAgain(true);
+    if (intro?.storage_path) {
+      void campaignIntroUrl(intro.storage_path).then((url) => { if (live) setVideoUrl(url); });
+    }
+    if (intro?.thumb_path) {
+      void campaignVideoThumbUrl(intro.thumb_path).then((url) => { if (live) setPosterUrl(url || null); });
+    }
+    return () => { live = false; };
+  }, [intro?.storage_path, intro?.thumb_path, intro?.version]);
   const remember = useMutation({ mutationFn: () => intro ? saveCampaignIntroView(campaignId, intro.version) : Promise.resolve(), onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["campaign-intro-view", campaignId] }), onError: (error: Error) => toast.error(error.message) });
   const loading = introQuery.isLoading || viewQuery.isLoading;
   const blocked = !loading && intro && continuedVersion !== intro.version && shouldBlockForCampaignIntro(intro, viewQuery.data);
   if (!loading && !blocked) return null;
-  return <div className="fixed inset-0 z-[100] flex flex-col bg-background" role="dialog" aria-modal="true" aria-label="Campaign introduction"><div className="flex min-h-0 flex-1 items-center justify-center p-3 sm:p-8">{blocked && videoUrl ? <video ref={gateVideoRef} key={intro.version} src={videoUrl} autoPlay controls playsInline preload="auto" onPlay={() => { const video = gateVideoRef.current; if (video && document.fullscreenElement == null) video.requestFullscreen?.().catch(() => undefined); }} onEnded={() => { setEnded(true); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => undefined); }} className="max-h-full w-full max-w-6xl bg-background object-contain" aria-label="Campaign introduction" /> : <div className="flex items-center gap-3 text-sm text-muted-foreground"><Film className="h-5 w-5" />Loading campaign intro…</div>}</div>{blocked ? <div className="shrink-0 border-t border-border bg-card p-4 sm:p-6"><div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><Checkbox id="skip-campaign-intro" checked={doNotShowAgain} onCheckedChange={(value) => setDoNotShowAgain(value === true)} disabled={!ended} /><Label htmlFor="skip-campaign-intro" className={!ended ? "text-muted-foreground" : undefined}>Don&apos;t show this intro again</Label></div><Button type="button" disabled={!ended || remember.isPending} onClick={async () => { if (!intro || !ended) return; if (doNotShowAgain) await remember.mutateAsync(); setContinuedVersion(intro.version); }}>{ended ? "Continue to campaign" : "Watch the full intro to continue"}</Button></div></div> : null}</div>;
+  return <div className="fixed inset-0 z-[100] flex flex-col bg-background" role="dialog" aria-modal="true" aria-label="Campaign introduction"><div className="flex min-h-0 flex-1 items-center justify-center p-3 sm:p-8"><div className="relative flex aspect-video max-h-full w-full max-w-6xl items-center justify-center overflow-hidden rounded-md border border-border bg-card shadow-2xl">{posterUrl ? <img src={posterUrl} alt="" className="absolute inset-0 size-full object-cover opacity-50" /> : null}{!videoReady ? <div className="relative z-10 flex flex-col items-center gap-3 text-muted-foreground"><span className="grid size-12 place-items-center rounded-full border border-border bg-background/80"><LoaderCircle className="h-6 w-6 animate-spin" /></span><span className="text-sm font-medium">Preparing campaign intro…</span></div> : null}{blocked && videoUrl ? <video ref={gateVideoRef} key={intro.version} src={videoUrl} poster={posterUrl ?? undefined} autoPlay controls playsInline preload="auto" onCanPlay={() => setVideoReady(true)} onPlay={() => { const video = gateVideoRef.current; if (video && document.fullscreenElement == null) video.requestFullscreen?.().catch(() => undefined); }} onEnded={() => { setEnded(true); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => undefined); }} className={`absolute inset-0 size-full bg-background object-contain transition-opacity duration-300 ${videoReady ? "opacity-100" : "opacity-0"}`} aria-label="Campaign introduction" /> : null}</div></div>{blocked ? <div className="shrink-0 border-t border-border bg-card p-4 sm:p-6"><div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><Checkbox id="skip-campaign-intro" checked={doNotShowAgain} onCheckedChange={(value) => setDoNotShowAgain(value === true)} disabled={!ended} /><Label htmlFor="skip-campaign-intro" className={!ended ? "text-muted-foreground" : undefined}>Don&apos;t show this intro again</Label></div><Button type="button" disabled={!ended || remember.isPending} onClick={async () => { if (!intro || !ended) return; if (doNotShowAgain) await remember.mutateAsync(); setContinuedVersion(intro.version); }}>{ended ? "Continue to campaign" : "Watch the full intro to continue"}</Button></div></div> : null}</div>;
 }

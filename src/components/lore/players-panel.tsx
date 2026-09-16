@@ -107,7 +107,9 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
   return (
     <div className="space-y-4">
       <p className="text-muted-foreground text-sm">
-        Secret records stay hidden until you reveal them here. Public records are always visible.
+        {isGm
+          ? "Secret records stay hidden until you reveal them here. Public records are always visible."
+          : "These are the secret records the GM has revealed to you."}
       </p>
       {rows.map((member) => {
         const mine = (grants.data ?? []).filter((g) => g.user_id === member.user_id);

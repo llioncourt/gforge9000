@@ -99,12 +99,17 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     );
   }
 
-  const rows = members.data ?? [];
+  // Players only ever see their own reveal card; the GM sees everyone.
+  const rows = isGm
+    ? (members.data ?? [])
+    : (members.data ?? []).filter((member) => member.user_id === user?.id);
 
   return (
     <div className="space-y-4">
       <p className="text-muted-foreground text-sm">
-        Secret records stay hidden until you reveal them here. Public records are always visible.
+        {isGm
+          ? "Secret records stay hidden until you reveal them here. Public records are always visible."
+          : "These are the secret records the GM has revealed to you."}
       </p>
       {rows.map((member) => {
         const mine = (grants.data ?? []).filter((g) => g.user_id === member.user_id);

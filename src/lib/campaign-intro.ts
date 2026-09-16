@@ -204,6 +204,10 @@ export async function removeCampaignVideo(video: CampaignVideo) {
   const paths = [video.storage_path];
   if (video.thumb_path) paths.push(video.thumb_path);
   await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(paths);
+  if (video.hls_path) {
+    const { removeHlsPackage } = await import("@/lib/video-hls");
+    await removeHlsPackage(video.hls_path);
+  }
 }
 
 export const removeCampaignIntro = removeCampaignVideo;

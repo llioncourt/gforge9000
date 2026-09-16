@@ -139,6 +139,25 @@ export function CampaignIntroExperience({ campaignId, isGm = false }: { campaign
   const remember = useMutation({ mutationFn: () => intro ? saveCampaignIntroView(campaignId, intro.version) : Promise.resolve(), onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["campaign-intro-view", campaignId] }), onError: (error: Error) => toast.error(error.message) });
   const loading = introQuery.isLoading || viewQuery.isLoading;
   const blocked = !loading && intro && continuedVersion !== intro.version && shouldBlockForCampaignIntro(intro, viewQuery.data);
+  const gateRef = useRef<HTMLDivElement>(null);
+  const enterFullscreen = () => {
+    const el = gateRef.current;
+    if (!el || document.fullscreenElement) return;
+    void el.requestFullscreen?.().catch(() => undefined);
+  };
+  // Browsers only grant fullscreen from a user gesture, and autoplay is not one.
+  // Try on playback, then fall back to the viewer's first click or key press.
+  useEffect(() => {
+    if (!blocked) return;
+    const handler = () => enterFullscreen();
+    document.addEventListener("pointerdown", handler, { once: true });
+    document.addEventListener("keydown", handler, { once: true });
+    return () => {
+      document.removeEventListener("pointerdown", handler);
+      document.removeEventListener("keydown", handler);
+    };
+  }, [blocked]);
   if (!loading && !blocked) return null;
-  return <div className="fixed inset-0 z-[100] flex flex-col bg-background" role="dialog" aria-modal="true" aria-label="Campaign introduction"><div className="flex min-h-0 flex-1 items-center justify-center p-3 sm:p-8">{blocked && videoUrl ? <HlsVideo videoRef={gateVideoRef} hlsPath={intro.hls_path} key={intro.version} src={videoUrl} autoPlay controls playsInline preload="auto" onPlay={() => { const video = gateVideoRef.current; if (video && document.fullscreenElement == null) video.requestFullscreen?.().catch(() => undefined); }} onEnded={() => { setEnded(true); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => undefined); }} className="max-h-full w-full max-w-6xl bg-background object-contain" aria-label="Campaign introduction" /> : <div className="flex items-center gap-3 text-sm text-muted-foreground"><Film className="h-5 w-5" />Loading campaign intro…</div>}</div>{blocked ? <div className="shrink-0 border-t border-border bg-card p-4 sm:p-6"><div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><Checkbox id="skip-campaign-intro" checked={doNotShowAgain} onCheckedChange={(value) => setDoNotShowAgain(value === true)} disabled={!ended && !isGm} /><Label htmlFor="skip-campaign-intro" className={!ended && !isGm ? "text-muted-foreground" : undefined}>Don&apos;t show this intro again</Label></div><Button type="button" disabled={(!ended && !isGm) || remember.isPending} onClick={async () => { if (!intro || (!ended && !isGm)) return; if (doNotShowAgain) await remember.mutateAsync(); setContinuedVersion(intro.version); }}>{ended ? "Continue to campaign" : isGm ? "Skip intro (GM)" : "Watch the full intro to continue"}</Button></div></div> : null}</div>;
+  return <div ref={gateRef} className="fixed inset-0 z-[100] flex flex-col bg-background" role="dialog" aria-modal="true" aria-label="Campaign introduction"><div className="flex min-h-0 flex-1 items-center justify-center p-3 sm:p-8">{blocked && videoUrl ? <HlsVideo videoRef={gateVideoRef} hlsPath={intro.hls_path} key={intro.version} src={videoUrl} autoPlay controls playsInline preload="auto" onPlay={() => enterFullscreen()} onEnded={() => { setEnded(true); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => undefined); }} className="max-h-full w-full max-w-6xl bg-background object-contain" aria-label="Campaign introduction" /> : <div className="flex items-center gap-3 text-sm text-muted-foreground"><Film className="h-5 w-5" />Loading campaign intro…</div>}</div>{blocked ? <div className="shrink-0 border-t border-border bg-card p-4 sm:p-6"><div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-center gap-3"><Checkbox id="skip-campaign-intro" checked={doNotShowAgain} onCheckedChange={(value) => setDoNotShowAgain(value === true)} disabled={!ended && !isGm} /><Label htmlFor="skip-campaign-intro" className={!ended && !isGm ? "text-muted-foreground" : undefined}>Don&apos;t show this intro again</Label></div><div className="flex items-center gap-2"><Button type="button" variant="outline" onClick={() => { if (document.fullscreenElement) void document.exitFullscreen?.().catch(() => undefined); else enterFullscreen(); }}>Fullscreen</Button><Button type="button" disabled={(!ended && !isGm) || remember.isPending} onClick={async () => { if (!intro || (!ended && !isGm)) return; if (doNotShowAgain) await remember.mutateAsync(); setContinuedVersion(intro.version); }}>{ended ? "Continue to campaign" : isGm ? "Skip intro (GM)" : "Watch the full intro to continue"}</Button></div></div></div> : null}</div>;
+
 }

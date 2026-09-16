@@ -57,7 +57,7 @@ export const sendRevealPush = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: gmRow, error: gmError } = await context.supabase
       .from("campaign_members")
-      .select("id")
+      .select("user_id")
       .eq("campaign_id", data.campaignId)
       .eq("user_id", context.userId)
       .eq("role", "gm")
@@ -67,10 +67,11 @@ export const sendRevealPush = createServerFn({ method: "POST" })
 
     const { data: member, error: memberError } = await context.supabase
       .from("campaign_members")
-      .select("id")
+      .select("user_id")
       .eq("campaign_id", data.campaignId)
       .eq("user_id", data.userId)
       .maybeSingle();
+
     if (memberError) throw new Error(memberError.message);
     if (!member) throw new Error("Recipient is not a member of this campaign");
 

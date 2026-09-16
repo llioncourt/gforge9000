@@ -890,7 +890,9 @@ function EntityPage() {
                 : "Revealing to a player switches this entry to “Selected players”, so only the players you pick below can see it."}
             </p>
             <ul className="divide-y rounded-lg border">
-              {(members.data ?? []).map((member) => {
+              {(members.data ?? [])
+                .filter((member) => member.role !== "gm" && member.user_id !== user?.id)
+                .map((member) => {
                 const granted = (grants.data ?? []).some((g) => g.user_id === member.user_id);
                 return (
                   <li key={member.user_id} className="flex items-center gap-3 p-3">

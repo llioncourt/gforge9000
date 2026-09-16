@@ -45,6 +45,12 @@ export function NotificationBell() {
     staleTime: 1000 * 30,
   });
 
+  const [permission, setPermission] = useState<NotificationPermissionState>("unsupported");
+
+  useEffect(() => {
+    setPermission(readNotificationPermission());
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -57,8 +63,18 @@ export function NotificationBell() {
           table: "notifications",
           filter: `user_id=eq.${user.id}`,
         },
-        () => {
+        (payload) => {
           queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+          if (payload.eventType !== "INSERT") return;
+          const row = payload.new as NotificationRow;
+          if (row.read_at) return;
+          toast(row.title, { description: row.body ?? undefined });
+          showSystemNotification({
+            title: row.title,
+            body: row.body,
+            tag: row.id,
+            url: row.entity_id ? `/entities/${row.entity_id}` : undefined,
+          });
         },
       )
       .subscribe();
@@ -66,6 +82,20 @@ export function NotificationBell() {
       supabase.removeChannel(channel);
     };
   }, [user, queryClient]);
+
+  const enableAlerts = async () => {
+    const next = await requestNotificationPermission();
+    setPermission(next);
+    if (next === "granted") {
+      showSystemNotification({
+        title: "Alerts enabled",
+        body: "You will be notified when the GM reveals something.",
+        tag: "alerts-enabled",
+      });
+    } else if (next === "denied") {
+      toast.error("Alerts blocked. Allow notifications for this site in your browser settings.");
+    }
+  };
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });

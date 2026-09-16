@@ -21,6 +21,7 @@ import {
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  type NotificationRow,
 } from "@/lib/notifications";
 
 function timeAgo(iso: string) {
@@ -123,6 +124,22 @@ export function NotificationBell() {
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[22rem] p-0">
+        {permission === "default" ? (
+          <div className="flex items-center justify-between gap-2 border-b border-border bg-accent/20 px-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              Get an alert on your device when the GM reveals something.
+            </p>
+            <Button size="sm" className="h-7 shrink-0 px-2 text-xs" onClick={() => void enableAlerts()}>
+              <BellRing className="mr-1 size-3" /> Enable
+            </Button>
+          </div>
+        ) : permission === "open-in-new-tab" ? (
+          <div className="border-b border-border bg-accent/20 px-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              Open the app in its own tab to turn on device alerts.
+            </p>
+          </div>
+        ) : null}
         <div className="flex items-center justify-between border-b border-border px-3 py-2">
           <p className="text-sm font-medium">Notifications</p>
           {unread > 0 ? (

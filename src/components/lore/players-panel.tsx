@@ -99,10 +99,47 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     );
   }
 
-  // Players only ever see their own reveal card; the GM sees everyone.
-  const rows = isGm
-    ? (members.data ?? []).filter((member) => member.role !== "gm" && member.user_id !== user?.id)
-    : (members.data ?? []).filter((member) => member.user_id === user?.id);
+  // Players get a flat list of their own revealed records — no player card.
+  if (!isGm) {
+    const mine = (grants.data ?? []).filter((g) => g.user_id === user?.id);
+    return (
+      <div className="space-y-4">
+        <p className="text-muted-foreground text-sm">
+          These are the secret records the GM has revealed to you.
+        </p>
+        {mine.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No secret records revealed yet.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {mine.map((grant) => {
+              const entity = entityById.get(grant.entity_id);
+              return (
+                <span
+                  key={grant.id}
+                  className="flex items-center gap-1 rounded-md border px-2 py-1 text-sm"
+                >
+                  <Badge variant="outline">{kindDef(entity?.kind ?? "note").label}</Badge>
+                  <Link
+                    to="/entities/$id"
+                    params={{ id: grant.entity_id }}
+                    search={{ from: "reveals" }}
+                    className="hover:underline"
+                  >
+                    {entity?.name ?? "Record"}
+                  </Link>
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // The GM sees every player except themselves.
+  const rows = (members.data ?? []).filter(
+    (member) => member.role !== "gm" && member.user_id !== user?.id,
+  );
 
   return (
     <div className="space-y-4">

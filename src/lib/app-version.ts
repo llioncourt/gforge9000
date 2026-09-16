@@ -12,7 +12,7 @@ export async function fetchDeployedBuildId(signal?: AbortSignal) {
   const response = await fetch(`/api/public/version?t=${Date.now()}`, {
     cache: "no-store",
     headers: { Accept: "application/json" },
-    signal,
+    ...(signal ? { signal } : {}),
   });
 
   if (!response.ok) throw new Error(`Version check failed (${response.status})`);

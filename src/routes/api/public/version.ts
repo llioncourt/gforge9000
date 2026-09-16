@@ -9,6 +9,7 @@ const NO_CACHE_HEADERS = {
 };
 
 export const Route = createFileRoute("/api/public/version")({
+  staticData: { sitemap: false },
   server: {
     handlers: {
       GET: async () =>

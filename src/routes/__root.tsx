@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DiceProvider } from "@/components/app/dice-context";
+import { PwaRegister } from "@/components/app/pwa-register";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -94,6 +95,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", content: "#1a1a1a" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "Char Forge" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       {
         name: "google-site-verification",
         content: "5blhJzh3sEeR7VKnUMKyQZjtKQ-5tu89z5kqwmjr8FM",
@@ -109,6 +114,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@500;600;700&display=swap",
       },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -148,6 +155,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={200}>
         <DiceProvider>
+          <PwaRegister />
           <Outlet />
           <Toaster position="top-right" richColors />
         </DiceProvider>

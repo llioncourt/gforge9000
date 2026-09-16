@@ -26,18 +26,19 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
 
 export function showSystemNotification(options: {
   title: string;
-  body?: string | null;
-  tag?: string;
-  url?: string;
+  body?: string | null | undefined;
+  tag?: string | undefined;
+  url?: string | undefined;
 }): void {
   if (readNotificationPermission() !== "granted") return;
   try {
-    const notification = new Notification(options.title, {
-      body: options.body ?? undefined,
+    const init: NotificationOptions = {
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
-      tag: options.tag,
-    });
+    };
+    if (options.body) init.body = options.body;
+    if (options.tag) init.tag = options.tag;
+    const notification = new Notification(options.title, init);
     notification.onclick = () => {
       window.focus();
       if (options.url) window.location.assign(options.url);

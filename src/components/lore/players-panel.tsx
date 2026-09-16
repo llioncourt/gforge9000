@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, Plus, X } from "lucide-react";
+import { ChevronRight, Eye, Plus, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { kindDef } from "@/lib/entity-kinds";
-import { listMembers } from "@/lib/api";
-import { listCampaignGrants, listEntities, type EntityRow } from "@/lib/lore";
+import { listCampaignCharacters, listMembers } from "@/lib/api";
+import { dataValue, listCampaignGrants, listEntities, type EntityRow } from "@/lib/lore";
 import { revealEntityToPlayer, revokeEntityReveal } from "@/lib/reveal";
+import { EntityThumb } from "@/components/lore/entity-thumb";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import { useSession } from "@/hooks/use-session";
 
@@ -39,6 +40,11 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
   const grants = useQuery({
     queryKey: ["lore-grants", campaignId],
     queryFn: () => listCampaignGrants(campaignId),
+  });
+  const characters = useQuery({
+    queryKey: ["campaign-characters", campaignId],
+    queryFn: () => listCampaignCharacters(campaignId),
+    staleTime: 1000 * 60 * 5,
   });
 
   const entityById = useMemo(() => {
@@ -99,35 +105,71 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     );
   }
 
-  // Players get a flat list of their own revealed records — no player card.
+  // Players get their own revealed records as rich cards — no player wrapper card.
   if (!isGm) {
-    const mine = (grants.data ?? []).filter((g) => g.user_id === user?.id);
+    const mine = (grants.data ?? [])
+      .filter((g) => g.user_id === user?.id)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
+    const portraitFor = (entity: EntityRow | undefined) => {
+      if (!entity) return null;
+      const sheetId = dataValue(entity, "character_sheet_id");
+      if (!sheetId) return null;
+      return (
+        (characters.data ?? []).find((c) => c.id === sheetId)?.portrait_path ?? null
+      );
+    };
     return (
       <div className="space-y-4">
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground flex items-center gap-2 text-sm">
+          <Sparkles className="text-primary size-4" />
           These are the secret records the GM has revealed to you.
         </p>
         {mine.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No secret records revealed yet.</p>
+          <div className="panel text-muted-foreground p-8 text-center text-sm">
+            No secret records revealed yet — when the GM shares one, it appears here.
+          </div>
         ) : (
-          <div className="flex flex-wrap gap-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {mine.map((grant) => {
               const entity = entityById.get(grant.entity_id);
               return (
-                <span
+                <Link
                   key={grant.id}
-                  className="flex items-center gap-1 rounded-md border px-2 py-1 text-sm"
+                  to="/entities/$id"
+                  params={{ id: grant.entity_id }}
+                  search={{ from: "reveals" }}
+                  className="group hover:border-primary/50 hover:bg-accent/30 block rounded-lg border p-3 transition"
                 >
-                  <Badge variant="outline">{kindDef(entity?.kind ?? "note").label}</Badge>
-                  <Link
-                    to="/entities/$id"
-                    params={{ id: grant.entity_id }}
-                    search={{ from: "reveals" }}
-                    className="hover:underline"
-                  >
-                    {entity?.name ?? "Record"}
-                  </Link>
-                </span>
+                  <div className="flex items-start gap-3">
+                    <EntityThumb
+                      path={entity?.image_url}
+                      fallbackPath={portraitFor(entity)}
+                      name={entity?.name ?? "Record"}
+                      className="size-14"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="group-hover:text-primary truncate font-medium">
+                          {entity?.name ?? "Record"}
+                        </span>
+                        <ChevronRight className="text-muted-foreground group-hover:text-primary mt-0.5 size-4 shrink-0 transition group-hover:translate-x-0.5" />
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        <Badge variant="outline" className="text-[10px] uppercase">
+                          {kindDef(entity?.kind ?? "note").label}
+                        </Badge>
+                        <span className="text-muted-foreground text-xs">
+                          Revealed {new Date(grant.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {entity?.summary ? (
+                        <p className="text-muted-foreground mt-1.5 line-clamp-2 text-sm">
+                          {entity.summary}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                </Link>
               );
             })}
           </div>

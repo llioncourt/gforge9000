@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DiceProvider } from "@/components/app/dice-context";
+import { PwaRegister } from "@/components/app/pwa-register";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -154,6 +155,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider delayDuration={200}>
         <DiceProvider>
+          <PwaRegister />
           <Outlet />
           <Toaster position="top-right" richColors />
         </DiceProvider>

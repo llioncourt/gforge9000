@@ -94,10 +94,19 @@ export async function packageVideoAsHls(
     playlist,
   ];
 
-  // Source-quality rendition: stream copy when possible (fast), re-encode as fallback.
+  // Source-quality rendition: stream copy keeps the original picture untouched.
+  // Only re-encode when copying is impossible, and then stay visually lossless.
   let copied = true;
   try {
-    await ffmpeg.exec(["-i", "input.mp4", "-c", "copy", ...hlsArgs("v0", "v0.m3u8")]);
+    await ffmpeg.exec([
+      "-i",
+      "input.mp4",
+      "-c",
+      "copy",
+      "-bsf:v",
+      "h264_mp4toannexb",
+      ...hlsArgs("v0", "v0.m3u8"),
+    ]);
     const check = await ffmpeg.readFile("v0.m3u8");
     if (!check || check.length === 0) throw new Error("empty playlist");
   } catch {
@@ -110,11 +119,13 @@ export async function packageVideoAsHls(
       "-preset",
       "veryfast",
       "-crf",
-      "23",
+      "18",
+      "-pix_fmt",
+      "yuv420p",
       "-c:a",
       "aac",
       "-b:a",
-      "128k",
+      "192k",
       ...hlsArgs("v0", "v0.m3u8"),
     ]);
   }

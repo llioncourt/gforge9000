@@ -62,5 +62,5 @@ export function HlsVideo({ hlsPath, src, videoRef, ...props }: HlsVideoProps) {
   }, [hlsPath, fallbackOnly]);
 
   const useHls = Boolean(hlsPath) && !fallbackOnly;
-  return <video ref={ref} {...props} src={useHls ? undefined : src} />;
+  return <video ref={(node) => { ref.current = node; if (videoRef) videoRef.current = node; }} {...props} src={useHls ? undefined : src} />;
 }

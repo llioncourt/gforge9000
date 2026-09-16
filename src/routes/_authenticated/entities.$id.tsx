@@ -50,6 +50,8 @@ import {
 import { getCampaign, listCampaignCharacters, listMembers } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
 import { revealEntityToPlayer, revokeEntityReveal } from "@/lib/reveal";
+import { isPlayerVisible } from "@/lib/visibility";
+import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { LibraryImagePicker } from "@/components/lore/library-image-picker";
 import { entityImageUrl } from "@/lib/entity-image";

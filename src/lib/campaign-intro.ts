@@ -86,22 +86,10 @@ export async function campaignIntroUrl(path: string) {
   return data?.signedUrl ?? "";
 }
 
-export type CampaignVideoUploadProgress = { percent: number; label: string };
-
 export async function uploadCampaignVideo(
   campaignId: string,
   file: File,
-  input: {
-    title: string;
-    videoType: CampaignVideoType;
-    thumb?: Blob | null;
-    /** Package the video for adaptive streaming in the browser before uploading. */
-    streaming?: boolean;
-    lowQuality?: boolean;
-    onProgress?: (progress: CampaignVideoUploadProgress) => void;
-    /** Called when streaming preparation failed and the plain upload was used instead. */
-    onWarning?: (message: string) => void;
-  },
+  input: { title: string; videoType: CampaignVideoType; thumb?: Blob | null },
 ) {
   const validation = validateCampaignVideoFile(file);
   if (validation) throw new Error(validation);
@@ -110,76 +98,31 @@ export async function uploadCampaignVideo(
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
-  const report = input.onProgress ?? (() => undefined);
   const currentIntro = input.videoType === "intro" ? await getCampaignIntro(campaignId) : null;
-  const videoId = crypto.randomUUID();
-  const path = `${user.id}/${campaignId}/${videoId}.mp4`;
-  const cleanup: string[] = [];
-
-  let hlsPath: string | null = null;
-  if (input.streaming) {
-    // Streaming preparation runs in the browser and can fail on unsupported
-    // codecs or low memory. It must never block the plain upload.
-    try {
-      const { packageVideoAsHls, uploadHlsPackage } = await import("@/lib/video-hls");
-      const bundle = await packageVideoAsHls(file, {
-        lowQuality: input.lowQuality ?? false,
-        onProgress: (progress) => report({ percent: Math.round(progress.percent * 70), label: progress.label }),
-      });
-      hlsPath = await uploadHlsPackage(`${user.id}/${campaignId}/hls-${videoId}`, bundle, (progress) =>
-        report({ percent: 70 + Math.round((progress.percent - 0.85) * 100), label: progress.label }),
-      );
-    } catch (error) {
-      hlsPath = null;
-      const detail = error instanceof Error ? error.message : String(error);
-      input.onWarning?.(`The streaming version could not be prepared (${detail}). The video was uploaded as a normal file.`);
-      report({ percent: 80, label: "Streaming preparation failed — uploading the original file…" });
-    }
-  }
-
-  report({ percent: 88, label: "Uploading the original file…" });
-
+  const path = `${user.id}/${campaignId}/${crypto.randomUUID()}.mp4`;
   const { error: uploadError } = await supabase.storage
     .from(CAMPAIGN_INTRO_BUCKET)
     .upload(path, file, { contentType: "video/mp4", upsert: false });
-  if (uploadError) {
-    if (hlsPath) {
-      const { removeHlsPackage } = await import("@/lib/video-hls");
-      await removeHlsPackage(hlsPath);
-    }
-    throw new Error(uploadError.message);
-  }
-  cleanup.push(path);
-
+  fail(uploadError);
   let thumbPath: string | null = null;
   if (input.thumb) {
     try {
       thumbPath = await uploadThumbBlob(campaignId, user.id, input.thumb);
-      cleanup.push(thumbPath);
     } catch {
       thumbPath = null;
     }
   }
-  const rollback = async () => {
-    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(cleanup);
-    if (hlsPath) {
-      const { removeHlsPackage } = await import("@/lib/video-hls");
-      await removeHlsPackage(hlsPath);
-    }
-  };
   if (currentIntro) {
     const removed = await supabase.from("campaign_videos").delete().eq("id", currentIntro.id);
     if (removed.error) {
-      await rollback();
+      await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(thumbPath ? [path, thumbPath] : [path]);
       throw new Error(removed.error.message);
     }
   }
-  report({ percent: 96, label: "Saving the video…" });
   const { error } = await supabase.from("campaign_videos").insert({
     campaign_id: campaignId,
     storage_path: path,
     thumb_path: thumbPath,
-    hls_path: hlsPath,
     file_name: file.name,
     title,
     video_type: input.videoType,
@@ -189,21 +132,16 @@ export async function uploadCampaignVideo(
     created_by: user.id,
   });
   if (error) {
-    await rollback();
+    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(thumbPath ? [path, thumbPath] : [path]);
     throw new Error(error.message);
   }
   if (currentIntro?.storage_path) {
     const stale = [currentIntro.storage_path];
     if (currentIntro.thumb_path) stale.push(currentIntro.thumb_path);
     await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(stale);
-    if (currentIntro.hls_path) {
-      const { removeHlsPackage } = await import("@/lib/video-hls");
-      await removeHlsPackage(currentIntro.hls_path);
-    }
   }
-  report({ percent: 100, label: "Done." });
-}
 
+}
 
 export async function uploadCampaignIntro(campaignId: string, file: File) {
   const title = file.name.replace(/\.[^.]+$/, "").trim() || "Campaign intro";
@@ -216,10 +154,6 @@ export async function removeCampaignVideo(video: CampaignVideo) {
   const paths = [video.storage_path];
   if (video.thumb_path) paths.push(video.thumb_path);
   await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(paths);
-  if (video.hls_path) {
-    const { removeHlsPackage } = await import("@/lib/video-hls");
-    await removeHlsPackage(video.hls_path);
-  }
 }
 
 export const removeCampaignIntro = removeCampaignVideo;

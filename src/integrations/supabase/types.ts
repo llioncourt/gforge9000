@@ -451,7 +451,6 @@ export type Database = {
           created_at: string
           created_by: string
           file_name: string
-          hls_path: string | null
           id: string
           mime_type: string
           storage_path: string
@@ -467,7 +466,6 @@ export type Database = {
           created_at?: string
           created_by?: string
           file_name: string
-          hls_path?: string | null
           id?: string
           mime_type?: string
           storage_path: string
@@ -483,7 +481,6 @@ export type Database = {
           created_at?: string
           created_by?: string
           file_name?: string
-          hls_path?: string | null
           id?: string
           mime_type?: string
           storage_path?: string

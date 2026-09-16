@@ -1,1 +1,0 @@
-alter table public.campaign_videos add column if not exists hls_path text;

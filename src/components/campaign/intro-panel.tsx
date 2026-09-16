@@ -96,9 +96,10 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
         queryClient.invalidateQueries({ queryKey: ["campaign-intro", campaignId] }),
         queryClient.invalidateQueries({ queryKey: ["campaign-intro-view", campaignId] }),
       ]);
+      setProgress(null);
       toast.success("Video uploaded.");
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => { setProgress(null); toast.error(error.message); },
   });
   const remove = useMutation({
     mutationFn: removeCampaignVideo,

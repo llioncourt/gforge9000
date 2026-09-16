@@ -3,8 +3,12 @@ import { RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   APP_BUILD_ID,
+  fetchDeployedAppAssetId,
   fetchDeployedBuildId,
+  isNewAppAssetAvailable,
   isNewBuildAvailable,
+  readLoadedAppAssetId,
+  refreshToLatestVersion,
 } from "@/lib/app-version";
 
 const CHECK_INTERVAL_MS = 60_000;
@@ -13,12 +17,19 @@ export function AppUpdateNotice() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
   const checkForUpdate = useCallback(async (signal?: AbortSignal) => {
-    try {
-      const deployedBuildId = await fetchDeployedBuildId(signal);
-      if (isNewBuildAvailable(APP_BUILD_ID, deployedBuildId)) setUpdateAvailable(true);
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
-      // A transient network failure should never interrupt an active session.
+    const loadedAssetId = readLoadedAppAssetId();
+    const [buildResult, assetResult] = await Promise.allSettled([
+      fetchDeployedBuildId(signal),
+      fetchDeployedAppAssetId(signal),
+    ]);
+    const deployedBuildId = buildResult.status === "fulfilled" ? buildResult.value : null;
+    const deployedAssetId = assetResult.status === "fulfilled" ? assetResult.value : null;
+
+    if (
+      isNewBuildAvailable(APP_BUILD_ID, deployedBuildId) ||
+      isNewAppAssetAvailable(loadedAssetId, deployedAssetId)
+    ) {
+      setUpdateAvailable(true);
     }
   }, []);
 
@@ -58,7 +69,7 @@ export function AppUpdateNotice() {
         size="sm"
         variant="secondary"
         className="h-7 gap-1.5"
-        onClick={() => window.location.reload()}
+        onClick={() => refreshToLatestVersion()}
       >
         <RefreshCw className="h-3.5 w-3.5" />
         Refresh now

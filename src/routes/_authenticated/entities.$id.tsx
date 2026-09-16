@@ -876,9 +876,14 @@ function EntityPage() {
 
         {isGm ? (
           <TabsContent value="reveals" className="space-y-4 pt-4">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Current visibility:</span>
+              <VisibilityBadge visibility={form.visibility} isGm={isGm} />
+            </div>
             <p className="text-muted-foreground text-sm">
-              With visibility set to “Selected players”, only the players you pick below can see
-              this entry.
+              {isPlayerVisible(form.visibility)
+                ? "This entry is already visible to every player in the campaign."
+                : "Revealing to a player switches this entry to “Selected players”, so only the players you pick below can see it."}
             </p>
             <ul className="divide-y rounded-lg border">
               {(members.data ?? []).map((member) => {

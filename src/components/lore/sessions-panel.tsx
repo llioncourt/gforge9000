@@ -128,13 +128,9 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
               <div className="flex items-center justify-between gap-2">
                 <h3 className="font-display text-base font-semibold">{session.title}</h3>
                 <div className="flex items-center gap-2">
-                  <div className="flex flex-col items-end gap-1">
-                    <Badge variant="outline" className="text-[10px]">
-                      {new Date(session.createdAt).toLocaleDateString()}
-                    </Badge>
-                    <VisibilityBadge visibility="GM_ONLY" isGm={isGm} />
-                    <VisibilityBadge visibility="ALL_PLAYERS" isGm={isGm} />
-                  </div>
+                  <Badge variant="outline" className="text-[10px]">
+                    {new Date(session.createdAt).toLocaleDateString()}
+                  </Badge>
                   {isGm ? (
                     <Button
                       size="icon"
@@ -149,38 +145,44 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
               </div>
               <div className="grid gap-4 lg:grid-cols-2">
                 {isGm ? (
+                  <div className="space-y-2">
+                    <SessionField
+                      label="Prep (GM only)"
+                      placeholder="Scenes to run, NPCs on deck, clues to drop, opening beat."
+                      note={session.prep}
+                      onCreate={(body) =>
+                        addNote({
+                          campaign_id: campaignId,
+                          title: session.title,
+                          body,
+                          kind: PREP,
+                          gm_only: true,
+                        } as never).then(invalidate)
+                      }
+                      onSave={(body) => updateNote(session.prep!.id, { body }).then(invalidate)}
+                    />
+                    <VisibilityBadge visibility="GM_ONLY" isGm={isGm} />
+                  </div>
+                ) : null}
+                <div className="space-y-2">
                   <SessionField
-                    label="Prep (GM only)"
-                    placeholder="Scenes to run, NPCs on deck, clues to drop, opening beat."
-                    note={session.prep}
+                    label="Recap (shared)"
+                    placeholder="What happened, who did what, where the party ended up."
+                    note={session.recap}
+                    readOnly={!isGm && !session.recap}
                     onCreate={(body) =>
                       addNote({
                         campaign_id: campaignId,
                         title: session.title,
                         body,
-                        kind: PREP,
-                        gm_only: true,
+                        kind: RECAP,
+                        gm_only: false,
                       } as never).then(invalidate)
                     }
-                    onSave={(body) => updateNote(session.prep!.id, { body }).then(invalidate)}
+                    onSave={(body) => updateNote(session.recap!.id, { body }).then(invalidate)}
                   />
-                ) : null}
-                <SessionField
-                  label="Recap (shared)"
-                  placeholder="What happened, who did what, where the party ended up."
-                  note={session.recap}
-                  readOnly={!isGm && !session.recap}
-                  onCreate={(body) =>
-                    addNote({
-                      campaign_id: campaignId,
-                      title: session.title,
-                      body,
-                      kind: RECAP,
-                      gm_only: false,
-                    } as never).then(invalidate)
-                  }
-                  onSave={(body) => updateNote(session.recap!.id, { body }).then(invalidate)}
-                />
+                  <VisibilityBadge visibility="ALL_PLAYERS" isGm={isGm} />
+                </div>
               </div>
             </article>
           ))}

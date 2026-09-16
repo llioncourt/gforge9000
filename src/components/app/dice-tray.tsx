@@ -65,18 +65,30 @@ export function DiceTray({ open, onOpenChange }: { open: boolean; onOpenChange: 
                   label: label || "Roll",
                   expression,
                   target: target.trim() === "" ? null : Number(target),
+                  campaignId,
                 })
               }
             >
               Roll
             </Button>
-            <Button variant="outline" onClick={() => roll({ label: "Reaction", expression: "3d6" })}>
+            <Button
+              variant="outline"
+              onClick={() => roll({ label: "Reaction", expression: "3d6", campaignId })}
+            >
               3d6
             </Button>
-            <Button variant="outline" onClick={() => roll({ label: "Damage", expression: "2d6+1" })}>
+            <Button
+              variant="outline"
+              onClick={() => roll({ label: "Damage", expression: "2d6+1", campaignId })}
+            >
               2d6+1
             </Button>
           </div>
+          {campaignId ? (
+            <p className="text-xs text-muted-foreground">
+              Rolls made here are recorded in this campaign for the GM to see.
+            </p>
+          ) : null}
 
           <div className="flex items-center justify-between pt-2">
             <p className="text-sm font-medium">Session history</p>

@@ -6,6 +6,8 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+const appBuildId = process.env["LOVABLE_DEPLOYMENT_ID"] ?? `${Date.now()}`;
+
 // Dev tooling annotates every JSX element with `data-tsd-source`. react-three-fiber
 // rejects unknown dashed props on three.js objects ("Cannot set data-tsd-source"),
 // so strip the annotation from the 3D scene files only.
@@ -30,6 +32,9 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    define: {
+      __APP_BUILD_ID__: JSON.stringify(appBuildId),
+    },
     plugins: [stripTsdSourceInR3F],
     // Pre-bundle the 3D stack at startup. Otherwise the first time the viewer is
     // opened Vite discovers these deps, re-optimizes, and the mid-session reload

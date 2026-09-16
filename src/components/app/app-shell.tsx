@@ -25,6 +25,7 @@ import { CampaignSoundtrackProvider } from "@/components/campaign/campaign-sound
 import { AmbientBackground } from "@/components/app/ambient-background";
 import { NotificationBell } from "@/components/app/notification-bell";
 import { ProfileMenu } from "@/components/app/profile-menu";
+import { AppUpdateNotice } from "@/components/app/app-update-notice";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -150,7 +151,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className={cn("relative z-10 transition-[padding] duration-300", collapsed ? "" : "lg:pl-64")}>
-        <header className="glass-bar no-print sticky top-0 z-30 flex h-16 items-center gap-2 border-b border-border/70 px-3 sm:gap-3 sm:px-4">
+        <div className="sticky top-0 z-30">
+          <AppUpdateNotice />
+        <header className="glass-bar no-print flex h-16 items-center gap-2 border-b border-border/70 px-3 sm:gap-3 sm:px-4">
           <button
             className={cn(
               "-ml-1 grid h-10 w-10 shrink-0 place-content-center rounded-md text-foreground transition-colors hover:bg-secondary",
@@ -186,6 +189,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <ProfileMenu onSignOut={signOut} />
           </div>
         </header>
+        </div>
 
         <main className="safe-b min-h-[calc(100vh-4rem)] px-3 py-5 sm:px-6 sm:py-6 lg:px-8">
           {children}

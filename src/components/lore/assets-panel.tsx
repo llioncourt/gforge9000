@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AssetImage } from "@/components/lore/asset-image";
+import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import {
   createAsset,
   deleteAsset,
@@ -149,7 +150,12 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((row) => (
-            <article key={row.id} data-search-id={row.id} className="space-y-3 rounded-lg border p-3">
+            <article key={row.id} data-search-id={row.id} className="relative space-y-3 rounded-lg border p-3">
+              <VisibilityBadge
+                visibility={row.visible_to_players}
+                isGm={isGm}
+                className="absolute top-5 right-5 z-10 backdrop-blur-sm"
+              />
               {isImageAsset(row) ? (
                 <AssetImage
                   path={row.storage_path}

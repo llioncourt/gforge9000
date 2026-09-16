@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { addNote, deleteNote, listNotes, updateNote, type NoteRow } from "@/lib/api";
+import { VisibilityBadge } from "@/components/lore/visibility-badge";
 
 const PREP = "session-prep";
 const RECAP = "session";
@@ -130,6 +131,7 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
                   <Badge variant="outline" className="text-[10px]">
                     {new Date(session.createdAt).toLocaleDateString()}
                   </Badge>
+                  <VisibilityBadge visibility="SELECTED_PLAYERS" isGm={isGm} className="normal-case" />
                   {isGm ? (
                     <Button
                       size="icon"

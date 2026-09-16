@@ -38,12 +38,10 @@ import {
   deleteEntity,
   deleteRelationship,
   getEntity,
-  grantKnowledge,
   listEntities,
   listEntityRevisions,
   listGrants,
   listRelationships,
-  revokeKnowledge,
   snapshotEntity,
   updateEntity,
   withDataValue,
@@ -51,6 +49,7 @@ import {
 } from "@/lib/lore";
 import { getCampaign, listCampaignCharacters, listMembers } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
+import { revealEntityToPlayer, revokeEntityReveal } from "@/lib/reveal";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { LibraryImagePicker } from "@/components/lore/library-image-picker";
 import { entityImageUrl } from "@/lib/entity-image";
@@ -289,7 +288,7 @@ function EntityPage() {
           ? "Reveal removed — record is GM only again"
           : "Reveal removed";
       }
-      const result = await revealEntityToPlayer({ entity: row, userId, gmId: userId ? user!.id : user!.id });
+      const result = await revealEntityToPlayer({ entity: row, userId, gmId: user!.id });
       if (result.alreadyPublic) return "Revealed — this record was already visible to every player";
       if (result.promotedTo) return "Revealed (visibility set to “Selected players”)";
       return "Revealed to the player";
@@ -297,7 +296,7 @@ function EntityPage() {
     onSuccess: async (message) => {
       toast.success(message);
       await queryClient.invalidateQueries({ queryKey: ["lore-grants", id] });
-      await queryClient.invalidateQueries({ queryKey: ["lore-entity", id] });
+      await queryClient.invalidateQueries({ queryKey: ["entity", id] });
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
     },
     onError: (error: Error) => toast.error(error.message),

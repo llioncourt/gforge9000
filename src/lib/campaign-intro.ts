@@ -118,7 +118,7 @@ export async function uploadCampaignVideo(
   if (input.streaming) {
     const { packageVideoAsHls, uploadHlsPackage } = await import("@/lib/video-hls");
     const bundle = await packageVideoAsHls(file, {
-      lowQuality: input.lowQuality,
+      lowQuality: input.lowQuality ?? false,
       onProgress: (progress) => report({ percent: Math.round(progress.percent * 70), label: progress.label }),
     });
     hlsPath = await uploadHlsPackage(`${user.id}/${campaignId}/hls-${videoId}`, bundle, (progress) =>

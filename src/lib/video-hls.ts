@@ -53,8 +53,8 @@ export async function packageVideoAsHls(
   report({ stage: "loading", percent: 0.02, label: "Preparing the video converter…" });
   const ffmpeg = new FFmpeg();
   await ffmpeg.load({
-    coreURL: await toBlobURL(`${FFMPEG_CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
-    wasmURL: await toBlobURL(`${FFMPEG_CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
+    coreURL: await toBlobURL(ffmpegCoreUrl, "text/javascript"),
+    wasmURL: await toBlobURL(ffmpegWasmUrl, "application/wasm"),
   });
 
   const lowQuality = options.lowQuality ?? false;

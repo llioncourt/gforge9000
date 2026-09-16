@@ -41,6 +41,11 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     queryKey: ["lore-grants", campaignId],
     queryFn: () => listCampaignGrants(campaignId),
   });
+  const characters = useQuery({
+    queryKey: ["campaign-characters", campaignId],
+    queryFn: () => listCampaignCharacters(campaignId),
+    staleTime: 1000 * 60 * 5,
+  });
 
   const entityById = useMemo(() => {
     const map = new Map<string, EntityRow>();

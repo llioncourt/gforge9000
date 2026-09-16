@@ -50,7 +50,10 @@ export function NotificationBell() {
   const [permission, setPermission] = useState<NotificationPermissionState>("unsupported");
 
   useEffect(() => {
-    setPermission(readNotificationPermission());
+    const current = readNotificationPermission();
+    setPermission(current);
+    // Already allowed on a previous visit: make sure this device stays registered.
+    if (current === "granted") void enableBackgroundPush().catch(() => undefined);
   }, []);
 
   useEffect(() => {

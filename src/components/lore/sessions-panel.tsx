@@ -128,11 +128,13 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
               <div className="flex items-center justify-between gap-2">
                 <h3 className="font-display text-base font-semibold">{session.title}</h3>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-[10px]">
-                    {new Date(session.createdAt).toLocaleDateString()}
-                  </Badge>
-                  <VisibilityBadge visibility="GM_ONLY" isGm={isGm} />
-                  <VisibilityBadge visibility="ALL_PLAYERS" isGm={isGm} />
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge variant="outline" className="text-[10px]">
+                      {new Date(session.createdAt).toLocaleDateString()}
+                    </Badge>
+                    <VisibilityBadge visibility="GM_ONLY" isGm={isGm} />
+                    <VisibilityBadge visibility="ALL_PLAYERS" isGm={isGm} />
+                  </div>
                   {isGm ? (
                     <Button
                       size="icon"

@@ -305,11 +305,13 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
                   >
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="font-medium">{row.name}</h3>
-                      <div className="flex items-center gap-1">
-                        <Badge variant="outline" className="text-[10px]">
-                          {eventLabel(row, calendar)}
-                        </Badge>
-                        <VisibilityBadge visibility={row.visibility} isGm={isGm} />
+                      <div className="flex items-center gap-2">
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge variant="outline" className="text-[10px]">
+                            {eventLabel(row, calendar)}
+                          </Badge>
+                          <VisibilityBadge visibility={row.visibility} isGm={isGm} />
+                        </div>
                         {isGm ? (
                           <EntityDeleteButton
                             campaignId={campaignId}

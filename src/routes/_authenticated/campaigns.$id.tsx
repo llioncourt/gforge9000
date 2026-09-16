@@ -833,10 +833,12 @@ function CampaignPage() {
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="font-medium">{n.title}</h3>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-[10px]">
-                        {n.kind}
-                      </Badge>
-                      <VisibilityBadge visibility={n.gm_only ? "GM_ONLY" : "ALL_PLAYERS"} isGm={isGm} />
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge variant="outline" className="text-[10px]">
+                          {n.kind}
+                        </Badge>
+                        <VisibilityBadge visibility={n.gm_only ? "GM_ONLY" : "ALL_PLAYERS"} isGm={isGm} />
+                      </div>
                       <Button
                         size="icon"
                         variant="ghost"

@@ -16,14 +16,9 @@ import {
 } from "@/components/ui/dialog";
 import { kindDef } from "@/lib/entity-kinds";
 import { listMembers } from "@/lib/api";
-import {
-  grantKnowledge,
-  listCampaignGrants,
-  listEntities,
-  revokeKnowledge,
-  type EntityRow,
-} from "@/lib/lore";
-import { createNotification } from "@/lib/notifications";
+import { listCampaignGrants, listEntities, type EntityRow } from "@/lib/lore";
+import { revealEntityToPlayer, revokeEntityReveal } from "@/lib/reveal";
+import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import { useSession } from "@/hooks/use-session";
 
 /**

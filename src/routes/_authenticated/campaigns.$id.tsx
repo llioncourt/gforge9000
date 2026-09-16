@@ -66,6 +66,7 @@ import { buildSheet } from "@/rules";
 import { useSession } from "@/hooks/use-session";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
 import { UserAvatar } from "@/components/app/user-avatar";
+import { VisibilityBadge } from "@/components/lore/visibility-badge";
 
 import { CampaignIntroExperience } from "@/components/campaign/intro-panel";
 import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
@@ -835,7 +836,7 @@ function CampaignPage() {
                       <Badge variant="outline" className="text-[10px]">
                         {n.kind}
                       </Badge>
-                      {n.gm_only ? <Badge className="text-[10px]">GM only</Badge> : null}
+                      <VisibilityBadge visibility={n.gm_only ? "GM_ONLY" : "ALL_PLAYERS"} isGm={isGm} />
                       <Button
                         size="icon"
                         variant="ghost"

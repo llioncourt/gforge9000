@@ -39,6 +39,7 @@ import { getCampaign, updateCampaign } from "@/lib/api";
 import { createEntity, listEntities, type EntityRow } from "@/lib/lore";
 import { useSession } from "@/hooks/use-session";
 import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
+import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import {
   calendarOf,
   eventOrder,
@@ -308,6 +309,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
                         <Badge variant="outline" className="text-[10px]">
                           {eventLabel(row, calendar)}
                         </Badge>
+                        <VisibilityBadge visibility={row.visibility} isGm={isGm} />
                         {isGm ? (
                           <EntityDeleteButton
                             campaignId={campaignId}

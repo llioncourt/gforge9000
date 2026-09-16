@@ -43,6 +43,7 @@ import {
   type MapRow,
 } from "@/lib/battlemap";
 import { BattleGrid } from "./battle-grid";
+import { VisibilityBadge } from "@/components/lore/visibility-badge";
 
 type Cell = { x: number; y: number };
 
@@ -310,6 +311,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
             </SelectContent>
           </Select>
         </div>
+        <VisibilityBadge visibility={current.visible_to_players} isGm={isGm} />
 
         <div className="flex gap-1">
           <Button

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { KINDS, kindDef } from "@/lib/entity-kinds";
 import { createEntity, listEntities, type EntityRow } from "@/lib/lore";
 import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
+import { VisibilityBadge } from "@/components/lore/visibility-badge";
 
 /** Outline spine of the story: each level may hold the next one below it. */
 const OUTLINE = ["ARC", "ADVENTURE", "CHAPTER", "SCENE"] as const;
@@ -119,6 +120,7 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
             {row.name}
           </Link>
           <span className="text-muted-foreground text-xs">{row.status}</span>
+          <VisibilityBadge visibility={row.visibility} isGm={isGm} />
           {isGm && child ? (
             <Button
               size="sm"
@@ -209,6 +211,7 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
                       <span className="truncate font-medium">{row.name}</span>
                       <div className="flex items-center gap-1">
                         <span className="text-muted-foreground text-xs">{row.status}</span>
+                        <VisibilityBadge visibility={row.visibility} isGm={isGm} />
                         {isGm ? (
                           <EntityDeleteButton
                             campaignId={campaignId}

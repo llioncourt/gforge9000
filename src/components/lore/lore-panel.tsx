@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { KINDS, kindDef, VISIBILITIES } from "@/lib/entity-kinds";
+import { KINDS, kindDef } from "@/lib/entity-kinds";
 import {
   createEntity,
   dataValue,
@@ -39,6 +39,7 @@ import { ImportDialog, useTransferTask } from "@/components/ui/transfer-dialog";
 import { AiDraftDialog } from "@/components/lore/ai-draft-dialog";
 import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
 import { EntityThumb } from "@/components/lore/entity-thumb";
+import { VisibilityBadge } from "@/components/lore/visibility-badge";
 
 const GROUPS: { group: string; label: string }[] = [
   { group: "world", label: "World" },
@@ -260,10 +261,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                         <div className="flex items-start justify-between gap-2">
                           <span className="font-medium">{row.name}</span>
-                          <Badge variant="outline">
-                            {VISIBILITIES.find((v) => v.value === row.visibility)?.label ??
-                              row.visibility}
-                          </Badge>
+                          <VisibilityBadge visibility={row.visibility} isGm={isGm} />
                         </div>
                         <p className="text-muted-foreground mt-1 line-clamp-2 min-h-10 flex-1 text-sm">
                           {row.summary ?? row.player_description ?? "No summary yet."}

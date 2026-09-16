@@ -39,7 +39,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
       supabase.from("campaigns").select("id,name,description").ilike("name", pattern).limit(LIMIT),
       supabase.from("characters").select("id,name,concept").ilike("name", pattern).limit(LIMIT),
       supabase.from("library_entries").select("id,name,kind").ilike("name", pattern).limit(LIMIT),
-      supabase.from("entities").select("id,name,kind,campaign_id").ilike("name", pattern).limit(LIMIT),
+      supabase.from("entities_safe").select("id,name,kind,campaign_id").ilike("name", pattern).limit(LIMIT),
       supabase.from("campaign_sound_fx").select("id,title,campaign_id").ilike("title", pattern).limit(LIMIT),
       supabase.from("campaign_soundtrack_albums").select("id,title,campaign_id").ilike("title", pattern).limit(LIMIT),
       supabase.from("campaign_soundtrack_tracks").select("id,title,campaign_id").ilike("title", pattern).limit(LIMIT),

@@ -82,8 +82,11 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
   const videos = useQuery({ queryKey: ["campaign-videos", campaignId], queryFn: () => listCampaignVideos(campaignId) });
   const [pending, setPending] = useState<{ file: File; url: string } | null>(null);
   const [thumb, setThumb] = useState<Blob | null>(null);
+  const [streaming, setStreaming] = useState(true);
+  const [lowQuality, setLowQuality] = useState(false);
+  const [progress, setProgress] = useState<{ percent: number; label: string } | null>(null);
   const upload = useMutation({
-    mutationFn: (file: File) => uploadCampaignVideo(campaignId, file, { title, videoType, thumb }),
+    mutationFn: (file: File) => uploadCampaignVideo(campaignId, file, { title, videoType, thumb, streaming, lowQuality, onProgress: (value) => setProgress({ percent: Math.min(100, Math.max(0, value.percent)), label: value.label }) }),
     onSuccess: async () => {
       setTitle("");
       setPending((current) => { if (current) URL.revokeObjectURL(current.url); return null; });

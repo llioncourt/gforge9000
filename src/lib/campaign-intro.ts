@@ -99,6 +99,8 @@ export async function uploadCampaignVideo(
     streaming?: boolean;
     lowQuality?: boolean;
     onProgress?: (progress: CampaignVideoUploadProgress) => void;
+    /** Called when streaming preparation failed and the plain upload was used instead. */
+    onWarning?: (message: string) => void;
   },
 ) {
   const validation = validateCampaignVideoFile(file);

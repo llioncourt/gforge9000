@@ -32,6 +32,7 @@ export function CardPageTransition() {
 
       event.preventDefault();
       event.stopPropagation();
+      event.stopImmediatePropagation();
 
       const rect = link.getBoundingClientRect();
       const clone = link.cloneNode(true) as HTMLElement;

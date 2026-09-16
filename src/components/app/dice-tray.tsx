@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "@tanstack/react-router";
 import { Dices } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,9 @@ export function DiceTray({ open, onOpenChange }: { open: boolean; onOpenChange: 
   const [expression, setExpression] = useState("3d6");
   const [target, setTarget] = useState("12");
   const [label, setLabel] = useState("Manual roll");
+  const { pathname } = useLocation();
+  const campaignMatch = /^\/campaigns\/([0-9a-f-]{36})/i.exec(pathname);
+  const campaignId = campaignMatch?.[1] ?? null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

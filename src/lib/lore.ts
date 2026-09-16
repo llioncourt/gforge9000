@@ -11,21 +11,27 @@ function unwrap<T>(res: { data: T; error: { message: string } | null }): NonNull
   return res.data as NonNullable<T>;
 }
 
+// Reads go through `entities_safe` / `entity_relationships_safe`, which strip
+// GM-only notes and GM-only data keys in the database for non-GM callers.
+// Writes still target the base tables (GM / owner only).
 export async function listEntities(campaignId: string): Promise<EntityRow[]> {
   return unwrap(
     await supabase
-      .from("entities")
+      .from("entities_safe")
       .select("*")
       .eq("campaign_id", campaignId)
       .order("kind", { ascending: true })
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true }),
-  );
+  ) as EntityRow[];
 }
 
 export async function getEntity(id: string): Promise<EntityRow> {
-  return unwrap(await supabase.from("entities").select("*").eq("id", id).single());
+  return unwrap(
+    await supabase.from("entities_safe").select("*").eq("id", id).single(),
+  ) as EntityRow;
 }
+
 
 export async function createEntity(input: TablesInsert<"entities">): Promise<EntityRow> {
   return unwrap(await supabase.from("entities").insert(input).select("*").single());

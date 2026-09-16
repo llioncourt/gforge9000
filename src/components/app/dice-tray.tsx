@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "@tanstack/react-router";
 import { Dices } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,9 @@ export function DiceTray({ open, onOpenChange }: { open: boolean; onOpenChange: 
   const [expression, setExpression] = useState("3d6");
   const [target, setTarget] = useState("12");
   const [label, setLabel] = useState("Manual roll");
+  const { pathname } = useLocation();
+  const campaignMatch = /^\/campaigns\/([0-9a-f-]{36})/i.exec(pathname);
+  const campaignId = campaignMatch?.[1] ?? null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -61,18 +65,30 @@ export function DiceTray({ open, onOpenChange }: { open: boolean; onOpenChange: 
                   label: label || "Roll",
                   expression,
                   target: target.trim() === "" ? null : Number(target),
+                  campaignId,
                 })
               }
             >
               Roll
             </Button>
-            <Button variant="outline" onClick={() => roll({ label: "Reaction", expression: "3d6" })}>
+            <Button
+              variant="outline"
+              onClick={() => roll({ label: "Reaction", expression: "3d6", campaignId })}
+            >
               3d6
             </Button>
-            <Button variant="outline" onClick={() => roll({ label: "Damage", expression: "2d6+1" })}>
+            <Button
+              variant="outline"
+              onClick={() => roll({ label: "Damage", expression: "2d6+1", campaignId })}
+            >
               2d6+1
             </Button>
           </div>
+          {campaignId ? (
+            <p className="text-xs text-muted-foreground">
+              Rolls made here are recorded in this campaign for the GM to see.
+            </p>
+          ) : null}
 
           <div className="flex items-center justify-between pt-2">
             <p className="text-sm font-medium">Session history</p>

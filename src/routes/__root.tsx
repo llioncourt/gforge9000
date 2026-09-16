@@ -15,6 +15,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DiceProvider } from "@/components/app/dice-context";
 import { PwaRegister } from "@/components/app/pwa-register";
+import { CardTransitions } from "@/components/app/card-transitions";
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -156,6 +157,7 @@ function RootComponent() {
       <TooltipProvider delayDuration={200}>
         <DiceProvider>
           <PwaRegister />
+          <CardTransitions />
           <Outlet />
           <Toaster position="top-right" richColors />
         </DiceProvider>

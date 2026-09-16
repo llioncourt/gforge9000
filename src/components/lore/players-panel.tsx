@@ -158,6 +158,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                           >
                             <Badge variant="outline">{kindDef(row.kind).label}</Badge>
                             <span className="flex-1 truncate">{row.name}</span>
+                            <VisibilityBadge visibility={row.visibility} isGm={isGm} />
                             <Eye className="text-muted-foreground size-4" />
                           </button>
                         ))

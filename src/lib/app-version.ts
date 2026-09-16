@@ -1,4 +1,5 @@
-export const APP_BUILD_ID = __APP_BUILD_ID__;
+export const APP_BUILD_ID =
+  typeof __APP_BUILD_ID__ === "string" ? __APP_BUILD_ID__ : "test-build";
 
 export function isNewBuildAvailable(loadedBuildId: string, deployedBuildId: unknown) {
   return (

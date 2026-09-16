@@ -52,12 +52,13 @@ export async function deleteEntity(id: string): Promise<void> {
 export async function listRelationships(campaignId: string): Promise<RelationshipRow[]> {
   return unwrap(
     await supabase
-      .from("entity_relationships")
+      .from("entity_relationships_safe")
       .select("*")
       .eq("campaign_id", campaignId)
       .order("created_at", { ascending: true }),
-  );
+  ) as RelationshipRow[];
 }
+
 
 export async function createRelationship(
   input: TablesInsert<"entity_relationships">,

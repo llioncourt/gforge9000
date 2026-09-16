@@ -262,39 +262,6 @@
   }
 }
 
-/* Clicked cards that navigate to full pages carry their surface into the next view. */
-.page-card-transition-clone {
-  position: fixed;
-  z-index: 120;
-  pointer-events: none;
-  overflow: hidden;
-  margin: 0;
-  transform-origin: center;
-  backface-visibility: hidden;
-  transition:
-    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 280ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 280ms ease,
-    box-shadow 280ms ease;
-  box-shadow: 0 28px 80px -28px color-mix(in oklab, var(--color-primary) 45%, transparent);
-}
-
-.page-card-transition-clone.is-launching {
-  opacity: 0;
-  filter: blur(2px);
-  transform: perspective(1100px) translateZ(90px) rotateY(-8deg) rotateX(3deg) scale(1.16);
-}
-
-.page-card-transition-source {
-  opacity: 0;
-}
-
-.page-card-transition-active body > *:not(.page-card-transition-clone) {
-  transition: filter 280ms ease, opacity 280ms ease;
-  filter: blur(1px);
-  opacity: 0.82;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .interactive-card,
   .interactive-card:hover,
@@ -307,11 +274,8 @@
   .modal-flip-zoom[data-state="open"] {
     animation: none;
   }
-
-  .page-card-transition-clone {
-    display: none;
-  }
 }
+
 
 /* Long lists / grids: skip painting offscreen rows. */
 @utility content-auto {

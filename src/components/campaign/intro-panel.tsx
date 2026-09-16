@@ -116,7 +116,7 @@ export function CampaignIntroExperience({ campaignId }: { campaignId: string; is
   const queryClient = useQueryClient();
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [ended, setEnded] = useState(false);
-  const [doNotShowAgain, setDoNotShowAgain] = useState(false);
+  const [doNotShowAgain, setDoNotShowAgain] = useState(true);
   const [continuedVersion, setContinuedVersion] = useState<string | null>(null);
   const gateVideoRef = useRef<HTMLVideoElement>(null);
   const introQuery = useQuery({ queryKey: ["campaign-intro", campaignId], queryFn: () => getCampaignIntro(campaignId) });

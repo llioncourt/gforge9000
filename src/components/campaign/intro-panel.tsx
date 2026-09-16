@@ -85,8 +85,10 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
   const [streaming, setStreaming] = useState(true);
   const [lowQuality, setLowQuality] = useState(false);
   const [progress, setProgress] = useState<{ percent: number; label: string } | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadWarning, setUploadWarning] = useState<string | null>(null);
   const upload = useMutation({
-    mutationFn: (file: File) => uploadCampaignVideo(campaignId, file, { title, videoType, thumb, streaming, lowQuality, onProgress: (value) => setProgress({ percent: Math.min(100, Math.max(0, value.percent)), label: value.label }) }),
+    mutationFn: (file: File) => uploadCampaignVideo(campaignId, file, { title, videoType, thumb, streaming, lowQuality, onWarning: (message) => setUploadWarning(message), onProgress: (value) => setProgress({ percent: Math.min(100, Math.max(0, value.percent)), label: value.label }) }),
     onSuccess: async () => {
       setTitle("");
       setPending((current) => { if (current) URL.revokeObjectURL(current.url); return null; });
@@ -97,10 +99,11 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
         queryClient.invalidateQueries({ queryKey: ["campaign-intro-view", campaignId] }),
       ]);
       setProgress(null);
-      toast.success("Video uploaded.");
+      if (!uploadWarning) toast.success("Video uploaded.");
     },
-    onError: (error: Error) => { setProgress(null); toast.error(error.message); },
+    onError: (error: Error) => { setProgress(null); setUploadError(error.message || "Unknown error."); },
   });
+
   const remove = useMutation({
     mutationFn: removeCampaignVideo,
     onSuccess: async () => {

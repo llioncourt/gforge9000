@@ -40,6 +40,7 @@ import { AiDraftDialog } from "@/components/lore/ai-draft-dialog";
 import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
 import { EntityThumb } from "@/components/lore/entity-thumb";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
+import { useLoreRealtime } from "@/hooks/use-lore-realtime";
 
 const GROUPS: { group: string; label: string }[] = [
   { group: "world", label: "World" },
@@ -50,6 +51,7 @@ const GROUPS: { group: string; label: string }[] = [
 
 export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
   const queryClient = useQueryClient();
+  useLoreRealtime(campaignId);
   const [search, setSearch] = useState("");
   const [group, setGroup] = useState("world");
   const [kindFilter, setKindFilter] = useState("ALL");

@@ -51,6 +51,7 @@ import { getCampaign, listCampaignCharacters, listMembers } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
 import { revealEntityToPlayer, revokeEntityReveal } from "@/lib/reveal";
 import { isPlayerVisible } from "@/lib/visibility";
+import { useLoreRealtime } from "@/hooks/use-lore-realtime";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { LibraryImagePicker } from "@/components/lore/library-image-picker";
@@ -88,6 +89,7 @@ function EntityPage() {
 
   const entity = useQuery({ queryKey: ["entity", id], queryFn: () => getEntity(id) });
   const campaignId = entity.data?.campaign_id;
+  useLoreRealtime(campaignId, id);
   const campaign = useQuery({
     queryKey: ["campaign", campaignId],
     queryFn: () => getCampaign(campaignId!),

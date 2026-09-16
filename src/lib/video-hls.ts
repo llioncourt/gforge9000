@@ -10,8 +10,15 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { CAMPAIGN_INTRO_BUCKET } from "@/lib/campaign-intro";
+// Same-origin copies of the ffmpeg.wasm core. Loading these from a CDN fails
+// behind the app's content-security policy, so the script ships in /public and
+// the large wasm binary is served as a hosted asset; both become blob URLs at
+// runtime in the browser.
+import ffmpegWasmAsset from "@/assets/ffmpeg-core.wasm.asset.json";
 
-const FFMPEG_CORE_BASE = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd";
+const ffmpegCoreUrl = "/ffmpeg/ffmpeg-core.js";
+const ffmpegWasmUrl = ffmpegWasmAsset.url;
+
 export const HLS_SEGMENT_SECONDS = 6;
 
 export type HlsStage = "loading" | "packaging" | "low" | "uploading" | "done";
@@ -49,8 +56,8 @@ export async function packageVideoAsHls(
   report({ stage: "loading", percent: 0.02, label: "Preparing the video converter…" });
   const ffmpeg = new FFmpeg();
   await ffmpeg.load({
-    coreURL: await toBlobURL(`${FFMPEG_CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
-    wasmURL: await toBlobURL(`${FFMPEG_CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
+    coreURL: await toBlobURL(ffmpegCoreUrl, "text/javascript"),
+    wasmURL: await toBlobURL(ffmpegWasmUrl, "application/wasm"),
   });
 
   const lowQuality = options.lowQuality ?? false;

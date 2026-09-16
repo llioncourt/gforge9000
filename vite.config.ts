@@ -6,7 +6,7 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
-const appBuildId = process.env["LOVABLE_DEPLOYMENT_ID"] ?? `${Date.now()}`;
+const appBuildId = `${process.env["LOVABLE_DEPLOYMENT_ID"] ?? "build"}-${Date.now()}`;
 
 // Dev tooling annotates every JSX element with `data-tsd-source`. react-three-fiber
 // rejects unknown dashed props on three.js objects ("Cannot set data-tsd-source"),

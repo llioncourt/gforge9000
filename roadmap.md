@@ -46,4 +46,4 @@ Order agreed with the user: lore first, battle grid after.
 ## UI motion consistency
 - [x] Add shared flip-and-zoom feedback to whole-card interactions
 - [x] Add matching zoom entrance to dialogs and confirmations
-- [ ] Verify representative cards and dialogs in the live preview
+- [x] Verify representative cards and dialogs in the live preview

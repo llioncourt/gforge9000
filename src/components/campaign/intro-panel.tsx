@@ -135,7 +135,7 @@ export function CampaignIntroExperience({ campaignId, isGm = false }: { campaign
   const introQuery = useQuery({ queryKey: ["campaign-intro", campaignId], queryFn: () => getCampaignIntro(campaignId) });
   const viewQuery = useQuery({ queryKey: ["campaign-intro-view", campaignId], queryFn: () => getMyCampaignIntroView(campaignId) });
   const intro = introQuery.data;
-  useEffect(() => { let live = true; setVideoUrl(null); setEnded(false); setDoNotShowAgain(false); if (intro?.storage_path) void campaignIntroUrl(intro.storage_path).then((url) => { if (live) setVideoUrl(url); }); return () => { live = false; }; }, [intro?.storage_path, intro?.version]);
+  useEffect(() => { let live = true; setVideoUrl(null); setEnded(false); setDoNotShowAgain(true); if (intro?.storage_path) void campaignIntroUrl(intro.storage_path).then((url) => { if (live) setVideoUrl(url); }); return () => { live = false; }; }, [intro?.storage_path, intro?.version]);
   const remember = useMutation({ mutationFn: () => intro ? saveCampaignIntroView(campaignId, intro.version) : Promise.resolve(), onSuccess: async () => queryClient.invalidateQueries({ queryKey: ["campaign-intro-view", campaignId] }), onError: (error: Error) => toast.error(error.message) });
   const loading = introQuery.isLoading || viewQuery.isLoading;
   const blocked = !loading && intro && continuedVersion !== intro.version && shouldBlockForCampaignIntro(intro, viewQuery.data);

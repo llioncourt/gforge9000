@@ -101,7 +101,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
 
   // Players only ever see their own reveal card; the GM sees everyone.
   const rows = isGm
-    ? (members.data ?? [])
+    ? (members.data ?? []).filter((member) => member.role !== "gm" && member.user_id !== user?.id)
     : (members.data ?? []).filter((member) => member.user_id === user?.id);
 
   return (

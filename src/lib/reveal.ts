@@ -22,6 +22,10 @@ export async function revealEntityToPlayer(input: {
 }): Promise<RevealResult> {
   const { entity, userId, gmId } = input;
 
+  if (userId === gmId) {
+    throw new Error("The GM cannot be a reveal recipient");
+  }
+
   const promoteTo = visibilityForReveal(entity.visibility);
   if (promoteTo) {
     await updateEntity(entity.id, { visibility: promoteTo });
@@ -42,7 +46,7 @@ export async function revealEntityToPlayer(input: {
     title: `New record revealed: ${entity.name}`,
     body: kindDef(entity.kind).label,
     created_by: gmId,
-  }).catch(() => undefined);
+  });
 
   return { promotedTo: promoteTo, alreadyPublic: isPlayerVisible(entity.visibility) };
 }

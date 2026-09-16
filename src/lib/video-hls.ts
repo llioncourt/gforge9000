@@ -20,7 +20,7 @@ import ffmpegWasmAsset from "@/assets/ffmpeg-core.wasm.asset.json";
 const ffmpegCoreUrl = "/ffmpeg/ffmpeg-core-esm-0.12.10.js";
 const ffmpegWasmUrl = ffmpegWasmAsset.url;
 
-export const HLS_SEGMENT_SECONDS = 6;
+export const HLS_SEGMENT_SECONDS = 4;
 
 export type HlsStage = "loading" | "packaging" | "low" | "uploading" | "done";
 

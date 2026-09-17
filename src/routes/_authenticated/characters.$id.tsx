@@ -788,7 +788,7 @@ function CharacterPage() {
                 onAdd={() => openNew(kind)}
                 onAddFromPack={() => setPickerKinds([kind])}
                 onEdit={openEdit}
-                onDelete={(eid) => removeEntry.mutate(eid)}
+                onDelete={(eid) => setPendingEntryDelete(eid)}
               />
             ))}
           </TabsContent>
@@ -918,7 +918,7 @@ function CharacterPage() {
                           <TableCell className="text-right">
                             <RowActions
                               onEdit={() => openEdit(entry)}
-                              onDelete={() => removeEntry.mutate(entry.id)}
+                              onDelete={() => setPendingEntryDelete(entry.id)}
                             />
                           </TableCell>
                         </TableRow>
@@ -1015,7 +1015,7 @@ function CharacterPage() {
                         <TableCell className="text-right">
                           <RowActions
                             onEdit={() => openEdit(e)}
-                            onDelete={() => removeEntry.mutate(e.id)}
+                            onDelete={() => setPendingEntryDelete(e.id)}
                           />
                         </TableCell>
                       </TableRow>
@@ -1163,7 +1163,7 @@ function CharacterPage() {
                         <p className="font-medium">{e.name}</p>
                         <RowActions
                           onEdit={() => openEdit(e)}
-                          onDelete={() => removeEntry.mutate(e.id)}
+                          onDelete={() => setPendingEntryDelete(e.id)}
                         />
                       </div>
                       <div className="mt-3 space-y-2">

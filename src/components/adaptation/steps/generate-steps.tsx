@@ -119,7 +119,7 @@ function ProblemList({
   );
 }
 
-export function ValidationStep({ project }: StepProps) {
+export function ValidationStep({ project, goTo }: StepProps) {
   const { t } = useT("adaptation");
   const { loading, problems } = useProblems(project.id, project);
 
@@ -137,11 +137,7 @@ export function ValidationStep({ project }: StepProps) {
           <h5 className="flex items-center gap-2 text-sm font-semibold">
             <AlertTriangle className="h-4 w-4 text-amber-500" /> {t("validation.problemsTitle")}
           </h5>
-          <ul className="space-y-1 text-sm">
-            {problems.map((problem) => (
-              <li key={problem.key}>{String(t(`validation.checks.${problem.key}` as never, { count: problem.count } as never))}</li>
-            ))}
-          </ul>
+          <ProblemList problems={problems} projectId={project.id} goTo={goTo} />
         </section>
       ) : (
         <p className="flex items-center gap-2 text-sm">

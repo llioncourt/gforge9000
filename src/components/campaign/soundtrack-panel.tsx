@@ -58,9 +58,10 @@ import {
   SOUNDTRACK_EXAMPLE_MANIFEST,
 } from "@/lib/soundtrack-pack-docs";
 import { useT } from "@/i18n/hooks";
-import type { TFunction } from "i18next";
+/** Minimal translate signature shared by the helpers in this file. */
+type Translate = (key: string, options?: Record<string, unknown>) => string;
 
-async function coverToAvifBytes(path: string, bytes: Uint8Array, t: TFunction<"media">) {
+async function coverToAvifBytes(path: string, bytes: Uint8Array, t: Translate) {
   if (/\.avif$/i.test(path)) return bytes;
   const name = path.split("/").pop() ?? "cover.png";
   const file = new File([bytes.slice().buffer as ArrayBuffer], name);
@@ -68,7 +69,7 @@ async function coverToAvifBytes(path: string, bytes: Uint8Array, t: TFunction<"m
   const converted = await convertToAvif(file);
   return new Uint8Array(await converted.arrayBuffer());
 }
-async function copySoundtrackPrompt(t: TFunction<"media">) {
+async function copySoundtrackPrompt(t: Translate) {
   try {
     await navigator.clipboard.writeText(buildSoundtrackPackPrompt());
     toast.success(t("soundtrack.import.promptCopied"));

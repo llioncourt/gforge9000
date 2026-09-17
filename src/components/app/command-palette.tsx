@@ -24,6 +24,8 @@ export function CommandPalette({
   const navigate = useNavigate();
   const { roll } = useDice();
   const { t } = useT("navigation");
+  // Search hits carry translation keys resolved at runtime.
+  const tk = t as (key: string, options?: Record<string, unknown>) => string;
   const [term, setTerm] = useState("");
   const [debounced, setDebounced] = useState("");
 

@@ -22,7 +22,7 @@ import { listNotes, type NoteRow } from "@/lib/api";
 import { ASSET_BUCKET, uploadAssetFile } from "@/lib/assets";
 import { listAdaptations } from "@/lib/adaptation/api";
 import { runAdaptationStage } from "@/lib/adaptation/ai.functions";
-import type { StageResult } from "@/lib/adaptation/ai-schemas";
+import { factsSchema } from "@/lib/adaptation/ai-schemas";
 import { CHRONICLE_ITEM_TYPES, type ChronicleItemType } from "@/lib/adaptation/types";
 import {
   addSessionChronicleItems,

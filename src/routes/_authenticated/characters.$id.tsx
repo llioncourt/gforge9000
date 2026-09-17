@@ -303,6 +303,17 @@ function CharacterPage() {
     () => (entriesQuery.data ?? []).map(toEntry),
     [entriesQuery.data],
   );
+  // When the character belongs to a campaign, the campaign's enabled packs are
+  // automatically available on the sheet (unioned with the character's own).
+  const campaignQuery = useQuery({
+    queryKey: ["campaign", form?.campaign_id],
+    queryFn: () => getCampaign(form!.campaign_id!),
+    enabled: !!form?.campaign_id,
+  });
+  const campaignRuleset = useMemo(
+    () => rulesetFromSettings(campaignQuery.data?.settings),
+    [campaignQuery.data],
+  );
   const sheet = useMemo(
     () => (form ? buildSheet(toCharacterRecord(form), entries, campaignRuleset) : null),
     [form, entries, campaignRuleset],
@@ -384,13 +395,6 @@ function CharacterPage() {
   const [pickerKinds, setPickerKinds] = useState<EntryKind[] | null>(null);
   const linkedPacks = form?.packs ?? [];
 
-  // When the character belongs to a campaign, the campaign's enabled packs are
-  // automatically available on the sheet (unioned with the character's own).
-  const campaignQuery = useQuery({
-    queryKey: ["campaign", form?.campaign_id],
-    queryFn: () => getCampaign(form!.campaign_id!),
-    enabled: !!form?.campaign_id,
-  });
   const campaignPacks = useMemo(
     () => allowedPacksOf(campaignQuery.data?.settings),
     [campaignQuery.data],

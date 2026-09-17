@@ -1,0 +1,1 @@
+revoke execute on function public.guard_character_campaign_change() from public, anon, authenticated;

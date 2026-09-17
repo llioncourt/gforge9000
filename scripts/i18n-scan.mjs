@@ -96,8 +96,12 @@ for (const file of walk(srcDir)) {
       const value = match[1];
       if (isTechnical(value)) continue;
       if (!/[a-zA-Z]{3}/.test(value)) continue;
+      // TypeScript generics and destructuring fragments look like JSX text on a single line.
+      if (/(Promise|VariantProps|FieldPath|FieldValues|useState|React\.|=>|&&|\|\||\)\s*$)/.test(value)) continue;
+      if (/^\s*[,&:=|]/.test(value)) continue;
       findings.push({ rel, line: index + 1, kind: "jsx-text", text: value.trim() });
     }
+
 
     // 3. toast / alert messages with literal sentences
     for (const match of line.matchAll(/toast\.\w+\(\s*"([^"]+)"/g)) {

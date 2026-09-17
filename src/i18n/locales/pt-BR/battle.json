@@ -26,7 +26,7 @@
     "gridSquare": "Quadrada",
     "gridHex": "Hexagonal",
     "gridNone": "Nenhuma",
-    "cellSize": "Tamanho da célula (px)",
+    "cellSize": "Tamanho da célula",
     "offset": "Deslocamento X / Y",
     "distancePerCell": "Distância por célula",
     "unit": "Unidade",

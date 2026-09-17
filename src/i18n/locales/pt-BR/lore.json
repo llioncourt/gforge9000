@@ -592,7 +592,7 @@
     },
     "deleteDialog": {
       "title": "Remover este item?",
-      "description": "{{title}} será excluído da biblioteca e do armazenamento. Isso não pode ser desfeito.",
+      "description": "{{title}} será excluído da biblioteca. Isso não pode ser desfeito.",
       "confirm": "Remover"
     },
     "defaultTitle": "Sem título"

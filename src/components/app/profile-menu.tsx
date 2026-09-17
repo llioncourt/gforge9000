@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { LogOut, UserRound } from "lucide-react";
+import { Loader2, LogOut, ShieldAlert, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,9 +22,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { UserAvatar } from "@/components/app/user-avatar";
-import { getProfile, setProfilePreferences, upsertProfile } from "@/lib/api";
+import { getProfile, setProfilePreferences, upsertProfile, wipeAllMyData } from "@/lib/api";
+import { lovable } from "@/integrations/lovable/index";
 import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";

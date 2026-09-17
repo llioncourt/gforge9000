@@ -16,7 +16,6 @@ import { Route as LegalRouteImport } from './routes/legal'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns.index'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
 import { Route as AuthenticatedCharactersIndexRouteImport } from './routes/_authenticated/characters.index'
@@ -58,11 +57,6 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
   id: '/library',
   path: '/library',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCampaignsIndexRoute =
@@ -117,7 +111,6 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
@@ -134,7 +127,6 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
-  '/settings': typeof AuthenticatedSettingsRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
@@ -153,7 +145,6 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/_authenticated/entities/$id': typeof AuthenticatedEntitiesIdRoute
@@ -172,7 +163,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/dashboard'
     | '/library'
-    | '/settings'
     | '/campaigns/$id'
     | '/characters/$id'
     | '/entities/$id'
@@ -189,7 +179,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/dashboard'
     | '/library'
-    | '/settings'
     | '/campaigns/$id'
     | '/characters/$id'
     | '/entities/$id'
@@ -207,7 +196,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/dashboard'
     | '/_authenticated/library'
-    | '/_authenticated/settings'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/characters/$id'
     | '/_authenticated/entities/$id'
@@ -278,13 +266,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLibraryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/campaigns/': {
       id: '/_authenticated/campaigns/'
       path: '/campaigns'
@@ -347,7 +328,6 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
   AuthenticatedCharactersIdRoute: typeof AuthenticatedCharactersIdRoute
   AuthenticatedEntitiesIdRoute: typeof AuthenticatedEntitiesIdRoute
@@ -360,7 +340,6 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
-  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
   AuthenticatedCharactersIdRoute: AuthenticatedCharactersIdRoute,
   AuthenticatedEntitiesIdRoute: AuthenticatedEntitiesIdRoute,

@@ -22,6 +22,7 @@ import {
   getAtPath,
   overridesFromRuleset,
   rulesetFromSettings,
+  setAtPath,
   type RulesetField,
   type RulesetGroup,
 } from "@/rules/campaign-ruleset";
@@ -50,10 +51,10 @@ export function CampaignRules({
   const setField = (field: RulesetField, raw: string | boolean) => {
     const value = coerceFieldValue(field, raw);
     if (value === null && field.kind !== "nullableInteger") return;
-    setRules((prev) => setPath(prev, field.path, value));
+    setRules((prev) => setAtPath(prev, field.path, value));
   };
   const resetField = (field: RulesetField) =>
-    setRules((prev) => setPath(prev, field.path, getAtPath(defaultRuleset, field.path)));
+    setRules((prev) => setAtPath(prev, field.path, getAtPath(defaultRuleset, field.path)));
 
   const byGroup = (group: RulesetGroup) => RULESET_FIELDS.filter((f) => f.group === group);
 
@@ -247,10 +248,4 @@ export function CampaignRules({
       </div>
     </section>
   );
-}
-
-function setPath(source: Ruleset, path: string, value: unknown): Ruleset {
-  // Local re-export keeps the component free of engine imports in JSX paths.
-  const { setAtPath } = require("@/rules/campaign-ruleset") as typeof import("@/rules/campaign-ruleset");
-  return setAtPath(source, path, value);
 }

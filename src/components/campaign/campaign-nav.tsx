@@ -137,7 +137,11 @@ export function CampaignNav({
 }) {
   const { t } = useT("campaigns");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const { groups, standalone } = buildCampaignNavGroups({ t, adaptLabel, isGm });
+  const { groups, standalone } = buildCampaignNavGroups({
+    t: t as unknown as (k: string) => string,
+    adaptLabel,
+    isGm,
+  });
 
   const select = (next: string) => {
     onChange(next);

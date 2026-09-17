@@ -302,7 +302,8 @@ export async function upsertFacts(
   facts: Omit<AdaptationFactRow, "id" | "adaptation_id" | "created_at" | "updated_at" | "reviewed_by" | "reviewed_at">[],
 ): Promise<void> {
   if (!facts.length) return;
-  const rows = facts.map((fact) => ({ ...fact, adaptation_id: adaptationId }));
+  await ensureSession();
+  const rows = dedupeByKey(facts.map((fact) => ({ ...fact, adaptation_id: adaptationId })));
   for (let index = 0; index < rows.length; index += 400) {
     const { error } = await db
       .from("adaptation_facts")
@@ -351,6 +352,7 @@ export async function upsertScenes(
   { preserveManualEdits = true }: { preserveManualEdits?: boolean } = {},
 ): Promise<void> {
   if (!scenes.length) return;
+  await ensureSession();
   let incoming = scenes;
   if (preserveManualEdits) {
     const existing = await listScenes(adaptationId);

@@ -243,6 +243,7 @@ export async function saveScan(
   adaptationId: string,
   snapshot: ScanSnapshot,
 ): Promise<AdaptationSnapshotRow> {
+  await ensureSession();
   await db.from("adaptation_sources").delete().eq("adaptation_id", adaptationId);
   const rows = snapshot.sources.map((source) => ({
     adaptation_id: adaptationId,
@@ -361,7 +362,7 @@ export async function upsertScenes(
     );
     incoming = scenes.filter((scene) => !locked.has(scene.stable_key ?? ""));
   }
-  const rows = incoming.map((scene) => ({ ...scene, adaptation_id: adaptationId }));
+  const rows = dedupeByKey(incoming.map((scene) => ({ ...scene, adaptation_id: adaptationId })));
   for (let index = 0; index < rows.length; index += 200) {
     const { error } = await db
       .from("adaptation_scenes")

@@ -94,7 +94,7 @@ const LOCATION_KEYS = {
   Hands: "hands",
   Legs: "legs",
   Feet: "feet",
-};
+} as const satisfies Record<(typeof LOCATION_VALUES)[number], string>;
 const WEAPON_FIELD_KEYS = [
   ["name", "mode"],
   ["damage", "damage"],

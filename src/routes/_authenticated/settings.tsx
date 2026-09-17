@@ -120,7 +120,7 @@ function SettingsPage() {
             {RULES_AUDIT.map((rule) => (
               <li key={rule.id} className="flex flex-col gap-1 py-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-foreground">{tRules(`audit.${rule.id}.title`)}</span>
+                  <span className="font-medium text-foreground">{tRuleKey(`audit.${rule.id}.title`)}</span>
                   <span
                     className={`rounded px-1.5 py-0.5 text-[11px] uppercase tracking-wide ${
                       rule.status === "EXACT"
@@ -133,7 +133,7 @@ function SettingsPage() {
                     {tRules(`status.${rule.status}`)}
                   </span>
                 </div>
-                <p className="text-muted-foreground">{tRules(`audit.${rule.id}.notes`)}</p>
+                <p className="text-muted-foreground">{tRuleKey(`audit.${rule.id}.notes`)}</p>
               </li>
             ))}
           </ul>
@@ -174,7 +174,7 @@ function SettingsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={wipe.isPending}>{t("common:actions.cancel")}</AlertDialogCancel>
+            <AlertDialogCancel disabled={wipe.isPending}>{tc("actions.cancel")}</AlertDialogCancel>
             {verified ? (
               <AlertDialogAction
                 onClick={(e) => {

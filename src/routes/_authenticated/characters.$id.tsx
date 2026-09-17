@@ -233,7 +233,7 @@ const APPEARANCE_FIELDS = [
   "eyes",
   "handedness",
   "languages_note",
-];
+] as const;
 
 function CharacterPage() {
   const { t } = useT("characters");

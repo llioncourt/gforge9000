@@ -319,6 +319,9 @@ function LibraryPage() {
 
   return (
     <div>
+      <p aria-live="polite" className="sr-only">
+        {foundLabel}
+      </p>
       <PageHeader
         title={t("page.title")}
         description={t("page.description")}

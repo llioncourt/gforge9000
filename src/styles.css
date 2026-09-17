@@ -484,3 +484,10 @@
   }
 }
 
+
+/* Toast close button: always visible */
+[data-sonner-toast] [data-close-button] {
+  opacity: 1 !important;
+  transform: none !important;
+  visibility: visible !important;
+}

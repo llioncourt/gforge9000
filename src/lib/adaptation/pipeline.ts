@@ -257,18 +257,18 @@ function entityIdFor(sourceKey: string | null, snapshot: ScanSnapshot): string |
 }
 
 function sourceRefs(keys: string[], snapshot: ScanSnapshot): SourceRef[] {
-  return keys
-    .map((key) => {
-      const record = snapshot.records[key];
-      if (!record) return null;
-      return {
-        source_type: record.source_type,
-        source_key: key,
-        source_id: record.source_id,
-        label: record.label,
-      } satisfies SourceRef;
-    })
-    .filter((ref): ref is SourceRef => !!ref);
+  const refs: SourceRef[] = [];
+  for (const key of keys) {
+    const record = snapshot.records[key];
+    if (!record) continue;
+    refs.push({
+      source_type: record.source_type,
+      source_key: key,
+      source_id: record.source_id,
+      label: record.label,
+    });
+  }
+  return refs;
 }
 
 export interface PipelineProgress {

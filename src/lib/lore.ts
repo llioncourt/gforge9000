@@ -16,7 +16,7 @@ function unwrap<T>(res: { data: T; error: { message: string } | null }): NonNull
 // GM-only notes and GM-only data keys for non-GM callers.
 // Writes still target the base tables (GM / owner only).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPCs created after types were generated
-const rpc = supabase.rpc as any;
+const rpc = supabase.rpc.bind(supabase) as any;
 
 export async function listEntities(campaignId: string): Promise<EntityRow[]> {
   return unwrap(

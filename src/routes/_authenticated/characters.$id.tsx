@@ -262,6 +262,8 @@ function CharacterPage() {
   const [conditionInput, setConditionInput] = useState("");
   const [saveError, setSaveError] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<VersionRow | null>(null);
+  const [pendingEntryDelete, setPendingEntryDelete] = useState<string | null>(null);
+
   const dirty = useRef(false);
   const exportTask = useTransferTask();
   const printPortraitUrl = usePortraitUrl(form?.portrait_path ?? null);

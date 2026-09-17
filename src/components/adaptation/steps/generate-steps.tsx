@@ -194,9 +194,12 @@ export function GenerateStep({ project, patch, goTo }: StepProps) {
       </header>
 
       {problems.length ? (
-        <p className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-          <AlertTriangle className="h-4 w-4" /> {t("generate.problemsWarning")}
-        </p>
+        <section className="space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
+          <h5 className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
+            <AlertTriangle className="h-4 w-4" /> {t("generate.problemsWarning")}
+          </h5>
+          <ProblemList problems={problems} projectId={project.id} goTo={goTo} />
+        </section>
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-3">

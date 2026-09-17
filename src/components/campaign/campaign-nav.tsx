@@ -64,6 +64,15 @@ export function buildCampaignNavGroups(opts: {
 
   const groups: CampaignNavGroup[] = [
     {
+      id: "cast",
+      label: t("nav.cast"),
+      icon: Users,
+      items: [
+        { value: "roster", label: t("tabs.roster"), icon: UserSquare2 },
+        { value: "members", label: t("tabs.members"), icon: Users },
+      ],
+    },
+    {
       id: "play",
       label: t("nav.play"),
       icon: Dices,
@@ -92,15 +101,6 @@ export function buildCampaignNavGroups(opts: {
         { value: "story", label: t("tabs.story"), icon: Scroll },
         { value: "reveals", label: t("tabs.reveals"), icon: Sparkles },
         { value: "notes", label: t("tabs.notes"), icon: NotebookPen },
-      ],
-    },
-    {
-      id: "cast",
-      label: t("nav.cast"),
-      icon: Users,
-      items: [
-        { value: "roster", label: t("tabs.roster"), icon: UserSquare2 },
-        { value: "members", label: t("tabs.members"), icon: Users },
       ],
     },
     {
@@ -152,26 +152,6 @@ export function CampaignNav({
     <div className={cn("w-full", className)}>
       {/* Desktop */}
       <nav className="hidden items-center gap-1 border-b border-border/60 pb-1 md:flex">
-        {standalone.map((item) => {
-          const active = value === item.value;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.value}
-              type="button"
-              onClick={() => select(item.value)}
-              className={cn(
-                triggerBase,
-                active && "text-foreground after:scale-x-100 bg-accent/40",
-              )}
-              aria-current={active ? "page" : undefined}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </button>
-          );
-        })}
-
         {groups.map((group) => {
           const activeChild = group.items.find((i) => i.value === value);
           const GroupIcon = group.icon;
@@ -221,6 +201,26 @@ export function CampaignNav({
             </DropdownMenu>
           );
         })}
+
+        {standalone.map((item) => {
+          const active = value === item.value;
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => select(item.value)}
+              className={cn(
+                triggerBase,
+                active && "text-foreground after:scale-x-100 bg-accent/40",
+              )}
+              aria-current={active ? "page" : undefined}
+            >
+              <Icon className="h-4 w-4" />
+              {item.label}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Mobile */}
@@ -239,16 +239,6 @@ export function CampaignNav({
               <SheetTitle>{t("nav.menu")}</SheetTitle>
             </SheetHeader>
             <div className="mt-4 space-y-5">
-              <div className="space-y-1">
-                {standalone.map((item) => (
-                  <MobileItem
-                    key={item.value}
-                    item={item}
-                    active={value === item.value}
-                    onSelect={select}
-                  />
-                ))}
-              </div>
               {groups.map((group) => (
                 <div key={group.id} className="space-y-1">
                   <p className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -264,6 +254,16 @@ export function CampaignNav({
                   ))}
                 </div>
               ))}
+              <div className="space-y-1">
+                {standalone.map((item) => (
+                  <MobileItem
+                    key={item.value}
+                    item={item}
+                    active={value === item.value}
+                    onSelect={select}
+                  />
+                ))}
+              </div>
             </div>
           </SheetContent>
         </Sheet>

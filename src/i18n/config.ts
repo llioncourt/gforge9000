@@ -30,8 +30,20 @@ export interface LocaleDefinition {
 export const DEFAULT_LOCALE = "en";
 export const FALLBACK_LOCALE = "en";
 
-/** Development-only locale that highlights untranslated strings. */
+/**
+ * Development-only locale that highlights untranslated strings. It is never
+ * offered in the language selector unless the developer turns it on explicitly
+ * with `VITE_PSEUDO=1 bun run dev`, so it can never appear for a real user.
+ */
 export const PSEUDO_LOCALE = "en-XA";
+
+/**
+ * The single gate for pseudo-localization. Reads build-time constants only, so
+ * the server and the client always agree (no hydration mismatch).
+ */
+export function pseudoEnabled(): boolean {
+  return import.meta.env?.DEV === true && import.meta.env?.VITE_PSEUDO === "1";
+}
 
 export const LOCALES: readonly LocaleDefinition[] = [
   {

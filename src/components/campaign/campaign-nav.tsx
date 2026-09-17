@@ -104,15 +104,6 @@ export function buildCampaignNavGroups(opts: {
       ],
     },
     {
-      id: "cast",
-      label: t("nav.cast"),
-      icon: Users,
-      items: [
-        { value: "roster", label: t("tabs.roster"), icon: UserSquare2 },
-        { value: "members", label: t("tabs.members"), icon: Users },
-      ],
-    },
-    {
       id: "settings",
       label: t("nav.settings"),
       icon: Settings2,

@@ -604,6 +604,7 @@ function EntityPage() {
                     <Link
                       to="/characters/$id"
                       params={{ id: dataValue(form, "character_sheet_id") }}
+                      search={{ from: `entity:${id}` }}
                     >
                       <ExternalLink className="mr-2 size-4" /> Open character sheet
                     </Link>

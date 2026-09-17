@@ -255,7 +255,11 @@ function CampaignPage() {
     onSuccess: (row) => {
       queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
       toast.success("NPC created.");
-      navigate({ to: "/characters/$id", params: { id: row.id } });
+      navigate({
+        to: "/characters/$id",
+        params: { id: row.id },
+        search: { from: `campaign:${id}:${tabParam ?? "roster"}` },
+      });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -555,6 +559,7 @@ function CampaignPage() {
                         <Link
                           to="/characters/$id"
                           params={{ id: c.id }}
+                          search={{ from: `campaign:${id}:${tabParam ?? "roster"}` }}
                           className="font-display font-semibold hover:underline"
                         >
                           {c.name}
@@ -695,7 +700,11 @@ function CampaignPage() {
                           Duplicate
                         </Button>
                         <Button asChild size="sm" variant="ghost">
-                          <Link to="/characters/$id" params={{ id: c.id }}>
+                          <Link
+                            to="/characters/$id"
+                            params={{ id: c.id }}
+                            search={{ from: `campaign:${id}:${tabParam ?? "roster"}` }}
+                          >
                             Open sheet
                           </Link>
                         </Button>

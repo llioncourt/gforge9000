@@ -66,48 +66,62 @@ async function callGateway(stage: AiStage, prompt: string): Promise<string> {
 
   let lastError = "";
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const response = await fetch(GATEWAY, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Lovable-API-Key": apiKey,
-        "X-Lovable-AIG-SDK": "fetch",
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        input: [
-          { role: "system", content: [{ type: "input_text", text: SYSTEM_PROMPT }] },
-          { role: "user", content: [{ type: "input_text", text: prompt }] },
-        ],
-        stream: true,
-        store: false,
-        reasoning: { effort: "low" },
-        text: {
-          format: {
-            type: "json_schema",
-            name: `adaptation_${stage}`,
-            strict: true,
-            schema: STAGE_JSON_SCHEMAS[stage],
-          },
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), STAGE_TIMEOUT_MS);
+    try {
+      const response = await fetch(GATEWAY, {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          "Lovable-API-Key": apiKey,
+          "X-Lovable-AIG-SDK": "fetch",
         },
-      }),
-    });
+        body: JSON.stringify({
+          model: MODEL,
+          input: [
+            { role: "system", content: [{ type: "input_text", text: SYSTEM_PROMPT }] },
+            { role: "user", content: [{ type: "input_text", text: prompt }] },
+          ],
+          stream: true,
+          store: false,
+          reasoning: { effort: "low" },
+          text: {
+            format: {
+              type: "json_schema",
+              name: `adaptation_${stage}`,
+              strict: true,
+              schema: STAGE_JSON_SCHEMAS[stage],
+            },
+          },
+        }),
+      });
 
-    if (!response.ok || !response.body) {
-      const body = await response.text().catch(() => "");
-      const message = gatewayMessage(response.status, body);
-      if (!retryable(response.status) || attempt === MAX_ATTEMPTS) throw new Error(message);
-      lastError = message;
-      await wait(attempt * 1500);
-      continue;
+      if (!response.ok || !response.body) {
+        const body = await response.text().catch(() => "");
+        const message = gatewayMessage(response.status, body);
+        if (!retryable(response.status) || attempt === MAX_ATTEMPTS) throw new Error(message);
+        lastError = message;
+        await wait(attempt * 1500);
+        continue;
+      }
+
+      const text = await readStream(response.body);
+      if (text.trim()) return text;
+      lastError = "The AI returned an empty response.";
+      if (attempt === MAX_ATTEMPTS) throw new Error(lastError);
+      await wait(attempt * 1000);
+    } catch (error) {
+      const aborted = error instanceof Error && error.name === "AbortError";
+      if (!aborted) throw error;
+      lastError = "The AI took too long to answer. Try that step again.";
+      if (attempt === MAX_ATTEMPTS) throw new Error(lastError);
+      await wait(attempt * 1000);
+    } finally {
+      clearTimeout(timer);
     }
-
-    const text = await readStream(response.body);
-    if (text.trim()) return text;
-    lastError = "The AI returned an empty response.";
-    if (attempt === MAX_ATTEMPTS) throw new Error(lastError);
-    await wait(attempt * 1000);
   }
+
   throw new Error(lastError || "The AI request failed.");
 }
 

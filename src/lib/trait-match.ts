@@ -45,14 +45,34 @@ export interface ImportedEntry {
 /** Kinds that come from content packs; equipment/notes are free-form. */
 export const MATCHABLE_KINDS = ["advantage", "disadvantage", "perk", "quirk", "skill", "technique", "spell"];
 
-export function normaliseName(value: string): string {
+function normaliseText(value: string): string {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/\(.*?\)/g, " ")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+/** The bare trait name, with any parenthetical qualifier removed. */
+export function normaliseName(value: string): string {
+  return normaliseText(value.replace(/\(.*?\)/g, " "));
+}
+
+/** The raw text inside parentheses, e.g. "Pistol" in "Guns (Pistol)". */
+export function rawQualifier(value: string): string {
+  const found = [...value.matchAll(/\(([^)]*)\)/g)].map((m) => m[1]!.trim()).filter(Boolean);
+  return found.join(", ");
+}
+
+/**
+ * Specialisation / self-control qualifiers are part of a trait's identity:
+ * `Guns (Pistol)` is not `Guns (Rifle)` and `Bad Temper (12)` is not
+ * `Bad Temper (6)`. They are therefore kept in the match key instead of being
+ * stripped.
+ */
+export function parseTraitName(value: string): { base: string; qualifier: string } {
+  return { base: normaliseName(value), qualifier: normaliseText(rawQualifier(value)) };
 }
 
 /** Library rows the user may actually use, indexed by kind + normalised name. */
@@ -61,7 +81,12 @@ export function buildCatalogue(rows: CatalogueEntry[], allowedPacks: string[]): 
 }
 
 function keyOf(kind: string, name: string): string {
-  return `${kind}::${normaliseName(name)}`;
+  const { base, qualifier } = parseTraitName(name);
+  return qualifier ? `${kind}::${base}::${qualifier}` : `${kind}::${base}`;
+}
+
+function baseKeyOf(kind: string, name: string): string {
+  return `${kind}::${parseTraitName(name).base}`;
 }
 
 export function catalogueIndex(rows: CatalogueEntry[]): Map<string, CatalogueEntry> {
@@ -77,14 +102,24 @@ export function isMatchable(entry: ImportedEntry): boolean {
   return MATCHABLE_KINDS.includes(entry.kind);
 }
 
-/** Deterministic pass: exact or normalised name match inside the same kind. */
+/**
+ * Deterministic pass: exact or normalised name match inside the same kind.
+ * A qualified import may fall back to an unqualified library entry of the same
+ * base name (the specialisation is preserved on apply), but never to a library
+ * entry carrying a *different* qualifier.
+ */
 export function matchLocally(
   entry: ImportedEntry,
   index: Map<string, CatalogueEntry>,
 ): CatalogueEntry | null {
   if (!isMatchable(entry)) return null;
-  return index.get(keyOf(entry.kind, entry.name)) ?? null;
+  const exact = index.get(keyOf(entry.kind, entry.name));
+  if (exact) return exact;
+  const { qualifier } = parseTraitName(entry.name);
+  if (!qualifier) return null;
+  return index.get(baseKeyOf(entry.kind, entry.name)) ?? null;
 }
+
 
 export interface UnmatchedItem {
   kind: string;
@@ -181,22 +216,33 @@ export function applyCatalogue(entry: ImportedEntry, target: CatalogueEntry): Im
       : perLevel
         ? base + perLevel * (levels - 1)
         : base;
+  // A specialisation the library entry does not carry must survive the rewrite.
+  const importedQualifier = rawQualifier(entry.name);
+  const name =
+    importedQualifier && !rawQualifier(target.name)
+      ? `${target.name} (${importedQualifier})`
+      : target.name;
+  const specialization =
+    importedQualifier && (entry.data?.['specialization'] ?? "") === ""
+      ? { specialization: importedQualifier }
+      : {};
   return {
     ...entry,
-    name: target.name,
+    name,
     category: target.category ?? entry.category ?? null,
     points,
-    data: { ...(target.data ?? {}), ...(entry.data ?? {}) },
+    data: { ...(target.data ?? {}), ...(entry.data ?? {}), ...specialization },
     source: {
       label: target.source_label ?? "Library",
       edition: target.source_edition ?? "",
       page: target.source_page ?? "",
       type: target.source_type ?? "user",
       pack: target.pack ?? null,
-      imported_as: entry.name !== target.name ? entry.name : undefined,
+      imported_as: entry.name !== name ? entry.name : undefined,
     },
   };
 }
+
 
 export interface ReconcileResult {
   entries: ImportedEntry[];

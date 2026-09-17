@@ -162,6 +162,11 @@ export async function buildCampaignPackageZip(
     settings.allowed_sources = (rawSettings["allowed_sources"] as unknown[]).filter(
       (value): value is string => typeof value === "string",
     );
+  if (Array.isArray(rawSettings["allowed_packs"]))
+    settings.allowed_packs = (rawSettings["allowed_packs"] as unknown[]).filter(
+      (value): value is string => typeof value === "string",
+    );
+
 
   // --- characters -----------------------------------------------------------
   step("Exporting characters…");
@@ -263,6 +268,11 @@ export async function buildCampaignPackageZip(
       ...(image ? { file: image } : {}),
       objects: objects.map((object) => {
         const characterKey = object.character_id ? characterKeyById.get(object.character_id) : undefined;
+        const data = (object.data ?? {}) as Record<string, unknown>;
+        // Tokens pinned to a lore entry keep that link across the round trip.
+        const entityId = typeof data["entity_id"] === "string" ? data["entity_id"] : undefined;
+        const entityKey = entityId ? entityKeyById.get(entityId) : undefined;
+        const { entity_id: _dropped, ...restData } = data;
         return {
           kind: object.kind,
           label: object.label,
@@ -272,10 +282,12 @@ export async function buildCampaignPackageZip(
           rotation: object.rotation,
           color: object.color,
           hidden: object.hidden,
-          data: (object.data ?? {}) as Record<string, unknown>,
+          data: restData,
           ...(characterKey ? { character_key: characterKey } : {}),
+          ...(entityKey ? { entity_key: entityKey } : {}),
         };
       }),
+
     });
     tick();
   }

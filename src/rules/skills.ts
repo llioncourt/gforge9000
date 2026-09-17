@@ -141,11 +141,22 @@ export function skillLevel(
   }
 
   const bought = attributeValue(attr, stats) + rel + bonus;
-  // A purchased skill is never worse than its best default.
-  const effective = fallback ? Math.max(bought, fallback.level + bonus) : bought;
+  // A purchased skill is never worse than its best default. When the default
+  // wins, every reported field must describe the winning value.
+  const defaultLevel = fallback ? fallback.level + bonus : null;
+  if (fallback && defaultLevel !== null && defaultLevel > bought) {
+    return {
+      relative: defaultLevel - bonus - attributeValue(attr, stats),
+      effective: defaultLevel,
+      label: `default ${fallback.from.from}${fallback.from.penalty ? fallback.from.penalty : ""}`,
+      fromDefault: true,
+      defaultFrom: fallback.from.from,
+    };
+  }
   const relText = rel >= 0 ? `+${rel}` : `${rel}`;
-  return { relative: rel, effective, label: `${attr}${relText}`, fromDefault: false, defaultFrom: null };
+  return { relative: rel, effective: bought, label: `${attr}${relText}`, fromDefault: false, defaultFrom: null };
 }
+
 
 /** Points needed to reach a target relative level (inverse of relativeLevel). */
 export function pointsForRelativeLevel(
@@ -177,6 +188,13 @@ export interface TechniqueLevel {
   levels: number;
   effective: number | null;
   capped: boolean;
+  /**
+   * True when the entry declares no default penalty. The cap on bought levels
+   * is derived from that penalty, so without it the cap is UNKNOWN — the
+   * engine does not invent one and the UI must not present the level as capped
+   * or verified.
+   */
+  penaltyUnknown: boolean;
   label: string;
 }
 
@@ -187,7 +205,10 @@ export function techniqueLevel(
 ): TechniqueLevel {
   const difficulty = (entry.data.difficulty as Difficulty) ?? "A";
   const points = Number(entry.data.points ?? entry.points ?? 0);
-  const penalty = Number(entry.data.defaultPenalty ?? 0);
+  const declared = entry.data['defaultPenalty'];
+  const penaltyUnknown =
+    declared === undefined || declared === null || !Number.isFinite(Number(declared));
+  const penalty = penaltyUnknown ? 0 : Number(declared);
   const raw = techniqueLevels(points, difficulty, rules);
   const maxLevels = penalty < 0 ? Math.abs(penalty) : raw;
   const levels = Math.min(raw, maxLevels);
@@ -196,6 +217,8 @@ export function techniqueLevel(
     levels,
     effective,
     capped: raw > levels,
+    penaltyUnknown,
     label: `${entry.data.baseSkill ?? "base"}${penalty ? penalty : ""}${levels ? `+${levels}` : ""}`,
   };
 }
+

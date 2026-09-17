@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { CharacterEntry, CharacterRecord, CharacterSheet } from "@/rules";
 
 /**
@@ -13,6 +14,56 @@ export interface PortableCharacter {
   entries: Omit<CharacterEntry, "id" | "character_id">[];
 }
 
+export const PORTABLE_CHARACTER_VERSION = 1;
+
+const numberish = z.union([z.number(), z.string()]).transform((v) => {
+  const n = Number(v);
+  if (!Number.isFinite(n)) throw new Error("Expected a number.");
+  return n;
+});
+
+const characterSchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().min(1, "Character name is missing."),
+    point_budget: numberish.default(0),
+    tech_level: numberish.default(0),
+    st: numberish.default(10),
+    dx: numberish.default(10),
+    iq: numberish.default(10),
+    ht: numberish.default(10),
+    hp_delta: numberish.default(0),
+    will_delta: numberish.default(0),
+    per_delta: numberish.default(0),
+    fp_delta: numberish.default(0),
+    speed_delta: numberish.default(0),
+    move_delta: numberish.default(0),
+    conditions: z.array(z.string()).default([]),
+    wealth: z.string().default("Average"),
+    status: numberish.default(0),
+  })
+  .passthrough();
+
+const entrySchema = z
+  .object({
+    kind: z.string().min(1, "An entry is missing its kind."),
+    name: z.string().min(1, "An entry is missing its name."),
+    category: z.string().nullish(),
+    points: numberish.default(0),
+    levels: numberish.default(1),
+    notes: z.string().nullish(),
+    data: z.record(z.string(), z.unknown()).default({}),
+  })
+  .passthrough();
+
+export const portableCharacterSchema = z.object({
+  format: z.literal("universal-character-forge"),
+  version: z.literal(PORTABLE_CHARACTER_VERSION),
+  exported_at: z.string().default(""),
+  character: characterSchema,
+  entries: z.array(entrySchema).default([]),
+});
+
 export function toPortable(
   character: CharacterRecord,
   entries: CharacterEntry[],
@@ -26,13 +77,36 @@ export function toPortable(
   };
 }
 
+/**
+ * Parses and validates a character file. Structure, format marker and version
+ * are all checked before anything reaches the database; unknown top-level
+ * fields are rejected rather than written blindly.
+ */
 export function parsePortable(raw: string): PortableCharacter {
-  const parsed = JSON.parse(raw) as PortableCharacter;
-  if (parsed.format !== "universal-character-forge") {
+  let json: unknown;
+  try {
+    json = JSON.parse(raw);
+  } catch {
+    throw new Error("That file is not valid JSON.");
+  }
+  const shape = json as { format?: unknown; version?: unknown };
+  if (shape?.format !== "universal-character-forge") {
     throw new Error("Unrecognised file. Expected a Universal Character Forge export.");
   }
-  return parsed;
+  if (shape.version !== PORTABLE_CHARACTER_VERSION) {
+    throw new Error(
+      `This file was made with a different version of the character format (version ${String(shape.version)}).`,
+    );
+  }
+  const result = portableCharacterSchema.safeParse(json);
+  if (!result.success) {
+    const first = result.error.issues[0];
+    const where = first?.path.length ? ` (${first.path.join(".")})` : "";
+    throw new Error(`This character file is not valid${where}: ${first?.message ?? "unknown problem"}`);
+  }
+  return result.data as unknown as PortableCharacter;
 }
+
 
 export function download(filename: string, contents: string, mime = "application/json") {
   const blob = new Blob([contents], { type: mime });

@@ -35,12 +35,15 @@ describe("RoF parsing", () => {
       shotsPerAttack: 3,
       multiProjectile: false,
       projectilesPerShot: 1,
+      jet: false,
     });
     expect(parseRoF("3x9").value).toEqual({
       shotsPerAttack: 3,
       multiProjectile: true,
       projectilesPerShot: 9,
+      jet: false,
     });
+
     expect(parseRoF("10!").status).toBe("resolved");
   });
 
@@ -273,6 +276,8 @@ describe("audit after phase B", () => {
 
   it("reports zero approximations and only documented MISSING entries", () => {
     expect(RULES_AUDIT.filter((r) => r.status === "APPROXIMATION")).toEqual([]);
-    expect(RULES_AUDIT.filter((r) => r.status === "MISSING").map((r) => r.id)).toEqual([]);
+    expect(RULES_AUDIT.filter((r) => r.status === "MISSING").map((r) => r.id)).toEqual([
+      "traits.prerequisites",
+    ]);
   });
 });

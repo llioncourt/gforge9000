@@ -193,7 +193,7 @@ export function SessionChroniclePanel({ campaignId, isGm }: { campaignId: string
           chunk_total: 1,
         },
       })) as { result: string };
-      const parsed = JSON.parse(response.result) as StageResult<"facts">;
+      const parsed = factsSchema.parse(JSON.parse(response.result));
       const existing = items.data ?? [];
       const nextSequence = existing.length
         ? Math.max(...existing.map((i) => i.sequence_no)) + 1
@@ -222,8 +222,6 @@ export function SessionChroniclePanel({ campaignId, isGm }: { campaignId: string
     onError: (e: Error) => toast.error(e.message),
   });
 
-  if (!isGm) return null;
-
   const noteById = (id: string | null): NoteRow | null =>
     id ? (notes.data ?? []).find((n) => n.id === id) ?? null : null;
 
@@ -233,6 +231,10 @@ export function SessionChroniclePanel({ campaignId, isGm }: { campaignId: string
     for (const item of items.data ?? []) map.get(item.item_type)?.push(item);
     return map;
   }, [items.data]);
+
+  // Every hook above runs unconditionally; the GM check gates rendering only.
+  if (!isGm) return null;
+
 
   return (
     <div className="space-y-6">

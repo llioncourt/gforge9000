@@ -592,7 +592,7 @@
     },
     "deleteDialog": {
       "title": "Remove this item?",
-      "description": "{{title}} will be deleted from the library and from storage. This cannot be undone.",
+      "description": "{{title}} will be deleted from the library. This cannot be undone.",
       "confirm": "Remove"
     },
     "defaultTitle": "Untitled"
@@ -684,7 +684,7 @@
       "dropNew": "Drop a new image, or click to browse",
       "uploading": "Uploading image…",
       "dropNewOf": "Drop an image of {{name}}, or click to browse",
-      "hint": "PNG, JPEG, WebP, GIF or AVIF up to 5 MB",
+      "hint": "Image up to 5 MB",
       "removeImage": "Remove image",
       "openCharacterSheet": "Open character sheet",
       "inheritedNote": "Showing the linked character sheet portrait. Drop an image to override it.",

@@ -43,7 +43,7 @@
       "title": "Importar personagem",
       "description": "Solte uma exportação JSON do Universal Character Forge.",
       "label": "Solte o JSON do personagem aqui, ou clique para procurar",
-      "hint": "Exportações produzidas por este app ou convertidas com o guia de IA",
+      "hint": "Arquivos exportados deste app, ou preparados com o guia de IA",
       "readingFile": "Lendo arquivo…",
       "creatingCharacter": "Criando personagem…",
       "matchingTraits": "Comparando características com seu conteúdo…",
@@ -495,7 +495,7 @@
     "portrait": {
       "alt": "Retrato de {{name}}",
       "uploadLabel": "Enviar retrato",
-      "uploadHint": "PNG, JPEG, WebP, GIF ou AVIF · até 5 MB · exibido em 3:4",
+      "uploadHint": "Imagem de até 5 MB · exibida em 3:4",
       "privateHint": "Privado para sua conta",
       "updated": "Retrato atualizado.",
       "removed": "Retrato removido."

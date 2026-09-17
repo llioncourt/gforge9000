@@ -43,7 +43,7 @@
       "title": "Import character",
       "description": "Drop a Universal Character Forge JSON export.",
       "label": "Drop the character JSON here, or click to browse",
-      "hint": "Exports produced by this app or converted with the AI guide",
+      "hint": "Files exported from this app, or prepared with the AI guide",
       "readingFile": "Reading file…",
       "creatingCharacter": "Creating character…",
       "matchingTraits": "Matching traits against your content…",
@@ -495,7 +495,7 @@
     "portrait": {
       "alt": "Portrait of {{name}}",
       "uploadLabel": "Upload portrait",
-      "uploadHint": "PNG, JPEG, WebP, GIF or AVIF · up to 5 MB · shown as 3:4",
+      "uploadHint": "Image up to 5 MB · shown as 3:4",
       "privateHint": "Private to your account",
       "updated": "Portrait updated.",
       "removed": "Portrait removed."

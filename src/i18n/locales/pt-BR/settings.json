@@ -1,4 +1,8 @@
 {
+  "meta": {
+    "title": "Configurações — Universal Character Forge",
+    "description": "Status das regras e controles de dados da conta."
+  },
   "page": {
     "title": "Configurações",
     "description": "Status das regras e controles de dados da conta."

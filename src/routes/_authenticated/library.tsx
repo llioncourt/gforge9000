@@ -61,6 +61,7 @@ import {
 } from "@/lib/portable";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
+import { metaText } from "@/i18n/meta";
 
 const KINDS = [
   "advantage",
@@ -82,14 +83,13 @@ export const Route = createFileRoute("/_authenticated/library")({
     typeof search['item'] === "string" ? { item: search['item'] } : {},
   head: () => ({
     meta: [
-      { title: "Library — Universal Character Forge" },
+      { title: metaText("library", "meta.title") },
       {
         name: "description",
-        content:
-          "Custom traits, skills and equipment you can reuse across characters and campaigns.",
+        content: metaText("library", "meta.description"),
       },
-      { property: "og:title", content: "Library — Universal Character Forge" },
-      { property: "og:description", content: "Reusable custom content with source provenance." },
+      { property: "og:title", content: metaText("library", "meta.title") },
+      { property: "og:description", content: metaText("library", "meta.ogDescription") },
     ],
   }),
   component: LibraryPage,

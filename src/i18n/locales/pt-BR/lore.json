@@ -1,4 +1,9 @@
 {
+  "meta": {
+    "entityTitle": "Entrada de lore — Universal Character Forge",
+    "entityDescription": "Edite uma entrada de lore da campanha: descrição, segredos, relacionamentos e revelações.",
+    "entityOgDescription": "Registro do mundo e da história da campanha."
+  },
   "kinds": {
     "NPC": {
       "label": "PNJ",

@@ -9,18 +9,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { createCharacter, listCampaigns, listCharacters, listLibrary, listRolls } from "@/lib/api";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
 import { useT } from "@/i18n/hooks";
+import { metaText } from "@/i18n/meta";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Dashboard — Universal Character Forge" },
+      { title: metaText("dashboard", "meta.title") },
       {
         name: "description",
-        content: "Your characters, campaigns, library entries and recent rolls in one place.",
+        content: metaText("dashboard", "meta.description"),
       },
-      { property: "og:title", content: "Dashboard — Universal Character Forge" },
-      { property: "og:description", content: "Characters, campaigns and recent rolls." },
+      { property: "og:title", content: metaText("dashboard", "meta.title") },
+      { property: "og:description", content: metaText("dashboard", "meta.ogDescription") },
     ],
   }),
   component: Dashboard,

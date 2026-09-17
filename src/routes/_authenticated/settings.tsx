@@ -20,6 +20,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/hooks/use-session";
 import { AUDIT_SUMMARY, RULES_AUDIT } from "@/rules/audit";
 import { useT } from "@/i18n/hooks";
+import { metaText } from "@/i18n/meta";
 import { LanguageSelector } from "@/components/app/language-selector";
 
 const WIPE_INTENT_KEY = "ucf:wipe-intent";
@@ -29,10 +30,10 @@ export const Route = createFileRoute("/_authenticated/settings")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Settings — Universal Character Forge" },
-      { name: "description", content: "Rules status and account data controls." },
-      { property: "og:title", content: "Settings — Universal Character Forge" },
-      { property: "og:description", content: "Rules status and account data controls." },
+      { title: metaText("settings", "meta.title") },
+      { name: "description", content: metaText("settings", "meta.description") },
+      { property: "og:title", content: metaText("settings", "meta.title") },
+      { property: "og:description", content: metaText("settings", "meta.description") },
     ],
   }),
   component: SettingsPage,

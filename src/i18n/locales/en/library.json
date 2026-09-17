@@ -1,4 +1,9 @@
 {
+  "meta": {
+    "title": "Library — Universal Character Forge",
+    "description": "Custom traits, skills and equipment you can reuse across characters and campaigns.",
+    "ogDescription": "Reusable custom content with source provenance."
+  },
   "page": {
     "title": "Library",
     "description": "Your own traits, skills and gear, grouped into content packs with full provenance."

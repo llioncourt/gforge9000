@@ -67,6 +67,7 @@ import { LibraryImagePicker } from "@/components/lore/library-image-picker";
 import { entityImageUrl } from "@/lib/entity-image";
 import { portraitInitials, removePortrait, uploadPortrait } from "@/lib/portrait";
 import { useT, useFormatters } from "@/i18n/hooks";
+import { metaText } from "@/i18n/meta";
 
 export const Route = createFileRoute("/_authenticated/entities/$id")({
   staticData: { sitemap: false },
@@ -76,13 +77,13 @@ export const Route = createFileRoute("/_authenticated/entities/$id")({
   },
   head: () => ({
     meta: [
-      { title: "Lore entry — Universal Character Forge" },
+      { title: metaText("lore", "meta.entityTitle") },
       {
         name: "description",
-        content: "Edit a campaign lore entry: description, secrets, relationships and reveals.",
+        content: metaText("lore", "meta.entityDescription"),
       },
-      { property: "og:title", content: "Lore entry — Universal Character Forge" },
-      { property: "og:description", content: "Campaign world and story record." },
+      { property: "og:title", content: metaText("lore", "meta.entityTitle") },
+      { property: "og:description", content: metaText("lore", "meta.entityOgDescription") },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

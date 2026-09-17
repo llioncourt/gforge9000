@@ -37,19 +37,20 @@ import { CAMPAIGN_COVER_SETTING } from "@/lib/campaign-cover";
 import { CampaignPackageImport } from "@/components/campaign/campaign-package-import";
 import { Progress } from "@/components/ui/progress";
 import { buildCampaignPackageZip, type CampaignExportStep } from "@/lib/campaign-package-export";
+import { metaText } from "@/i18n/meta";
 
 
 export const Route = createFileRoute("/_authenticated/campaigns/")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Campaigns — Universal Character Forge" },
+      { title: metaText("campaigns", "meta.listTitle") },
       {
         name: "description",
-        content: "Run or join campaigns with invite codes, rosters, house rules and shared notes.",
+        content: metaText("campaigns", "meta.listDescription"),
       },
-      { property: "og:title", content: "Campaigns — Universal Character Forge" },
-      { property: "og:description", content: "Rosters, invite codes and shared notes." },
+      { property: "og:title", content: metaText("campaigns", "meta.listTitle") },
+      { property: "og:description", content: metaText("campaigns", "meta.listOgDescription") },
     ],
   }),
   component: CampaignsPage,

@@ -1,4 +1,9 @@
 {
+  "meta": {
+    "title": "Painel — Universal Character Forge",
+    "description": "Seus personagens, campanhas, itens da biblioteca e rolagens recentes em um só lugar.",
+    "ogDescription": "Personagens, campanhas e rolagens recentes."
+  },
   "page": {
     "title": "Painel",
     "description": "Tudo o que está na sua mesa agora.",

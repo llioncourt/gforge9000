@@ -1,4 +1,9 @@
 {
+  "meta": {
+    "title": "Dashboard — Universal Character Forge",
+    "description": "Your characters, campaigns, library entries and recent rolls in one place.",
+    "ogDescription": "Characters, campaigns and recent rolls."
+  },
   "page": {
     "title": "Dashboard",
     "description": "Everything on your table right now.",

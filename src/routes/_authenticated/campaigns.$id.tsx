@@ -76,6 +76,7 @@ import {
   removeCampaignCoverFile,
   uploadCampaignCover,
 } from "@/lib/campaign-cover";
+import { metaText } from "@/i18n/meta";
 
 // Heavy campaign tabs load on demand — the campaign page ships a much
 // smaller first bundle and each panel is fetched only when its tab opens.
@@ -157,9 +158,8 @@ export const Route = createFileRoute("/_authenticated/campaigns/$id")({
     return out;
   },
   head: ({ params }) => {
-    const title = `Campaign ${params.id.slice(0, 8)} — Universal Character Forge`;
-    const description =
-      "Roster, GM tools, shared notes and house rules for this campaign.";
+    const title = metaText("campaigns", "meta.detailTitle", { id: params.id.slice(0, 8) });
+    const description = metaText("campaigns", "meta.detailDescription");
     return {
       meta: [
         { title },

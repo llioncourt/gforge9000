@@ -44,6 +44,7 @@ import { parsePortable } from "@/lib/portable";
 import { reconcileImportedEntries } from "@/lib/import-reconcile";
 import type { ImportedEntry } from "@/lib/trait-match";
 import { ImportDialog } from "@/components/ui/transfer-dialog";
+import { metaText } from "@/i18n/meta";
 
 import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 
@@ -51,13 +52,13 @@ export const Route = createFileRoute("/_authenticated/characters/")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Characters — Universal Character Forge" },
+      { title: metaText("characters", "meta.listTitle") },
       {
         name: "description",
-        content: "All your player characters and NPCs with point budgets and tech levels.",
+        content: metaText("characters", "meta.listDescription"),
       },
-      { property: "og:title", content: "Characters — Universal Character Forge" },
-      { property: "og:description", content: "Browse, import and create characters." },
+      { property: "og:title", content: metaText("characters", "meta.listTitle") },
+      { property: "og:description", content: metaText("characters", "meta.listOgDescription") },
     ],
   }),
   component: CharactersPage,

@@ -1,4 +1,9 @@
 {
+  "meta": {
+    "entityTitle": "Lore entry — Universal Character Forge",
+    "entityDescription": "Edit a campaign lore entry: description, secrets, relationships and reveals.",
+    "entityOgDescription": "Campaign world and story record."
+  },
   "kinds": {
     "NPC": {
       "label": "NPC",

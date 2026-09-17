@@ -1,4 +1,12 @@
 {
+  "meta": {
+    "indexTitle": "Content packs — Universal Character Forge",
+    "indexDescription": "Curate, import and share content packs of traits, skills and gear, and enable them per campaign.",
+    "indexOgDescription": "Group your library into packs and enable them for the campaigns you run.",
+    "detailTitle": "Pack detail — Universal Character Forge",
+    "detailDescription": "Every entry in this content pack, grouped by kind, with provenance and campaign use.",
+    "detailOgDescription": "Curate a content pack and enable it per campaign."
+  },
   "page": {
     "title": "Packs",
     "description": "Content packs group your library into reusable sets you can curate, share and enable per campaign.",

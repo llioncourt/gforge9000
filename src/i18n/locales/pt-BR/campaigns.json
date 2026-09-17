@@ -1,4 +1,11 @@
 {
+  "meta": {
+    "listTitle": "Campanhas — Universal Character Forge",
+    "listDescription": "Conduza ou participe de campanhas com códigos de convite, elenco de personagens, regras da casa e notas compartilhadas.",
+    "listOgDescription": "Elenco de personagens, códigos de convite e notas compartilhadas.",
+    "detailTitle": "Campanha {{id}} — Universal Character Forge",
+    "detailDescription": "Elenco de personagens, ferramentas de mestre, notas compartilhadas e regras da casa para esta campanha."
+  },
   "page": {
     "fallbackTitle": "Campanha",
     "renameAria": "Renomear campanha",

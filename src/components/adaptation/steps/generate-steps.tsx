@@ -148,7 +148,7 @@ export function ValidationStep({ project, goTo }: StepProps) {
   );
 }
 
-export function GenerateStep({ project, patch }: StepProps) {
+export function GenerateStep({ project, patch, goTo }: StepProps) {
   const { t } = useT("adaptation");
   const { problems } = useProblems(project.id, project);
   const [running, setRunning] = useState<string | null>(null);

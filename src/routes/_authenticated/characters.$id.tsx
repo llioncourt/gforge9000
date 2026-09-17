@@ -1295,6 +1295,32 @@ function CharacterPage() {
           </AlertDialogContent>
         </AlertDialog>
 
+        <AlertDialog
+          open={!!pendingEntryDelete}
+          onOpenChange={(v) => !v && setPendingEntryDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("sheet.deleteEntryTitle")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("sheet.deleteEntryDescription")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (pendingEntryDelete) removeEntry.mutate(pendingEntryDelete);
+                  setPendingEntryDelete(null);
+                }}
+              >
+                {tc("actions.delete")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+
         <EntryDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}

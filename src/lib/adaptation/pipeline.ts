@@ -302,6 +302,9 @@ export interface PipelineProgress {
   chunk: number;
   chunks: number;
   label: string;
+  /** Batches finished so far and the total planned, for a truthful bar. */
+  done: number;
+  total: number;
 }
 
 export interface ReconstructionResult {

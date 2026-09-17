@@ -22,6 +22,8 @@ export interface StepProps {
   project: AdaptationProject;
   patch: (patch: Partial<AdaptationProject>) => Promise<void>;
   patchCreative: (patch: CreativeSettings) => Promise<void>;
+  /** Lets a step send the user straight to the place that fixes an issue. */
+  goTo: (step: WizardStep) => void;
 }
 
 export function AdaptationWizard({

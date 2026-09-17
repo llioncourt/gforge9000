@@ -31,13 +31,13 @@ const STAGE_PROMPTS: Record<AiStage, string> = {
   digest:
     "Summarise the source records below into a short digest: what the story is about, the live threads, and what is still unanswered.",
   facts:
-    "Extract discrete, checkable facts from the source records. One statement per fact. Tag provenance_type as campaign_canon when a campaign record states it outright, session_derived when it comes from a played session, and ai_inference when you are inferring it. Set confidence honestly.",
+    "Extract discrete, checkable facts from the source records. One statement per fact. Return at most 40 facts, choosing the most significant ones. Tag provenance_type as campaign_canon when a campaign record states it outright, session_derived when it comes from a played session, and ai_inference when you are inferring it. Set confidence honestly.",
   conflicts:
     "Find statements in the material below that contradict one another. Report each conflict with the statements involved and the sources behind them. Do not resolve them.",
   chronology:
     "Put the listed happenings into the order they occurred in the story world. Mark certainty honestly; use \"unknown\" when the sources do not say.",
   scenes:
-    "Turn the material into adapted scenes for a visual retelling: title, synopsis, dramatic goal, beats, dialogue and narration. Keep the cast, location and props limited to names present in the material. Cite source_keys for every scene.",
+    "Turn the material into adapted scenes for a visual retelling: title, synopsis, dramatic goal, beats, dialogue and narration. Return at most 8 scenes. Keep the cast, location and props limited to names present in the material. Cite source_keys for every scene.",
   enrichment:
     "Suggest purely presentational additions (wardrobe, set dressing, transitions, motifs) that make the scenes filmable, plus a story bible. These are inventions for the adaptation, not campaign facts.",
   impact:

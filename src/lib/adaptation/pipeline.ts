@@ -14,7 +14,33 @@ import { allowedBySpoilerPolicy } from "@/lib/adaptation/spoilers";
  * server function.
  */
 
-export const DEFAULT_CHUNK_CHARS = 60_000;
+/**
+ * Small batches on purpose: one oversized batch keeps a single request open for
+ * many minutes, which reads as a run that never ends. Several small batches run
+ * side by side instead.
+ */
+export const DEFAULT_CHUNK_CHARS = 12_000;
+
+/** How many batches are sent at the same time. */
+export const CHUNK_CONCURRENCY = 3;
+
+/** Runs tasks with a bounded number in flight, preserving result order. */
+async function mapWithLimit<T, R>(
+  items: T[],
+  limit: number,
+  task: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor++;
+      results[index] = await task(items[index] as T, index);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
 
 export interface ContextChunk {
   index: number;
@@ -276,6 +302,9 @@ export interface PipelineProgress {
   chunk: number;
   chunks: number;
   label: string;
+  /** Batches finished so far and the total planned, for a truthful bar. */
+  done: number;
+  total: number;
 }
 
 export interface ReconstructionResult {
@@ -307,13 +336,17 @@ export async function runReconstruction(
     failures: [],
   };
 
+  // digest + facts, conflicts, chronology + scenes, enrichment + impact.
+  const total = chunks.length * 4 + 3;
+  let done = 0;
+
   const call = async <S extends AiStage>(
     stage: S,
     context: string,
     chunkIndex: number,
     chunkTotal: number,
   ): Promise<StageResult<S> | null> => {
-    onProgress?.({ stage, chunk: chunkIndex + 1, chunks: chunkTotal, label: stage });
+    onProgress?.({ stage, chunk: chunkIndex + 1, chunks: chunkTotal, label: stage, done, total });
     try {
       const response = (await runAdaptationStage({
         data: {
@@ -329,15 +362,21 @@ export async function runReconstruction(
     } catch (error) {
       out.failures.push({ stage, chunk: chunkIndex, message: (error as Error).message });
       return null;
+    } finally {
+      done += 1;
+      onProgress?.({ stage, chunk: chunkIndex + 1, chunks: chunkTotal, label: stage, done, total });
     }
   };
 
-  // A. digest + B. fact extraction, per chunk.
-  for (const chunk of chunks) {
+  // A. digest + B. fact extraction, several batches at a time.
+  const extracted = await mapWithLimit(chunks, CHUNK_CONCURRENCY, async (chunk) => {
     const digest = await call("digest", chunk.text, chunk.index, chunk.total);
-    if (digest) out.digest.push(digest);
     const facts = await call("facts", chunk.text, chunk.index, chunk.total);
-    if (facts) out.facts.push(...toDraftFacts(facts, snapshot));
+    return { digest, facts };
+  });
+  for (const entry of extracted) {
+    if (entry.digest) out.digest.push(entry.digest);
+    if (entry.facts) out.facts.push(...toDraftFacts(entry.facts, snapshot));
   }
 
   // C. conflict detection over the extracted facts.
@@ -345,21 +384,24 @@ export async function runReconstruction(
     const statements = out.facts.map((fact) => `- ${fact.statement}`).join("\n");
     const conflicts = await call("conflicts", statements, 0, 1);
     if (conflicts) out.facts = applyConflicts(out.facts, conflicts);
+  } else {
+    done += 1;
   }
 
-  // D. chronology + E. scene reconstruction.
-  let offset = 0;
-  for (const chunk of chunks) {
+  // D. chronology + E. scene reconstruction, several batches at a time.
+  const staged = await mapWithLimit(chunks, CHUNK_CONCURRENCY, async (chunk) => {
     const chronology = await call("chronology", chunk.text, chunk.index, chunk.total);
     const context = chronology
       ? `${chunk.text}\n\n--- SUGGESTED ORDER ---\n${JSON.stringify(chronology.ordered)}`
       : chunk.text;
-    const scenes = await call("scenes", context, chunk.index, chunk.total);
-    if (scenes) {
-      const drafts = toDraftScenes(scenes, snapshot, offset);
-      offset += drafts.length;
-      out.scenes.push(...drafts);
-    }
+    return call("scenes", context, chunk.index, chunk.total);
+  });
+  let offset = 0;
+  for (const scenes of staged) {
+    if (!scenes) continue;
+    const drafts = toDraftScenes(scenes, snapshot, offset);
+    offset += drafts.length;
+    out.scenes.push(...drafts);
   }
 
   // F. enrichment + G. impact map.
@@ -367,9 +409,16 @@ export async function runReconstruction(
     const outline = out.scenes
       .map((scene) => `${scene.sequence_no}. ${scene.title} — ${scene.synopsis}`)
       .join("\n");
-    out.enrichment = await call("enrichment", outline, 0, 1);
-    out.impact = await call("impact", outline, 0, 1);
+    const [enrichment, impact] = await Promise.all([
+      call("enrichment", outline, 0, 1),
+      call("impact", outline, 0, 1),
+    ]);
+    out.enrichment = enrichment;
+    out.impact = impact;
+  } else {
+    done += 2;
   }
 
+  onProgress?.({ stage: "impact", chunk: 1, chunks: 1, label: "impact", done: total, total });
   return out;
 }

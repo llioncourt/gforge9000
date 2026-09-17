@@ -38,7 +38,7 @@ export function ReconstructionStep({ project, patch }: StepProps) {
         (value) =>
           setProgress({
             label: value.label,
-            percent: Math.round((value.chunk / Math.max(1, value.chunks)) * 100),
+            percent: Math.min(100, Math.round((value.done / Math.max(1, value.total)) * 100)),
           }),
       );
 

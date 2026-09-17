@@ -10,7 +10,9 @@ import { KINDS } from "@/lib/entity-kinds";
 
 function databaseKeyMap(): Record<string, string[]> {
   const dir = "supabase/migrations";
-  const files = readdirSync(dir).filter((f) => f.endsWith(".sql")).sort();
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
   let latest: Record<string, string[]> | null = null;
   for (const file of files) {
     const sql = readFileSync(join(dir, file), "utf8");
@@ -31,7 +33,10 @@ describe("GM-only field parity", () => {
   it("matches the fields the app marks as GM-only", () => {
     const fromApp: Record<string, string[]> = {};
     for (const kind of KINDS) {
-      const keys = kind.fields.filter((f) => f.gm).map((f) => f.key).sort();
+      const keys = kind.fields
+        .filter((f) => f.gm)
+        .map((f) => f.key)
+        .sort();
       if (keys.length) fromApp[kind.kind] = keys;
     }
     const normalise = (map: Record<string, string[]>) =>

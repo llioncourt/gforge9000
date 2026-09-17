@@ -152,26 +152,6 @@ export function CampaignNav({
     <div className={cn("w-full", className)}>
       {/* Desktop */}
       <nav className="hidden items-center gap-1 border-b border-border/60 pb-1 md:flex">
-        {standalone.map((item) => {
-          const active = value === item.value;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.value}
-              type="button"
-              onClick={() => select(item.value)}
-              className={cn(
-                triggerBase,
-                active && "text-foreground after:scale-x-100 bg-accent/40",
-              )}
-              aria-current={active ? "page" : undefined}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </button>
-          );
-        })}
-
         {groups.map((group) => {
           const activeChild = group.items.find((i) => i.value === value);
           const GroupIcon = group.icon;
@@ -219,6 +199,26 @@ export function CampaignNav({
                 })}
               </DropdownMenuContent>
             </DropdownMenu>
+          );
+        })}
+
+        {standalone.map((item) => {
+          const active = value === item.value;
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() => select(item.value)}
+              className={cn(
+                triggerBase,
+                active && "text-foreground after:scale-x-100 bg-accent/40",
+              )}
+              aria-current={active ? "page" : undefined}
+            >
+              <Icon className="h-4 w-4" />
+              {item.label}
+            </button>
           );
         })}
       </nav>

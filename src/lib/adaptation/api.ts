@@ -24,6 +24,30 @@ function unwrap<T>(res: { data: T; error: { message: string } | null }): NonNull
   return res.data as NonNullable<T>;
 }
 
+/**
+ * Long runs (scan + reconstruction) can outlive the current access token.
+ * Refresh it before writing so the request is not sent as an anonymous caller,
+ * which the row policies reject.
+ */
+async function ensureSession(): Promise<void> {
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) throw new Error("Your session expired. Sign in again to save this work.");
+  const expiresAt = (data.session.expires_at ?? 0) * 1000;
+  if (expiresAt && expiresAt - Date.now() < 120_000) {
+    const { data: refreshed, error } = await supabase.auth.refreshSession();
+    if (error || !refreshed.session) {
+      throw new Error("Your session expired. Sign in again to save this work.");
+    }
+  }
+}
+
+/** Keeps the last row for each key so one batch never upserts the same key twice. */
+function dedupeByKey<T extends { stable_key?: string }>(rows: T[]): T[] {
+  const byKey = new Map<string, T>();
+  for (const row of rows) byKey.set(row.stable_key ?? "", row);
+  return [...byKey.values()];
+}
+
 export interface CreativeSettings {
   comic?: Partial<ComicConfig>;
   movie?: Partial<MovieConfig>;
@@ -219,6 +243,7 @@ export async function saveScan(
   adaptationId: string,
   snapshot: ScanSnapshot,
 ): Promise<AdaptationSnapshotRow> {
+  await ensureSession();
   await db.from("adaptation_sources").delete().eq("adaptation_id", adaptationId);
   const rows = snapshot.sources.map((source) => ({
     adaptation_id: adaptationId,
@@ -278,7 +303,8 @@ export async function upsertFacts(
   facts: Omit<AdaptationFactRow, "id" | "adaptation_id" | "created_at" | "updated_at" | "reviewed_by" | "reviewed_at">[],
 ): Promise<void> {
   if (!facts.length) return;
-  const rows = facts.map((fact) => ({ ...fact, adaptation_id: adaptationId }));
+  await ensureSession();
+  const rows = dedupeByKey(facts.map((fact) => ({ ...fact, adaptation_id: adaptationId })));
   for (let index = 0; index < rows.length; index += 400) {
     const { error } = await db
       .from("adaptation_facts")
@@ -327,6 +353,7 @@ export async function upsertScenes(
   { preserveManualEdits = true }: { preserveManualEdits?: boolean } = {},
 ): Promise<void> {
   if (!scenes.length) return;
+  await ensureSession();
   let incoming = scenes;
   if (preserveManualEdits) {
     const existing = await listScenes(adaptationId);
@@ -335,7 +362,7 @@ export async function upsertScenes(
     );
     incoming = scenes.filter((scene) => !locked.has(scene.stable_key ?? ""));
   }
-  const rows = incoming.map((scene) => ({ ...scene, adaptation_id: adaptationId }));
+  const rows = dedupeByKey(incoming.map((scene) => ({ ...scene, adaptation_id: adaptationId })));
   for (let index = 0; index < rows.length; index += 200) {
     const { error } = await db
       .from("adaptation_scenes")

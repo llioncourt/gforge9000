@@ -118,7 +118,7 @@
   "houseRules": {
     "cover": {
       "label": "Campaign card cover",
-      "hint": "This image appears behind the campaign card. Images are converted to AVIF.",
+      "hint": "This image appears behind the campaign card.",
       "uploadingLabel": "Uploading cover…",
       "dropReplace": "Drop a replacement cover here, or click to browse",
       "dropNew": "Drop a cover here, or click to browse",

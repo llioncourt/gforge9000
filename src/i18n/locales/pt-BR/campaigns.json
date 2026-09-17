@@ -118,7 +118,7 @@
   "houseRules": {
     "cover": {
       "label": "Capa do card da campanha",
-      "hint": "Esta imagem aparece atrás do card da campanha. As imagens são convertidas para AVIF.",
+      "hint": "Esta imagem aparece atrás do card da campanha.",
       "uploadingLabel": "Enviando capa…",
       "dropReplace": "Solte uma nova capa aqui, ou clique para procurar",
       "dropNew": "Solte uma capa aqui, ou clique para procurar",

@@ -79,7 +79,7 @@
     "email": "Email",
     "photo": "Profile photo",
     "photoAlt": "Your profile photo",
-    "dropPhotoHint": "Drop an image here — it is converted to AVIF automatically",
+    "dropPhotoHint": "Drop an image here",
     "uploadingPhoto": "Uploading photo…",
     "removePhoto": "Remove photo",
     "save": "Save profile",

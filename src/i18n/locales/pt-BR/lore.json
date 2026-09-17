@@ -684,7 +684,7 @@
       "dropNew": "Solte uma nova imagem, ou clique para procurar",
       "uploading": "Enviando imagem…",
       "dropNewOf": "Solte uma imagem de {{name}}, ou clique para procurar",
-      "hint": "PNG, JPEG, WebP, GIF ou AVIF até 5 MB",
+      "hint": "Imagem de até 5 MB",
       "removeImage": "Remover imagem",
       "openCharacterSheet": "Abrir ficha de personagem",
       "inheritedNote": "Mostrando o retrato da ficha de personagem vinculada. Solte uma imagem para substituí-lo.",

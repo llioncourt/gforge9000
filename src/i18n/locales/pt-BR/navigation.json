@@ -79,7 +79,7 @@
     "email": "E-mail",
     "photo": "Foto de perfil",
     "photoAlt": "Sua foto de perfil",
-    "dropPhotoHint": "Solte uma imagem aqui — ela é convertida para AVIF automaticamente",
+    "dropPhotoHint": "Solte uma imagem aqui",
     "uploadingPhoto": "Enviando foto…",
     "removePhoto": "Remover foto",
     "save": "Salvar perfil",

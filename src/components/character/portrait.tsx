@@ -135,7 +135,7 @@ export function PortraitPanel({
         <div className="flex gap-2">
           {upload.isPending ? (
             <span className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> {tc("uploading")}
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> {tc("states.uploading")}
             </span>
           ) : (
             <span className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -150,7 +150,7 @@ export function PortraitPanel({
               onClick={() => clear.mutate()}
               disabled={clear.isPending}
             >
-              <Trash2 className="mr-1 h-3.5 w-3.5" /> {tc("remove")}
+              <Trash2 className="mr-1 h-3.5 w-3.5" /> {tc("actions.remove")}
             </Button>
           ) : null}
         </div>

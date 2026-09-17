@@ -224,7 +224,7 @@ function PlusButton({
 
 const TRAIT_KINDS: EntryKind[] = ["advantage", "disadvantage", "perk", "quirk", "custom"];
 const LORE_KINDS: EntryKind[] = ["language", "culture"];
-const APPEARANCE_FIELDS: string[] = [
+const APPEARANCE_FIELDS = [
   "age",
   "height",
   "weight",
@@ -461,7 +461,7 @@ function CharacterPage() {
                   document.title = prev;
                 }}
               >
-                <Printer className="mr-2 h-4 w-4" /> {t("sheet.print")}
+                <Printer className="mr-2 h-4 w-4" /> {tc("actions.print")}
               </Button>
               <Button
                 variant="outline"

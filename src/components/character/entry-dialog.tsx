@@ -78,14 +78,14 @@ export function toDraft(entry: CharacterEntry): EntryDraft {
 
 const ATTRS = ["ST", "DX", "IQ", "HT", "Will", "Per"];
 const DIFFICULTY_VALUES = ["E", "A", "H", "VH"] as const;
-const DIFFICULTY_KEYS: Record<(typeof DIFFICULTY_VALUES)[number], string> = {
+const DIFFICULTY_KEYS = {
   E: "easy",
   A: "average",
   H: "hard",
   VH: "veryHard",
-};
+} as const satisfies Record<(typeof DIFFICULTY_VALUES)[number], string>;
 const LOCATION_VALUES = ["Skull", "Face", "Torso", "Vitals", "Arms", "Hands", "Legs", "Feet"] as const;
-const LOCATION_KEYS: Record<(typeof LOCATION_VALUES)[number], string> = {
+const LOCATION_KEYS = {
   Skull: "skull",
   Face: "face",
   Torso: "torso",

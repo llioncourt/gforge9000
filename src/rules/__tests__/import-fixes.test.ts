@@ -76,7 +76,7 @@ describe("applyCatalogue keeps specialisations", () => {
     const entry = { kind: "skill", name: "Guns (Pistol)", points: 2, levels: 1, data: {} } as ImportedEntry;
     const applied = applyCatalogue(entry, target);
     expect(applied.name).toBe("Guns (Pistol)");
-    expect(applied.source?.imported_as).toBeUndefined();
+    expect(applied.source?.["imported_as"]).toBeUndefined();
   });
 
   it("keeps the library name when the import carried no qualifier", () => {

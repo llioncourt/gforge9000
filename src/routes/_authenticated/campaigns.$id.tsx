@@ -64,6 +64,8 @@ import {
 import { listLibrary } from "@/lib/api";
 import { allowedPacksOf } from "@/lib/packs";
 import { buildSheet } from "@/rules";
+import { CampaignRules } from "@/components/campaign/campaign-rules";
+import { CAMPAIGN_RULESET_SETTING, rulesetFromSettings } from "@/rules/campaign-ruleset";
 import { useSession } from "@/hooks/use-session";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
 import { useT } from "@/i18n/hooks";
@@ -248,7 +250,7 @@ function CampaignPage() {
     const byChar = new Map<string, ReturnType<typeof buildSheet>>();
     for (const c of roster.data ?? []) {
       const rows = (entries.data ?? []).filter((e) => e.character_id === c.id).map(toEntry);
-      byChar.set(c.id, buildSheet(toCharacterRecord(c), rows));
+      byChar.set(c.id, buildSheet(toCharacterRecord(c), rows, campaignRuleset));
     }
     return byChar;
   }, [roster.data, entries.data]);
@@ -1210,6 +1212,13 @@ function HouseRules({
           {t("houseRules.packs.hint")}
         </p>
       </div>
+      <div className="border-t border-border" />
+      <CampaignRules
+        settings={settings}
+        disabled={disabled}
+        onSave={(overrides) => onSave({ [CAMPAIGN_RULESET_SETTING]: overrides })}
+      />
+      <div className="border-t border-border" />
       <div className="space-y-1.5">
         <Label>{t("houseRules.houseRulesLabel")}</Label>
         <Textarea

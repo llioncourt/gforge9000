@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -61,6 +61,7 @@ import { useSession } from "@/hooks/use-session";
 import { revealEntityToPlayer, revokeEntityReveal } from "@/lib/reveal";
 import { isPlayerVisible } from "@/lib/visibility";
 import { useLoreRealtime } from "@/hooks/use-lore-realtime";
+import { decideSync } from "@/lib/form-sync";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { LibraryImagePicker } from "@/components/lore/library-image-picker";
@@ -251,7 +252,9 @@ function EntityPage() {
       return updateEntity(id, patch);
     },
     onSuccess: async (row) => {
+      baseline.current = row;
       setForm(row);
+      setStaleWarning(false);
       await queryClient.invalidateQueries({ queryKey: ["entity", id] });
       await queryClient.invalidateQueries({ queryKey: ["lore-revisions", id] });
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", row.campaign_id] });
@@ -272,7 +275,9 @@ function EntityPage() {
         data: (snapshot["data"] ?? {}) as never,
       }),
     onSuccess: async (row) => {
+      baseline.current = row;
       setForm(row);
+      setStaleWarning(false);
       toast.success(t("entityPage.toasts.versionRestored"));
       await queryClient.invalidateQueries({ queryKey: ["entity", id] });
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", row.campaign_id] });

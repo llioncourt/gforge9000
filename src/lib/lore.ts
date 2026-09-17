@@ -11,15 +11,16 @@ function unwrap<T>(res: { data: T; error: { message: string } | null }): NonNull
   return res.data as NonNullable<T>;
 }
 
-// Reads go through `entities_safe` / `entity_relationships_safe`, which strip
-// GM-only notes and GM-only data keys in the database for non-GM callers.
+// Reads go through the `list_entities_safe` / `list_relationships_safe`
+// functions, which apply the same visibility rules as the base tables and strip
+// GM-only notes and GM-only data keys for non-GM callers.
 // Writes still target the base tables (GM / owner only).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPCs created after types were generated
+const rpc = supabase.rpc as any;
+
 export async function listEntities(campaignId: string): Promise<EntityRow[]> {
   return unwrap(
-    await supabase
-      .from("entities_safe")
-      .select("*")
-      .eq("campaign_id", campaignId)
+    await rpc("list_entities_safe", { _campaign: campaignId })
       .order("kind", { ascending: true })
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true }),
@@ -27,9 +28,7 @@ export async function listEntities(campaignId: string): Promise<EntityRow[]> {
 }
 
 export async function getEntity(id: string): Promise<EntityRow> {
-  return unwrap(
-    await supabase.from("entities_safe").select("*").eq("id", id).single(),
-  ) as EntityRow;
+  return unwrap(await rpc("list_entities_safe").eq("id", id).single()) as EntityRow;
 }
 
 

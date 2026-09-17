@@ -285,6 +285,11 @@
       "unresolvedAssets": "{{count}} asset(s) are still unresolved or ambiguous.",
       "noComicConfig": "Comic settings are incomplete.",
       "noMovieConfig": "Movie settings are incomplete."
+    },
+    "actions": {
+      "fix": "Fix",
+      "confirmAll": "Confirm all",
+      "confirmedAll": "Facts confirmed."
     }
   },
   "generate": {
@@ -299,7 +304,7 @@
     "movieTitle": "Movie projection",
     "movieDescription": "Only what MovieSmith needs to build the movie.",
     "movieButton": "Export movie bundle",
-    "problemsWarning": "This adaptation still has validation problems. You can export anyway.",
+    "problemsWarning": "Finish these before exporting for the best result. You can still export as is.",
     "exporting": "Preparing export…",
     "toasts": {
       "exported": "Bundle ready."

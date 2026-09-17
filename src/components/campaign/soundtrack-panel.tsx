@@ -57,21 +57,24 @@ import {
   buildSoundtrackPackReadme,
   SOUNDTRACK_EXAMPLE_MANIFEST,
 } from "@/lib/soundtrack-pack-docs";
+import { useT } from "@/i18n/hooks";
+/** Minimal translate signature shared by the helpers in this file. */
+type Translate = (key: string, options?: Record<string, unknown>) => string;
 
-async function coverToAvifBytes(path: string, bytes: Uint8Array) {
+async function coverToAvifBytes(path: string, bytes: Uint8Array, t: Translate) {
   if (/\.avif$/i.test(path)) return bytes;
   const name = path.split("/").pop() ?? "cover.png";
   const file = new File([bytes.slice().buffer as ArrayBuffer], name);
-  if (!isImageFile(file)) throw new Error(`The cover must be an image file: ${path}`);
+  if (!isImageFile(file)) throw new Error(t("soundtrack.errors.coverMustBeImage", { path }));
   const converted = await convertToAvif(file);
   return new Uint8Array(await converted.arrayBuffer());
 }
-async function copySoundtrackPrompt() {
+async function copySoundtrackPrompt(t: Translate) {
   try {
     await navigator.clipboard.writeText(buildSoundtrackPackPrompt());
-    toast.success("AI prompt copied to your clipboard.");
+    toast.success(t("soundtrack.import.promptCopied"));
   } catch {
-    toast.error("Could not copy the prompt.");
+    toast.error(t("soundtrack.import.promptCopyFailed"));
   }
 }
 function downloadSoundtrackReadme() {
@@ -91,6 +94,7 @@ function downloadSoundtrackReadme() {
 }
 
 function AlbumCover({ album }: { album: SoundtrackAlbum }) {
+  const { t } = useT("media");
   const [url, setUrl] = useState<string | null>(null),
     [zoom, setZoom] = useState(1);
   useEffect(() => {
@@ -115,20 +119,20 @@ function AlbumCover({ album }: { album: SoundtrackAlbum }) {
           type="button"
           variant="ghost"
           className="group aspect-square h-auto w-full shrink-0 cursor-zoom-in overflow-hidden rounded-none p-0 md:h-[180px] md:w-[180px]"
-          aria-label={`Enlarge ${album.title} cover`}
+          aria-label={t("soundtrack.cover.enlargeAria", { title: album.title })}
         >
           <img
             decoding="async"
             src={url}
-            alt={`${album.title} cover`}
+            alt={t("soundtrack.cover.altText", { title: album.title })}
             className="block h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
           />
         </Button>
       </DialogTrigger>
       <DialogContent className="flex h-dvh w-screen max-w-none flex-col gap-0 overflow-hidden border-0 bg-background/95 p-0 sm:rounded-none">
-        <DialogTitle className="sr-only">{album.title} cover</DialogTitle>
+        <DialogTitle className="sr-only">{t("soundtrack.cover.altText", { title: album.title })}</DialogTitle>
         <DialogDescription className="sr-only">
-          Enlarged album cover with zoom controls.
+          {t("soundtrack.cover.enlargedAlt", { title: album.title })}
         </DialogDescription>
         <div
           className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-6"
@@ -143,7 +147,7 @@ function AlbumCover({ album }: { album: SoundtrackAlbum }) {
           <img
             decoding="async"
             src={url}
-            alt={`${album.title} cover enlarged`}
+            alt={t("soundtrack.cover.enlargedAlt", { title: album.title })}
             draggable={false}
             className="max-h-[78vh] max-w-[90vw] shrink-0 object-contain transition-transform duration-150"
             style={{ transform: `scale(${zoom})` }}
@@ -158,7 +162,7 @@ function AlbumCover({ album }: { album: SoundtrackAlbum }) {
               className="h-8 w-8 rounded-full"
               disabled={zoom <= 1}
               onClick={() => setZoom((current) => Math.max(1, +(current - 0.25).toFixed(2)))}
-              aria-label="Zoom out"
+              aria-label={t("soundtrack.cover.zoomOut")}
             >
               <ZoomOut className="h-4 w-4" />
             </Button>
@@ -169,7 +173,7 @@ function AlbumCover({ album }: { album: SoundtrackAlbum }) {
               step={0.05}
               onValueChange={(value) => setZoom(value[0] ?? 1)}
               className="w-48"
-              aria-label="Cover zoom"
+              aria-label={t("soundtrack.cover.zoomSlider")}
             />
             <Button
               type="button"
@@ -178,7 +182,7 @@ function AlbumCover({ album }: { album: SoundtrackAlbum }) {
               className="h-8 w-8 rounded-full"
               disabled={zoom >= 5}
               onClick={() => setZoom((current) => Math.min(5, +(current + 0.25).toFixed(2)))}
-              aria-label="Zoom in"
+              aria-label={t("soundtrack.cover.zoomIn")}
             >
               <ZoomIn className="h-4 w-4" />
             </Button>
@@ -192,6 +196,8 @@ function AlbumCover({ album }: { album: SoundtrackAlbum }) {
   );
 }
 export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const { t } = useT("media");
+  const { t: tc } = useT("common");
   const player = useCampaignSoundtrack(),
     qc = useQueryClient(),
     [albumIndex, setAlbumIndex] = useState(0);
@@ -216,25 +222,25 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
       const archive = unzipSync(new Uint8Array(await file.arrayBuffer())),
         pick = (p: string) => archive[p] ?? archive[p.replace(/^\.\//, "")],
         raw = archive["album.json"];
-      if (!raw) throw new Error("The package must contain album.json at its root.");
+      if (!raw) throw new Error(t("soundtrack.errors.missingAlbumJson"));
       const manifest = campaignSoundtrackManifestSchema.parse(
           JSON.parse(new TextDecoder().decode(raw)),
         ),
-        positions = manifest.tracks.map((t) => t.position).sort((a, b) => a - b);
+        positions = manifest.tracks.map((tr) => tr.position).sort((a, b) => a - b);
       if (positions.some((p, i) => p !== i + 1))
-        throw new Error("Track positions must start at 1 without gaps.");
+        throw new Error(t("soundtrack.errors.trackPositions"));
       const coverEntry = pick(manifest.album.cover);
-      if (!coverEntry) throw new Error(`Missing cover: ${manifest.album.cover}`);
+      if (!coverEntry) throw new Error(t("soundtrack.errors.missingCover", { path: manifest.album.cover }));
       if (coverEntry.length > MAX_SOUNDTRACK_COVER_BYTES)
-        throw new Error("The cover is larger than 3 MB.");
-      const cover = await coverToAvifBytes(manifest.album.cover, coverEntry);
+        throw new Error(t("soundtrack.errors.coverTooLarge"));
+      const cover = await coverToAvifBytes(manifest.album.cover, coverEntry, t as Translate);
       const tracks = manifest.tracks.map((meta) => {
         const bytes = pick(meta.file);
-        if (!bytes) throw new Error(`Missing track: ${meta.file}`);
+        if (!bytes) throw new Error(t("soundtrack.errors.missingTrack", { file: meta.file }));
         const mime = soundtrackAudioMime(meta.file);
-        if (!mime) throw new Error(`Unsupported audio format: ${meta.file}`);
+        if (!mime) throw new Error(t("soundtrack.errors.unsupportedFormat", { file: meta.file }));
         if (bytes.length > MAX_SOUNDTRACK_TRACK_BYTES)
-          throw new Error(`${meta.file} is larger than 40 MB.`);
+          throw new Error(t("soundtrack.errors.trackTooLarge", { file: meta.file }));
         return {
           position: meta.position,
           name: meta.file.split("/").pop() ?? `track-${meta.position}`,
@@ -259,70 +265,70 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
     file: File,
     report: (label: string, percent?: number) => void,
   ) => {
-    report("Lendo o ZIP…", 10);
-    report("Enviando capa e faixas…", 35);
+    report(t("soundtrack.import.readingZip"), 10);
+    report(t("soundtrack.import.uploadingAssets"), 35);
     await importer.mutateAsync(file);
-    report("Atualizando trilha…", 92);
-    return "Soundtrack imported.";
+    report(t("soundtrack.import.updatingSoundtrack"), 92);
+    return t("soundtrack.import.imported");
   };
   const remove = useMutation({
     mutationFn: (a: SoundtrackAlbum) => deleteCampaignSoundtrack(a, player.tracks),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["campaign-soundtrack", campaignId] });
-      toast.success("Album removed.");
+      toast.success(t("soundtrack.removeSuccess"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
   const album = player.albums[albumIndex],
     tracks = album
-      ? player.tracks.filter((t) => t.album_id === album.id).sort((a, b) => a.position - b.position)
+      ? player.tracks.filter((tr) => tr.album_id === album.id).sort((a, b) => a.position - b.position)
       : [];
   return (
     <div className="space-y-6">
       {isGm ? (
         <section className="panel p-5">
-          <h2 className="font-display text-lg font-semibold">Import soundtrack</h2>
+          <h2 className="font-display text-lg font-semibold">{t("soundtrack.import.title")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Upload a soundtrack ZIP with album.json, a cover image, and audio tracks.
+            {t("soundtrack.import.description")}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => void copySoundtrackPrompt()}
+              onClick={() => void copySoundtrackPrompt(t as Translate)}
             >
               <Sparkles className="mr-2 h-4 w-4" />
-              Copy AI prompt
+              {t("soundtrack.import.copyPrompt")}
             </Button>
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() =>
-                void exportTask.run("Download read me (ZIP)", async (report) => {
-                  report("Gerando pacote…", 45);
+                void exportTask.run(t("soundtrack.import.readmeTaskLabel"), async (report) => {
+                  report(t("soundtrack.import.generatingPackage"), 45);
                   downloadSoundtrackReadme();
-                  report("Baixando…", 90);
-                  return "Read me baixado.";
+                  report(t("soundtrack.import.downloading"), 90);
+                  return t("soundtrack.import.readmeDownloaded");
                 })
               }
             >
               <Download className="mr-2 h-4 w-4" />
-              Download read me
+              {t("soundtrack.import.downloadReadme")}
             </Button>
             <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(true)}>
               <Download className="mr-2 h-4 w-4 rotate-180" />
-              Import soundtrack ZIP
+              {t("soundtrack.import.importZip")}
             </Button>
           </div>
           <ImportDialog
             open={importOpen}
             onOpenChange={setImportOpen}
-            title="Import soundtrack"
-            description="album.json at root · any image as cover · MP3, OGG, Opus, or M4A"
+            title={t("soundtrack.import.dialogTitle")}
+            description={t("soundtrack.import.dialogDescription")}
             accept=".zip,application/zip"
-            label="Drop the soundtrack ZIP here, or click to browse"
+            label={t("soundtrack.import.dropLabel")}
             run={importSoundtrackFile}
           />
           {exportTask.node}
@@ -330,7 +336,7 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
       ) : null}
       {!album ? (
         <div className="panel p-8 text-center text-sm text-muted-foreground">
-          No soundtrack albums yet.
+          {t("soundtrack.empty")}
         </div>
       ) : (
         <section data-search-id={album.id} className="panel overflow-hidden">
@@ -341,7 +347,7 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
               size="icon"
               disabled={albumIndex === 0}
               onClick={() => setAlbumIndex((current) => Math.max(0, current - 1))}
-              aria-label="Previous album"
+              aria-label={t("soundtrack.previousAlbum")}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -349,7 +355,7 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
               className="text-xs font-medium tabular-nums text-muted-foreground"
               aria-live="polite"
             >
-              Album {albumIndex + 1} of {player.albums.length}
+              {t("soundtrack.albumCount", { current: albumIndex + 1, total: player.albums.length })}
             </span>
             <Button
               type="button"
@@ -359,7 +365,7 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
               onClick={() =>
                 setAlbumIndex((current) => Math.min(player.albums.length - 1, current + 1))
               }
-              aria-label="Next album"
+              aria-label={t("soundtrack.nextAlbum")}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -387,22 +393,22 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
                         size="icon"
                         variant="ghost"
                         className="text-destructive hover:text-destructive"
-                        aria-label={`Remove ${album.title}`}
+                        aria-label={t("soundtrack.removeAlbumAria", { title: album.title })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Remove this album?</AlertDialogTitle>
+                        <AlertDialogTitle>{t("soundtrack.removeAlbumConfirmTitle")}</AlertDialogTitle>
                         <AlertDialogDescription>
-                          {album.title} and all its audio files will be permanently removed.
+                          {t("soundtrack.removeAlbumConfirmBody", { title: album.title })}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
                         <AlertDialogAction onClick={() => remove.mutate(album)}>
-                          Remove
+                          {tc("actions.remove")}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -449,7 +455,7 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
               </ol>
               {!isGm ? (
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Playback is synchronized by the GM.
+                  {t("soundtrack.gmControlled")}
                 </p>
               ) : null}
             </div>

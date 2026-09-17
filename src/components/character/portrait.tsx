@@ -4,6 +4,7 @@ import { ImageUp, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { FileDropzone } from "@/components/ui/FileDropzone";
+import { useT } from "@/i18n/hooks";
 import {
   portraitInitials,
   portraitUrl,
@@ -25,6 +26,7 @@ export function PortraitFrame({
   className?: string;
   eager?: boolean;
 }) {
+  const { t } = useT("characters");
   return (
     <div
       className={cn(
@@ -35,7 +37,7 @@ export function PortraitFrame({
       {url ? (
         <img decoding="async"
           src={url}
-          alt={`Portrait of ${name}`}
+          alt={t("sheet.portrait.alt", { name })}
           className="h-full w-full object-cover object-top"
           loading={eager ? "eager" : "lazy"}
         />
@@ -73,6 +75,8 @@ export function PortraitPanel({
   path: string | null;
   onChange: (path: string | null) => void;
 }) {
+  const { t } = useT("characters");
+  const { t: tc } = useT("common");
   const signed = usePortraitUrl(path);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -94,7 +98,7 @@ export function PortraitPanel({
     },
     onSuccess: (next) => {
       onChange(next);
-      toast.success("Portrait updated.");
+      toast.success(t("sheet.portrait.updated"));
     },
     onError: (e: Error) => {
       setPreview(null);
@@ -109,7 +113,7 @@ export function PortraitPanel({
     onSuccess: () => {
       setPreview(null);
       onChange(null);
-      toast.success("Portrait removed.");
+      toast.success(t("sheet.portrait.removed"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -121,8 +125,8 @@ export function PortraitPanel({
         <FileDropzone
           accept="image/*"
           compact
-          label="Upload portrait"
-          hint="PNG, JPEG, WebP, GIF or AVIF · up to 5 MB · shown as 3:4"
+          label={t("sheet.portrait.uploadLabel")}
+          hint={t("sheet.portrait.uploadHint")}
           onFiles={(files) => {
             const file = files[0];
             if (file) upload.mutate(file);
@@ -131,11 +135,11 @@ export function PortraitPanel({
         <div className="flex gap-2">
           {upload.isPending ? (
             <span className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading…
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> {tc("states.uploading")}
             </span>
           ) : (
             <span className="flex items-center gap-2 text-xs text-muted-foreground">
-              <ImageUp className="h-3.5 w-3.5" /> Private to your account
+              <ImageUp className="h-3.5 w-3.5" /> {t("sheet.portrait.privateHint")}
             </span>
           )}
           {path ? (
@@ -146,7 +150,7 @@ export function PortraitPanel({
               onClick={() => clear.mutate()}
               disabled={clear.isPending}
             >
-              <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
+              <Trash2 className="mr-1 h-3.5 w-3.5" /> {tc("actions.remove")}
             </Button>
           ) : null}
         </div>

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { LayoutGrid, List, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { useT } from "@/i18n/hooks";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,8 @@ export const Route = createFileRoute("/_authenticated/characters/")({
 });
 
 function CharactersPage() {
+  const { t } = useT("characters");
+  const { t: tc } = useT("common");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -100,7 +103,7 @@ function CharactersPage() {
     mutationFn: (id: string) => deleteCharacter(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["characters"] });
-      toast.success("Character deleted.");
+      toast.success(t("list.deleteSuccess"));
       setPendingDelete(null);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -110,12 +113,12 @@ function CharactersPage() {
     file: File,
     report: (label: string, percent?: number) => void,
   ) => {
-    report("Reading file…", 5);
+    report(t("list.import.readingFile"), 5);
     const parsed = parsePortable(await file.text());
     const { id: _ignored, ...character } = parsed.character;
-    report("Creating character…", 15);
+    report(t("list.import.creatingCharacter"), 15);
     const row = await createCharacter(character as never);
-    report("Matching traits against your content…", 25);
+    report(t("list.import.matchingTraits"), 25);
     // Reconcile trait names against enabled content before saving them.
     const { entries } = await reconcileImportedEntries(
       parsed.entries as unknown as ImportedEntry[],
@@ -125,14 +128,14 @@ function CharactersPage() {
       await addEntry({ ...entry, character_id: row.id, data: entry.data ?? {} } as never);
       done += 1;
       report(
-        `Importing entries (${done}/${entries.length})…`,
+        t("list.import.importingEntries", { done, total: entries.length }),
         30 + Math.round((done / Math.max(1, entries.length)) * 65),
       );
     }
     await queryClient.invalidateQueries({ queryKey: ["characters"] });
     setImportOpen(false);
     navigate({ to: "/characters/$id", params: { id: row.id } });
-    return `${row.name} imported with ${entries.length} entries.`;
+    return t("list.import.success", { name: row.name, count: entries.length });
   };
 
   const rows = (data ?? []).filter((c) =>
@@ -142,11 +145,11 @@ function CharactersPage() {
   return (
     <div>
       <PageHeader
-        title="Characters"
-        description="Player characters, NPCs and templates you own."
+        title={t("list.title")}
+        description={t("list.description")}
         actions={
           <Button onClick={() => create.mutate()} disabled={create.isPending}>
-            <Plus className="mr-2 h-4 w-4" /> New character
+            <Plus className="mr-2 h-4 w-4" /> {t("list.newCharacter")}
           </Button>
         }
       />
@@ -154,7 +157,7 @@ function CharactersPage() {
       <div className="mb-4 grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Filter by name or concept…"
+            placeholder={t("list.filterPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -163,7 +166,7 @@ function CharactersPage() {
               size="icon"
               variant="ghost"
               className={cn("rounded-none", view === "list" && "bg-secondary")}
-              aria-label="List view"
+              aria-label={t("list.listView")}
               aria-pressed={view === "list"}
               onClick={() => viewMode.mutate("list")}
             >
@@ -173,7 +176,7 @@ function CharactersPage() {
               size="icon"
               variant="ghost"
               className={cn("rounded-none", view === "grid" && "bg-secondary")}
-              aria-label="Grid view"
+              aria-label={t("list.gridView")}
               aria-pressed={view === "grid"}
               onClick={() => viewMode.mutate("grid")}
             >
@@ -183,7 +186,7 @@ function CharactersPage() {
         </div>
         <div className="grid gap-2">
           <Button variant="outline" onClick={() => setImportOpen(true)}>
-            <Upload className="mr-2 h-4 w-4" /> Import character JSON
+            <Upload className="mr-2 h-4 w-4" /> {t("list.importButton")}
           </Button>
           <AiConversionGuideButton kind="character" />
         </div>
@@ -195,7 +198,7 @@ function CharactersPage() {
             [0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-[120px] w-full" />)
           ) : rows.length === 0 ? (
             <div className="panel py-10 text-center text-sm text-muted-foreground sm:col-span-2 lg:col-span-3">
-              No characters yet.
+              {t("list.empty")}
             </div>
           ) : (
             rows.map((c) => (
@@ -209,14 +212,14 @@ function CharactersPage() {
                   <div className="relative flex items-center justify-between gap-2">
                     <p className="truncate font-medium">{c.name}</p>
                     <Badge variant={c.approved ? "default" : "outline"} className="shrink-0">
-                      {c.is_npc ? "NPC" : c.approved ? "Approved" : "Draft"}
+                      {c.is_npc ? t("list.npc") : c.approved ? t("list.approved") : t("list.draft")}
                     </Badge>
                   </div>
                   <p className="relative truncate text-xs text-muted-foreground">
-                    {c.concept || "No concept set"}
+                    {c.concept || t("list.noConcept")}
                   </p>
                   <p className="relative text-xs text-muted-foreground">
-                    <span className="stat-value">{c.point_budget} pts</span> · TL {c.tech_level}
+                    <span className="stat-value">{t("list.points", { count: c.point_budget })}</span> · TL {c.tech_level}
                   </p>
                 </Link>
                 <div
@@ -231,7 +234,7 @@ function CharactersPage() {
                     variant="ghost"
                     className="h-8 w-8"
                     onClick={() => setPendingDelete({ id: c.id, name: c.name })}
-                    aria-label={`Delete ${c.name}`}
+                    aria-label={t("list.deleteAria", { name: c.name })}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -245,11 +248,11 @@ function CharactersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead className="hidden sm:table-cell">Concept</TableHead>
-                <TableHead className="w-20 text-right">Budget</TableHead>
-                <TableHead className="hidden w-16 text-right md:table-cell">TL</TableHead>
-                <TableHead className="w-24">Status</TableHead>
+                <TableHead>{t("list.table.name")}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t("list.table.concept")}</TableHead>
+                <TableHead className="w-20 text-right">{t("list.table.budget")}</TableHead>
+                <TableHead className="hidden w-16 text-right md:table-cell">{t("list.table.tl")}</TableHead>
+                <TableHead className="w-24">{t("list.table.status")}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -271,7 +274,7 @@ function CharactersPage() {
                     colSpan={6}
                     className="py-10 text-center text-sm text-muted-foreground"
                   >
-                    No characters yet.
+                    {t("list.empty")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -288,7 +291,7 @@ function CharactersPage() {
                       </Link>
                     </TableCell>
                     <TableCell className="hidden text-muted-foreground sm:table-cell">
-                      {c.concept || "—"}
+                      {c.concept || t("list.table.noValue")}
                     </TableCell>
                     <TableCell className="text-right font-mono">{c.point_budget}</TableCell>
                     <TableCell className="hidden text-right font-mono md:table-cell">
@@ -296,7 +299,7 @@ function CharactersPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={c.approved ? "default" : "outline"}>
-                        {c.is_npc ? "NPC" : c.approved ? "Approved" : "Draft"}
+                        {c.is_npc ? t("list.npc") : c.approved ? t("list.approved") : t("list.draft")}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -304,7 +307,7 @@ function CharactersPage() {
                         size="icon"
                         variant="ghost"
                         onClick={() => setPendingDelete({ id: c.id, name: c.name })}
-                        aria-label={`Delete ${c.name}`}
+                        aria-label={t("list.deleteAria", { name: c.name })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -320,16 +323,15 @@ function CharactersPage() {
       <AlertDialog open={pendingDelete !== null} onOpenChange={(o) => !o && setPendingDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {pendingDelete?.name}?</AlertDialogTitle>
+            <AlertDialogTitle>{t("list.deleteConfirmTitle", { name: pendingDelete?.name ?? "" })}</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the character, its entries and its version history. This cannot be
-              undone.
+              {t("list.deleteConfirmBody")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => pendingDelete && remove.mutate(pendingDelete.id)}>
-              Delete
+              {tc("actions.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -338,11 +340,11 @@ function CharactersPage() {
       <ImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}
-        title="Import character"
-        description="Drop a Universal Character Forge JSON export."
+        title={t("list.import.title")}
+        description={t("list.import.description")}
         accept="application/json,.json"
-        label="Drop the character JSON here, or click to browse"
-        hint="Exports produced by this app or converted with the AI guide"
+        label={t("list.import.label")}
+        hint={t("list.import.hint")}
         run={importCharacterFile}
       />
     </div>

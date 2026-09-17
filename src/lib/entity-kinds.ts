@@ -540,3 +540,42 @@ export const RELATIONSHIP_TYPES = [
   "SECRETLY_WORKS_FOR",
   "CONNECTED_TO",
 ];
+
+/**
+ * Translation-key helpers for the labels declared above. Data (kind, field
+ * keys, status/option values) stays structural here; presentation strings
+ * live in `src/i18n/locales/<locale>/lore.json`. Components should look up
+ * `t(kindLabelKey(kind))` etc. via `useT("lore")` instead of reading
+ * `.label` / `.plural` / status & option strings directly.
+ */
+export function kindLabelKey(kind: string): string {
+  return `kinds.${kind}.label`;
+}
+
+export function kindPluralKey(kind: string): string {
+  return `kinds.${kind}.plural`;
+}
+
+function slugify(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+export function fieldLabelKey(kind: string, fieldKey: string): string {
+  return `fields.${kind}.${fieldKey}`;
+}
+
+export function statusLabelKey(kind: string, status: string): string {
+  return `statuses.${kind}.${slugify(status)}`;
+}
+
+export function optionLabelKey(kind: string, fieldKey: string, optionValue: string): string {
+  return `options.${kind}.${fieldKey}.${slugify(optionValue)}`;
+}
+
+export function relationshipLabelKey(type: string): string {
+  return `relationships.${type}`;
+}

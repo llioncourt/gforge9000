@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { useT } from "@/i18n/hooks";
 import { recordRoll } from "@/lib/api";
 import { parseDice, resolveSuccess, rollExpression, type Outcome } from "@/rules";
 
@@ -68,6 +69,7 @@ export function prefersReducedMotion(): boolean {
 }
 
 export function DiceProvider({ children }: { children: ReactNode }) {
+  const { t } = useT("dice");
   const [history, setHistory] = useState<RollEvent[]>([]);
   const [pending, setPending] = useState<PendingRoll | null>(null);
   const [settled, setSettled] = useState<RollEvent | null>(null);
@@ -94,12 +96,18 @@ export function DiceProvider({ children }: { children: ReactNode }) {
 
       const detail =
         resolved === null
-          ? `${total} (${dice.join(" + ")})`
-          : `${total} vs ${target} — ${resolved.outcome} by ${Math.abs(resolved.margin)}`;
-      if (resolved?.outcome === "critical success") toast.success(`${request.label}: ${detail}`);
+          ? t("toast.plain", { total, dice: dice.join(" + ") })
+          : t("toast.withTarget", {
+              total,
+              target,
+              outcome: t(`outcome.${resolved.outcome}`),
+              margin: Math.abs(resolved.margin),
+            });
+      const message = t("toast.result", { label: request.label, detail });
+      if (resolved?.outcome === "critical success") toast.success(message);
       else if (resolved?.outcome === "critical failure" || resolved?.outcome === "failure")
-        toast.error(`${request.label}: ${detail}`);
-      else toast(`${request.label}: ${detail}`);
+        toast.error(message);
+      else toast(message);
 
       void recordRoll({
         label: request.label,
@@ -115,7 +123,7 @@ export function DiceProvider({ children }: { children: ReactNode }) {
 
       return event;
     },
-    [],
+    [t],
   );
 
   const roll = useCallback<DiceContextValue["roll"]>(
@@ -123,7 +131,7 @@ export function DiceProvider({ children }: { children: ReactNode }) {
       const expression = opts.expression ?? "3d6";
       const parsed = parseDice(expression);
       if (!parsed) {
-        toast.error(`Could not read the dice expression "${expression}".`);
+        toast.error(t("errors.invalidExpression", { expression }));
         return;
       }
       if (supports3d(expression)) {
@@ -140,12 +148,12 @@ export function DiceProvider({ children }: { children: ReactNode }) {
       }
       const result = rollExpression(expression);
       if (!result) {
-        toast.error(`Could not read the dice expression "${expression}".`);
+        toast.error(t("errors.invalidExpression", { expression }));
         return;
       }
       finalize({ ...opts, expression }, result.dice, result.total);
     },
-    [finalize],
+    [finalize, t],
   );
 
   const reportFaces = useCallback(

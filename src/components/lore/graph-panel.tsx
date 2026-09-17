@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KINDS, kindDef } from "@/lib/entity-kinds";
 import { listEntities, listRelationships, type EntityRow } from "@/lib/lore";
+import { useT } from "@/i18n/hooks";
 
 type Node = { id: string; name: string; kind: string; x: number; y: number };
 type Edge = { id: string; source: string; target: string; label: string };
@@ -85,6 +86,7 @@ function layout(rows: EntityRow[], edges: Edge[]): Node[] {
 }
 
 export function GraphPanel({ campaignId }: { campaignId: string }) {
+  const { t } = useT("lore");
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [kindFilter, setKindFilter] = useState<string | null>(null);
@@ -148,7 +150,7 @@ export function GraphPanel({ campaignId }: { campaignId: string }) {
       <div className="flex flex-wrap items-center gap-2">
         <Input
           className="w-full sm:w-64"
-          placeholder="Search records"
+          placeholder={t("graph.searchPlaceholder")}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
@@ -157,7 +159,7 @@ export function GraphPanel({ campaignId }: { campaignId: string }) {
           variant={kindFilter ? "outline" : "default"}
           onClick={() => setKindFilter(null)}
         >
-          All kinds
+          {t("graph.allKinds")}
         </Button>
         {kindsPresent.map((kind) => (
           <Button
@@ -173,7 +175,7 @@ export function GraphPanel({ campaignId }: { campaignId: string }) {
 
       {nodes.length === 0 ? (
         <div className="panel p-8 text-center text-sm text-muted-foreground">
-          Nothing to plot yet. Create records and link them in the World &amp; lore tab.
+          {t("graph.emptyState")}
         </div>
       ) : (
         <div className="panel overflow-hidden p-2">
@@ -181,7 +183,7 @@ export function GraphPanel({ campaignId }: { campaignId: string }) {
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
             className="h-[560px] w-full"
             role="img"
-            aria-label="Relationship graph"
+            aria-label={t("graph.ariaLabel")}
           >
             {edges.map((edge) => {
               const a = byId.get(edge.source);
@@ -245,9 +247,9 @@ export function GraphPanel({ campaignId }: { campaignId: string }) {
 
       <p className="text-muted-foreground text-xs">
         <Badge variant="outline" className="mr-2">
-          {nodes.length} records
+          {t("graph.recordCount", { count: nodes.length })}
         </Badge>
-        {edges.length} links · hover to isolate, click to open the record.
+        {t("graph.linksHint", { count: edges.length })}
       </p>
     </div>
   );

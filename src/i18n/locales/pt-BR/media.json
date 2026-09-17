@@ -1,0 +1,172 @@
+{
+  "videos": {
+    "durationUnavailable": "Duração indisponível",
+    "playAria": "Reproduzir {{title}}",
+    "playDialog": {
+      "description": "{{type}} · {{duration}}"
+    },
+    "thumbnailEditAria": "Editar miniatura de {{title}}",
+    "thumbnailDialog": {
+      "title": "Quadro da miniatura",
+      "description": "Avance até o quadro desejado e salve-o como miniatura."
+    },
+    "saveThumbnail": "Salvar miniatura",
+    "thumbnailUpdated": "Miniatura atualizada.",
+    "removeAria": "Remover {{title}}",
+    "removeConfirmTitle": "Remover este vídeo?",
+    "removeConfirmBodyIntro": "Os membros não verão mais este vídeo ao entrar na campanha.",
+    "removeConfirmBodyOther": "{{title}} será removido permanentemente.",
+    "sizeMb": "{{size}} MB",
+    "upload": {
+      "title": "Enviar vídeo",
+      "description": "Vídeos de introdução recebem os jogadores na primeira entrada. Outros tipos são mídia opcional da campanha.",
+      "titleLabel": "Título",
+      "titlePlaceholder": "Título do vídeo",
+      "typeLabel": "Tipo",
+      "pickFrameHint": "Escolha o quadro para usar como miniatura (opcional) e depois envie.",
+      "frameSelected": "Quadro selecionado — escolher outro",
+      "useThisFrame": "Usar este quadro",
+      "frameSelectedToast": "Quadro da miniatura selecionado.",
+      "uploadButton": "Enviar vídeo",
+      "uploading": "Enviando…",
+      "chooseAnother": "Escolher outro arquivo",
+      "dropLabel": "Solte um MP4 aqui, ou clique para procurar",
+      "dropHintIntro": "MP4 · até 250 MB · substitui a Introdução atual",
+      "dropHintOther": "MP4 · até 250 MB",
+      "enterTitleFirst": "Digite primeiro um título para o vídeo.",
+      "success": "Vídeo enviado."
+    },
+    "removeSuccess": "Vídeo removido.",
+    "empty": "Nenhum vídeo de campanha ainda."
+  },
+  "introExperience": {
+    "ariaLabel": "Introdução da campanha",
+    "preparing": "Preparando a introdução da campanha…",
+    "dontShowAgain": "Não mostrar esta introdução novamente",
+    "continueButton": "Continuar para a campanha",
+    "watchFullButton": "Assista a introdução completa para continuar"
+  },
+  "panel": {
+    "tabs": {
+      "videos": "Vídeos",
+      "soundtrack": "Trilha sonora",
+      "soundFx": "Efeitos sonoros"
+    }
+  },
+  "soundFx": {
+    "upload": {
+      "title": "Enviar efeito sonoro",
+      "description": "Os efeitos tocam uma vez para todos que estão nesta campanha.",
+      "titleLabel": "Título",
+      "titlePlaceholder": "Porta batendo, trovão, choque de espadas…",
+      "dropLabel": "Solte um arquivo de áudio aqui, ou clique para procurar",
+      "dropHint": "MP3, OGG, Opus, M4A, WAV ou WebM · até 40 MB",
+      "enterTitleFirst": "Digite primeiro um título para o efeito sonoro.",
+      "success": "Efeito sonoro enviado.",
+      "uploading": "Enviando efeito…"
+    },
+    "downloadPack": "Modelo de Sound FX (ZIP)",
+    "importZip": "Importar ZIP",
+    "importDialog": {
+      "title": "Importar Sound FX",
+      "description": "Solte o ZIP com o sound-fx.json e os arquivos de áudio. Baixe o modelo para ver a estrutura.",
+      "label": "Solte o ZIP de Sound FX aqui, ou clique para procurar",
+      "hint": "ZIP com sound-fx.json e a pasta sounds/"
+    },
+    "readingZip": "Lendo o ZIP…",
+    "uploadingEffects": "Enviando efeitos ({{done}}/{{total}})…",
+    "importedSummary_one": "{{count}} efeito sonoro importado.",
+    "importedSummary_other": "{{count}} efeitos sonoros importados.",
+    "generatingPackage": "Gerando pacote…",
+    "downloading": "Baixando…",
+    "templateDownloaded": "Modelo baixado.",
+    "selectedCount_one": "{{count}} selecionado",
+    "selectedCount_other": "{{count}} selecionados",
+    "clearSelection": "Limpar seleção",
+    "removeSelected": "Remover selecionados",
+    "removeSelectedConfirmTitle_one": "Remover {{count}} efeito sonoro?",
+    "removeSelectedConfirmTitle_other": "Remover {{count}} efeitos sonoros?",
+    "removeSelectedConfirmBody": "Os arquivos selecionados serão removidos permanentemente.",
+    "removedSummary_one": "{{count}} efeito sonoro removido.",
+    "removedSummary_other": "{{count}} efeitos sonoros removidos.",
+    "removeSuccess": "Efeito sonoro removido.",
+    "dragAria": "Arraste para reordenar",
+    "selectAria": "Selecionar {{title}}",
+    "playAria": "Reproduzir {{title}} para todos",
+    "removeAria": "Remover {{title}}",
+    "removeConfirmTitle": "Remover este efeito sonoro?",
+    "removeConfirmBody": "{{title}} será removido permanentemente.",
+    "empty": "Nenhum efeito sonoro ainda.",
+    "gmControlled": "Os efeitos sonoros são acionados pelo mestre.",
+    "fileSize": "{{name}} · {{size}} KB"
+  },
+  "soundtrack": {
+    "import": {
+      "title": "Importar trilha sonora",
+      "description": "Envie um ZIP de trilha sonora com album.json, uma imagem de capa e faixas de áudio.",
+      "copyPrompt": "Copiar prompt de IA",
+      "promptCopied": "Prompt de IA copiado para a área de transferência.",
+      "promptCopyFailed": "Não foi possível copiar o prompt.",
+      "downloadReadme": "Baixar leia-me",
+      "importZip": "Importar ZIP da trilha sonora",
+      "dialogTitle": "Importar trilha sonora",
+      "dialogDescription": "album.json na raiz · qualquer imagem como capa · MP3, OGG, Opus ou M4A",
+      "dropLabel": "Solte o ZIP da trilha sonora aqui, ou clique para procurar",
+      "readingZip": "Lendo o ZIP…",
+      "uploadingAssets": "Enviando capa e faixas…",
+      "updatingSoundtrack": "Atualizando trilha sonora…",
+      "imported": "Trilha sonora importada.",
+      "readmeTaskLabel": "Baixar leia-me (ZIP)",
+      "generatingPackage": "Gerando pacote…",
+      "downloading": "Baixando…",
+      "readmeDownloaded": "Leia-me baixado."
+    },
+    "removeSuccess": "Álbum removido.",
+    "empty": "Nenhum álbum de trilha sonora ainda.",
+    "cover": {
+      "enlargeAria": "Ampliar capa de {{title}}",
+      "altText": "Capa de {{title}}",
+      "enlargedAlt": "Capa de {{title}} ampliada",
+      "zoomOut": "Reduzir zoom",
+      "zoomIn": "Aumentar zoom",
+      "zoomSlider": "Zoom da capa"
+    },
+    "previousAlbum": "Álbum anterior",
+    "nextAlbum": "Próximo álbum",
+    "albumCount": "Álbum {{current}} de {{total}}",
+    "removeAlbumAria": "Remover {{title}}",
+    "removeAlbumConfirmTitle": "Remover este álbum?",
+    "removeAlbumConfirmBody": "{{title}} e todos os seus arquivos de áudio serão removidos permanentemente.",
+    "gmControlled": "A reprodução é sincronizada pelo mestre.",
+    "errors": {
+      "missingAlbumJson": "O pacote deve conter album.json na raiz.",
+      "trackPositions": "As posições das faixas devem começar em 1 sem lacunas.",
+      "missingCover": "Capa ausente: {{path}}",
+      "coverTooLarge": "A capa é maior que 3 MB.",
+      "missingTrack": "Faixa ausente: {{file}}",
+      "unsupportedFormat": "Formato de áudio não suportado: {{file}}",
+      "trackTooLarge": "{{file}} é maior que 40 MB.",
+      "coverMustBeImage": "A capa precisa ser um arquivo de imagem: {{path}}"
+    }
+  },
+  "player": {
+    "previousTrack": "Faixa anterior",
+    "nextTrack": "Próxima faixa",
+    "pause": "Pausar",
+    "play": "Reproduzir",
+    "expandPlayer": "Expandir player",
+    "collapsePlayer": "Recolher player",
+    "stopSoundtrack": "Parar trilha sonora",
+    "loopOne": "Repetir 1",
+    "loopCurrentTrackAria": "Repetir faixa atual",
+    "gmControlled": "Controlado pelo mestre"
+  },
+  "framePicker": {
+    "videoStillLoading": "O vídeo ainda está carregando.",
+    "couldNotReadFrame": "Não foi possível ler o quadro.",
+    "framesUnreadable": "Os quadros deste vídeo não podem ser lidos aqui.",
+    "sliderAria": "Quadro da miniatura",
+    "saving": "Salvando…",
+    "useThisFrame": "Usar este quadro"
+  }
+}

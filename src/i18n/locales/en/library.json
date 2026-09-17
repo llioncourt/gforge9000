@@ -1,0 +1,101 @@
+{
+  "page": {
+    "title": "Library",
+    "description": "Your own traits, skills and gear, grouped into content packs with full provenance."
+  },
+  "actions": {
+    "import": "Import",
+    "exportJson": "Export JSON",
+    "exportCsv": "CSV",
+    "newEntry": "New entry",
+    "addToCharacter": "Add to character",
+    "editAria": "Edit {{name}}",
+    "deleteAria": "Delete {{name}}"
+  },
+  "filters": {
+    "searchPlaceholder": "Search library…",
+    "allKinds": "All kinds",
+    "allPacks": "All packs"
+  },
+  "kinds": {
+    "advantage": "Advantage",
+    "disadvantage": "Disadvantage",
+    "perk": "Perk",
+    "quirk": "Quirk",
+    "skill": "Skill",
+    "technique": "Technique",
+    "spell": "Spell",
+    "equipment": "Equipment",
+    "language": "Language",
+    "culture": "Culture",
+    "custom": "Custom"
+  },
+  "visibility": {
+    "private": "private",
+    "public": "public"
+  },
+  "empty": {
+    "noEntries": "Your library is empty. Create an entry, or import a library export.",
+    "noMatches": "No library entries match these filters."
+  },
+  "card": {
+    "sourcePage": "p.{{page}}"
+  },
+  "export": {
+    "task": "Exporting library (JSON)",
+    "taskCsv": "Exporting library (CSV)",
+    "building": "Building file…",
+    "downloading": "Downloading…",
+    "done_one": "Exported {{count}} entry.",
+    "done_other": "Exported {{count}} entries."
+  },
+  "import": {
+    "title": "Import library",
+    "description": "Drop a Universal Character Forge library JSON file.",
+    "dropLabel": "Drop the library JSON here, or click to browse",
+    "reading": "Reading file…",
+    "importing": "Importing {{count}} entries…",
+    "refreshing": "Refreshing library…",
+    "done_one": "Imported {{count}} entry.",
+    "done_other": "Imported {{count}} entries."
+  },
+  "toasts": {
+    "updated": "Entry updated.",
+    "created": "Library entry created.",
+    "removed": "Entry removed.",
+    "addedToCharacter": "Added to character."
+  },
+  "dialog": {
+    "editTitle": "Edit library entry",
+    "newTitle": "New library entry",
+    "description": "Enter your own content only. Do not paste text you are not licensed to reproduce.",
+    "fields": {
+      "name": "Name",
+      "kind": "Kind",
+      "category": "Category",
+      "basePoints": "Base points",
+      "costPerLevel": "Cost per level",
+      "contentPack": "Content pack",
+      "notes": "Notes",
+      "tags": "Tags (comma separated)",
+      "sourceLabel": "Source label",
+      "edition": "Edition",
+      "pageRef": "Page ref"
+    },
+    "sharePublicly": "Share publicly",
+    "sharePubliclyHint": "Public entries are readable by every signed-in user.",
+    "saveChanges": "Save changes",
+    "createEntry": "Create entry"
+  },
+  "addDialog": {
+    "title": "Add “{{name}}” to a character",
+    "description": "The entry is copied onto the sheet, including its source provenance. Edit it there.",
+    "noCharacters": "You have no characters yet.",
+    "npc": "NPC",
+    "pc": "PC"
+  },
+  "deleteDialog": {
+    "title": "Delete “{{name}}”?",
+    "description": "This removes the library entry. Characters that already use it keep their copy."
+  }
+}

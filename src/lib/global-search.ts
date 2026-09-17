@@ -16,9 +16,12 @@ export type SearchTarget =
 
 export type SearchHit = {
   id: string;
-  group: string;
+  groupKey: string;
   label: string;
+  labelKey?: string;
   sublabel?: string;
+  sublabelKey?: string;
+  sublabelParams?: Record<string, string | number>;
   target: SearchTarget;
 };
 
@@ -55,11 +58,16 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
   const push = (hit: SearchHit) => hits.push(hit);
 
   for (const row of campaigns.data ?? [])
-    push({ id: `campaign-${row.id}`, group: "Campaigns", label: row.name, target: { kind: "campaign", id: row.id } });
+    push({
+      id: `campaign-${row.id}`,
+      groupKey: "search.groups.campaigns",
+      label: row.name,
+      target: { kind: "campaign", id: row.id },
+    });
   for (const row of characters.data ?? [])
     push({
       id: `character-${row.id}`,
-      group: "Characters",
+      groupKey: "search.groups.characters",
       label: row.name,
       ...(row.concept ? { sublabel: row.concept } : {}),
       target: { kind: "character", id: row.id },
@@ -68,8 +76,9 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
     const kind = row.kind ?? "LORE";
     push({
       id: `entity-${row.id}`,
-      group: "World & lore",
-      label: row.name ?? "Untitled",
+      groupKey: "search.groups.worldLore",
+      label: row.name ?? "",
+      ...(row.name ? {} : { labelKey: "search.labels.untitled" }),
       sublabel: kind,
       target: { kind: "entity", id: row.id as string, from: kind === "EVENT" ? "timeline" : "lore" },
     });
@@ -78,30 +87,30 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
   for (const row of sfx.data ?? [])
     push({
       id: `sfx-${row.id}`,
-      group: "Sound FX",
+      groupKey: "search.groups.soundFx",
       label: row.title,
       target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id, sub: "sound-fx" },
     });
   for (const row of albums.data ?? [])
     push({
       id: `album-${row.id}`,
-      group: "Soundtrack",
+      groupKey: "search.groups.soundtrack",
       label: row.title,
-      sublabel: "Album",
+      sublabelKey: "search.sublabels.album",
       target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id, sub: "soundtrack" },
     });
   for (const row of tracks.data ?? [])
     push({
       id: `track-${row.id}`,
-      group: "Soundtrack",
+      groupKey: "search.groups.soundtrack",
       label: row.title,
-      sublabel: "Track",
+      sublabelKey: "search.sublabels.track",
       target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id, sub: "soundtrack" },
     });
   for (const row of videos.data ?? [])
     push({
       id: `video-${row.id}`,
-      group: "Videos",
+      groupKey: "search.groups.videos",
       label: row.title,
       sublabel: campaignVideoTypeLabel(row.video_type),
       target: { kind: "campaign", id: row.campaign_id, tab: "media", item: row.id, sub: "videos" },
@@ -109,7 +118,7 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
   for (const row of notes.data ?? [])
     push({
       id: `note-${row.id}`,
-      group: "Notes & handouts",
+      groupKey: "search.groups.notesHandouts",
       label: row.title,
       sublabel: row.kind,
       target: { kind: "campaign", id: row.campaign_id, tab: "notes", item: row.id },
@@ -117,23 +126,29 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
   for (const row of assets.data ?? [])
     push({
       id: `asset-${row.id}`,
-      group: "Campaign library",
+      groupKey: "search.groups.campaignLibrary",
       label: row.title,
       target: { kind: "campaign", id: row.campaign_id, tab: "library", item: row.id },
     });
   for (const row of maps.data ?? [])
     push({
       id: `map-${row.id}`,
-      group: "Battle maps",
+      groupKey: "search.groups.battleMaps",
       label: row.name,
       target: { kind: "campaign", id: row.campaign_id, tab: "battle", item: row.id },
     });
   for (const row of library.data ?? [])
-    push({ id: `lib-${row.id}`, group: "Rules library", label: row.name, sublabel: row.kind, target: { kind: "library", item: row.id } });
+    push({
+      id: `lib-${row.id}`,
+      groupKey: "search.groups.rulesLibrary",
+      label: row.name,
+      sublabel: row.kind,
+      target: { kind: "library", item: row.id },
+    });
   for (const row of packs.data ?? [])
     push({
       id: `pack-${row.id}`,
-      group: "Content packs",
+      groupKey: "search.groups.contentPacks",
       label: row.name,
       ...(row.source_label ? { sublabel: row.source_label } : {}),
       target: { kind: "packs" },
@@ -142,9 +157,10 @@ export async function globalSearch(term: string): Promise<SearchHit[]> {
     if (!row.campaign_id) continue;
     push({
       id: `roll-${row.id}`,
-      group: "Dice rolls",
+      groupKey: "search.groups.diceRolls",
       label: row.label,
-      sublabel: `Total ${row.total}`,
+      sublabelKey: "search.sublabels.total",
+      sublabelParams: { total: row.total },
       target: { kind: "campaign", id: row.campaign_id, tab: "rolls", item: row.id },
     });
   }

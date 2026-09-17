@@ -1,0 +1,91 @@
+{
+  "page": {
+    "title": "Packs",
+    "description": "Content packs group your library into reusable sets you can curate, share and enable per campaign.",
+    "newPack": "New pack"
+  },
+  "filters": {
+    "searchPlaceholder": "Search packs…"
+  },
+  "actions": {
+    "importPack": "Import a pack",
+    "addToPack": "Add to pack",
+    "movePack": "Move to {{pack}}",
+    "rename": "Rename",
+    "deletePack": "Delete pack",
+    "exportPack": "Export pack"
+  },
+  "empty": {
+    "noPacks": "No packs yet. Create one, or import a pack JSON file.",
+    "noEntries": "This pack has no entries yet. Add existing library entries above, or import a pack file.",
+    "noOtherEntries": "No other entries available"
+  },
+  "card": {
+    "entries_one": "{{count}} entry",
+    "entries_other": "{{count}} entries",
+    "shared": "Shared",
+    "userContent": "User content",
+    "enabledIn": "Enabled in {{campaigns}}",
+    "notEnabled": "Not enabled in any campaign you run"
+  },
+  "detail": {
+    "provenance": "Provenance",
+    "provenanceLine": "{{sources}}{{edition}} · {{type}} content",
+    "userContent": "User content",
+    "summaryLine": "{{count}} entries · {{kinds}} · visibility {{visibility}}",
+    "entries_one": "{{count}} entry",
+    "entries_other": "{{count}} entries",
+    "noEntriesYet": "no entries yet",
+    "enabledInCampaigns": "Enabled in campaigns you run",
+    "noCampaigns": "You do not run any campaign yet.",
+    "allPacksAllowed": "All packs allowed",
+    "enableAria": "Enable {{pack}} in {{campaign}}",
+    "addEntryLabel": "Add a library entry to this pack",
+    "choosePlaceholder": "Choose an entry…",
+    "defaultContentPack": "Content pack"
+  },
+  "toasts": {
+    "created": "Pack created.",
+    "deleted": "Pack deleted.",
+    "deletedKeepsCustom": "Pack deleted. Anything already on a sheet is now custom.",
+    "renamed": "Pack renamed."
+  },
+  "import": {
+    "reading": "Reading file…",
+    "creating": "Creating pack “{{name}}”…",
+    "importing": "Importing {{count}} entries…",
+    "refreshing": "Refreshing packs…",
+    "done": "Imported {{count}} entries into “{{name}}”."
+  },
+  "export": {
+    "task": "Exporting pack",
+    "building": "Building file…",
+    "downloading": "Downloading…",
+    "done": "Exported {{count}} entries from “{{name}}”."
+  },
+  "newDialog": {
+    "title": "New content pack",
+    "description": "A pack groups your own library entries. Every entry belongs to a pack.",
+    "name": "Name",
+    "description2": "Description",
+    "create": "Create pack"
+  },
+  "importDialog": {
+    "title": "Import pack",
+    "description": "Drop a Universal Character Forge pack JSON file.",
+    "dropLabel": "Drop the pack JSON here, or click to browse"
+  },
+  "renameDialog": {
+    "title": "Rename pack",
+    "name": "Name",
+    "rename": "Rename",
+    "errorNameRequired": "Give the pack a name."
+  },
+  "deleteDialog": {
+    "confirmTitle": "Delete this pack?",
+    "confirmDescriptionList": "This permanently removes “{{name}}” and every entry inside it. Campaigns that had this pack enabled will lose access to its content. This cannot be undone.",
+    "confirmDescriptionDetail": "Every entry inside this pack is deleted with it. Anything already added to a character stays on the sheet and becomes a custom entry.",
+    "deletePackAria": "Delete pack"
+  },
+  "allPacksLink": "All packs"
+}

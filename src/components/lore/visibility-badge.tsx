@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { normalizeVisibility, VISIBILITY_LABELS } from "@/lib/visibility";
+import { normalizeVisibility } from "@/lib/visibility";
+import { useT } from "@/i18n/hooks";
 
 type VisibilityBadgeProps = {
   visibility: string | boolean | null | undefined;
@@ -17,6 +18,7 @@ const TONES: Record<string, string> = {
 };
 
 export function VisibilityBadge({ visibility, isGm, className }: VisibilityBadgeProps) {
+  const { t } = useT("lore");
   if (!isGm) return null;
   const normalized = normalizeVisibility(visibility);
   return (
@@ -24,7 +26,7 @@ export function VisibilityBadge({ visibility, isGm, className }: VisibilityBadge
       variant="outline"
       className={cn("shrink-0 text-[10px] uppercase", TONES[normalized], className)}
     >
-      {VISIBILITY_LABELS[normalized]}
+      {t(`visibility.${normalized}`)}
     </Badge>
   );
 }

@@ -3,6 +3,7 @@ import { ZoomIn } from "lucide-react";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/hooks";
 
 /**
  * Renders an image that opens a fullscreen zoom dialog on click.
@@ -23,12 +24,13 @@ export function ImageZoom({
   imgClassName?: string | undefined;
   onError?: (() => void) | undefined;
 }) {
+  const { t } = useT("common");
   const [open, setOpen] = useState(false);
   return (
     <>
       <button
         type="button"
-        aria-label={`Zoom ${alt}`}
+        aria-label={t("a11y.zoomImage", { name: alt })}
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();

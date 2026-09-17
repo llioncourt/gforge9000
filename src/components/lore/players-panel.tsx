@@ -21,12 +21,16 @@ import { revealEntityToPlayer, revokeEntityReveal } from "@/lib/reveal";
 import { EntityThumb } from "@/components/lore/entity-thumb";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import { useSession } from "@/hooks/use-session";
+import { useT, useFormatters } from "@/i18n/hooks";
 
 /**
  * GM-facing reveal board: which lore record each player has been let in on.
  * Players see the same board read-only, limited to their own reveals by RLS.
  */
 export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const { t } = useT("lore");
+  const { t: tc } = useT("common");
+  const f = useFormatters();
   const queryClient = useQueryClient();
   const { user } = useSession();
   const [pickerFor, setPickerFor] = useState<string | null>(null);
@@ -61,16 +65,16 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
   const give = useMutation({
     mutationFn: async (input: { userId: string; entityId: string }) => {
       const entity = entityById.get(input.entityId);
-      if (!entity) throw new Error("Record not found");
+      if (!entity) throw new Error(t("reveals.recordNotFound"));
       return revealEntityToPlayer({ entity, userId: input.userId, gmId: user!.id });
     },
     onSuccess: async (result) => {
       if (result.alreadyPublic) {
-        toast.success("Revealed — this record was already visible to every player");
+        toast.success(t("reveals.alreadyPublic"));
       } else if (result.promotedTo) {
-        toast.success("Revealed to the player (visibility set to “Selected players”)");
+        toast.success(t("playersPanel.toasts.revealedPromoted"));
       } else {
-        toast.success("Revealed to the player");
+        toast.success(t("reveals.revealedToPlayer"));
       }
       await invalidate();
     },
@@ -89,7 +93,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
       });
     },
     onSuccess: async (result) => {
-      toast.success(result.demoted ? "Reveal removed — record is GM only again" : "Reveal removed");
+      toast.success(result.demoted ? t("reveals.removedDemoted") : t("reveals.removed"));
       await invalidate();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -122,11 +126,11 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
       <div className="space-y-4">
         <p className="text-muted-foreground flex items-center gap-2 text-sm">
           <Sparkles className="text-primary size-4" />
-          These are the secret records the GM has revealed to you.
+          {t("playersPanel.playerIntro")}
         </p>
         {mine.length === 0 ? (
           <div className="panel text-muted-foreground p-8 text-center text-sm">
-            No secret records revealed yet — when the GM shares one, it appears here.
+            {t("playersPanel.emptyPlayerRecords")}
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -144,13 +148,13 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                     <EntityThumb
                       path={entity?.image_url}
                       fallbackPath={portraitFor(entity)}
-                      name={entity?.name ?? "Record"}
+                      name={entity?.name ?? tc("labels.untitled")}
                       className="size-14"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <span className="group-hover:text-primary truncate font-medium">
-                          {entity?.name ?? "Record"}
+                          {entity?.name ?? tc("labels.untitled")}
                         </span>
                         <ChevronRight className="text-muted-foreground group-hover:text-primary mt-0.5 size-4 shrink-0 transition group-hover:translate-x-0.5" />
                       </div>
@@ -159,7 +163,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                           {kindDef(entity?.kind ?? "note").label}
                         </Badge>
                         <span className="text-muted-foreground text-xs">
-                          Revealed {new Date(grant.created_at).toLocaleDateString()}
+                          {t("playersPanel.revealedOn", { date: f.date(grant.created_at) })}
                         </span>
                       </div>
                       {entity?.summary ? (
@@ -186,9 +190,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
   return (
     <div className="space-y-4">
       <p className="text-muted-foreground text-sm">
-        {isGm
-          ? "Secret records stay hidden until you reveal them here. Public records are always visible."
-          : "These are the secret records the GM has revealed to you."}
+        {isGm ? t("playersPanel.gmIntro") : t("playersPanel.playerIntro")}
       </p>
       {rows.map((member) => {
         const mine = (grants.data ?? []).filter((g) => g.user_id === member.user_id);
@@ -214,21 +216,25 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                 >
                   <DialogTrigger asChild>
                     <Button size="sm" variant="outline">
-                      <Plus className="mr-1 size-3.5" /> Reveal a record
+                      <Plus className="mr-1 size-3.5" /> {t("playersPanel.revealARecord")}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Reveal to {member.display_name}</DialogTitle>
+                      <DialogTitle>
+                        {t("playersPanel.revealToDialogTitle", { name: member.display_name })}
+                      </DialogTitle>
                     </DialogHeader>
                     <Input
-                      placeholder="Search records"
+                      placeholder={t("playersPanel.searchRecordsPlaceholder")}
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
                     />
                     <div className="space-y-1">
                       {candidates.length === 0 ? (
-                        <p className="text-muted-foreground text-sm">Nothing left to reveal.</p>
+                        <p className="text-muted-foreground text-sm">
+                          {t("playersPanel.nothingLeftToReveal")}
+                        </p>
                       ) : (
                         candidates.map((row) => (
                           <button
@@ -253,7 +259,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
               ) : null}
             </div>
             {mine.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No secret records revealed yet.</p>
+              <p className="text-muted-foreground text-sm">{t("playersPanel.emptyGmSideRecords")}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {mine.map((grant) => {
@@ -269,12 +275,12 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                         search={{ from: "reveals" }}
                         className="hover:underline"
                       >
-                        {entity?.name ?? "Record"}
+                        {entity?.name ?? tc("labels.untitled")}
                       </Link>
                       {isGm ? (
                         <button
                           type="button"
-                          aria-label="Remove reveal"
+                          aria-label={t("playersPanel.removeRevealAria")}
                           onClick={() =>
                             revoke.mutate({ grantId: grant.id, entityId: grant.entity_id })
                           }

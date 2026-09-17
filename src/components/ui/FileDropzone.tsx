@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/hooks";
 
 export interface FileDropzoneProps {
   onFiles: (files: File[]) => void;
@@ -21,13 +22,16 @@ export function FileDropzone({
   onFiles,
   accept,
   multiple = false,
-  label = "Drop a file here, or click to browse",
+  label,
   hint,
   compact = false,
   className,
   loading = false,
-  loadingLabel = "Importing…",
+  loadingLabel,
 }: FileDropzoneProps) {
+  const { t } = useT("common");
+  const resolvedLabel = label ?? t("dropzone.default");
+  const resolvedLoadingLabel = loadingLabel ?? t("upload.importing");
   const inputRef = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
 
@@ -69,11 +73,11 @@ export function FileDropzone({
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          {loadingLabel}
+          {resolvedLoadingLabel}
         </div>
       ) : (
         <>
-          <div>{label}</div>
+          <div>{resolvedLabel}</div>
           {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
         </>
       )}

@@ -44,10 +44,13 @@ import {
 } from "@/lib/battlemap";
 import { BattleGrid } from "./battle-grid";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
+import { useT } from "@/i18n/hooks";
 
 type Cell = { x: number; y: number };
 
 export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: string; isGm: boolean; focusMapId?: string | null }) {
+  const { t } = useT("battle");
+  const { t: tc } = useT("common");
   const queryClient = useQueryClient();
   const { user } = useSession();
   const [mapId, setMapId] = useState<string | null>(null);
@@ -124,7 +127,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
     mutationFn: () =>
       createMap({
         campaign_id: campaignId,
-        name: `Map ${(maps.data?.length ?? 0) + 1}`,
+        name: t("panel.newMapName", { number: (maps.data?.length ?? 0) + 1 }),
         is_active: (maps.data?.length ?? 0) === 0,
         grid_type: "hex",
       }),
@@ -147,7 +150,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
       return updateMap(current!.id, { image_path: path });
     },
     onSuccess: async () => {
-      toast.success("Map image updated");
+      toast.success(t("panel.mapImageUpdated"));
       await queryClient.invalidateQueries({ queryKey: ["map-image"] });
       await invalidateMaps();
     },
@@ -248,7 +251,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
 
   function addTokenFromPicker(value: string) {
     if (value === "marker") {
-      addToken.mutate({ characterId: null, label: "Marker" });
+      addToken.mutate({ characterId: null, label: t("panel.marker") });
       return;
     }
     if (value.startsWith("char:")) {
@@ -280,13 +283,11 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
       <div className="space-y-4 rounded-lg border p-8 text-center">
         <MapIcon className="text-muted-foreground mx-auto size-8" />
         <p className="text-muted-foreground text-sm">
-          {isGm
-            ? "No battle map yet. Create one and drop in a background image."
-            : "The GM has not shared a battle map yet."}
+          {isGm ? t("panel.noMapGm") : t("panel.noMapPlayer")}
         </p>
         {isGm ? (
           <Button onClick={() => addMap.mutate()} disabled={addMap.isPending}>
-            <Plus className="mr-2 size-4" /> New map
+            <Plus className="mr-2 size-4" /> {t("panel.newMap")}
           </Button>
         ) : null}
       </div>
@@ -297,7 +298,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="w-56">
-          <Label className="text-xs">Map</Label>
+          <Label className="text-xs">{t("panel.map")}</Label>
           <Select value={current.id} onValueChange={setMapId}>
             <SelectTrigger>
               <SelectValue />
@@ -319,14 +320,14 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
             variant={tool === "move" ? "default" : "outline"}
             onClick={() => setTool("move")}
           >
-            <Hand className="mr-1 size-4" /> Move
+            <Hand className="mr-1 size-4" /> {t("panel.move")}
           </Button>
           <Button
             size="sm"
             variant={tool === "measure" ? "default" : "outline"}
             onClick={() => setTool("measure")}
           >
-            <Crosshair className="mr-1 size-4" /> Measure
+            <Crosshair className="mr-1 size-4" /> {t("panel.measure")}
           </Button>
           {isGm ? (
             <Button
@@ -334,7 +335,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
               variant={tool === "fog" ? "default" : "outline"}
               onClick={() => setTool("fog")}
             >
-              <EyeOff className="mr-1 size-4" /> Fog
+              <EyeOff className="mr-1 size-4" /> {t("panel.fog")}
             </Button>
           ) : null}
         </div>
@@ -342,7 +343,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
         <div className="flex items-center gap-2">
           <Switch id="show3d" checked={show3d} onCheckedChange={setShow3d} />
           <Label htmlFor="show3d" className="text-xs">
-            3D tokens
+            {t("panel.tokens3d")}
           </Label>
         </div>
 
@@ -355,14 +356,14 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
                 onCheckedChange={(checked) => patchMap.mutate({ visible_to_players: checked })}
               />
               <Label htmlFor="visible" className="text-xs">
-                <Eye className="mr-1 inline size-3.5" /> Players can see
+                <Eye className="mr-1 inline size-3.5" /> {t("panel.playersCanSee")}
               </Label>
             </div>
             <Button size="sm" variant="outline" onClick={() => addMap.mutate()}>
-              <Plus className="mr-1 size-4" /> New map
+              <Plus className="mr-1 size-4" /> {t("panel.newMap")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => setConfirmDelete(true)}>
-              <Trash2 className="mr-1 size-4" /> Delete map
+              <Trash2 className="mr-1 size-4" /> {t("panel.deleteMap")}
             </Button>
           </div>
         ) : null}
@@ -371,7 +372,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
       {isGm ? (
         <div className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2 lg:grid-cols-6">
           <div className="space-y-1">
-            <Label className="text-xs">Name</Label>
+            <Label className="text-xs">{t("panel.name")}</Label>
             <Input
               defaultValue={current.name}
               onBlur={(event) => {
@@ -380,7 +381,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Grid</Label>
+            <Label className="text-xs">{t("panel.grid")}</Label>
             <Select
               value={current.grid_type}
               onValueChange={(value) => patchMap.mutate({ grid_type: value })}
@@ -389,14 +390,14 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="square">Square</SelectItem>
-                <SelectItem value="hex">Hex</SelectItem>
-                <SelectItem value="none">None</SelectItem>
+                <SelectItem value="square">{t("panel.gridSquare")}</SelectItem>
+                <SelectItem value="hex">{t("panel.gridHex")}</SelectItem>
+                <SelectItem value="none">{t("panel.gridNone")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Cell size (px)</Label>
+            <Label className="text-xs">{t("panel.cellSize")}</Label>
             <Input
               type="number"
               defaultValue={Number(current.grid_size)}
@@ -404,7 +405,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Offset X / Y</Label>
+            <Label className="text-xs">{t("panel.offset")}</Label>
             <div className="flex gap-1">
               <Input
                 type="number"
@@ -423,7 +424,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
             </div>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Distance per cell</Label>
+            <Label className="text-xs">{t("panel.distancePerCell")}</Label>
             <Input
               type="number"
               step="0.1"
@@ -432,7 +433,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
             />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Unit</Label>
+            <Label className="text-xs">{t("panel.unit")}</Label>
             <Input
               defaultValue={current.unit_name}
               onBlur={(event) => patchMap.mutate({ unit_name: event.target.value || "yd" })}
@@ -448,7 +449,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
           label={
             <span className="flex items-center gap-2 text-sm">
               <Upload className="size-4" />
-              {upload.isPending ? "Uploading…" : "Drop a map image here (PNG, JPEG, WebP, AVIF)"}
+              {upload.isPending ? t("panel.uploadingImage") : t("panel.dropMapImage")}
             </span>
           }
           onFiles={(files) => files[0] && upload.mutate(files[0])}
@@ -458,10 +459,10 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
       {isGm ? (
         <div className="flex flex-wrap items-end gap-3 rounded-lg border p-3">
           <div className="w-72 space-y-1">
-            <Label className="text-xs">Add token</Label>
+            <Label className="text-xs">{t("panel.addToken")}</Label>
             <Select value="" onValueChange={addTokenFromPicker}>
               <SelectTrigger>
-                <SelectValue placeholder="Pick a character, NPC or marker" />
+                <SelectValue placeholder={t("panel.pickToken")} />
               </SelectTrigger>
               <SelectContent>
                 {availableCharacters.map((c) => (
@@ -471,16 +472,16 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
                 ))}
                 {availableNpcs.map((n) => (
                   <SelectItem key={n.id} value={`npc:${n.id}`}>
-                    {n.name} (NPC)
+                    {t("panel.npcSuffix", { name: n.name })}
                   </SelectItem>
                 ))}
-                <SelectItem value="marker">Blank marker</SelectItem>
+                <SelectItem value="marker">{t("panel.blankMarker")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           {availableCharacters.length === 0 && availableNpcs.length === 0 ? (
             <p className="text-muted-foreground pb-2 text-xs">
-              Every character and NPC is already on the grid.
+              {t("panel.allPlaced")}
             </p>
           ) : null}
         </div>
@@ -506,7 +507,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
       {selected ? (
         <div className="flex flex-wrap items-end gap-3 rounded-lg border p-3">
           <div className="space-y-1">
-            <Label className="text-xs">Label</Label>
+            <Label className="text-xs">{t("panel.label")}</Label>
             <Input
               key={selected.id}
               defaultValue={selected.label}
@@ -517,7 +518,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
             />
           </div>
           <div className="w-28 space-y-1">
-            <Label className="text-xs">Size (cells)</Label>
+            <Label className="text-xs">{t("panel.size")}</Label>
             <Input
               key={`${selected.id}-size`}
               type="number"
@@ -544,7 +545,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
                   }
                 />
                 <Label htmlFor="token-hidden" className="text-xs">
-                  Hidden from players
+                  {t("panel.hiddenFromPlayers")}
                 </Label>
               </div>
               <Button
@@ -553,7 +554,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
                 className="mb-1"
                 onClick={() => removeToken.mutate(selected.id)}
               >
-                <Trash2 className="mr-1 size-4" /> Remove token
+                <Trash2 className="mr-1 size-4" /> {t("panel.removeToken")}
               </Button>
             </>
           ) : null}
@@ -563,14 +564,14 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this map?</AlertDialogTitle>
+            <AlertDialogTitle>{t("panel.deleteMapTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              The map and every token on it will be removed for the whole table.
+              {t("panel.deleteMapDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => removeMap.mutate()}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => removeMap.mutate()}>{tc("actions.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

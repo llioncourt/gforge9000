@@ -26,14 +26,17 @@ import { AmbientBackground } from "@/components/app/ambient-background";
 import { NotificationBell } from "@/components/app/notification-bell";
 import { ProfileMenu } from "@/components/app/profile-menu";
 import { AppUpdateNotice } from "@/components/app/app-update-notice";
+import { LanguageSelector, useAccountLocale } from "@/components/app/language-selector";
+import { useT } from "@/i18n/hooks";
 
+/** Navigation items keep a translation key, never a literal label. */
 const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/characters", label: "Characters", icon: Shield },
-  { to: "/campaigns", label: "Campaigns", icon: Users },
-  { to: "/library", label: "Library", icon: BookOpen },
-  { to: "/packs", label: "Packs", icon: Boxes },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/dashboard", labelKey: "links.dashboard", icon: LayoutDashboard },
+  { to: "/characters", labelKey: "links.characters", icon: Shield },
+  { to: "/campaigns", labelKey: "links.campaigns", icon: Users },
+  { to: "/library", labelKey: "links.library", icon: BookOpen },
+  { to: "/packs", labelKey: "links.packs", icon: Boxes },
+  { to: "/settings", labelKey: "links.settings", icon: Settings },
 ] as const;
 
 
@@ -45,6 +48,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { t } = useT("navigation");
+  useAccountLocale();
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -97,31 +102,31 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <div className="leading-tight">
             <p className="font-display text-sm font-semibold text-sidebar-foreground">
-              Character Forge
+              {t("brand.name")}
             </p>
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              GURPS 4e compatible
+              {t("brand.tagline")}
             </p>
           </div>
           <button
             className="ml-auto text-muted-foreground hover:text-foreground lg:hidden"
             onClick={() => setOpen(false)}
-            aria-label="Close navigation"
+            aria-label={t("sidebar.close")}
           >
             <X className="h-4 w-4" />
           </button>
           <button
             className="ml-auto hidden text-muted-foreground hover:text-foreground lg:block"
             onClick={() => toggleCollapsed(true)}
-            aria-label="Collapse sidebar"
-            title="Collapse sidebar"
+            aria-label={t("sidebar.collapse")}
+            title={t("sidebar.collapse")}
           >
             <PanelLeftClose className="h-4 w-4" />
           </button>
         </div>
 
         <nav className="space-y-1 p-3">
-          {NAV.map(({ to, label, icon: Icon }) => (
+          {NAV.map(({ to, labelKey, icon: Icon }) => (
             <Link
               key={to}
               to={to}
@@ -132,20 +137,20 @@ export function AppShell({ children }: { children: ReactNode }) {
               }}
             >
               <Icon className="h-4 w-4" />
-              {label}
+              {t(labelKey)}
             </Link>
           ))}
         </nav>
 
         <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-sidebar-border p-3">
           <Button variant="outline" size="sm" className="w-full justify-start gap-2" onClick={() => setTrayOpen(true)}>
-            <Dices className="h-4 w-4" /> Dice tray
+            <Dices className="h-4 w-4" /> {t("header.diceTray")}
           </Button>
           <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={signOut}>
-            <LogOut className="h-4 w-4" /> Sign out
+            <LogOut className="h-4 w-4" /> {t("header.signOut")}
           </Button>
           <Link to="/legal" className="block px-2 text-[11px] text-muted-foreground hover:text-foreground">
-            Unofficial companion · Legal & content policy
+            {t("links.legal")}
           </Link>
         </div>
       </aside>
@@ -163,7 +168,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               setOpen(true);
               if (collapsed) toggleCollapsed(false);
             }}
-            aria-label="Open navigation"
+            aria-label={t("sidebar.open")}
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -172,19 +177,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="glass-soft flex h-10 min-w-0 flex-1 max-w-md items-center gap-2 rounded-md px-3 text-sm text-muted-foreground transition-colors hover:border-ring"
           >
             <Search className="h-4 w-4 shrink-0" />
-            <span className="truncate">Search ANYTHING!</span>
+            <span className="truncate">{t("header.search")}</span>
           </button>
           <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
             <Button
               size="sm"
               variant="secondary"
               className="gap-2"
-              aria-label="Roll dice"
+              aria-label={t("header.rollDice")}
               onClick={() => setTrayOpen(true)}
             >
               <Dices className="h-4 w-4" />
-              <span className="hidden sm:inline">Roll</span>
+              <span className="hidden sm:inline">{t("header.roll")}</span>
             </Button>
+            <LanguageSelector className="hidden sm:inline-flex" />
             <NotificationBell />
             <ProfileMenu onSignOut={signOut} />
           </div>
@@ -196,17 +202,18 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
 
         <footer className="no-print border-t border-border px-6 py-6 text-xs leading-relaxed text-muted-foreground">
-          Universal Character Forge is an unofficial, independent companion tool. GURPS is a
-          trademark of Steve Jackson Games Incorporated; this project is not affiliated with,
-          endorsed or sponsored by Steve Jackson Games. No rulebook text, tables or artwork are
-          reproduced here. <Link to="/legal" className="underline hover:text-foreground">Read the full policy</Link>.
+          {t("footer.disclaimer")}{" "}
+          <Link to="/legal" className="underline hover:text-foreground">
+            {t("footer.policyLink")}
+          </Link>
+          .
         </footer>
       </div>
 
       {open ? (
         <button
           className="fixed inset-0 z-30 bg-background/60 backdrop-blur-sm lg:hidden"
-          aria-label="Close navigation overlay"
+          aria-label={t("sidebar.closeOverlay")}
           onClick={() => setOpen(false)}
         />
       ) : null}

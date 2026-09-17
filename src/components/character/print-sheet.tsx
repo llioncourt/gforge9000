@@ -1,6 +1,7 @@
 import type { CharacterRow } from "@/lib/api";
 import type { CharacterEntry, CharacterSheet } from "@/rules";
 import { PortraitFrame } from "@/components/character/portrait";
+import { useT } from "@/i18n/hooks";
 
 /**
  * Dedicated print-first character sheet: A4 portrait, grayscale, dense and
@@ -17,6 +18,7 @@ export function PrintSheet({
   entries: CharacterEntry[];
   portraitUrl: string | null;
 }) {
+  const { t } = useT("characters");
   const appearance = (character.appearance ?? {}) as Record<string, string>;
   const traits = entries.filter((e) =>
     ["advantage", "perk", "custom", "language", "culture"].includes(e.kind),
@@ -24,49 +26,56 @@ export function PrintSheet({
   const drawbacks = entries.filter((e) => ["disadvantage", "quirk"].includes(e.kind));
   const gear = entries.filter((e) => e.kind === "equipment");
 
+  const noValue = t("sheet.print.noValue");
+
   return (
     <div className="print-sheet">
       <header className="print-head">
         <div className="print-head-main">
-          <h1 className="print-title">{character.name || "Unnamed character"}</h1>
+          <h1 className="print-title">{character.name || t("sheet.print.unnamedCharacter")}</h1>
           <p className="print-sub">
-            {[character.concept, character.player_name ? `Player: ${character.player_name}` : null]
+            {[
+              character.concept,
+              character.player_name
+                ? t("sheet.print.playerPrefix", { name: character.player_name })
+                : null,
+            ]
               .filter(Boolean)
-              .join(" · ") || "—"}
+              .join(" · ") || noValue}
           </p>
           <table className="print-table print-identity">
             <tbody>
               <tr>
-                <th>Points</th>
+                <th>{t("sheet.print.labels.points")}</th>
                 <td>
                   {sheet.points.total} / {character.point_budget}
                 </td>
-                <th>TL</th>
+                <th>{t("sheet.print.labels.tl")}</th>
                 <td>{character.tech_level}</td>
-                <th>Wealth</th>
+                <th>{t("sheet.print.labels.wealth")}</th>
                 <td>{character.wealth}</td>
-                <th>Status</th>
+                <th>{t("sheet.print.labels.status")}</th>
                 <td>{character.status}</td>
               </tr>
               <tr>
-                <th>Age</th>
+                <th>{t("sheet.print.labels.age")}</th>
                 <td>{appearance["age"] ?? ""}</td>
-                <th>Height</th>
+                <th>{t("sheet.print.labels.height")}</th>
                 <td>{appearance["height"] ?? ""}</td>
-                <th>Weight</th>
+                <th>{t("sheet.print.labels.weight")}</th>
                 <td>{appearance["weight"] ?? ""}</td>
-                <th>Build</th>
+                <th>{t("sheet.print.labels.build")}</th>
                 <td>{appearance["build"] ?? ""}</td>
               </tr>
               <tr>
-                <th>Hair</th>
+                <th>{t("sheet.print.labels.hair")}</th>
                 <td>{appearance["hair"] ?? ""}</td>
-                <th>Eyes</th>
+                <th>{t("sheet.print.labels.eyes")}</th>
                 <td>{appearance["eyes"] ?? ""}</td>
-                <th>Hand</th>
+                <th>{t("sheet.print.labels.hand")}</th>
                 <td>{appearance["handedness"] ?? ""}</td>
-                <th>Type</th>
-                <td>{character.is_npc ? "NPC" : "PC"}</td>
+                <th>{t("sheet.print.labels.type")}</th>
+                <td>{character.is_npc ? t("sheet.print.npc") : t("sheet.print.pc")}</td>
               </tr>
             </tbody>
           </table>
@@ -74,18 +83,18 @@ export function PrintSheet({
           <div className="print-stat-row">
             {(
               [
-                ["ST", sheet.stats.st],
-                ["DX", sheet.stats.dx],
-                ["IQ", sheet.stats.iq],
-                ["HT", sheet.stats.ht],
-                ["HP", sheet.stats.hp],
-                ["Will", sheet.stats.will],
-                ["Per", sheet.stats.per],
-                ["FP", sheet.stats.fp],
-                ["Speed", sheet.stats.basicSpeed.toFixed(2)],
-                ["Move", sheet.encumbrance.effectiveMove],
-                ["Dodge", sheet.encumbrance.effectiveDodge],
-                ["BL", sheet.stats.basicLift],
+                [t("sheet.stats.st"), sheet.stats.st],
+                [t("sheet.stats.dx"), sheet.stats.dx],
+                [t("sheet.stats.iq"), sheet.stats.iq],
+                [t("sheet.stats.ht"), sheet.stats.ht],
+                [t("sheet.stats.hp"), sheet.stats.hp],
+                [t("sheet.stats.will"), sheet.stats.will],
+                [t("sheet.stats.per"), sheet.stats.per],
+                [t("sheet.stats.fp"), sheet.stats.fp],
+                [t("sheet.stats.speed"), sheet.stats.basicSpeed.toFixed(2)],
+                [t("sheet.stats.move"), sheet.encumbrance.effectiveMove],
+                [t("sheet.stats.dodge"), sheet.encumbrance.effectiveDodge],
+                [t("sheet.stats.bl"), sheet.stats.basicLift],
               ] as const
             ).map(([label, value]) => (
               <div key={label} className="print-stat">
@@ -98,91 +107,121 @@ export function PrintSheet({
 
         {/* Reserved portrait box — kept even when no image exists. */}
         <div className="print-portrait">
-          <PortraitFrame url={portraitUrl} name={character.name || "Character"} eager />
-          <p className="print-portrait-caption">Portrait</p>
+          <PortraitFrame
+            url={portraitUrl}
+            name={character.name || t("sheet.print.portraitFallbackName")}
+            eager
+          />
+          <p className="print-portrait-caption">{t("sheet.print.portraitCaption")}</p>
         </div>
       </header>
 
       <section className="print-cols">
         <PrintTable
-          title="Advantages, perks & background"
-          head={["Trait", "Lv", "Pts"]}
+          title={t("sheet.print.advantagesTitle")}
+          head={[t("sheet.print.headTrait"), t("sheet.print.headLv"), t("sheet.print.headPts")]}
           rows={traits.map((e) => [e.name, String(e.levels), String(e.points * Math.max(1, e.levels))])}
+          emptyLabel={noValue}
         />
         <PrintTable
-          title="Disadvantages & quirks"
-          head={["Trait", "Lv", "Pts"]}
+          title={t("sheet.print.disadvantagesTitle")}
+          head={[t("sheet.print.headTrait"), t("sheet.print.headLv"), t("sheet.print.headPts")]}
           rows={drawbacks.map((e) => [
             e.name,
             String(e.levels),
             String(e.points * Math.max(1, e.levels)),
           ])}
+          emptyLabel={noValue}
         />
       </section>
 
       <PrintTable
-        title="Skills, techniques & abilities"
-        head={["Name", "Kind", "Relative", "Pts", "Level"]}
+        title={t("sheet.print.skillsTitle")}
+        head={[
+          t("sheet.print.headName"),
+          t("sheet.print.headKind"),
+          t("sheet.print.headRelative"),
+          t("sheet.print.headPts"),
+          t("sheet.print.headLevel"),
+        ]}
         rows={sheet.skills.map(({ entry, level }) => [
           entry.name +
             (entry.data["specialization"] ? ` (${String(entry.data["specialization"])})` : ""),
           entry.kind,
           level.label,
           String(Number(entry.data["points"] ?? 0)),
-          String(level.effective ?? "—"),
+          String(level.effective ?? noValue),
         ])}
+        emptyLabel={noValue}
       />
 
       <PrintTable
-        title={`Equipment — carried ${sheet.encumbrance.carriedWeight} · total ${sheet.encumbrance.totalWeight} · ${sheet.encumbrance.label}`}
-        head={["Item", "Qty", "Weight", "Cost", "DR", "State"]}
+        title={t("sheet.print.equipmentTitle", {
+          carried: sheet.encumbrance.carriedWeight,
+          total: sheet.encumbrance.totalWeight,
+          label: sheet.encumbrance.label,
+        })}
+        head={[
+          t("sheet.print.headItem"),
+          t("sheet.print.headQty"),
+          t("sheet.print.headWeight"),
+          t("sheet.print.headCost"),
+          t("sheet.print.headDr"),
+          t("sheet.print.headState"),
+        ]}
         rows={gear.map((e) => [
           e.name,
           String(Number(e.data["quantity"] ?? 1)),
           String(Number(e.data["weight"] ?? 0)),
           String(Number(e.data["cost"] ?? 0)),
-          String(Number(e.data["dr"] ?? 0) || "—"),
-          e.data["carried"] === false ? "Stored" : "Carried",
+          String(Number(e.data["dr"] ?? 0) || noValue),
+          e.data["carried"] === false
+            ? t("sheet.equipmentTable.stored")
+            : t("sheet.equipmentTable.carried"),
         ])}
+        emptyLabel={noValue}
       />
 
       <section className="print-cols">
         <div className="print-block">
-          <h2 className="print-h2">Condition</h2>
+          <h2 className="print-h2">{t("sheet.combat.conditionTitle")}</h2>
           <table className="print-table">
             <tbody>
               <tr>
-                <th>Current HP</th>
+                <th>{t("sheet.print.currentHpLabel")}</th>
                 <td>
                   {character.current_hp ?? sheet.stats.hp} / {sheet.stats.hp}
                 </td>
-                <th>Current FP</th>
+                <th>{t("sheet.print.currentFpLabel")}</th>
                 <td>
                   {character.current_fp ?? sheet.stats.fp} / {sheet.stats.fp}
                 </td>
               </tr>
               <tr>
-                <th>Conditions</th>
-                <td colSpan={3}>{(character.conditions ?? []).join(", ") || "—"}</td>
+                <th>{t("sheet.combat.conditionsLabel")}</th>
+                <td colSpan={3}>{(character.conditions ?? []).join(", ") || noValue}</td>
               </tr>
               <tr>
-                <th>Basic damage</th>
+                <th>{t("sheet.print.basicDamageLabel")}</th>
                 <td colSpan={3}>
                   {sheet.damage.status === "configured"
-                    ? `thrust ${sheet.damage.thrust} · swing ${sheet.damage.swing}`
-                    : "not configured"}
+                    ? t("sheet.print.damageConfigured", {
+                        thrust: sheet.damage.thrust,
+                        swing: sheet.damage.swing,
+                      })
+                    : t("sheet.print.notConfigured")}
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
         <div className="print-block">
-          <h2 className="print-h2">DR by location</h2>
+          <h2 className="print-h2">{t("sheet.combat.drTitle")}</h2>
           <table className="print-table">
             <tbody>
               {Object.keys(sheet.dr).length === 0 ? (
                 <tr>
-                  <td>No worn armour.</td>
+                  <td>{t("sheet.combat.noArmour")}</td>
                 </tr>
               ) : (
                 Object.entries(sheet.dr).map(([loc, dr]) => (
@@ -198,14 +237,11 @@ export function PrintSheet({
       </section>
 
       <div className="print-block">
-        <h2 className="print-h2">Notes</h2>
+        <h2 className="print-h2">{t("sheet.print.notesTitle")}</h2>
         <p className="print-notes">{character.notes || " "}</p>
       </div>
 
-      <footer className="print-footer">
-        Universal Character Forge — unofficial, independent companion tool. GURPS is a trademark of
-        Steve Jackson Games Incorporated; this sheet is not affiliated with or endorsed by them.
-      </footer>
+      <footer className="print-footer">{t("sheet.print.disclaimer")}</footer>
     </div>
   );
 }
@@ -214,10 +250,12 @@ function PrintTable({
   title,
   head,
   rows,
+  emptyLabel,
 }: {
   title: string;
   head: string[];
   rows: string[][];
+  emptyLabel: string;
 }) {
   return (
     <div className="print-block">
@@ -233,7 +271,7 @@ function PrintTable({
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={head.length}>—</td>
+              <td colSpan={head.length}>{emptyLabel}</td>
             </tr>
           ) : (
             rows.map((r, i) => (

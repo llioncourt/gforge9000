@@ -3,6 +3,7 @@ import { assetUrl } from "@/lib/assets";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImageZoom } from "@/components/ui/image-zoom";
+import { useT } from "@/i18n/hooks";
 
 /** Renders a private library image by resolving a short-lived signed URL. */
 export function AssetImage({
@@ -14,6 +15,7 @@ export function AssetImage({
   alt: string;
   className?: string;
 }) {
+  const { t } = useT("lore");
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -41,7 +43,7 @@ export function AssetImage({
           className,
         )}
       >
-        Preview unavailable
+        {t("assetImage.previewUnavailable")}
       </div>
     );
   }

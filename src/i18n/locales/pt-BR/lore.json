@@ -1,0 +1,859 @@
+{
+  "kinds": {
+    "NPC": {
+      "label": "PNJ",
+      "plural": "PNJs"
+    },
+    "PC": {
+      "label": "Personagem de Jogador",
+      "plural": "Personagens de Jogador"
+    },
+    "FACTION": {
+      "label": "Facção",
+      "plural": "Facções"
+    },
+    "LOCATION": {
+      "label": "Local",
+      "plural": "Locais"
+    },
+    "ITEM": {
+      "label": "Item",
+      "plural": "Itens"
+    },
+    "CREATURE": {
+      "label": "Criatura",
+      "plural": "Criaturas"
+    },
+    "LORE": {
+      "label": "Entrada da Bíblia do Mundo",
+      "plural": "Bíblia do Mundo"
+    },
+    "ARC": {
+      "label": "Arco Narrativo",
+      "plural": "Arcos Narrativos"
+    },
+    "ADVENTURE": {
+      "label": "Aventura",
+      "plural": "Aventuras"
+    },
+    "CHAPTER": {
+      "label": "Capítulo",
+      "plural": "Capítulos"
+    },
+    "SCENE": {
+      "label": "Cena",
+      "plural": "Cenas"
+    },
+    "QUEST": {
+      "label": "Missão",
+      "plural": "Missões"
+    },
+    "MYSTERY": {
+      "label": "Mistério",
+      "plural": "Mistérios"
+    },
+    "CLUE": {
+      "label": "Pista",
+      "plural": "Pistas"
+    },
+    "SECRET": {
+      "label": "Segredo",
+      "plural": "Segredos"
+    },
+    "THREAD": {
+      "label": "Fio Narrativo",
+      "plural": "Fios Narrativos"
+    },
+    "CLOCK": {
+      "label": "Relógio da Campanha",
+      "plural": "Relógios"
+    },
+    "HANDOUT": {
+      "label": "Material Distribuível",
+      "plural": "Materiais Distribuíveis"
+    },
+    "EVENT": {
+      "label": "Evento da Linha do Tempo",
+      "plural": "Linha do Tempo"
+    },
+    "CUSTOM": {
+      "label": "Entidade Personalizada",
+      "plural": "Entidades Personalizadas"
+    }
+  },
+  "fields": {
+    "NPC": {
+      "pronouns": "Pronomes",
+      "age": "Idade",
+      "species": "Espécie / tipo",
+      "occupation": "Ocupação",
+      "role": "Papel na campanha",
+      "title": "Patente / título",
+      "appearance": "Aparência",
+      "voice": "Voz",
+      "speech": "Padrão de fala",
+      "mannerisms": "Maneirismos",
+      "personality": "Personalidade",
+      "values": "Valores",
+      "flaws": "Defeitos",
+      "motivations": "Motivações",
+      "immediate_goal": "Objetivo imediato",
+      "long_goal": "Objetivo de longo prazo",
+      "fears": "Medos",
+      "biography": "Biografia",
+      "knowledge": "O que eles sabem",
+      "secrets": "Segredos",
+      "possessions": "Posses",
+      "influence": "Recursos e influência"
+    },
+    "PC": {
+      "player": "Jogador",
+      "concept": "Conceito",
+      "biography": "Biografia",
+      "appearance": "Aparência",
+      "personality": "Personalidade",
+      "beliefs": "Crenças",
+      "goals": "Objetivos",
+      "fears": "Medos",
+      "bonds": "Vínculos",
+      "flaws": "Defeitos",
+      "possessions": "Posses importantes",
+      "personal_quests": "Missões pessoais",
+      "discovered_lore": "Lore descoberta",
+      "player_notes": "Notas privadas do jogador",
+      "gm_notes_pc": "Notas privadas do mestre",
+      "system_notes": "Notas de sistema (livre, não interpretadas)"
+    },
+    "FACTION": {
+      "leader": "Líder",
+      "headquarters": "Quartel-general",
+      "territory": "Território",
+      "values": "Valores",
+      "goals": "Objetivos",
+      "methods": "Métodos",
+      "resources": "Recursos",
+      "reputation": "Reputação",
+      "influence": "Influência",
+      "current_plans": "Planos atuais",
+      "secret_agenda": "Agenda secreta"
+    },
+    "LOCATION": {
+      "location_type": "Tipo de local",
+      "sensory": "Detalhes sensoriais",
+      "history": "História",
+      "population": "Notas de população",
+      "government": "Governo",
+      "economy": "Economia",
+      "rumors": "Boatos",
+      "secrets": "Segredos"
+    },
+    "ITEM": {
+      "category": "Categoria",
+      "significance": "Significado narrativo",
+      "owner": "Dono atual",
+      "previous_owners": "Donos anteriores",
+      "current_location": "Localização atual",
+      "history": "História",
+      "properties": "Propriedades descritivas",
+      "secrets": "Segredos"
+    },
+    "CREATURE": {
+      "habitat": "Habitat",
+      "behaviour": "Comportamento",
+      "lore": "Lore",
+      "signs": "Sinais de presença",
+      "secrets": "Segredos"
+    },
+    "LORE": {
+      "category": "Categoria",
+      "secrets": "Segredos do mestre"
+    },
+    "ARC": {
+      "dramatic_question": "Questão dramática",
+      "themes": "Temas",
+      "opposition": "Oposição",
+      "starting_situation": "Situação inicial",
+      "escalation": "Escalada",
+      "turning_points": "Pontos de virada",
+      "climax": "Clímax",
+      "possible_endings": "Finais possíveis",
+      "consequences": "Consequências"
+    },
+    "ADVENTURE": {
+      "hook": "Gancho",
+      "expected_sessions": "Sessões previstas",
+      "objectives": "Objetivos",
+      "opposition": "Oposição",
+      "branching": "Desfechos ramificados",
+      "gm_guidance": "Orientação para o mestre"
+    },
+    "CHAPTER": {
+      "goal": "Objetivo do capítulo",
+      "gm_guidance": "Orientação para o mestre"
+    },
+    "SCENE": {
+      "scene_type": "Tipo de encontro",
+      "purpose": "Propósito",
+      "setup": "Preparação",
+      "sensory": "Descrição sensorial",
+      "read_aloud": "Texto para ler em voz alta",
+      "gm_info": "Informação do mestre",
+      "expected_questions": "Perguntas esperadas",
+      "approaches": "Abordagens possíveis",
+      "consequences": "Consequências",
+      "transitions": "Transições"
+    },
+    "QUEST": {
+      "giver": "Quem dá a missão",
+      "objectives": "Objetivos",
+      "optional_objectives": "Objetivos opcionais",
+      "stages": "Etapas",
+      "requirements": "Requisitos",
+      "rewards": "Recompensas narrativas",
+      "consequences": "Consequências",
+      "hidden_objectives": "Objetivos ocultos",
+      "expiration": "Expira em"
+    },
+    "MYSTERY": {
+      "central_question": "Questão central",
+      "truth": "Verdade canônica",
+      "suspects": "Suspeitos",
+      "motives": "Motivos",
+      "false_leads": "Pistas falsas",
+      "revelations": "Revelações"
+    },
+    "CLUE": {
+      "information": "Informação revelada",
+      "source": "Fonte",
+      "clue_location": "Onde é encontrada",
+      "reliability": "Confiabilidade",
+      "misleading": "Enganosa? (sim/não)",
+      "gm_interpretation": "Interpretação do mestre",
+      "player_interpretation": "Interpretação do jogador",
+      "discovered_session": "Descoberta na sessão"
+    },
+    "SECRET": {
+      "truth": "Verdade canônica",
+      "who_knows": "Quem sabe",
+      "who_suspects": "Quem suspeita",
+      "false_belief": "Quem acredita em outra coisa",
+      "reveal_conditions": "Condições de revelação"
+    },
+    "THREAD": {
+      "priority": "Prioridade",
+      "created_session": "Criada na sessão",
+      "last_touched": "Última sessão tocada"
+    },
+    "CLOCK": {
+      "segments": "Segmentos",
+      "progress": "Progresso",
+      "trigger": "Gatilho",
+      "consequence": "Consequência"
+    },
+    "HANDOUT": {
+      "handout_type": "Tipo",
+      "body": "Conteúdo seguro para jogadores",
+      "gm_original": "Original do mestre / conteúdo verdadeiro",
+      "source": "Fonte"
+    },
+    "EVENT": {
+      "year": "Ano",
+      "month": "Mês",
+      "day": "Dia",
+      "hour": "Hora (opcional)",
+      "minute": "Minuto (opcional)",
+      "era": "Era / calendário",
+      "what_happened": "O que aconteceu",
+      "consequences": "Consequências",
+      "gm_truth": "A história real"
+    },
+    "CUSTOM": {
+      "custom_type": "Tipo"
+    }
+  },
+  "statuses": {
+    "NPC": {
+      "alive": "Vivo",
+      "dead": "Morto",
+      "missing": "Desaparecido",
+      "unknown": "Desconhecido",
+      "captured": "Capturado",
+      "retired": "Aposentado"
+    },
+    "PC": {
+      "active": "Ativo",
+      "retired": "Aposentado",
+      "dead": "Morto",
+      "missing": "Desaparecido"
+    },
+    "FACTION": {
+      "active": "Ativo",
+      "dormant": "Adormecida",
+      "destroyed": "Destruída",
+      "ascendant": "Ascendente",
+      "fractured": "Fragmentada"
+    },
+    "LOCATION": {
+      "intact": "Intacto",
+      "damaged": "Danificado",
+      "destroyed": "Destruída",
+      "abandoned": "Abandonado",
+      "hidden": "Oculto"
+    },
+    "ITEM": {
+      "available": "Disponível",
+      "held": "Em posse",
+      "lost": "Perdido",
+      "destroyed": "Destruída",
+      "hidden": "Oculto"
+    },
+    "CREATURE": {
+      "extant": "Existente",
+      "rare": "Raro",
+      "extinct": "Extinto",
+      "legendary": "Lendário"
+    },
+    "LORE": {
+      "draft": "Rascunho",
+      "canon": "Cânone",
+      "contested": "Contestado"
+    },
+    "ARC": {
+      "planned": "Planejado",
+      "active": "Ativo",
+      "resolved": "Resolvido",
+      "abandoned": "Abandonado"
+    },
+    "ADVENTURE": {
+      "planned": "Planejado",
+      "active": "Ativo",
+      "completed": "Concluído",
+      "shelved": "Engavetada"
+    },
+    "CHAPTER": {
+      "planned": "Planejado",
+      "active": "Ativo",
+      "completed": "Concluído"
+    },
+    "SCENE": {
+      "planned": "Planejado",
+      "ready": "Pronta",
+      "played": "Jogada",
+      "skipped": "Pulada"
+    },
+    "QUEST": {
+      "rumored": "BOATO",
+      "available": "DISPONÍVEL",
+      "active": "ATIVO",
+      "completed": "CONCLUÍDA",
+      "failed": "FALHOU",
+      "abandoned": "ABANDONADO",
+      "expired": "EXPIRADA"
+    },
+    "MYSTERY": {
+      "open": "Aberto",
+      "partially_solved": "Parcialmente resolvido",
+      "solved": "Resolvido",
+      "cold": "Esfriado"
+    },
+    "CLUE": {
+      "undiscovered": "Não descoberta",
+      "discovered": "Descoberta",
+      "misread": "Mal interpretada"
+    },
+    "SECRET": {
+      "hidden": "Oculto",
+      "suspected": "Suspeita",
+      "revealed": "Revelado"
+    },
+    "THREAD": {
+      "open": "Aberto",
+      "advancing": "Avançando",
+      "stalled": "Estagnada",
+      "resolved": "Resolvido"
+    },
+    "CLOCK": {
+      "ticking": "Correndo",
+      "paused": "Pausado",
+      "triggered": "Acionado"
+    },
+    "HANDOUT": {
+      "draft": "Rascunho",
+      "ready": "Pronta",
+      "revealed": "Revelado"
+    },
+    "EVENT": {
+      "historical": "Histórico",
+      "recent": "Recente",
+      "upcoming": "Futuro",
+      "rumored": "Boato"
+    },
+    "CUSTOM": {
+      "active": "Ativo",
+      "archived": "Arquivado"
+    }
+  },
+  "options": {
+    "LOCATION": {
+      "location_type": {
+        "world": "Mundo",
+        "continent": "Continente",
+        "region": "Região",
+        "nation": "Nação",
+        "province": "Província",
+        "city": "Cidade",
+        "town": "Vila",
+        "village": "Aldeia",
+        "district": "Distrito",
+        "building": "Edifício",
+        "room": "Sala",
+        "dungeon": "Masmorra",
+        "wilderness": "Terras Selvagens",
+        "ruin": "Ruína",
+        "point_of_interest": "Ponto de Interesse"
+      }
+    },
+    "LORE": {
+      "category": {
+        "overview": "Visão Geral",
+        "cosmology": "Cosmologia",
+        "geography": "Geografia",
+        "history": "História",
+        "culture": "Cultura",
+        "language": "Idioma",
+        "religion": "Religião",
+        "deity": "Divindade",
+        "government": "Governo",
+        "politics": "Política",
+        "economy": "Economia",
+        "technology": "Tecnologia",
+        "supernatural": "Sobrenatural",
+        "organization": "Organização",
+        "legend": "Lenda",
+        "rumor": "Boato",
+        "flora_fauna": "Flora e Fauna",
+        "custom": "Personalizado"
+      }
+    },
+    "SCENE": {
+      "scene_type": {
+        "confrontation": "Confronto",
+        "social": "Social",
+        "exploration": "Exploração",
+        "puzzle": "Enigma",
+        "hazard": "Perigo",
+        "chase": "Perseguição",
+        "investigation": "Investigação",
+        "travel": "Viagem",
+        "downtime": "Tempo Livre",
+        "infiltration": "Infiltração",
+        "discovery": "Descoberta",
+        "negotiation": "Negociação",
+        "custom": "Personalizado"
+      }
+    },
+    "THREAD": {
+      "priority": {
+        "low": "Baixa",
+        "medium": "Média",
+        "high": "Alta"
+      }
+    },
+    "HANDOUT": {
+      "handout_type": {
+        "letter": "Carta",
+        "journal": "Diário",
+        "wanted_poster": "Cartaz de Procurado",
+        "newspaper": "Jornal",
+        "contract": "Contrato",
+        "prophecy": "Profecia",
+        "menu": "Cardápio",
+        "coded_message": "Mensagem Codificada",
+        "diagram": "Diagrama",
+        "photograph": "Fotografia",
+        "clipping": "Recorte",
+        "government_document": "Documento do Governo",
+        "scroll": "Pergaminho",
+        "book": "Livro",
+        "research_notes": "Notas de Pesquisa",
+        "receipt": "Recibo",
+        "ticket": "Bilhete",
+        "custom": "Personalizado"
+      }
+    }
+  },
+  "relationships": {
+    "MEMBER_OF": "membro de",
+    "LEADS": "lidera",
+    "ENEMY_OF": "inimigo de",
+    "ALLY_OF": "aliado de",
+    "PARENT_OF": "pai/mãe de",
+    "CHILD_OF": "filho de",
+    "SIBLING_OF": "irmão de",
+    "LOVES": "ama",
+    "HATES": "odeia",
+    "OWES": "deve a",
+    "CONTROLS": "controla",
+    "SERVES": "serve",
+    "RULES": "governa",
+    "LOCATED_IN": "localizado em",
+    "BASED_IN": "baseado em",
+    "OWNS": "possui",
+    "KNOWS": "conhece",
+    "WANTS": "quer",
+    "FEARS": "teme",
+    "TRUSTS": "confia em",
+    "BETRAYED": "traiu",
+    "CREATED_BY": "criado por",
+    "DESTROYED_BY": "destruído por",
+    "WORSHIPS": "adora",
+    "INVESTIGATES": "investiga",
+    "WORKS_FOR": "trabalha para",
+    "SECRETLY_WORKS_FOR": "trabalha secretamente para",
+    "CONNECTED_TO": "conectado a"
+  },
+  "visibility": {
+    "GM_ONLY": "Somente mestre",
+    "UNREVEALED": "Não revelado",
+    "SELECTED_PLAYERS": "Jogadores selecionados",
+    "ALL_PLAYERS": "Todos os jogadores",
+    "PUBLIC": "Público"
+  },
+  "entityThumb": {
+    "photoAlt": "Foto de {{name}}"
+  },
+  "panel": {
+    "groups": {
+      "world": "Mundo",
+      "story": "História",
+      "play": "Jogo",
+      "assets": "Recursos"
+    },
+    "searchPlaceholder": "Buscar na mitologia",
+    "allTypes": "Todos os tipos",
+    "aiDraft": "Rascunho por IA",
+    "newEntry": "Nova entrada",
+    "loreEntry": "Entrada",
+    "gridLoading": "Carregando entradas…",
+    "emptyState": "Nada por aqui ainda.",
+    "emptyStateGmHint": "Crie a primeira entrada para esta parte da campanha.",
+    "noSummary": "Sem resumo ainda.",
+    "newEntryDialog": {
+      "title": "Nova entrada de mitologia",
+      "typeLabel": "Tipo",
+      "nameLabel": "Nome",
+      "namePlaceholder": "Nome",
+      "defaultName": "Sem título"
+    },
+    "importDialog": {
+      "title": "Importar mitologia",
+      "description": "Adiciona as entradas e seus vínculos de um arquivo exportado a esta campanha. As entradas existentes são mantidas; nada é sobrescrito.",
+      "label": "Solte aqui um arquivo exportado de mitologia, ou clique para procurar",
+      "hint": "Arquivo JSON exportado de uma campanha"
+    },
+    "toasts": {
+      "entryCreated": "Entrada criada",
+      "exporting": "Exportando mundo e mitologia",
+      "readingCampaign": "Lendo campanha…",
+      "buildingFile": "Gerando arquivo…",
+      "downloading": "Baixando…",
+      "exportedCount": "{{count}} entradas exportadas.",
+      "readingFile": "Lendo arquivo…",
+      "importingEntries": "Importando entradas e vínculos…",
+      "refreshing": "Atualizando mundo e mitologia…",
+      "importedCount": "{{entities}} entradas e {{relationships}} vínculos importados."
+    }
+  },
+  "assets": {
+    "searchPlaceholder": "Buscar na biblioteca",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} itens",
+    "dropzone": {
+      "uploading": "Enviando…",
+      "label": "Solte imagens ou PDFs aqui, ou clique para procurar",
+      "hint": "Até 25 MB cada. Os itens ficam privados até serem compartilhados com os jogadores."
+    },
+    "emptyStateGm": "A biblioteca está vazia. Solte mapas, retratos ou panfletos para mantê-los em um só lugar.",
+    "emptyStatePlayer": "Nada foi compartilhado com o grupo ainda.",
+    "titleLabel": "Título",
+    "captionLabel": "Legenda",
+    "captionPlaceholder": "Legenda",
+    "sharedWithPlayers": "Compartilhado com os jogadores",
+    "removeAria": "Remover {{title}}",
+    "previewUnavailable": "Pré-visualização indisponível",
+    "toasts": {
+      "added": "Adicionado à biblioteca",
+      "removed": "Removido"
+    },
+    "deleteDialog": {
+      "title": "Remover este item?",
+      "description": "{{title}} será excluído da biblioteca e do armazenamento. Isso não pode ser desfeito.",
+      "confirm": "Remover"
+    },
+    "defaultTitle": "Sem título"
+  },
+  "entityDelete": {
+    "deleteAria": "Excluir {{name}}",
+    "confirmTitle": "Excluir esta entrada?",
+    "confirmDescription": "{{name}} e seus vínculos serão removidos permanentemente da campanha. Isso não pode ser desfeito.",
+    "toastDeleted": "Entrada excluída."
+  },
+  "assetImage": {
+    "previewUnavailable": "Pré-visualização indisponível"
+  },
+  "libraryPicker": {
+    "trigger": "Escolher da biblioteca",
+    "title": "Biblioteca da campanha",
+    "description": "Reutilize uma imagem já enviada para esta campanha.",
+    "empty": "Ainda não há imagens na biblioteca da campanha."
+  },
+  "graph": {
+    "searchPlaceholder": "Buscar registros",
+    "allKinds": "Todos os tipos",
+    "emptyState": "Nada para exibir ainda. Crie registros e vincule-os na aba Mundo e mitologia.",
+    "ariaLabel": "Grafo de relacionamentos",
+    "recordCount_one": "{{count}} registro",
+    "recordCount_other": "{{count}} registros",
+    "linksHint": "{{count}} vínculos · passe o mouse para isolar, clique para abrir o registro."
+  },
+  "aiDraft": {
+    "title": "Rascunho por IA",
+    "typeLabel": "Tipo",
+    "briefLabel": "O que deveria ser?",
+    "briefPlaceholder": "Um contrabandista do porto que deve um favor ao grupo e teme a guilda das docas.",
+    "briefHint": "O rascunho é apenas uma sugestão. Revise-o antes de salvar; nada é armazenado até você clicar em Salvar.",
+    "generate": "Gerar",
+    "generating": "Escrevendo…",
+    "tryAgain": "Tentar novamente",
+    "saveEntry": "Salvar entrada",
+    "toastSaved": "Rascunho salvo como nova entrada"
+  },
+  "reveals": {
+    "alreadyPublic": "Revelado — este registro já era visível para todos os jogadores",
+    "removedDemoted": "Revelação removida — o registro voltou a ser só do mestre",
+    "removed": "Revelação removida",
+    "revealedToPlayer": "Revelado para o jogador",
+    "recordNotFound": "Registro não encontrado"
+  },
+  "entityPage": {
+    "tabs": {
+      "overview": "Visão geral",
+      "details": "Detalhes",
+      "links": "Relações",
+      "history": "Histórico",
+      "reveals": "Revelações"
+    },
+    "backToCampaign": "Campanha",
+    "deleteDialog": {
+      "trigger": "Excluir",
+      "title": "Excluir esta entrada?",
+      "description": "A entrada, suas relações e seu histórico de revisões são removidos para todos nesta campanha. Isso não pode ser desfeito.",
+      "confirm": "Excluir"
+    },
+    "toasts": {
+      "photoUpdated": "Foto atualizada.",
+      "imageLinked": "Imagem vinculada à biblioteca da campanha.",
+      "revealedPromoted": "Revelado (visibilidade definida como “Jogadores selecionados”)",
+      "entryDeleted": "Entrada excluída",
+      "versionRestored": "Versão restaurada",
+      "revealRemovedDemoted": "Revelação removida — a entrada voltou a ser só para o mestre",
+      "revealRemoved": "Revelação removida",
+      "revealedAlreadyPublic": "Revelado — esta entrada já era visível para todos os jogadores",
+      "revealedToPlayer": "Revelado para o jogador"
+    },
+    "fields": {
+      "name": "Nome",
+      "status": "Status",
+      "visibility": "Visibilidade",
+      "tags": "Tags",
+      "image": "Imagem",
+      "characterSheet": "Ficha de personagem (opcional)",
+      "noLinkedSheet": "Nenhuma ficha vinculada",
+      "summary": "Resumo",
+      "playerDescription": "Descrição para o jogador",
+      "gmNotes": "Notas do mestre"
+    },
+    "image": {
+      "fromLibrary": "Da Biblioteca",
+      "fromChar": "Da Ficha",
+      "dropNew": "Solte uma nova imagem, ou clique para procurar",
+      "uploading": "Enviando imagem…",
+      "dropNewOf": "Solte uma imagem de {{name}}, ou clique para procurar",
+      "hint": "PNG, JPEG, WebP, GIF ou AVIF até 5 MB",
+      "removeImage": "Remover imagem",
+      "openCharacterSheet": "Abrir ficha de personagem",
+      "inheritedNote": "Mostrando o retrato da ficha de personagem vinculada. Solte uma imagem para substituí-lo.",
+      "alt": "Imagem de {{name}}",
+      "thisEntry": "esta entrada"
+    },
+    "details": {
+      "selectPlaceholder": "Selecionar",
+      "onePerLine": "Um por linha",
+      "gmBadge": "Mestre"
+    },
+    "links": {
+      "relationshipLabel": "Relação",
+      "targetLabel": "Alvo",
+      "targetPlaceholder": "Escolha uma entrada",
+      "linkButton": "Vincular",
+      "empty": "Nenhuma relação ainda.",
+      "removeAria": "Remover relação",
+      "mentionsTitle": "Menções",
+      "mentionsEmpty": "Nenhuma outra entrada menciona “{{name}}” em seu texto."
+    },
+    "history": {
+      "intro": "Cada salvamento guarda a versão anterior. As 30 mais recentes são mantidas.",
+      "empty": "Nenhuma versão anterior ainda.",
+      "restore": "Restaurar",
+      "restoreDialogTitle": "Restaurar esta versão?",
+      "restoreDialogDescription": "O texto atual é substituído por esta versão salva. A versão atual é mantida no histórico.",
+      "entryDateLabel": "{{date}} · {{label}}"
+    },
+    "reveals": {
+      "currentVisibility": "Visibilidade atual:",
+      "alreadyVisible": "Esta entrada já é visível para todos os jogadores da campanha.",
+      "revealSwitchesNote": "Revelar para um jogador muda esta entrada para “Jogadores selecionados”, de modo que só os jogadores escolhidos abaixo poderão vê-la.",
+      "revealed": "Revelado",
+      "reveal": "Revelar"
+    },
+    "errors": {
+      "recordNotLoaded": "Registro não carregado"
+    },
+    "unknownEntity": "Desconhecido",
+    "defaultCampaignName": "Campanha",
+    "headerDescription": "{{kind}} · {{campaign}}"
+  },
+  "storyPanel": {
+    "collapseAria": "Recolher",
+    "expandAria": "Expandir",
+    "newArc": "Novo arco",
+    "outlineTitle": "Estrutura da história",
+    "noArcsYet": "Nenhum arco ainda.",
+    "noArcsYetGmHint": "Comece com um arco e depois aninhe aventuras, capítulos e cenas.",
+    "notInArc": "Fora de um arco",
+    "sideTitle": "Tramas e segredos",
+    "sideEmpty": "Missões, mistérios, pistas e relógios que você criar serão listados aqui.",
+    "noSummary": "Ainda sem resumo.",
+    "addedToast": "Adicionado à estrutura da história",
+    "newEntityName": "Novo(a) {{label}}"
+  },
+  "timelinePanel": {
+    "todayBanner": {
+      "withDate": "{{unit}} atual: {{date}}",
+      "withDateEra": "{{unit}} atual: {{date}} ({{era}})",
+      "noDate": "Defina um {{unit}} atual para ordenar eventos pelo seu calendário."
+    },
+    "exportEventsTemplate": "Modelo de eventos (ZIP)",
+    "importEvents": "Importar eventos",
+    "calendarButton": "Calendário",
+    "worldCalendarTitle": "Calendário do mundo",
+    "calendarSaved": "Calendário salvo.",
+    "noEventsYet": "Nenhum evento na timeline ainda.",
+    "addEvent": "Adicionar evento",
+    "eventNamePlaceholder": "Nome do evento",
+    "optionalSuffix": "(opc.)",
+    "summaryPlaceholder": "Resumo",
+    "importEventsTitle": "Importar eventos da timeline",
+    "importEventsDescription": "Solte o events.json ou o ZIP do modelo de eventos.",
+    "importEventsLabel": "Solte o events.json ou o ZIP aqui",
+    "importEventsHint": "Baixe o modelo de eventos para ver a estrutura.",
+    "validatingDates": "Validando datas…",
+    "eventError": "Evento {{index}} (\"{{name}}\"): {{error}}",
+    "importingEvents": "Importando eventos ({{done}}/{{total}})…",
+    "eventsImported_one": "{{count}} evento importado.",
+    "eventsImported_other": "{{count}} eventos importados.",
+    "generatingPackage": "Gerando pacote…",
+    "downloading": "Baixando…",
+    "templateDownloaded": "Modelo baixado.",
+    "eventAdded": "Evento adicionado.",
+    "calendar": {
+      "downloadTemplateTask": "Baixar modelo de calendário (ZIP)",
+      "calendarImported": "Calendário importado — revise e salve.",
+      "applyingCalendar": "Aplicando calendário…",
+      "useGregorian": "Usar calendário gregoriano",
+      "downloadTemplateZip": "Baixar modelo (ZIP)",
+      "importCalendar": "Importar calendário",
+      "importCalendarTitle": "Importar calendário",
+      "importCalendarDescription": "Solte o calendar.json ou o ZIP do modelo.",
+      "importCalendarLabel": "Solte o calendar.json ou o ZIP aqui",
+      "importCalendarHint": "Use o pacote modelo como referência da estrutura.",
+      "tabs": {
+        "units": "Unidades",
+        "months": "Meses",
+        "seasons": "Estações",
+        "cycle": "Ciclo",
+        "today": "Hoje"
+      },
+      "unitsIntro": "Nomes canônicos das unidades de tempo (singular / plural).",
+      "unitLabels": {
+        "era": "Era",
+        "year": "Ano / Ciclo",
+        "season": "Estação / Quarto",
+        "month": "Mês",
+        "week": "Semana",
+        "day": "Dia / Rota",
+        "hour": "Hora / Quarto",
+        "minute": "Minuto / Parte"
+      },
+      "eraNameLabel": "Nome da era",
+      "eraNamePlaceholder": "Terceira Era",
+      "monthsIntro": "Cada {{month}} com a sua duração em {{days}}.",
+      "addMonth": "Adicionar {{unit}}",
+      "monthFallbackName": "Mês {{index}}",
+      "seasonsIntro": "Agrupe {{months}} em {{seasons}} / quartos.",
+      "namePlaceholder": "Nome",
+      "subtitlePlaceholder": "Lema (opc.)",
+      "addSeason": "Adicionar {{unit}}",
+      "newSeasonName": "Estação {{index}}",
+      "daysPerWeekLabel": "{{days}} por {{week}}",
+      "hoursPerDayLabel": "{{hours}} por {{day}}",
+      "minutesPerHourLabel": "{{minutes}} por {{hour}}",
+      "weekdayNamesLabel": "Nomes dos {{days}} da semana",
+      "weekdayNamesPlaceholder": "Domingo\nSegunda\nTerça",
+      "leapYearLabel": "{{year}} bissexto",
+      "leapNone": "Nenhum",
+      "leapGregorian": "Gregoriano (a cada 4, exceto 100)",
+      "leapBlock": "Por bloco (ex.: 4, 7, 10 de cada 10)",
+      "blockSizeLabel": "Tamanho do bloco",
+      "leapYearsInBlockLabel": "Anos bissextos no bloco",
+      "leapYearsPlaceholder": "4, 7, 10",
+      "extraDayMonthLabel": "{{month}} que recebe dia extra",
+      "extraDaysLabel": "{{days}} extras",
+      "todayIntro": "Data atual do mundo. Usada para mostrar \"hoje\" e ordenar eventos próximos.",
+      "clearCurrentDate": "Limpar data atual",
+      "saveCalendar": "Salvar calendário"
+    }
+  },
+  "sessionsPanel": {
+    "intro": "A preparação é só do mestre. O resumo é compartilhado com a mesa. Ambos ficam junto das notas da campanha.",
+    "sessionPlaceholder": "Sessão {{n}}",
+    "newSession": "Nova sessão",
+    "sessionAdded": "Sessão adicionada.",
+    "deleteSessionAria": "Excluir sessão",
+    "prepLabel": "Preparação (só mestre)",
+    "prepPlaceholder": "Cenas para conduzir, PNJs de prontidão, pistas a soltar, gancho de abertura.",
+    "recapLabel": "Resumo (compartilhado)",
+    "recapPlaceholder": "O que aconteceu, quem fez o quê, onde o grupo terminou.",
+    "nothingSharedYet": "Nada compartilhado ainda.",
+    "noSessionsYet": "Nenhuma sessão ainda.",
+    "deleteDialog": {
+      "title": "Excluir esta sessão?",
+      "description": "A preparação e o resumo de “{{title}}” serão removidos. Isso não pode ser desfeito."
+    }
+  },
+  "playersPanel": {
+    "gmIntro": "Registros secretos ficam ocultos até você revelá-los aqui. Registros públicos são sempre visíveis.",
+    "playerIntro": "Estes são os registros secretos que o mestre revelou para você.",
+    "emptyPlayerRecords": "Nenhum registro secreto revelado ainda — quando o mestre compartilhar um, ele aparece aqui.",
+    "revealedOn": "Revelado em {{date}}",
+    "emptyGmSideRecords": "Nenhum registro secreto revelado ainda.",
+    "revealARecord": "Revelar um registro",
+    "revealToDialogTitle": "Revelar para {{name}}",
+    "searchRecordsPlaceholder": "Buscar registros",
+    "nothingLeftToReveal": "Nada mais para revelar.",
+    "removeRevealAria": "Remover revelação",
+    "toasts": {
+      "revealedPromoted": "Revelado para o jogador (visibilidade definida como “Jogadores selecionados”)"
+    }
+  }
+}

@@ -31,8 +31,11 @@ import {
   validateAssetFile,
   type AssetRow,
 } from "@/lib/assets";
+import { useT } from "@/i18n/hooks";
 
 export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const { t } = useT("lore");
+  const { t: tc } = useT("common");
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [pending, setPending] = useState<string[]>([]);
@@ -76,7 +79,7 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
       }
     },
     onSuccess: async () => {
-      toast.success("Added to the library");
+      toast.success(t("assets.toasts.added"));
       await invalidate();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -94,7 +97,7 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
     mutationFn: (row: AssetRow) => deleteAsset(row),
     onSuccess: async () => {
       setConfirmDelete(null);
-      toast.success("Removed");
+      toast.success(t("assets.toasts.removed"));
       await invalidate();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -108,12 +111,12 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search library"
+            placeholder={t("assets.searchPlaceholder")}
             className="w-56 pl-8"
           />
         </div>
         <p className="text-muted-foreground ml-auto text-xs">
-          {rows.length} item{rows.length === 1 ? "" : "s"}
+          {t("assets.itemCount", { count: rows.length })}
         </p>
       </div>
 
@@ -122,12 +125,8 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
           multiple
           accept="image/*,application/pdf"
           onFiles={(files) => upload.mutate(files)}
-          label={upload.isPending ? "Uploading…" : "Drop images or PDFs here, or click to browse"}
-          hint={
-            pending.length
-              ? pending.join(", ")
-              : "Up to 25 MB each. Items stay private until you share them with players."
-          }
+          label={upload.isPending ? t("assets.dropzone.uploading") : t("assets.dropzone.label")}
+          hint={pending.length ? pending.join(", ") : t("assets.dropzone.hint")}
         />
       ) : null}
 
@@ -143,9 +142,7 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
         </div>
       ) : rows.length === 0 ? (
         <p className="text-muted-foreground text-sm">
-          {isGm
-            ? "The library is empty. Drop in maps, portraits or handouts to keep them in one place."
-            : "Nothing has been shared with the party yet."}
+          {isGm ? t("assets.emptyStateGm") : t("assets.emptyStatePlayer")}
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -172,16 +169,16 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
                 <>
                   <Input
                     defaultValue={row.title}
-                    aria-label="Title"
+                    aria-label={t("assets.titleLabel")}
                     onBlur={(event) => {
-                      const title = event.target.value.trim() || "Untitled";
+                      const title = event.target.value.trim() || t("assets.defaultTitle");
                       if (title !== row.title) patch.mutate({ id: row.id, title });
                     }}
                   />
                   <Input
                     defaultValue={row.caption ?? ""}
-                    aria-label="Caption"
-                    placeholder="Caption"
+                    aria-label={t("assets.captionLabel")}
+                    placeholder={t("assets.captionPlaceholder")}
                     onBlur={(event) => {
                       const caption = event.target.value;
                       if (caption !== (row.caption ?? "")) patch.mutate({ id: row.id, caption });
@@ -197,13 +194,13 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
                         }
                       />
                       <Label htmlFor={`share-${row.id}`} className="text-xs">
-                        Shared with players
+                        {t("assets.sharedWithPlayers")}
                       </Label>
                     </div>
                     <Button
                       size="icon"
                       variant="ghost"
-                      aria-label={`Remove ${row.title}`}
+                      aria-label={t("assets.removeAria", { title: row.title })}
                       onClick={() => setConfirmDelete(row)}
                     >
                       <Trash2 className="size-4" />
@@ -227,19 +224,18 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
       <AlertDialog open={confirmDelete !== null} onOpenChange={(open) => !open && setConfirmDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove this item?</AlertDialogTitle>
+            <AlertDialogTitle>{t("assets.deleteDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmDelete?.title} will be deleted from the library and from storage. This cannot
-              be undone.
+              {t("assets.deleteDialog.description", { title: confirmDelete?.title })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => confirmDelete && remove.mutate(confirmDelete)}
               disabled={remove.isPending}
             >
-              Remove
+              {t("assets.deleteDialog.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

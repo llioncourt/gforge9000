@@ -1,0 +1,101 @@
+{
+  "page": {
+    "title": "Biblioteca",
+    "description": "Suas próprias características, perícias e equipamentos, agrupados em pacotes de conteúdo com proveniência completa."
+  },
+  "actions": {
+    "import": "Importar",
+    "exportJson": "Exportar JSON",
+    "exportCsv": "CSV",
+    "newEntry": "Novo item",
+    "addToCharacter": "Adicionar a um personagem",
+    "editAria": "Editar {{name}}",
+    "deleteAria": "Excluir {{name}}"
+  },
+  "filters": {
+    "searchPlaceholder": "Buscar na biblioteca…",
+    "allKinds": "Todos os tipos",
+    "allPacks": "Todos os pacotes"
+  },
+  "kinds": {
+    "advantage": "Vantagem",
+    "disadvantage": "Desvantagem",
+    "perk": "Perk",
+    "quirk": "Peculiaridade",
+    "skill": "Perícia",
+    "technique": "Técnica",
+    "spell": "Magia",
+    "equipment": "Equipamento",
+    "language": "Idioma",
+    "culture": "Cultura",
+    "custom": "Personalizado"
+  },
+  "visibility": {
+    "private": "privado",
+    "public": "público"
+  },
+  "empty": {
+    "noEntries": "Sua biblioteca está vazia. Crie um item ou importe uma exportação de biblioteca.",
+    "noMatches": "Nenhum item da biblioteca corresponde a esses filtros."
+  },
+  "card": {
+    "sourcePage": "p.{{page}}"
+  },
+  "export": {
+    "task": "Exportando biblioteca (JSON)",
+    "taskCsv": "Exportando biblioteca (CSV)",
+    "building": "Gerando arquivo…",
+    "downloading": "Baixando…",
+    "done_one": "{{count}} item exportado.",
+    "done_other": "{{count}} itens exportados."
+  },
+  "import": {
+    "title": "Importar biblioteca",
+    "description": "Solte um arquivo JSON de biblioteca do Universal Character Forge.",
+    "dropLabel": "Solte o JSON da biblioteca aqui, ou clique para escolher",
+    "reading": "Lendo arquivo…",
+    "importing": "Importando {{count}} itens…",
+    "refreshing": "Atualizando biblioteca…",
+    "done_one": "{{count}} item importado.",
+    "done_other": "{{count}} itens importados."
+  },
+  "toasts": {
+    "updated": "Item atualizado.",
+    "created": "Item da biblioteca criado.",
+    "removed": "Item removido.",
+    "addedToCharacter": "Adicionado ao personagem."
+  },
+  "dialog": {
+    "editTitle": "Editar item da biblioteca",
+    "newTitle": "Novo item da biblioteca",
+    "description": "Insira apenas conteúdo próprio. Não cole texto que você não tem licença para reproduzir.",
+    "fields": {
+      "name": "Nome",
+      "kind": "Tipo",
+      "category": "Categoria",
+      "basePoints": "Pontos base",
+      "costPerLevel": "Custo por nível",
+      "contentPack": "Pacote de conteúdo",
+      "notes": "Notas",
+      "tags": "Tags (separadas por vírgula)",
+      "sourceLabel": "Fonte",
+      "edition": "Edição",
+      "pageRef": "Referência de página"
+    },
+    "sharePublicly": "Compartilhar publicamente",
+    "sharePubliclyHint": "Itens públicos podem ser lidos por qualquer usuário autenticado.",
+    "saveChanges": "Salvar alterações",
+    "createEntry": "Criar item"
+  },
+  "addDialog": {
+    "title": "Adicionar “{{name}}” a um personagem",
+    "description": "O item é copiado para a ficha, incluindo sua proveniência de origem. Edite-o lá.",
+    "noCharacters": "Você ainda não tem personagens.",
+    "npc": "NPC",
+    "pc": "PJ"
+  },
+  "deleteDialog": {
+    "title": "Excluir “{{name}}”?",
+    "description": "Isso remove o item da biblioteca. Personagens que já o utilizam mantêm sua cópia."
+  }
+}

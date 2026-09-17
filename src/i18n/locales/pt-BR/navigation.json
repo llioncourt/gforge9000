@@ -1,0 +1,115 @@
+{
+  "brand": {
+    "name": "Character Forge",
+    "tagline": "Compatível com GURPS 4e"
+  },
+  "links": {
+    "dashboard": "Painel",
+    "characters": "Personagens",
+    "campaigns": "Campanhas",
+    "library": "Biblioteca",
+    "packs": "Pacotes",
+    "settings": "Configurações",
+    "legal": "Companion não oficial · Política legal e de conteúdo",
+    "home": "Início"
+  },
+  "sidebar": {
+    "open": "Abrir navegação",
+    "close": "Fechar navegação",
+    "closeOverlay": "Fechar sobreposição de navegação",
+    "collapse": "Recolher barra lateral",
+    "expand": "Expandir barra lateral",
+    "toggle": "Alternar barra lateral",
+    "title": "Barra lateral",
+    "description": "Exibe a barra lateral no celular."
+  },
+  "header": {
+    "search": "Buscar QUALQUER COISA!",
+    "roll": "Rolar",
+    "rollDice": "Rolar dados",
+    "diceTray": "Bandeja de dados",
+    "signOut": "Sair",
+    "accountMenu": "Menu da conta",
+    "notifications": "Notificações"
+  },
+  "account": {
+    "yourAccount": "Sua conta",
+    "profile": "Perfil",
+    "fallbackName": "Conta"
+  },
+  "footer": {
+    "disclaimer": "O Universal Character Forge é uma ferramenta companion independente e não oficial. GURPS é marca registrada da Steve Jackson Games Incorporated; este projeto não é afiliado, endossado ou patrocinado pela Steve Jackson Games. Nenhum texto, tabela ou arte dos livros de regras é reproduzido aqui.",
+    "policyLink": "Ler a política completa"
+  },
+  "update": {
+    "message": "Uma nova versão do aplicativo está disponível.",
+    "action": "Atualizar agora"
+  },
+  "commandPalette": {
+    "typeToSearch": "Digite ao menos duas letras para buscar.",
+    "searching": "Buscando…",
+    "noResults": "Nada encontrado.",
+    "actions": "Ações",
+    "newCharacter": "Novo personagem",
+    "rollQuickDice": "Rolar 3d6 vs 10",
+    "campaigns": "Campanhas"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "markAllRead": "Marcar todas como lidas",
+    "empty": "Nada de novo por aqui.",
+    "enablePrompt": "Receba um alerta no seu dispositivo quando o mestre revelar algo.",
+    "enable": "Ativar",
+    "openInNewTab": "Abra o app em sua própria aba para ativar alertas no dispositivo.",
+    "markAsRead": "Marcar como lida",
+    "markAsUnread": "Marcar como não lida",
+    "delete": "Excluir notificação",
+    "alertsEnabledTitle": "Alertas ativados",
+    "alertsEnabledBody": "Você será notificado quando o mestre revelar algo.",
+    "alertsBlocked": "Alertas bloqueados. Permita notificações para este site nas configurações do navegador.",
+    "timeAgoSeconds": "há {{count}}s",
+    "timeAgoMinutes": "há {{count}}min",
+    "timeAgoHours": "há {{count}}h",
+    "timeAgoDays": "há {{count}}d"
+  },
+  "profile": {
+    "title": "Perfil",
+    "displayName": "Nome de exibição",
+    "aboutYou": "Sobre você",
+    "email": "E-mail",
+    "photo": "Foto de perfil",
+    "photoAlt": "Sua foto de perfil",
+    "dropPhotoHint": "Solte uma imagem aqui — ela é convertida para AVIF automaticamente",
+    "uploadingPhoto": "Enviando foto…",
+    "removePhoto": "Remover foto",
+    "save": "Salvar perfil",
+    "photoUpdated": "Foto atualizada.",
+    "photoRemoved": "Foto removida.",
+    "saved": "Perfil salvo.",
+    "lightTheme": "Tema claro"
+  },
+  "search": {
+    "groups": {
+      "campaigns": "Campanhas",
+      "characters": "Personagens",
+      "worldLore": "Mundo e lore",
+      "soundFx": "Efeitos sonoros",
+      "soundtrack": "Trilha sonora",
+      "videos": "Vídeos",
+      "notesHandouts": "Notas e materiais",
+      "campaignLibrary": "Biblioteca da campanha",
+      "battleMaps": "Mapas de batalha",
+      "rulesLibrary": "Biblioteca de regras",
+      "contentPacks": "Pacotes de conteúdo",
+      "diceRolls": "Rolagens de dados"
+    },
+    "sublabels": {
+      "album": "Álbum",
+      "track": "Faixa",
+      "total": "Total {{total}}"
+    },
+    "labels": {
+      "untitled": "Sem título"
+    }
+  }
+}

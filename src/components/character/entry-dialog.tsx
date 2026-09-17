@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { CharacterEntry, EntryKind, TraitModifier, WeaponMode } from "@/rules";
+import { useT } from "@/i18n/hooks";
 
 export interface EntryDraft {
   id?: string;
@@ -76,13 +77,37 @@ export function toDraft(entry: CharacterEntry): EntryDraft {
 }
 
 const ATTRS = ["ST", "DX", "IQ", "HT", "Will", "Per"];
-const DIFFS = [
-  { value: "E", label: "Easy" },
-  { value: "A", label: "Average" },
-  { value: "H", label: "Hard" },
-  { value: "VH", label: "Very Hard" },
-];
-const LOCATIONS = ["Skull", "Face", "Torso", "Vitals", "Arms", "Hands", "Legs", "Feet"];
+const DIFFICULTY_VALUES = ["E", "A", "H", "VH"] as const;
+const DIFFICULTY_KEYS = {
+  E: "easy",
+  A: "average",
+  H: "hard",
+  VH: "veryHard",
+} as const satisfies Record<(typeof DIFFICULTY_VALUES)[number], string>;
+const LOCATION_VALUES = ["Skull", "Face", "Torso", "Vitals", "Arms", "Hands", "Legs", "Feet"] as const;
+const LOCATION_KEYS = {
+  Skull: "skull",
+  Face: "face",
+  Torso: "torso",
+  Vitals: "vitals",
+  Arms: "arms",
+  Hands: "hands",
+  Legs: "legs",
+  Feet: "feet",
+} as const satisfies Record<(typeof LOCATION_VALUES)[number], string>;
+const WEAPON_FIELD_KEYS = [
+  ["name", "mode"],
+  ["damage", "damage"],
+  ["skill", "skill"],
+  ["reach", "reach"],
+  ["parry", "parry"],
+  ["accuracy", "acc"],
+  ["range", "range"],
+  ["rof", "rof"],
+  ["shots", "shots"],
+  ["bulk", "bulk"],
+  ["recoil", "rcl"],
+] as const;
 
 export function EntryDialog({
   open,
@@ -97,6 +122,7 @@ export function EntryDialog({
   onChange: (d: EntryDraft) => void;
   onSubmit: () => void;
 }) {
+  const { t } = useT("characters");
   const [local, setLocal] = useState(draft);
   useEffect(() => setLocal(draft), [draft]);
 
@@ -117,25 +143,27 @@ export function EntryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[88vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{local.id ? "Edit" : "Add"} {local.kind}</DialogTitle>
-          <DialogDescription>
-            All fields are yours to define. Enter only content you are licensed to use.
-          </DialogDescription>
+          <DialogTitle>
+            {local.id
+              ? t("sheet.entryDialog.titleEdit", { kind: t(`sheet.kindName.${local.kind}`) })
+              : t("sheet.entryDialog.titleAdd", { kind: t(`sheet.kindName.${local.kind}`) })}
+          </DialogTitle>
+          <DialogDescription>{t("sheet.entryDialog.description")}</DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Row label="Name">
+            <Row label={t("sheet.entryDialog.name")}>
               <Input value={local.name} onChange={(e) => set({ name: e.target.value })} />
             </Row>
-            <Row label="Category">
+            <Row label={t("sheet.entryDialog.category")}>
               <Input value={local.category} onChange={(e) => set({ category: e.target.value })} />
             </Row>
           </div>
 
           {isSkill ? (
             <div className="grid gap-4 sm:grid-cols-4">
-              <Row label="Attribute">
+              <Row label={t("sheet.entryDialog.attribute")}>
                 <Select
                   value={String(local.data["attribute"] ?? "DX")}
                   onValueChange={(v) => setData({ attribute: v })}
@@ -152,7 +180,7 @@ export function EntryDialog({
                   </SelectContent>
                 </Select>
               </Row>
-              <Row label="Difficulty">
+              <Row label={t("sheet.entryDialog.difficulty")}>
                 <Select
                   value={String(local.data["difficulty"] ?? "A")}
                   onValueChange={(v) => setData({ difficulty: v })}
@@ -161,41 +189,41 @@ export function EntryDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {DIFFS.map((d) => (
-                      <SelectItem key={d.value} value={d.value}>
-                        {d.label}
+                    {DIFFICULTY_VALUES.map((d) => (
+                      <SelectItem key={d} value={d}>
+                        {t(`sheet.entryDialog.difficulties.${DIFFICULTY_KEYS[d]}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </Row>
-              <Row label="Points">
+              <Row label={t("sheet.entryDialog.points")}>
                 <Input
                   type="number"
                   value={Number(local.data["points"] ?? 1)}
                   onChange={(e) => setData({ points: Number(e.target.value) })}
                 />
               </Row>
-              <Row label="Other bonus">
+              <Row label={t("sheet.entryDialog.otherBonus")}>
                 <Input
                   type="number"
                   value={Number(local.data["bonus"] ?? 0)}
                   onChange={(e) => setData({ bonus: Number(e.target.value) })}
                 />
               </Row>
-              <Row label="Specialization">
+              <Row label={t("sheet.entryDialog.specialization")}>
                 <Input
                   value={String(local.data["specialization"] ?? "")}
                   onChange={(e) => setData({ specialization: e.target.value })}
                 />
               </Row>
-              <Row label="Defaults">
+              <Row label={t("sheet.entryDialog.defaults")}>
                 <Input
                   value={String(local.data["defaults"] ?? "")}
                   onChange={(e) => setData({ defaults: e.target.value })}
                 />
               </Row>
-              <Row label="Prerequisites" className="sm:col-span-2">
+              <Row label={t("sheet.entryDialog.prerequisites")} className="sm:col-span-2">
                 <Input
                   value={String(local.data["prerequisites"] ?? "")}
                   onChange={(e) => setData({ prerequisites: e.target.value })}
@@ -205,14 +233,14 @@ export function EntryDialog({
           ) : isGear ? (
             <>
               <div className="grid gap-4 sm:grid-cols-4">
-                <Row label="Quantity">
+                <Row label={t("sheet.entryDialog.quantity")}>
                   <Input
                     type="number"
                     value={Number(local.data["quantity"] ?? 1)}
                     onChange={(e) => setData({ quantity: Number(e.target.value) })}
                   />
                 </Row>
-                <Row label="Weight (each)">
+                <Row label={t("sheet.entryDialog.weightEach")}>
                   <Input
                     type="number"
                     step="0.1"
@@ -220,40 +248,40 @@ export function EntryDialog({
                     onChange={(e) => setData({ weight: Number(e.target.value) })}
                   />
                 </Row>
-                <Row label="Cost (each)">
+                <Row label={t("sheet.entryDialog.costEach")}>
                   <Input
                     type="number"
                     value={Number(local.data["cost"] ?? 0)}
                     onChange={(e) => setData({ cost: Number(e.target.value) })}
                   />
                 </Row>
-                <Row label="DR">
+                <Row label={t("sheet.entryDialog.dr")}>
                   <Input
                     type="number"
                     value={Number(local.data["dr"] ?? 0)}
                     onChange={(e) => setData({ dr: Number(e.target.value) })}
                   />
                 </Row>
-                <Row label="TL">
+                <Row label={t("sheet.entryDialog.tl")}>
                   <Input
                     type="number"
                     value={Number(local.data["tl"] ?? 8)}
                     onChange={(e) => setData({ tl: Number(e.target.value) })}
                   />
                 </Row>
-                <Row label="Legality class">
+                <Row label={t("sheet.entryDialog.legalityClass")}>
                   <Input
                     value={String(local.data["legality"] ?? "")}
                     onChange={(e) => setData({ legality: e.target.value })}
                   />
                 </Row>
-                <Row label="Container">
+                <Row label={t("sheet.entryDialog.container")}>
                   <Input
                     value={String(local.data["container"] ?? "")}
                     onChange={(e) => setData({ container: e.target.value })}
                   />
                 </Row>
-                <Row label="Carried">
+                <Row label={t("sheet.entryDialog.carried")}>
                   <div className="flex h-9 items-center">
                     <Switch
                       checked={local.data["carried"] !== false}
@@ -264,9 +292,9 @@ export function EntryDialog({
               </div>
 
               <div>
-                <Label>Armour locations</Label>
+                <Label>{t("sheet.entryDialog.armourLocations")}</Label>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {LOCATIONS.map((loc) => {
+                  {LOCATION_VALUES.map((loc) => {
                     const active = locations.includes(loc);
                     return (
                       <button
@@ -285,7 +313,7 @@ export function EntryDialog({
                             : "border-border text-muted-foreground hover:text-foreground"
                         }`}
                       >
-                        {loc}
+                        {t(`sheet.entryDialog.locations.${LOCATION_KEYS[loc]}`)}
                       </button>
                     );
                   })}
@@ -294,7 +322,7 @@ export function EntryDialog({
 
               <div>
                 <div className="flex items-center justify-between">
-                  <Label>Attack modes</Label>
+                  <Label>{t("sheet.entryDialog.attackModes")}</Label>
                   <Button
                     type="button"
                     size="sm"
@@ -303,28 +331,14 @@ export function EntryDialog({
                       setData({ weapons: [...weapons, { name: "Attack", damage: "1d6" }] })
                     }
                   >
-                    <Plus className="mr-1 h-3.5 w-3.5" /> Add mode
+                    <Plus className="mr-1 h-3.5 w-3.5" /> {t("sheet.entryDialog.addMode")}
                   </Button>
                 </div>
                 <div className="mt-2 space-y-2">
                   {weapons.map((w, i) => (
                     <div key={i} className="grid grid-cols-2 gap-2 rounded-md border border-border p-3 sm:grid-cols-4">
-                      {(
-                        [
-                          ["name", "Mode"],
-                          ["damage", "Damage"],
-                          ["skill", "Skill"],
-                          ["reach", "Reach"],
-                          ["parry", "Parry"],
-                          ["accuracy", "Acc"],
-                          ["range", "Range"],
-                          ["rof", "RoF"],
-                          ["shots", "Shots"],
-                          ["bulk", "Bulk"],
-                          ["recoil", "Rcl"],
-                        ] as const
-                      ).map(([key, label]) => (
-                        <Row key={key} label={label}>
+                      {WEAPON_FIELD_KEYS.map(([key, labelKey]) => (
+                        <Row key={key} label={t(`sheet.entryDialog.weaponFields.${labelKey}`)}>
                           <Input
                             value={String(w[key] ?? "")}
                             onChange={(e) => {
@@ -343,7 +357,7 @@ export function EntryDialog({
                           variant="ghost"
                           onClick={() => setData({ weapons: weapons.filter((_, idx) => idx !== i) })}
                         >
-                          <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove mode
+                          <Trash2 className="mr-1 h-3.5 w-3.5" /> {t("sheet.entryDialog.removeMode")}
                         </Button>
                       </div>
                     </div>
@@ -354,14 +368,14 @@ export function EntryDialog({
           ) : (
             <>
               <div className="grid gap-4 sm:grid-cols-3">
-                <Row label="Points per level">
+                <Row label={t("sheet.entryDialog.pointsPerLevel")}>
                   <Input
                     type="number"
                     value={local.points}
                     onChange={(e) => set({ points: Number(e.target.value) })}
                   />
                 </Row>
-                <Row label="Levels">
+                <Row label={t("sheet.entryDialog.levels")}>
                   <Input
                     type="number"
                     min={1}
@@ -369,7 +383,7 @@ export function EntryDialog({
                     onChange={(e) => set({ levels: Number(e.target.value) })}
                   />
                 </Row>
-                <Row label="Prerequisites">
+                <Row label={t("sheet.entryDialog.prerequisites")}>
                   <Input
                     value={String(local.data["prerequisites"] ?? "")}
                     onChange={(e) => setData({ prerequisites: e.target.value })}
@@ -379,21 +393,21 @@ export function EntryDialog({
 
               <div>
                 <div className="flex items-center justify-between">
-                  <Label>Modifiers (enhancements / limitations)</Label>
+                  <Label>{t("sheet.entryDialog.modifiers")}</Label>
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
                     onClick={() => setData({ modifiers: [...modifiers, { name: "", percent: 0 }] })}
                   >
-                    <Plus className="mr-1 h-3.5 w-3.5" /> Add modifier
+                    <Plus className="mr-1 h-3.5 w-3.5" /> {t("sheet.entryDialog.addModifier")}
                   </Button>
                 </div>
                 <div className="mt-2 space-y-2">
                   {modifiers.map((m, i) => (
                     <div key={i} className="flex gap-2">
                       <Input
-                        placeholder="Name"
+                        placeholder={t("sheet.entryDialog.modifierName")}
                         value={m.name}
                         onChange={(e) => {
                           const next = modifiers.map((x, idx) =>
@@ -405,7 +419,7 @@ export function EntryDialog({
                       <Input
                         type="number"
                         className="w-28"
-                        placeholder="%"
+                        placeholder={t("sheet.entryDialog.modifierPercent")}
                         value={m.percent}
                         onChange={(e) => {
                           const next = modifiers.map((x, idx) =>
@@ -421,7 +435,7 @@ export function EntryDialog({
                         onClick={() =>
                           setData({ modifiers: modifiers.filter((_, idx) => idx !== i) })
                         }
-                        aria-label="Remove modifier"
+                        aria-label={t("sheet.entryDialog.removeModifierAria")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -432,24 +446,24 @@ export function EntryDialog({
             </>
           )}
 
-          <Row label="Notes">
+          <Row label={t("sheet.entryDialog.notes")}>
             <Textarea rows={3} value={local.notes} onChange={(e) => set({ notes: e.target.value })} />
           </Row>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <Row label="Source label">
+            <Row label={t("sheet.entryDialog.sourceLabel")}>
               <Input
                 value={local.source.label}
                 onChange={(e) => set({ source: { ...local.source, label: e.target.value } })}
               />
             </Row>
-            <Row label="Edition">
+            <Row label={t("sheet.entryDialog.edition")}>
               <Input
                 value={local.source.edition}
                 onChange={(e) => set({ source: { ...local.source, edition: e.target.value } })}
               />
             </Row>
-            <Row label="Page ref">
+            <Row label={t("sheet.entryDialog.pageRef")}>
               <Input
                 value={local.source.page}
                 onChange={(e) => set({ source: { ...local.source, page: e.target.value } })}
@@ -460,7 +474,7 @@ export function EntryDialog({
 
         <DialogFooter>
           <Button onClick={onSubmit} disabled={!local.name}>
-            {local.id ? "Save changes" : "Add to character"}
+            {local.id ? t("sheet.entryDialog.saveChanges") : t("sheet.entryDialog.addToCharacter")}
           </Button>
         </DialogFooter>
       </DialogContent>

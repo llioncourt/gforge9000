@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useT } from "@/i18n/hooks";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Loader2, Plus, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -55,6 +56,8 @@ export const Route = createFileRoute("/_authenticated/campaigns/")({
 });
 
 function CampaignsPage() {
+  const { t } = useT("campaigns");
+  const { t: tc } = useT("common");
   const { user } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -77,7 +80,7 @@ function CampaignsPage() {
     setExportName(campaignName);
     setExportError(null);
     setExportDone(false);
-    setExportStep({ label: "Reading campaign…", done: 0, total: 1, percent: 0 });
+    setExportStep({ label: t("list.export.reading"), done: 0, total: 1, percent: 0 });
     try {
       const { blob, fileName } = await buildCampaignPackageZip(campaignId, (progress) =>
         setExportStep(progress),
@@ -90,10 +93,10 @@ function CampaignsPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setExportStep({ label: "Done", done: 1, total: 1, percent: 100 });
+      setExportStep({ label: t("list.export.done"), done: 1, total: 1, percent: 100 });
       setExportDone(true);
     } catch (error) {
-      setExportError(error instanceof Error ? error.message : "Export failed.");
+      setExportError(error instanceof Error ? error.message : t("list.export.failed"));
     } finally {
       setExporting(null);
     }
@@ -130,18 +133,18 @@ function CampaignsPage() {
     mutationFn: () => joinCampaign(code.trim().toUpperCase()),
     onSuccess: (id) => {
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      toast.success("Joined campaign.");
+      toast.success(t("list.join.success"));
       setCode("");
       navigate({ to: "/campaigns/$id", params: { id } });
     },
-    onError: () => toast.error("That invite code didn't match an open campaign."),
+    onError: () => toast.error(t("list.join.error")),
   });
 
   const remove = useMutation({
     mutationFn: (cid: string) => deleteCampaign(cid),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      toast.success("Campaign deleted.");
+      toast.success(t("list.deleted"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -149,18 +152,18 @@ function CampaignsPage() {
   return (
     <div>
       <PageHeader
-        title="Campaigns"
-        description="Tables you run and tables you play at."
+        title={t("list.title")}
+        description={t("list.description")}
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="mr-2 h-4 w-4" /> New campaign
+                <Plus className="mr-2 h-4 w-4" /> {t("list.newCampaign")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>New campaign</DialogTitle>
+                <DialogTitle>{t("list.dialog.title")}</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4">
                 <CampaignPackageImport
@@ -171,11 +174,11 @@ function CampaignsPage() {
                 />
 
                 <div className="space-y-1.5">
-                  <Label>Name</Label>
+                  <Label>{t("list.dialog.nameLabel")}</Label>
                   <Input value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Premise</Label>
+                  <Label>{t("list.dialog.premiseLabel")}</Label>
                   <Textarea
                     rows={3}
                     value={description}
@@ -184,22 +187,22 @@ function CampaignsPage() {
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1.5">
-                    <Label>Point limit</Label>
+                    <Label>{t("list.dialog.pointLimit")}</Label>
                     <Input value={pointLimit} onChange={(e) => setPointLimit(e.target.value)} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Disadv. limit</Label>
+                    <Label>{t("list.dialog.disadvantageLimit")}</Label>
                     <Input value={disadvLimit} onChange={(e) => setDisadvLimit(e.target.value)} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Tech level</Label>
+                    <Label>{t("list.dialog.techLevel")}</Label>
                     <Input value={tl} onChange={(e) => setTl(e.target.value)} />
                   </div>
                 </div>
               </div>
               <DialogFooter>
                 <Button onClick={() => create.mutate()} disabled={!name || create.isPending}>
-                  Create campaign
+                  {t("list.dialog.create")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -209,16 +212,16 @@ function CampaignsPage() {
 
       <div className="panel mb-6 flex flex-wrap items-end gap-3 p-4">
         <div className="min-w-[200px] flex-1 space-y-1.5">
-          <Label htmlFor="code">Join with an invite code</Label>
+          <Label htmlFor="code">{t("list.join.label")}</Label>
           <Input
             id="code"
-            placeholder="e.g. 7KQ2F4"
+            placeholder={t("list.join.placeholder")}
             value={code}
             onChange={(e) => setCode(e.target.value)}
           />
         </div>
         <Button variant="outline" onClick={() => join.mutate()} disabled={!code || join.isPending}>
-          Join
+          {t("list.join.button")}
         </Button>
       </div>
 
@@ -232,7 +235,7 @@ function CampaignsPage() {
         <div className="panel p-10 text-center">
           <Users className="mx-auto h-6 w-6 text-muted-foreground" />
           <p className="mt-3 text-sm text-muted-foreground">
-            No campaigns yet. Create one as GM, or join with a code from your Game Master.
+            {t("list.empty")}
           </p>
         </div>
       ) : (
@@ -254,15 +257,15 @@ function CampaignsPage() {
                 <div className="relative flex items-start justify-between gap-2">
                   <h2 className="font-display text-lg font-semibold">{c.name}</h2>
                   <Badge variant={c.gm_id === user?.id ? "default" : "outline"}>
-                    {c.gm_id === user?.id ? "GM" : "Player"}
+                    {c.gm_id === user?.id ? t("list.badge.gm") : t("list.badge.player")}
                   </Badge>
                 </div>
                 <p className="relative mt-2 line-clamp-3 text-sm text-muted-foreground">
-                  {c.description || "No premise written yet."}
+                  {c.description || t("list.noPremise")}
                 </p>
                 <div className="relative mt-auto flex gap-4 pt-4 text-xs text-muted-foreground">
-                  <span>{settings["point_limit"] ?? "—"} pts</span>
-                  <span>TL {settings["tech_level"] ?? "—"}</span>
+                  <span>{t("list.points", { count: settings["point_limit"] ?? "—" })}</span>
+                  <span>{t("list.techLevelShort", { level: settings["tech_level"] ?? "—" })}</span>
                   <span className="font-mono">{c.invite_code}</span>
                 </div>
                 {c.gm_id === user?.id ? (
@@ -276,8 +279,8 @@ function CampaignsPage() {
                     <button
                       type="button"
                       className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
-                      aria-label="Download campaign package"
-                      title="Download campaign package (ZIP)"
+                      aria-label={t("list.downloadAria")}
+                      title={t("list.downloadTitle")}
                       disabled={exporting === c.id}
                       onClick={() => exportCampaign(c.id, c.name)}
                     >
@@ -292,28 +295,25 @@ function CampaignsPage() {
                         <button
                           type="button"
                           className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                          aria-label="Delete campaign"
+                          aria-label={t("list.deleteAria")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete this campaign?</AlertDialogTitle>
+                          <AlertDialogTitle>{t("list.deleteConfirmTitle")}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This permanently removes {c.name} and everything inside it: lore,
-                            maps, notes, soundtrack, intro video, reveals and roll history.
-                            Characters are kept, but they are detached from the campaign. This
-                            cannot be undone.
+                            {t("list.deleteConfirmBody", { name: c.name })}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => remove.mutate(c.id)}
                             disabled={remove.isPending}
                           >
-                            Delete campaign
+                            {t("list.deleteConfirmButton")}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -342,13 +342,13 @@ function CampaignsPage() {
           }}
         >
           <DialogHeader>
-            <DialogTitle>Exporting {exportName || "campaign"}</DialogTitle>
+            <DialogTitle>{t("list.export.title", { name: exportName || t("list.export.fallbackName") })}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Progress value={exportError ? 100 : (exportStep?.percent ?? 0)} />
             <div className="flex items-center justify-between text-sm">
               <span className={exportError ? "text-destructive" : "text-muted-foreground"}>
-                {exportError ?? (exportDone ? "Package downloaded." : (exportStep?.label ?? ""))}
+                {exportError ?? (exportDone ? t("list.export.downloaded") : (exportStep?.label ?? ""))}
               </span>
               <span className="tabular-nums text-muted-foreground">
                 {exportError ? "" : `${exportStep?.percent ?? 0}%`}
@@ -356,13 +356,13 @@ function CampaignsPage() {
             </div>
             {!exportError && exportStep && exportStep.total > 1 ? (
               <p className="text-xs text-muted-foreground">
-                {exportStep.done} of {exportStep.total} items packed
+                {t("list.export.itemsPacked", { done: exportStep.done, total: exportStep.total })}
               </p>
             ) : null}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={closeExport} disabled={Boolean(exporting)}>
-              Close
+              {t("list.export.close")}
             </Button>
           </DialogFooter>
         </DialogContent>

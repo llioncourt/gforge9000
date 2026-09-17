@@ -1,0 +1,106 @@
+{
+  "status": {
+    "EXACT": "Exata",
+    "CONFIGURABLE": "Configurável",
+    "APPROXIMATION": "Aproximação",
+    "MISSING": "Ausente"
+  },
+  "audit": {
+    "attr.primary-cost": {
+      "title": "Custo em pontos de FOR / DES / IQ / SAU",
+      "notes": "Custo linear por ponto acima/abaixo de 10. Padrões 10/20/20/10; campanhas podem sobrepor."
+    },
+    "sec.hp-fp-will-per": {
+      "title": "Derivação e custo de PV, PF, Vontade, Per",
+      "notes": "PV = FOR + delta, PF = SAU + delta, Vontade/Per = IQ + delta. Custam 2/3/5/5 por ponto."
+    },
+    "sec.basic-speed-move": {
+      "title": "Deslocamento e Movimento Básicos",
+      "notes": "Deslocamento = (DES + SAU)/4 + delta; Movimento = piso(Deslocamento) + delta, com piso em 0. Deslocamento custa 20/ponto, Movimento 5/nível."
+    },
+    "sec.basic-lift": {
+      "title": "Carga Básica",
+      "notes": "CB = FOR^2 / divisor (padrão 5) em libras, com precisão fracionária preservada (FOR 11 => 24.2). Divisor configurável."
+    },
+    "points.total": {
+      "title": "Totais de pontos e orçamento restante",
+      "notes": "Soma determinística por categoria; equipamento nunca contribui com pontos."
+    },
+    "traits.levels": {
+      "title": "Características com níveis",
+      "notes": "Custo = base x níveis (mínimo 1 nível) antes dos modificadores."
+    },
+    "traits.modifiers": {
+      "title": "Melhorias e limitações",
+      "notes": "As porcentagens são somadas, com piso em ruleset.modifierFloorPercent (-80%), depois arredondadas conforme ruleset.modifierRounding."
+    },
+    "skills.relative-level": {
+      "title": "Níveis de perícia por dificuldade e pontos",
+      "notes": "1/2/4 pontos e depois +1 nível a cada 4; deslocamentos de dificuldade vêm do ruleset."
+    },
+    "skills.defaults": {
+      "title": "Padrões de perícia",
+      "notes": "Padrões extraídos de texto do usuário ('DX-5, Luta-2'); o melhor padrão prevalece e uma perícia comprada nunca é pior que seu padrão. Nenhuma tabela de padrões é fornecida."
+    },
+    "skills.techniques": {
+      "title": "Técnicas",
+      "notes": "Nível = perícia base + penalidade padrão + níveis comprados; níveis comprados limitados pela penalidade. Custos vêm de ruleset.technique."
+    },
+    "equip.encumbrance": {
+      "title": "Limiares de carga, efeitos em Movimento e Esquiva",
+      "notes": "Níveis em 1/2/3/6/10 x CB com fatores de Movimento 1/0,8/0,6/0,4/0,2 e Esquiva 0/-1/-2/-3/-4."
+    },
+    "equip.dr": {
+      "title": "RD por local de acerto",
+      "notes": "Agrega a RD da armadura carregada por local declarado (Torso quando não especificado). O empilhamento é uma política, não uma regra universal: aditivo por padrão, com opção 'maior valor'. Nuances de armadura flexível, ablativa e cobertura parcial não são modeladas."
+    },
+    "combat.active-defenses": {
+      "title": "Esquiva, Aparar e Bloquear",
+      "notes": "Esquiva = piso(Deslocamento Básico) + 3. Aparar/Bloquear = piso(perícia/2) + 3, recuo +3. Tudo vindo de ruleset.activeDefense."
+    },
+    "combat.basic-damage": {
+      "title": "Dano básico (perfurante/cortante) por FOR",
+      "notes": "Busca baseada em tabela. Nenhuma progressão é fornecida; sem uma, o motor reporta 'não configurado' e a ficha mostra o dano como indisponível. A fórmula inventada anterior foi removida."
+    },
+    "combat.health": {
+      "title": "Limiares e condições atuais de PV/PF",
+      "notes": "Limiares fracionários com rótulos e fatores de Movimento vindos de ruleset.health. Condições em texto livre são armazenadas mas não têm efeito mecânico."
+    },
+    "combat.weapon-parsing": {
+      "title": "Interpretação de campos de armas (alcance corpo a corpo, aparar, Prec, volume, alcance, CdT, tiros, coice)",
+      "notes": "Formas numéricas inequívocas são convertidas em valores tipados; qualquer outra coisa é reportada como não resolvida e o texto bruto é preservado. Nenhuma tabela de armas é fornecida."
+    },
+    "combat.damage-expression": {
+      "title": "Resolução da expressão de dano da arma",
+      "notes": "Expressões perf/cort são resolvidas pela progressão de dano configurada; sem nenhuma instalada, o resultado é 'indisponível' e nenhuma rolagem é oferecida. Os rótulos de tipo de dano são extraídos, não interpretados."
+    },
+    "combat.ammo": {
+      "title": "Tiros e estado de munição",
+      "notes": "Estado puro derivado do campo Tiros; o consumo rejeita quantidades não positivas ou acima da capacidade e nunca altera a definição da arma. Os tiros atuais são persistidos separadamente (ver combat.ammo-persistence)."
+    },
+    "combat.ammo-persistence": {
+      "title": "Munição atual persistida entre sessões",
+      "notes": "Os tiros atuais são armazenados em uma tabela dedicada indexada por personagem, item de equipamento e modo de ataque; a definição estática de WeaponMode nunca é alterada. Limitação: WeaponMode não tem id estável, então a chave é derivada do índice do modo dentro do item, e reordenar os modos remapeia o estado armazenado."
+    },
+    "combat.rapid-fire": {
+      "title": "Tiro rápido: CdT, coice e acertos adicionais",
+      "notes": "Um acerto extra por múltiplo completo de Coice na margem de sucesso, limitado pelos tiros disparados, munição disponível e o limite opcional do ruleset. Sem Coice e CdT, o resultado é explicitamente indisponível."
+    },
+    "combat.accuracy-bulk": {
+      "title": "Modificadores de Precisão/Mira e Volume",
+      "notes": "Ganchos tipados que expõem apenas os valores que a arma declara; tempo de mira, apoio e outras manobras não são modelados nem sugeridos pela interface."
+    },
+    "dice.expressions": {
+      "title": "Expressões genéricas de dados",
+      "notes": "Suporta NdS, d6 implícito, multiplicadores e modificadores; o multiplicador se aplica após o modificador."
+    },
+    "dice.success": {
+      "title": "Rolagens de sucesso 3d6, críticos e margens",
+      "notes": "<=4 é sucesso crítico; 5 com alvo 15+; 6 com alvo 16+; 18 é sempre falha crítica; 17 é falha crítica com alvo <=15; margem de falha >= 10 é falha crítica."
+    },
+    "campaign.overrides": {
+      "title": "Regras da casa e limites da campanha",
+      "notes": "Mesclagem por seção sobre o ruleset padrão; orçamento de pontos, limites de desvantagens e peculiaridades e NT são reportados como violações."
+    }
+  }
+}

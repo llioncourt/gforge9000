@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { assetUrl, isImageAsset, listAssets, type AssetRow } from "@/lib/assets";
+import { useT } from "@/i18n/hooks";
 
 function AssetTile({ row, onPick }: { row: AssetRow; onPick: (path: string) => void }) {
   const url = useQuery({
@@ -51,6 +52,7 @@ export function LibraryImagePicker({
   onPick: (path: string) => void;
   disabled?: boolean;
 }) {
+  const { t } = useT("lore");
   const [open, setOpen] = useState(false);
   const assets = useQuery({
     queryKey: ["assets", campaignId],
@@ -63,13 +65,13 @@ export function LibraryImagePicker({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" disabled={disabled}>
-          <ImagePlus className="mr-2 size-4" /> Pick from library
+          <ImagePlus className="mr-2 size-4" /> {t("libraryPicker.trigger")}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Campaign library</DialogTitle>
-          <DialogDescription>Reuse an image already uploaded to this campaign.</DialogDescription>
+          <DialogTitle>{t("libraryPicker.title")}</DialogTitle>
+          <DialogDescription>{t("libraryPicker.description")}</DialogDescription>
         </DialogHeader>
         {assets.isPending ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -78,9 +80,7 @@ export function LibraryImagePicker({
             ))}
           </div>
         ) : images.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            No images in the campaign library yet.
-          </p>
+          <p className="text-muted-foreground text-sm">{t("libraryPicker.empty")}</p>
         ) : (
           <div className="grid max-h-[60vh] grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-4">
             {images.map((row) => (

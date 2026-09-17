@@ -25,6 +25,7 @@ import { KINDS, kindDef } from "@/lib/entity-kinds";
 import { applyDraft, buildContext, type AppliedDraft, type LoreDraft } from "@/lib/ai-lore";
 import { draftLoreEntry } from "@/lib/ai-lore.functions";
 import { createEntity, listEntities } from "@/lib/lore";
+import { useT } from "@/i18n/hooks";
 
 export function AiDraftDialog({
   campaignId,
@@ -37,6 +38,8 @@ export function AiDraftDialog({
   onOpenChange: (value: boolean) => void;
   initialKind: string;
 }) {
+  const { t } = useT("lore");
+  const { t: tc } = useT("common");
   const queryClient = useQueryClient();
   const callDraft = useServerFn(draftLoreEntry);
   const [kind, setKind] = useState(initialKind);
@@ -69,7 +72,7 @@ export function AiDraftDialog({
     },
     onSuccess: async () => {
       close();
-      toast.success("Draft saved as a new entry");
+      toast.success(t("aiDraft.toastSaved"));
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -87,11 +90,11 @@ export function AiDraftDialog({
     <Dialog open={open} onOpenChange={(value) => (value ? onOpenChange(true) : close())}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>AI draft</DialogTitle>
+          <DialogTitle>{t("aiDraft.title")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="ai-kind">Type</Label>
+            <Label htmlFor="ai-kind">{t("aiDraft.typeLabel")}</Label>
             <Select
               value={kind}
               onValueChange={(value) => {
@@ -112,18 +115,15 @@ export function AiDraftDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="ai-brief">What should it be?</Label>
+            <Label htmlFor="ai-brief">{t("aiDraft.briefLabel")}</Label>
             <Textarea
               id="ai-brief"
               rows={4}
               value={brief}
               onChange={(event) => setBrief(event.target.value)}
-              placeholder="A harbour smuggler who owes the party a favour and fears the dock guild."
+              placeholder={t("aiDraft.briefPlaceholder")}
             />
-            <p className="text-muted-foreground text-xs">
-              The draft is only a suggestion. Review it before saving; nothing is stored until you
-              press Save.
-            </p>
+            <p className="text-muted-foreground text-xs">{t("aiDraft.briefHint")}</p>
           </div>
 
           {draft ? (
@@ -149,7 +149,7 @@ export function AiDraftDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={close}>
-            Cancel
+            {tc("actions.cancel")}
           </Button>
           <Button
             variant="outline"
@@ -157,10 +157,10 @@ export function AiDraftDialog({
             disabled={generate.isPending || brief.trim().length < 3}
           >
             <Sparkles className="mr-2 size-4" />
-            {generate.isPending ? "Writing…" : draft ? "Try again" : "Generate"}
+            {generate.isPending ? t("aiDraft.generating") : draft ? t("aiDraft.tryAgain") : t("aiDraft.generate")}
           </Button>
           <Button onClick={() => save.mutate()} disabled={!draft || save.isPending}>
-            Save entry
+            {t("aiDraft.saveEntry")}
           </Button>
         </DialogFooter>
       </DialogContent>

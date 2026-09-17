@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Configurações",
+    "description": "Status das regras e controles de dados da conta."
+  },
+  "rulesStatus": {
+    "title": "Status das regras",
+    "summary": "Cada mecânica do motor de cálculo, e o quão fielmente ela é implementada. Exata {{exact}} · Configurável {{configurable}} · Aproximação {{approximation}} · Ausente {{missing}}"
+  },
+  "danger": {
+    "title": "Apagar tudo",
+    "description": "Exclui todos os seus personagens, campanhas, notas, itens de biblioteca, pacotes e histórico de rolagens. Sua conta e login permanecem. Isso não pode ser desfeito, por isso é necessário confirmar primeiro com seu login do Google.",
+    "eraseButton": "Apagar todos os meus dados"
+  },
+  "wipeDialog": {
+    "title": "Apagar tudo na sua conta?",
+    "description": "Personagens, campanhas, notas, itens de biblioteca, pacotes e histórico de rolagens são excluídos permanentemente. Confirme com seu login do Google ({{email}}) para continuar.",
+    "confirmWithGoogle": "Confirmar com o Google",
+    "deleteEverything": "Excluir tudo"
+  },
+  "toasts": {
+    "identityConfirmed": "Identidade confirmada.",
+    "identityFailed": "Não foi possível confirmar sua identidade.",
+    "wiped": "Tudo foi excluído. Sua conta ainda está aqui."
+  },
+  "language": {
+    "title": "Idioma",
+    "description": "Escolha o idioma da interface."
+  }
+}

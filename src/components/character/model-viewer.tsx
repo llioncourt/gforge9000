@@ -15,6 +15,7 @@ import {
   type ViewerApi,
   type ViewerSettings,
 } from "@/lib/model3d";
+import { useT } from "@/i18n/hooks";
 
 const BACKDROP_COLOR: Record<BackdropMode, string | null> = {
   graphite: "#15171c",
@@ -30,7 +31,7 @@ type Loaded = {
   info: ModelInfo;
 };
 
-function useGlb(url: string) {
+function useGlb(url: string, loadErrorMessage: string) {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,12 +90,12 @@ function useGlb(url: string) {
         });
       },
       undefined,
-      () => !cancelled && setError("Could not read that model."),
+      () => !cancelled && setError(loadErrorMessage),
     );
     return () => {
       cancelled = true;
     };
-  }, [url]);
+  }, [url, loadErrorMessage]);
 
   return { loaded, error };
 }
@@ -338,7 +339,8 @@ export default function ModelViewer({
   onInfo?: ((info: ModelInfo) => void) | undefined;
   onApi?: ((api: ViewerApi) => void) | undefined;
 }) {
-  const { loaded, error } = useGlb(url);
+  const { t } = useT("characters");
+  const { loaded, error } = useGlb(url, t("sheet.model.loadError"));
   useMaterialMode(loaded, settings.materialMode, settings.wireframe);
 
   useEffect(() => {

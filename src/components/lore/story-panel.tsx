@@ -10,6 +10,7 @@ import { KINDS, kindDef } from "@/lib/entity-kinds";
 import { createEntity, listEntities, type EntityRow } from "@/lib/lore";
 import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
+import { useT } from "@/i18n/hooks";
 
 /** Outline spine of the story: each level may hold the next one below it. */
 const OUTLINE = ["ARC", "ADVENTURE", "CHAPTER", "SCENE"] as const;
@@ -25,6 +26,7 @@ function childKindOf(kind: string): string | null {
 }
 
 export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const { t } = useT("lore");
   const queryClient = useQueryClient();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
@@ -76,11 +78,11 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
         campaign_id: campaignId,
         kind: input.kind,
         parent_id: input.parentId,
-        name: `New ${kindDef(input.kind).label}`,
+        name: t("storyPanel.newEntityName", { label: kindDef(input.kind).label }),
         status: kindDef(input.kind).defaultStatus,
       }),
     onSuccess: async () => {
-      toast.success("Added to the story outline");
+      toast.success(t("storyPanel.addedToast"));
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -101,7 +103,7 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
           {kids.length > 0 ? (
             <button
               type="button"
-              aria-label={isOpen ? "Collapse" : "Expand"}
+              aria-label={isOpen ? t("storyPanel.collapseAria") : t("storyPanel.expandAria")}
               onClick={() => setCollapsed((prev) => ({ ...prev, [row.id]: isOpen }))}
               className="text-muted-foreground"
             >
@@ -155,20 +157,20 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
     <div className="space-y-8">
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold tracking-wide uppercase">Story outline</h3>
+          <h3 className="text-sm font-semibold tracking-wide uppercase">{t("storyPanel.outlineTitle")}</h3>
           {isGm ? (
             <Button
               size="sm"
               onClick={() => create.mutate({ kind: "ARC", parentId: null })}
               disabled={create.isPending}
             >
-              <Plus className="mr-2 size-4" /> New arc
+              <Plus className="mr-2 size-4" /> {t("storyPanel.newArc")}
             </Button>
           ) : null}
         </div>
         {roots.length === 0 && orphans.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No arcs yet. {isGm ? "Start with an arc, then nest adventures, chapters and scenes." : null}
+            {t("storyPanel.noArcsYet")} {isGm ? t("storyPanel.noArcsYetGmHint") : null}
           </p>
         ) : (
           <div className="space-y-2">
@@ -176,7 +178,7 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
             {orphans.length > 0 ? (
               <div className="space-y-2 pt-4">
                 <h4 className="text-muted-foreground text-xs tracking-wide uppercase">
-                  Not in an arc
+                  {t("storyPanel.notInArc")}
                 </h4>
                 {orphans.map((row) => renderNode(row, 0))}
               </div>
@@ -186,10 +188,10 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-sm font-semibold tracking-wide uppercase">Threads &amp; secrets</h3>
+        <h3 className="text-sm font-semibold tracking-wide uppercase">{t("storyPanel.sideTitle")}</h3>
         {sideGroups.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            Quests, mysteries, clues and clocks you create will be listed here.
+            {t("storyPanel.sideEmpty")}
           </p>
         ) : (
           sideGroups.map((group) => (
@@ -222,7 +224,7 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
                       </div>
                     </div>
                     <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
-                      {row.summary ?? row.player_description ?? "No summary yet."}
+                      {row.summary ?? row.player_description ?? t("storyPanel.noSummary")}
                     </p>
                   </Link>
                 ))}

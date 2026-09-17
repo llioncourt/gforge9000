@@ -1,0 +1,208 @@
+{
+  "page": {
+    "fallbackTitle": "Campanha",
+    "renameAria": "Renomear campanha",
+    "inviteCopied": "Código de convite copiado.",
+    "newNpc": "Novo NPC",
+    "npcCreated": "NPC criado.",
+    "copyCreated": "Cópia criada.",
+    "gmTransferred": "Cargo de mestre transferido.",
+    "memberRemoved": "Membro removido da campanha.",
+    "characterSubmitted": "Personagem enviado para a campanha.",
+    "characterRemoved": "Personagem removido da campanha.",
+    "ownershipTransferred": "Propriedade do personagem transferida.",
+    "settingsSaved": "Configurações da campanha salvas.",
+    "campaignUpdated": "Campanha atualizada."
+  },
+  "editDialog": {
+    "title": "Editar campanha",
+    "nameLabel": "Nome da campanha",
+    "premiseLabel": "Premissa",
+    "premisePlaceholder": "Sobre o que é esta campanha?"
+  },
+  "tabs": {
+    "media": "Mídia",
+    "roster": "Elenco",
+    "lore": "Mundo e lore",
+    "story": "História",
+    "graph": "Grafo",
+    "reveals": "Revelações",
+    "sessions": "Sessões",
+    "timeline": "Linha do tempo",
+    "battle": "Grade de batalha",
+    "library": "Biblioteca",
+    "rolls": "Rolagens",
+    "notes": "Notas e handouts",
+    "members": "Membros",
+    "rules": "Regras da casa"
+  },
+  "roster": {
+    "empty": "Nenhum personagem enviado ainda. Os jogadores anexam um personagem abaixo.",
+    "unassigned": "Sem atribuição",
+    "npc": "NPC",
+    "playerCharacter": "Personagem de jogador",
+    "approved": "Aprovado",
+    "pending": "Pendente",
+    "stats": {
+      "hp": "HP",
+      "fp": "FP",
+      "move": "Movimento",
+      "dodge": "Esquiva",
+      "st": "ST",
+      "dx": "DX",
+      "iq": "IQ",
+      "ht": "HT"
+    },
+    "pointsSummary": "Pontos {{total}} / {{budget}} · Carga {{load}} · RD {{dr}}",
+    "drNone": "nenhuma",
+    "owner": "Dono",
+    "currentOwner": "Dono atual",
+    "revoke": "Revogar",
+    "approve": "Aprovar",
+    "duplicate": "Duplicar",
+    "openSheet": "Abrir ficha",
+    "removeAria": "Remover da campanha",
+    "removeConfirmTitle": "Remover da campanha?",
+    "removeConfirmBody": "{{name}} será desvinculado desta campanha, mas permanecerá na conta do dono.{{npcNote}}",
+    "removeConfirmNpcNote": " Este NPC não aparecerá mais no elenco.",
+    "remove": "Remover",
+    "submitSection": {
+      "title": "Envie um dos seus personagens",
+      "allSubmitted": "Todos os seus personagens já foram enviados."
+    }
+  },
+  "notes": {
+    "filterAria": "Filtrar entradas",
+    "filters": {
+      "all": "Todas as entradas",
+      "note": "Notas",
+      "handout": "Handouts",
+      "session": "Diário de sessão",
+      "npc": "NPCs",
+      "partyInventory": "Inventário do grupo"
+    },
+    "kinds": {
+      "note": "Nota",
+      "handout": "Handout",
+      "session": "Diário de sessão",
+      "npc": "NPC",
+      "partyInventory": "Inventário do grupo"
+    },
+    "empty": "Nenhuma entrada por aqui ainda.",
+    "deleteAria": "Excluir nota",
+    "addEntry": {
+      "title": "Adicionar uma entrada",
+      "titlePlaceholder": "Título",
+      "bodyPlaceholder": "Conteúdo",
+      "gmOnlyLabel": "Somente mestre",
+      "submit": "Adicionar entrada",
+      "added": "Entrada adicionada."
+    }
+  },
+  "members": {
+    "makeGm": "Tornar mestre",
+    "transferConfirmTitle": "Transferir o cargo de mestre?",
+    "transferConfirmBody": "{{name}} se torna o mestre desta campanha e você se torna um jogador comum. Somente o novo mestre pode transferir de volta.",
+    "transfer": "Transferir",
+    "removeAria": "Remover {{name}} da campanha",
+    "removeConfirmTitle": "Remover este membro?",
+    "removeConfirmBody": "{{name}} perde o acesso a esta campanha. Os personagens dele permanecem na conta dele e podem ser reanexados depois."
+  },
+  "houseRules": {
+    "cover": {
+      "label": "Capa do card da campanha",
+      "hint": "Esta imagem aparece atrás do card da campanha. As imagens são convertidas para AVIF.",
+      "uploadingLabel": "Enviando capa…",
+      "dropReplace": "Solte uma nova capa aqui, ou clique para procurar",
+      "dropNew": "Solte uma capa aqui, ou clique para procurar",
+      "sizeHint": "Qualquer formato de imagem comum, até 25 MB.",
+      "removeAria": "Remover capa da campanha",
+      "updated": "Capa da campanha atualizada.",
+      "removed": "Capa da campanha removida."
+    },
+    "pointLimit": "Limite de pontos",
+    "disadvantageLimit": "Limite de desvantagens",
+    "techLevel": "Nível tecnológico",
+    "packs": {
+      "label": "Pacotes de conteúdo habilitados",
+      "empty": "Nenhum pacote de conteúdo encontrado ainda. Marque entradas da biblioteca com um nome de pacote para gerenciá-las aqui.",
+      "enableAria": "Habilitar pacote {{name}}",
+      "addPlaceholder": "Adicionar outro nome de pacote",
+      "hint": "Com nada habilitado, todos os pacotes são permitidos. Quando pelo menos um pacote está habilitado, entradas da biblioteca de outros pacotes não podem ser adicionadas a personagens desta campanha. Entradas sem pacote são conteúdo pessoal e continuam disponíveis."
+    },
+    "houseRulesLabel": "Regras da casa",
+    "houseRulesPlaceholder": "Acordos de mesa, pacotes de conteúdo permitidos, tom da campanha…",
+    "save": "Salvar regras da casa"
+  },
+  "list": {
+    "title": "Campanhas",
+    "description": "Mesas que você mestra e mesas em que você joga.",
+    "newCampaign": "Nova campanha",
+    "dialog": {
+      "title": "Nova campanha",
+      "nameLabel": "Nome",
+      "premiseLabel": "Premissa",
+      "pointLimit": "Limite de pontos",
+      "disadvantageLimit": "Limite de desv.",
+      "techLevel": "Nível tecnológico",
+      "create": "Criar campanha"
+    },
+    "join": {
+      "label": "Entrar com um código de convite",
+      "placeholder": "ex.: 7KQ2F4",
+      "button": "Entrar",
+      "success": "Você entrou na campanha.",
+      "error": "Esse código de convite não corresponde a uma campanha aberta."
+    },
+    "deleted": "Campanha excluída.",
+    "empty": "Nenhuma campanha ainda. Crie uma como mestre, ou entre com um código do seu mestre.",
+    "badge": {
+      "gm": "Mestre",
+      "player": "Jogador"
+    },
+    "noPremise": "Nenhuma premissa escrita ainda.",
+    "points": "{{count}} pts",
+    "techLevelShort": "NT {{level}}",
+    "downloadAria": "Baixar pacote da campanha",
+    "downloadTitle": "Baixar pacote da campanha (ZIP)",
+    "deleteAria": "Excluir campanha",
+    "deleteConfirmTitle": "Excluir esta campanha?",
+    "deleteConfirmBody": "Isso remove permanentemente {{name}} e tudo dentro dela: lore, mapas, notas, trilha sonora, vídeo de introdução, revelações e histórico de rolagens. Os personagens são mantidos, mas são desvinculados da campanha. Isso não pode ser desfeito.",
+    "deleteConfirmButton": "Excluir campanha",
+    "export": {
+      "reading": "Lendo campanha…",
+      "done": "Concluído",
+      "downloaded": "Pacote baixado.",
+      "failed": "Falha na exportação.",
+      "title": "Exportando {{name}}",
+      "fallbackName": "campanha",
+      "itemsPacked": "{{done}} de {{total}} itens empacotados",
+      "close": "Fechar"
+    }
+  },
+  "packageImport": {
+    "importButton": "Importar pacote",
+    "formatButton": "Formato do pacote",
+    "dialog": {
+      "title": "Formato do pacote de campanha",
+      "description": "Tudo que um ZIP pode trazer para uma nova campanha, e para onde cada arquivo vai."
+    },
+    "downloadGuide": "Baixar o guia",
+    "downloadExample": "Exemplo de campaign.json",
+    "hint": "Um ZIP pode trazer a premissa, regras da casa, lore, notas, handouts, mapas de batalha, trilhas sonoras, o vídeo de introdução e fichas de personagens.",
+    "importDialog": {
+      "title": "Importar pacote de campanha",
+      "description": "campaign.json na raiz, mais os arquivos que ele referencia.",
+      "label": "Solte o ZIP da campanha aqui, ou clique para procurar"
+    },
+    "readingZip": "Lendo o ZIP…",
+    "refreshing": "Atualizando campanhas…",
+    "importedSummary": "Campanha importada — {{entities}} entradas de lore, {{characters}} personagens, {{maps}} mapas, {{albums}} álbuns."
+  },
+  "rolls": {
+    "descriptionGm": "Todas as rolagens feitas pela mesa nesta campanha, mais recentes primeiro.",
+    "descriptionPlayer": "Suas rolagens nesta campanha, mais recentes primeiro.",
+    "empty": "Nenhuma rolagem ainda.",
+    "vsTarget": "vs {{target}}"
+  }
+}

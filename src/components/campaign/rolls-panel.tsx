@@ -7,17 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { outcomeTone } from "@/components/app/dice-tray";
 import { cn } from "@/lib/utils";
-
-function when(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+import { useT, useFormatters } from "@/i18n/hooks";
 
 export function RollsPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const { t } = useT("campaigns");
+  const f = useFormatters();
   const queryClient = useQueryClient();
   const rolls = useQuery({
     queryKey: ["campaign-rolls", campaignId],
@@ -62,12 +56,10 @@ export function RollsPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        {isGm
-          ? "Every roll made by the table in this campaign, newest first."
-          : "Your rolls in this campaign, newest first."}
+        {isGm ? t("rolls.descriptionGm") : t("rolls.descriptionPlayer")}
       </p>
       {rows.length === 0 ? (
-        <div className="panel p-8 text-center text-sm text-muted-foreground">No rolls yet.</div>
+        <div className="panel p-8 text-center text-sm text-muted-foreground">{t("rolls.empty")}</div>
       ) : (
         <div className="space-y-2">
           {rows.map((r) => (
@@ -82,7 +74,7 @@ export function RollsPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {r.display_name} · {r.expression} · {r.dice.join(" + ")}
-                  {r.target !== null ? ` · vs ${r.target}` : ""} · {when(r.created_at)}
+                  {r.target !== null ? ` · ${t("rolls.vsTarget", { target: r.target })}` : ""} · {f.dateTime(r.created_at)}
                 </p>
               </div>
               {r.outcome ? (

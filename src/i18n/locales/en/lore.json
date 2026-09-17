@@ -1,0 +1,859 @@
+{
+  "kinds": {
+    "NPC": {
+      "label": "NPC",
+      "plural": "NPCs"
+    },
+    "PC": {
+      "label": "Player Character",
+      "plural": "Player Characters"
+    },
+    "FACTION": {
+      "label": "Faction",
+      "plural": "Factions"
+    },
+    "LOCATION": {
+      "label": "Location",
+      "plural": "Locations"
+    },
+    "ITEM": {
+      "label": "Item",
+      "plural": "Items"
+    },
+    "CREATURE": {
+      "label": "Creature",
+      "plural": "Creatures"
+    },
+    "LORE": {
+      "label": "World Bible Entry",
+      "plural": "World Bible"
+    },
+    "ARC": {
+      "label": "Story Arc",
+      "plural": "Story Arcs"
+    },
+    "ADVENTURE": {
+      "label": "Adventure",
+      "plural": "Adventures"
+    },
+    "CHAPTER": {
+      "label": "Chapter",
+      "plural": "Chapters"
+    },
+    "SCENE": {
+      "label": "Scene",
+      "plural": "Scenes"
+    },
+    "QUEST": {
+      "label": "Quest",
+      "plural": "Quests"
+    },
+    "MYSTERY": {
+      "label": "Mystery",
+      "plural": "Mysteries"
+    },
+    "CLUE": {
+      "label": "Clue",
+      "plural": "Clues"
+    },
+    "SECRET": {
+      "label": "Secret",
+      "plural": "Secrets"
+    },
+    "THREAD": {
+      "label": "Story Thread",
+      "plural": "Story Threads"
+    },
+    "CLOCK": {
+      "label": "Campaign Clock",
+      "plural": "Clocks"
+    },
+    "HANDOUT": {
+      "label": "Handout",
+      "plural": "Handouts"
+    },
+    "EVENT": {
+      "label": "Timeline Event",
+      "plural": "Timeline"
+    },
+    "CUSTOM": {
+      "label": "Custom Entity",
+      "plural": "Custom Entities"
+    }
+  },
+  "fields": {
+    "NPC": {
+      "pronouns": "Pronouns",
+      "age": "Age",
+      "species": "Species / type",
+      "occupation": "Occupation",
+      "role": "Campaign role",
+      "title": "Rank / title",
+      "appearance": "Appearance",
+      "voice": "Voice",
+      "speech": "Speech pattern",
+      "mannerisms": "Mannerisms",
+      "personality": "Personality",
+      "values": "Values",
+      "flaws": "Flaws",
+      "motivations": "Motivations",
+      "immediate_goal": "Immediate goal",
+      "long_goal": "Long-term goal",
+      "fears": "Fears",
+      "biography": "Biography",
+      "knowledge": "What they know",
+      "secrets": "Secrets",
+      "possessions": "Possessions",
+      "influence": "Resources & influence"
+    },
+    "PC": {
+      "player": "Player",
+      "concept": "Concept",
+      "biography": "Biography",
+      "appearance": "Appearance",
+      "personality": "Personality",
+      "beliefs": "Beliefs",
+      "goals": "Goals",
+      "fears": "Fears",
+      "bonds": "Bonds",
+      "flaws": "Flaws",
+      "possessions": "Important possessions",
+      "personal_quests": "Personal quests",
+      "discovered_lore": "Discovered lore",
+      "player_notes": "Private player notes",
+      "gm_notes_pc": "Private GM notes",
+      "system_notes": "System notes (freeform, not interpreted)"
+    },
+    "FACTION": {
+      "leader": "Leader",
+      "headquarters": "Headquarters",
+      "territory": "Territory",
+      "values": "Values",
+      "goals": "Goals",
+      "methods": "Methods",
+      "resources": "Resources",
+      "reputation": "Reputation",
+      "influence": "Influence",
+      "current_plans": "Current plans",
+      "secret_agenda": "Secret agenda"
+    },
+    "LOCATION": {
+      "location_type": "Location type",
+      "sensory": "Sensory details",
+      "history": "History",
+      "population": "Population notes",
+      "government": "Government",
+      "economy": "Economy",
+      "rumors": "Rumors",
+      "secrets": "Secrets"
+    },
+    "ITEM": {
+      "category": "Category",
+      "significance": "Narrative significance",
+      "owner": "Current owner",
+      "previous_owners": "Previous owners",
+      "current_location": "Current location",
+      "history": "History",
+      "properties": "Descriptive properties",
+      "secrets": "Secrets"
+    },
+    "CREATURE": {
+      "habitat": "Habitat",
+      "behaviour": "Behaviour",
+      "lore": "Lore",
+      "signs": "Signs of presence",
+      "secrets": "Secrets"
+    },
+    "LORE": {
+      "category": "Category",
+      "secrets": "GM secrets"
+    },
+    "ARC": {
+      "dramatic_question": "Dramatic question",
+      "themes": "Themes",
+      "opposition": "Opposition",
+      "starting_situation": "Starting situation",
+      "escalation": "Escalation",
+      "turning_points": "Turning points",
+      "climax": "Climax",
+      "possible_endings": "Possible endings",
+      "consequences": "Consequences"
+    },
+    "ADVENTURE": {
+      "hook": "Hook",
+      "expected_sessions": "Expected sessions",
+      "objectives": "Objectives",
+      "opposition": "Opposition",
+      "branching": "Branching outcomes",
+      "gm_guidance": "GM guidance"
+    },
+    "CHAPTER": {
+      "goal": "Chapter goal",
+      "gm_guidance": "GM guidance"
+    },
+    "SCENE": {
+      "scene_type": "Encounter type",
+      "purpose": "Purpose",
+      "setup": "Setup",
+      "sensory": "Sensory description",
+      "read_aloud": "Read-aloud text",
+      "gm_info": "GM information",
+      "expected_questions": "Expected questions",
+      "approaches": "Possible approaches",
+      "consequences": "Consequences",
+      "transitions": "Transitions"
+    },
+    "QUEST": {
+      "giver": "Quest giver",
+      "objectives": "Objectives",
+      "optional_objectives": "Optional objectives",
+      "stages": "Stages",
+      "requirements": "Requirements",
+      "rewards": "Narrative rewards",
+      "consequences": "Consequences",
+      "hidden_objectives": "Hidden objectives",
+      "expiration": "Expires on"
+    },
+    "MYSTERY": {
+      "central_question": "Central question",
+      "truth": "Canonical truth",
+      "suspects": "Suspects",
+      "motives": "Motives",
+      "false_leads": "False leads",
+      "revelations": "Revelations"
+    },
+    "CLUE": {
+      "information": "Information revealed",
+      "source": "Source",
+      "clue_location": "Where it is found",
+      "reliability": "Reliability",
+      "misleading": "Misleading? (yes/no)",
+      "gm_interpretation": "GM interpretation",
+      "player_interpretation": "Player interpretation",
+      "discovered_session": "Discovered in session"
+    },
+    "SECRET": {
+      "truth": "Canonical truth",
+      "who_knows": "Who knows",
+      "who_suspects": "Who suspects",
+      "false_belief": "Who believes something else",
+      "reveal_conditions": "Reveal conditions"
+    },
+    "THREAD": {
+      "priority": "Priority",
+      "created_session": "Created in session",
+      "last_touched": "Last touched session"
+    },
+    "CLOCK": {
+      "segments": "Segments",
+      "progress": "Progress",
+      "trigger": "Trigger",
+      "consequence": "Consequence"
+    },
+    "HANDOUT": {
+      "handout_type": "Type",
+      "body": "Player-safe content",
+      "gm_original": "GM original / true content",
+      "source": "Source"
+    },
+    "EVENT": {
+      "year": "Year",
+      "month": "Month",
+      "day": "Day",
+      "hour": "Hour (optional)",
+      "minute": "Minute (optional)",
+      "era": "Era / calendar",
+      "what_happened": "What happened",
+      "consequences": "Consequences",
+      "gm_truth": "The real story"
+    },
+    "CUSTOM": {
+      "custom_type": "Type"
+    }
+  },
+  "statuses": {
+    "NPC": {
+      "alive": "Alive",
+      "dead": "Dead",
+      "missing": "Missing",
+      "unknown": "Unknown",
+      "captured": "Captured",
+      "retired": "Retired"
+    },
+    "PC": {
+      "active": "Active",
+      "retired": "Retired",
+      "dead": "Dead",
+      "missing": "Missing"
+    },
+    "FACTION": {
+      "active": "Active",
+      "dormant": "Dormant",
+      "destroyed": "Destroyed",
+      "ascendant": "Ascendant",
+      "fractured": "Fractured"
+    },
+    "LOCATION": {
+      "intact": "Intact",
+      "damaged": "Damaged",
+      "destroyed": "Destroyed",
+      "abandoned": "Abandoned",
+      "hidden": "Hidden"
+    },
+    "ITEM": {
+      "available": "Available",
+      "held": "Held",
+      "lost": "Lost",
+      "destroyed": "Destroyed",
+      "hidden": "Hidden"
+    },
+    "CREATURE": {
+      "extant": "Extant",
+      "rare": "Rare",
+      "extinct": "Extinct",
+      "legendary": "Legendary"
+    },
+    "LORE": {
+      "draft": "Draft",
+      "canon": "Canon",
+      "contested": "Contested"
+    },
+    "ARC": {
+      "planned": "Planned",
+      "active": "Active",
+      "resolved": "Resolved",
+      "abandoned": "Abandoned"
+    },
+    "ADVENTURE": {
+      "planned": "Planned",
+      "active": "Active",
+      "completed": "Completed",
+      "shelved": "Shelved"
+    },
+    "CHAPTER": {
+      "planned": "Planned",
+      "active": "Active",
+      "completed": "Completed"
+    },
+    "SCENE": {
+      "planned": "Planned",
+      "ready": "Ready",
+      "played": "Played",
+      "skipped": "Skipped"
+    },
+    "QUEST": {
+      "rumored": "RUMORED",
+      "available": "AVAILABLE",
+      "active": "ACTIVE",
+      "completed": "COMPLETED",
+      "failed": "FAILED",
+      "abandoned": "ABANDONED",
+      "expired": "EXPIRED"
+    },
+    "MYSTERY": {
+      "open": "Open",
+      "partially_solved": "Partially solved",
+      "solved": "Solved",
+      "cold": "Cold"
+    },
+    "CLUE": {
+      "undiscovered": "Undiscovered",
+      "discovered": "Discovered",
+      "misread": "Misread"
+    },
+    "SECRET": {
+      "hidden": "Hidden",
+      "suspected": "Suspected",
+      "revealed": "Revealed"
+    },
+    "THREAD": {
+      "open": "Open",
+      "advancing": "Advancing",
+      "stalled": "Stalled",
+      "resolved": "Resolved"
+    },
+    "CLOCK": {
+      "ticking": "Ticking",
+      "paused": "Paused",
+      "triggered": "Triggered"
+    },
+    "HANDOUT": {
+      "draft": "Draft",
+      "ready": "Ready",
+      "revealed": "Revealed"
+    },
+    "EVENT": {
+      "historical": "Historical",
+      "recent": "Recent",
+      "upcoming": "Upcoming",
+      "rumored": "Rumored"
+    },
+    "CUSTOM": {
+      "active": "Active",
+      "archived": "Archived"
+    }
+  },
+  "options": {
+    "LOCATION": {
+      "location_type": {
+        "world": "World",
+        "continent": "Continent",
+        "region": "Region",
+        "nation": "Nation",
+        "province": "Province",
+        "city": "City",
+        "town": "Town",
+        "village": "Village",
+        "district": "District",
+        "building": "Building",
+        "room": "Room",
+        "dungeon": "Dungeon",
+        "wilderness": "Wilderness",
+        "ruin": "Ruin",
+        "point_of_interest": "Point of Interest"
+      }
+    },
+    "LORE": {
+      "category": {
+        "overview": "Overview",
+        "cosmology": "Cosmology",
+        "geography": "Geography",
+        "history": "History",
+        "culture": "Culture",
+        "language": "Language",
+        "religion": "Religion",
+        "deity": "Deity",
+        "government": "Government",
+        "politics": "Politics",
+        "economy": "Economy",
+        "technology": "Technology",
+        "supernatural": "Supernatural",
+        "organization": "Organization",
+        "legend": "Legend",
+        "rumor": "Rumor",
+        "flora_fauna": "Flora & Fauna",
+        "custom": "Custom"
+      }
+    },
+    "SCENE": {
+      "scene_type": {
+        "confrontation": "Confrontation",
+        "social": "Social",
+        "exploration": "Exploration",
+        "puzzle": "Puzzle",
+        "hazard": "Hazard",
+        "chase": "Chase",
+        "investigation": "Investigation",
+        "travel": "Travel",
+        "downtime": "Downtime",
+        "infiltration": "Infiltration",
+        "discovery": "Discovery",
+        "negotiation": "Negotiation",
+        "custom": "Custom"
+      }
+    },
+    "THREAD": {
+      "priority": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      }
+    },
+    "HANDOUT": {
+      "handout_type": {
+        "letter": "Letter",
+        "journal": "Journal",
+        "wanted_poster": "Wanted poster",
+        "newspaper": "Newspaper",
+        "contract": "Contract",
+        "prophecy": "Prophecy",
+        "menu": "Menu",
+        "coded_message": "Coded message",
+        "diagram": "Diagram",
+        "photograph": "Photograph",
+        "clipping": "Clipping",
+        "government_document": "Government document",
+        "scroll": "Scroll",
+        "book": "Book",
+        "research_notes": "Research notes",
+        "receipt": "Receipt",
+        "ticket": "Ticket",
+        "custom": "Custom"
+      }
+    }
+  },
+  "relationships": {
+    "MEMBER_OF": "member of",
+    "LEADS": "leads",
+    "ENEMY_OF": "enemy of",
+    "ALLY_OF": "ally of",
+    "PARENT_OF": "parent of",
+    "CHILD_OF": "child of",
+    "SIBLING_OF": "sibling of",
+    "LOVES": "loves",
+    "HATES": "hates",
+    "OWES": "owes",
+    "CONTROLS": "controls",
+    "SERVES": "serves",
+    "RULES": "rules",
+    "LOCATED_IN": "located in",
+    "BASED_IN": "based in",
+    "OWNS": "owns",
+    "KNOWS": "knows",
+    "WANTS": "wants",
+    "FEARS": "fears",
+    "TRUSTS": "trusts",
+    "BETRAYED": "betrayed",
+    "CREATED_BY": "created by",
+    "DESTROYED_BY": "destroyed by",
+    "WORSHIPS": "worships",
+    "INVESTIGATES": "investigates",
+    "WORKS_FOR": "works for",
+    "SECRETLY_WORKS_FOR": "secretly works for",
+    "CONNECTED_TO": "connected to"
+  },
+  "visibility": {
+    "GM_ONLY": "GM only",
+    "UNREVEALED": "Unrevealed",
+    "SELECTED_PLAYERS": "Selected players",
+    "ALL_PLAYERS": "All players",
+    "PUBLIC": "Public"
+  },
+  "entityThumb": {
+    "photoAlt": "{{name}} photo"
+  },
+  "panel": {
+    "groups": {
+      "world": "World",
+      "story": "Story",
+      "play": "Play",
+      "assets": "Assets"
+    },
+    "searchPlaceholder": "Search lore",
+    "allTypes": "All types",
+    "aiDraft": "AI draft",
+    "newEntry": "New entry",
+    "loreEntry": "Entry",
+    "gridLoading": "Loading entries…",
+    "emptyState": "Nothing here yet.",
+    "emptyStateGmHint": "Create the first entry for this part of the campaign.",
+    "noSummary": "No summary yet.",
+    "newEntryDialog": {
+      "title": "New lore entry",
+      "typeLabel": "Type",
+      "nameLabel": "Name",
+      "namePlaceholder": "Name",
+      "defaultName": "Untitled"
+    },
+    "importDialog": {
+      "title": "Import lore",
+      "description": "Adds the entries and their links from an exported file to this campaign. Existing entries are kept; nothing is overwritten.",
+      "label": "Drop a lore export here, or click to browse",
+      "hint": "JSON file exported from a campaign"
+    },
+    "toasts": {
+      "entryCreated": "Entry created",
+      "exporting": "Exporting world & lore",
+      "readingCampaign": "Reading campaign…",
+      "buildingFile": "Building file…",
+      "downloading": "Downloading…",
+      "exportedCount": "Exported {{count}} entries.",
+      "readingFile": "Reading file…",
+      "importingEntries": "Importing entries and links…",
+      "refreshing": "Refreshing world & lore…",
+      "importedCount": "Imported {{entities}} entries and {{relationships}} links."
+    }
+  },
+  "assets": {
+    "searchPlaceholder": "Search library",
+    "itemCount_one": "{{count}} item",
+    "itemCount_other": "{{count}} items",
+    "dropzone": {
+      "uploading": "Uploading…",
+      "label": "Drop images or PDFs here, or click to browse",
+      "hint": "Up to 25 MB each. Items stay private until you share them with players."
+    },
+    "emptyStateGm": "The library is empty. Drop in maps, portraits or handouts to keep them in one place.",
+    "emptyStatePlayer": "Nothing has been shared with the party yet.",
+    "titleLabel": "Title",
+    "captionLabel": "Caption",
+    "captionPlaceholder": "Caption",
+    "sharedWithPlayers": "Shared with players",
+    "removeAria": "Remove {{title}}",
+    "previewUnavailable": "Preview unavailable",
+    "toasts": {
+      "added": "Added to the library",
+      "removed": "Removed"
+    },
+    "deleteDialog": {
+      "title": "Remove this item?",
+      "description": "{{title}} will be deleted from the library and from storage. This cannot be undone.",
+      "confirm": "Remove"
+    },
+    "defaultTitle": "Untitled"
+  },
+  "entityDelete": {
+    "deleteAria": "Delete {{name}}",
+    "confirmTitle": "Delete this entry?",
+    "confirmDescription": "{{name}} and its links will be permanently removed from the campaign. This cannot be undone.",
+    "toastDeleted": "Entry deleted."
+  },
+  "assetImage": {
+    "previewUnavailable": "Preview unavailable"
+  },
+  "libraryPicker": {
+    "trigger": "Pick from library",
+    "title": "Campaign library",
+    "description": "Reuse an image already uploaded to this campaign.",
+    "empty": "No images in the campaign library yet."
+  },
+  "graph": {
+    "searchPlaceholder": "Search records",
+    "allKinds": "All kinds",
+    "emptyState": "Nothing to plot yet. Create records and link them in the World & lore tab.",
+    "ariaLabel": "Relationship graph",
+    "recordCount_one": "{{count}} record",
+    "recordCount_other": "{{count}} records",
+    "linksHint": "{{count}} links · hover to isolate, click to open the record."
+  },
+  "aiDraft": {
+    "title": "AI draft",
+    "typeLabel": "Type",
+    "briefLabel": "What should it be?",
+    "briefPlaceholder": "A harbour smuggler who owes the party a favour and fears the dock guild.",
+    "briefHint": "The draft is only a suggestion. Review it before saving; nothing is stored until you press Save.",
+    "generate": "Generate",
+    "generating": "Writing…",
+    "tryAgain": "Try again",
+    "saveEntry": "Save entry",
+    "toastSaved": "Draft saved as a new entry"
+  },
+  "reveals": {
+    "alreadyPublic": "Revealed — this record was already visible to every player",
+    "removedDemoted": "Reveal removed — record is GM only again",
+    "removed": "Reveal removed",
+    "revealedToPlayer": "Revealed to the player",
+    "recordNotFound": "Record not found"
+  },
+  "entityPage": {
+    "tabs": {
+      "overview": "Overview",
+      "details": "Details",
+      "links": "Relationships",
+      "history": "History",
+      "reveals": "Reveals"
+    },
+    "backToCampaign": "Campaign",
+    "deleteDialog": {
+      "trigger": "Delete",
+      "title": "Delete this entry?",
+      "description": "The entry, its relationships and its revision history are removed for everyone in this campaign. This cannot be undone.",
+      "confirm": "Delete"
+    },
+    "toasts": {
+      "photoUpdated": "Photo updated.",
+      "imageLinked": "Image linked from the campaign library.",
+      "revealedPromoted": "Revealed (visibility set to “Selected players”)",
+      "entryDeleted": "Entry deleted",
+      "versionRestored": "Version restored",
+      "revealRemovedDemoted": "Reveal removed — record is GM only again",
+      "revealRemoved": "Reveal removed",
+      "revealedAlreadyPublic": "Revealed — this record was already visible to every player",
+      "revealedToPlayer": "Revealed to the player"
+    },
+    "fields": {
+      "name": "Name",
+      "status": "Status",
+      "visibility": "Visibility",
+      "tags": "Tags",
+      "image": "Image",
+      "characterSheet": "Character sheet (optional)",
+      "noLinkedSheet": "No linked sheet",
+      "summary": "Summary",
+      "playerDescription": "Player-facing description",
+      "gmNotes": "GM notes"
+    },
+    "image": {
+      "fromLibrary": "From Library",
+      "fromChar": "From Char",
+      "dropNew": "Drop a new image, or click to browse",
+      "uploading": "Uploading image…",
+      "dropNewOf": "Drop an image of {{name}}, or click to browse",
+      "hint": "PNG, JPEG, WebP, GIF or AVIF up to 5 MB",
+      "removeImage": "Remove image",
+      "openCharacterSheet": "Open character sheet",
+      "inheritedNote": "Showing the linked character sheet portrait. Drop an image to override it.",
+      "alt": "{{name}} image",
+      "thisEntry": "this entry"
+    },
+    "details": {
+      "selectPlaceholder": "Select",
+      "onePerLine": "One per line",
+      "gmBadge": "GM"
+    },
+    "links": {
+      "relationshipLabel": "Relationship",
+      "targetLabel": "Target",
+      "targetPlaceholder": "Pick an entry",
+      "linkButton": "Link",
+      "empty": "No relationships yet.",
+      "removeAria": "Remove relationship",
+      "mentionsTitle": "Mentions",
+      "mentionsEmpty": "No other entry mentions “{{name}}” in its text."
+    },
+    "history": {
+      "intro": "Each save stores the previous version. The 30 most recent are kept.",
+      "empty": "No earlier versions yet.",
+      "restore": "Restore",
+      "restoreDialogTitle": "Restore this version?",
+      "restoreDialogDescription": "The current text is replaced by this saved version. The current version is kept in history.",
+      "entryDateLabel": "{{date}} · {{label}}"
+    },
+    "reveals": {
+      "currentVisibility": "Current visibility:",
+      "alreadyVisible": "This entry is already visible to every player in the campaign.",
+      "revealSwitchesNote": "Revealing to a player switches this entry to “Selected players”, so only the players you pick below can see it.",
+      "revealed": "Revealed",
+      "reveal": "Reveal"
+    },
+    "errors": {
+      "recordNotLoaded": "Record not loaded"
+    },
+    "unknownEntity": "Unknown",
+    "defaultCampaignName": "Campaign",
+    "headerDescription": "{{kind}} · {{campaign}}"
+  },
+  "storyPanel": {
+    "collapseAria": "Collapse",
+    "expandAria": "Expand",
+    "newArc": "New arc",
+    "outlineTitle": "Story outline",
+    "noArcsYet": "No arcs yet.",
+    "noArcsYetGmHint": "Start with an arc, then nest adventures, chapters and scenes.",
+    "notInArc": "Not in an arc",
+    "sideTitle": "Threads & secrets",
+    "sideEmpty": "Quests, mysteries, clues and clocks you create will be listed here.",
+    "noSummary": "No summary yet.",
+    "addedToast": "Added to the story outline",
+    "newEntityName": "New {{label}}"
+  },
+  "timelinePanel": {
+    "todayBanner": {
+      "withDate": "Current {{unit}}: {{date}}",
+      "withDateEra": "Current {{unit}}: {{date}} ({{era}})",
+      "noDate": "Set a current {{unit}} to sort events by your calendar."
+    },
+    "exportEventsTemplate": "Events template (ZIP)",
+    "importEvents": "Import events",
+    "calendarButton": "Calendar",
+    "worldCalendarTitle": "World calendar",
+    "calendarSaved": "Calendar saved.",
+    "noEventsYet": "No events on the timeline yet.",
+    "addEvent": "Add event",
+    "eventNamePlaceholder": "Event name",
+    "optionalSuffix": "(opt.)",
+    "summaryPlaceholder": "Summary",
+    "importEventsTitle": "Import timeline events",
+    "importEventsDescription": "Drop the events.json file or the events template ZIP.",
+    "importEventsLabel": "Drop the events.json file or the ZIP here",
+    "importEventsHint": "Download the events template to see the structure.",
+    "validatingDates": "Validating dates…",
+    "eventError": "Event {{index}} (\"{{name}}\"): {{error}}",
+    "importingEvents": "Importing events ({{done}}/{{total}})…",
+    "eventsImported_one": "{{count}} event imported.",
+    "eventsImported_other": "{{count}} events imported.",
+    "generatingPackage": "Generating package…",
+    "downloading": "Downloading…",
+    "templateDownloaded": "Template downloaded.",
+    "eventAdded": "Event added.",
+    "calendar": {
+      "downloadTemplateTask": "Download calendar template (ZIP)",
+      "calendarImported": "Calendar imported — review and save.",
+      "applyingCalendar": "Applying calendar…",
+      "useGregorian": "Use Gregorian calendar",
+      "downloadTemplateZip": "Download template (ZIP)",
+      "importCalendar": "Import calendar",
+      "importCalendarTitle": "Import calendar",
+      "importCalendarDescription": "Drop the calendar.json file or the template ZIP.",
+      "importCalendarLabel": "Drop the calendar.json file or the ZIP here",
+      "importCalendarHint": "Use the template pack as a reference for the structure.",
+      "tabs": {
+        "units": "Units",
+        "months": "Months",
+        "seasons": "Seasons",
+        "cycle": "Cycle",
+        "today": "Today"
+      },
+      "unitsIntro": "Canonical names for the time units (singular / plural).",
+      "unitLabels": {
+        "era": "Era",
+        "year": "Year / Cycle",
+        "season": "Season / Quarter",
+        "month": "Month",
+        "week": "Week",
+        "day": "Day / Route",
+        "hour": "Hour / Quarter",
+        "minute": "Minute / Part"
+      },
+      "eraNameLabel": "Era name",
+      "eraNamePlaceholder": "Third Era",
+      "monthsIntro": "Each {{month}} with its length in {{days}}.",
+      "addMonth": "Add {{unit}}",
+      "monthFallbackName": "Month {{index}}",
+      "seasonsIntro": "Group {{months}} into {{seasons}} / quarters.",
+      "namePlaceholder": "Name",
+      "subtitlePlaceholder": "Motto (opt.)",
+      "addSeason": "Add {{unit}}",
+      "newSeasonName": "Season {{index}}",
+      "daysPerWeekLabel": "{{days}} per {{week}}",
+      "hoursPerDayLabel": "{{hours}} per {{day}}",
+      "minutesPerHourLabel": "{{minutes}} per {{hour}}",
+      "weekdayNamesLabel": "Names of the {{days}} of the week",
+      "weekdayNamesPlaceholder": "Sunday\nMonday\nTuesday",
+      "leapYearLabel": "Leap {{year}}",
+      "leapNone": "None",
+      "leapGregorian": "Gregorian (every 4, except 100)",
+      "leapBlock": "By block (e.g. 4, 7, 10 out of 10)",
+      "blockSizeLabel": "Block size",
+      "leapYearsInBlockLabel": "Leap years in the block",
+      "leapYearsPlaceholder": "4, 7, 10",
+      "extraDayMonthLabel": "{{month}} that gets the extra day",
+      "extraDaysLabel": "Extra {{days}}",
+      "todayIntro": "Current date of the world. Used to show \"today\" and sort upcoming events.",
+      "clearCurrentDate": "Clear current date",
+      "saveCalendar": "Save calendar"
+    }
+  },
+  "sessionsPanel": {
+    "intro": "Prep is GM only. The recap is shared with the table. Both live alongside the campaign notes.",
+    "sessionPlaceholder": "Session {{n}}",
+    "newSession": "New session",
+    "sessionAdded": "Session added.",
+    "deleteSessionAria": "Delete session",
+    "prepLabel": "Prep (GM only)",
+    "prepPlaceholder": "Scenes to run, NPCs on deck, clues to drop, opening beat.",
+    "recapLabel": "Recap (shared)",
+    "recapPlaceholder": "What happened, who did what, where the party ended up.",
+    "nothingSharedYet": "Nothing shared yet.",
+    "noSessionsYet": "No sessions yet.",
+    "deleteDialog": {
+      "title": "Delete this session?",
+      "description": "Prep and recap for “{{title}}” will be removed. This cannot be undone."
+    }
+  },
+  "playersPanel": {
+    "gmIntro": "Secret records stay hidden until you reveal them here. Public records are always visible.",
+    "playerIntro": "These are the secret records the GM has revealed to you.",
+    "emptyPlayerRecords": "No secret records revealed yet — when the GM shares one, it appears here.",
+    "revealedOn": "Revealed {{date}}",
+    "emptyGmSideRecords": "No secret records revealed yet.",
+    "revealARecord": "Reveal a record",
+    "revealToDialogTitle": "Reveal to {{name}}",
+    "searchRecordsPlaceholder": "Search records",
+    "nothingLeftToReveal": "Nothing left to reveal.",
+    "removeRevealAria": "Remove reveal",
+    "toasts": {
+      "revealedPromoted": "Revealed to the player (visibility set to “Selected players”)"
+    }
+  }
+}

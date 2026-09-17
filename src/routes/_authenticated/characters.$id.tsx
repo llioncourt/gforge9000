@@ -35,6 +35,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Trans } from "react-i18next";
+import { useT } from "@/i18n/hooks";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -162,6 +164,7 @@ function parseBack(from?: string): BackTo {
 }
 
 function BackLink({ from }: { from?: string | undefined }) {
+  const { t } = useT("characters");
   const back = parseBack(from);
   const cls =
     "no-print mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground";
@@ -170,20 +173,20 @@ function BackLink({ from }: { from?: string | undefined }) {
     const search = back.tab ? { tab: back.tab as never } : {};
     return (
       <Link to="/campaigns/$id" params={{ id: back.id }} search={search} className={cls}>
-        <ArrowLeft className="h-4 w-4" /> Campaign
+        <ArrowLeft className="h-4 w-4" /> {t("back.campaign")}
       </Link>
     );
   }
   if (back.kind === "entity") {
     return (
       <Link to="/entities/$id" params={{ id: back.id }} className={cls}>
-        <ArrowLeft className="h-4 w-4" /> Lore entry
+        <ArrowLeft className="h-4 w-4" /> {t("back.loreEntry")}
       </Link>
     );
   }
   return (
     <Link to="/characters" className={cls}>
-      <ArrowLeft className="h-4 w-4" /> All characters
+      <ArrowLeft className="h-4 w-4" /> {t("back.allCharacters")}
     </Link>
   );
 }
@@ -221,18 +224,20 @@ function PlusButton({
 
 const TRAIT_KINDS: EntryKind[] = ["advantage", "disadvantage", "perk", "quirk", "custom"];
 const LORE_KINDS: EntryKind[] = ["language", "culture"];
-const APPEARANCE_FIELDS: [string, string][] = [
-  ["age", "Age"],
-  ["height", "Height"],
-  ["weight", "Weight"],
-  ["build", "Build"],
-  ["hair", "Hair"],
-  ["eyes", "Eyes"],
-  ["handedness", "Handedness"],
-  ["languages_note", "Cultural / language note"],
-];
+const APPEARANCE_FIELDS = [
+  "age",
+  "height",
+  "weight",
+  "build",
+  "hair",
+  "eyes",
+  "handedness",
+  "languages_note",
+] as const;
 
 function CharacterPage() {
+  const { t } = useT("characters");
+  const { t: tc } = useT("common");
   const { id } = Route.useParams();
   const { from } = Route.useSearch();
   const queryClient = useQueryClient();
@@ -323,7 +328,7 @@ function CharacterPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["entries", id] });
       setDialogOpen(false);
-      toast.success("Saved.");
+      toast.success(t("sheet.entrySaved"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -338,7 +343,7 @@ function CharacterPage() {
     mutationFn: () => saveVersion(id, new Date().toLocaleString()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["versions", id] });
-      toast.success("Version saved.");
+      toast.success(t("sheet.versionSaved"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -348,7 +353,7 @@ function CharacterPage() {
     onSuccess: () => {
       dirty.current = false;
       queryClient.invalidateQueries();
-      toast.success("Version restored.");
+      toast.success(t("sheet.versionRestored"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -357,7 +362,7 @@ function CharacterPage() {
     mutationFn: () => duplicateCharacter(id),
     onSuccess: (copy) => {
       queryClient.invalidateQueries({ queryKey: ["characters"] });
-      toast.success(`Created “${copy.name}”.`);
+      toast.success(t("sheet.duplicated", { name: copy.name }));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -412,7 +417,7 @@ function CharacterPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["entries", id] });
-      toast.success("Added from pack.");
+      toast.success(t("sheet.addedFromPack"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -430,7 +435,7 @@ function CharacterPage() {
   const appearance = (form.appearance ?? {}) as Record<string, string>;
   const campaignId = form.campaign_id ?? null;
   const rollAttribute = (label: string, target: number) =>
-    roll({ label: `${label} check`, target, characterId: id, campaignId });
+    roll({ label: t("sheet.rollLabels.attributeCheck", { label }), target, characterId: id, campaignId });
 
   const gear = entries.filter((e) => e.kind === "equipment");
   const weaponEntries = gear.filter(
@@ -442,7 +447,7 @@ function CharacterPage() {
       <div className="screen-only">
         <BackLink from={from} />
         <PageHeader
-          title={form.name || "Untitled character"}
+          title={form.name || t("sheet.untitled")}
 
           description={form.concept ?? undefined}
           actions={
@@ -451,16 +456,16 @@ function CharacterPage() {
                 variant="outline"
                 onClick={() => {
                   const prev = document.title;
-                  document.title = form.name || "Untitled character";
+                  document.title = form.name || t("sheet.untitled");
                   window.print();
                   document.title = prev;
                 }}
               >
-                <Printer className="mr-2 h-4 w-4" /> Print
+                <Printer className="mr-2 h-4 w-4" /> {tc("actions.print")}
               </Button>
               <Button
                 variant="outline"
-                aria-label="Copy image generation prompt"
+                aria-label={t("sheet.promptAria")}
                 onClick={() => {
                   const prompt = buildImagePrompt({
                     name: form.name,
@@ -472,54 +477,54 @@ function CharacterPage() {
                   });
                   void navigator.clipboard
                     .writeText(prompt)
-                    .then(() => toast.success("Image prompt copied to clipboard."))
-                    .catch(() => toast.error("Could not copy the prompt."));
+                    .then(() => toast.success(t("sheet.promptCopied")))
+                    .catch(() => toast.error(t("sheet.promptCopyFailed")));
                 }}
               >
-                <Sparkles className="mr-2 h-4 w-4" /> Prompt
+                <Sparkles className="mr-2 h-4 w-4" /> {t("sheet.promptButton")}
               </Button>
               <Button
                 variant="outline"
                 disabled={exportTask.busy}
                 onClick={() =>
-                  void exportTask.run("Exporting character (JSON)", async (report) => {
-                    report("Building file…", 40);
+                  void exportTask.run(t("sheet.exportingJson"), async (report) => {
+                    report(t("sheet.buildingFile"), 40);
                     const contents = JSON.stringify(
                       toPortable(toCharacterRecord(form), entries),
                       null,
                       2,
                     );
-                    report("Downloading…", 85);
+                    report(t("sheet.downloading"), 85);
                     download(`${slugify(form.name)}.json`, contents);
-                    return `Exported ${form.name} with ${entries.length} entries.`;
+                    return t("sheet.exportedJson", { name: form.name, count: entries.length });
                   })
                 }
               >
-                <Download className="mr-2 h-4 w-4" /> JSON
+                <Download className="mr-2 h-4 w-4" /> {t("sheet.exportJson")}
               </Button>
               <Button
                 variant="outline"
                 disabled={exportTask.busy}
                 onClick={() =>
-                  void exportTask.run("Exporting character (CSV)", async (report) => {
-                    report("Building file…", 40);
+                  void exportTask.run(t("sheet.exportingCsv"), async (report) => {
+                    report(t("sheet.buildingFile"), 40);
                     const contents = entriesToCsv(entries, sheet);
-                    report("Downloading…", 85);
+                    report(t("sheet.downloading"), 85);
                     download(`${slugify(form.name)}.csv`, contents, "text/csv");
-                    return `Exported ${entries.length} entries.`;
+                    return t("sheet.exportedCsv", { count: entries.length });
                   })
                 }
               >
-                CSV
+                {t("sheet.exportCsv")}
               </Button>
               <Button variant="outline" onClick={() => clone.mutate()} disabled={clone.isPending}>
-                <Copy className="mr-2 h-4 w-4" /> Duplicate
+                <Copy className="mr-2 h-4 w-4" /> {t("sheet.duplicate")}
               </Button>
               <Button onClick={() => snapshot.mutate()} disabled={snapshot.isPending}>
-                <Save className="mr-2 h-4 w-4" /> Save version
+                <Save className="mr-2 h-4 w-4" /> {t("sheet.saveVersion")}
               </Button>
               <span aria-live="polite" className="text-xs text-muted-foreground">
-                {save.isPending ? "Saving…" : saveError ? "Not saved" : "All changes saved"}
+                {save.isPending ? t("sheet.saving") : saveError ? t("sheet.notSaved") : t("sheet.allSaved")}
               </span>
             </div>
           }
@@ -529,14 +534,14 @@ function CharacterPage() {
           <PointsBar sheet={sheet} budget={form.point_budget} />
           <div className="panel grid grid-cols-2 gap-2 p-4 sm:grid-cols-4">
             {[
-              ["HP", sheet.stats.hp],
-              ["Will", sheet.stats.will],
-              ["Per", sheet.stats.per],
-              ["FP", sheet.stats.fp],
-              ["Speed", sheet.stats.basicSpeed.toFixed(2)],
-              ["Move", sheet.encumbrance.effectiveMove],
-              ["Dodge", sheet.encumbrance.effectiveDodge],
-              ["BL", sheet.stats.basicLift],
+              [t("sheet.stats.hp"), sheet.stats.hp],
+              [t("sheet.stats.will"), sheet.stats.will],
+              [t("sheet.stats.per"), sheet.stats.per],
+              [t("sheet.stats.fp"), sheet.stats.fp],
+              [t("sheet.stats.speed"), sheet.stats.basicSpeed.toFixed(2)],
+              [t("sheet.stats.move"), sheet.encumbrance.effectiveMove],
+              [t("sheet.stats.dodge"), sheet.encumbrance.effectiveDodge],
+              [t("sheet.stats.bl"), sheet.stats.basicLift],
             ].map(([label, value]) => (
               <div
                 key={String(label)}
@@ -553,20 +558,20 @@ function CharacterPage() {
 
         <Tabs defaultValue="attributes">
           <TabsList className="no-print flex-wrap">
-            <TabsTrigger value="attributes">Attributes</TabsTrigger>
-            <TabsTrigger value="traits">Traits</TabsTrigger>
-            <TabsTrigger value="skills">Skills</TabsTrigger>
-            <TabsTrigger value="equipment">Equipment</TabsTrigger>
-            <TabsTrigger value="combat">Combat</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
+            <TabsTrigger value="attributes">{t("sheet.tabs.attributes")}</TabsTrigger>
+            <TabsTrigger value="traits">{t("sheet.tabs.traits")}</TabsTrigger>
+            <TabsTrigger value="skills">{t("sheet.tabs.skills")}</TabsTrigger>
+            <TabsTrigger value="equipment">{t("sheet.tabs.equipment")}</TabsTrigger>
+            <TabsTrigger value="combat">{t("sheet.tabs.combat")}</TabsTrigger>
+            <TabsTrigger value="notes">{t("sheet.tabs.notes")}</TabsTrigger>
+            <TabsTrigger value="history">{t("sheet.tabs.history")}</TabsTrigger>
           </TabsList>
 
           {/* Attributes */}
           <TabsContent value="attributes" className="mt-6 grid gap-6 lg:grid-cols-2">
             <section className="panel space-y-4 p-5">
               <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Identity
+                {t("sheet.identity.title")}
               </h2>
               <div className="grid gap-5 sm:grid-cols-[160px_1fr]">
                 <div className="space-y-4">
@@ -587,42 +592,42 @@ function CharacterPage() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Name">
+                  <Field label={t("sheet.identity.name")}>
                     <Input value={form.name} onChange={(e) => patch({ name: e.target.value })} />
                   </Field>
-                  <Field label="Player">
+                  <Field label={t("sheet.identity.player")}>
                     <Input
                       value={form.player_name ?? ""}
                       onChange={(e) => patch({ player_name: e.target.value })}
                     />
                   </Field>
-                  <Field label="Concept" className="sm:col-span-2">
+                  <Field label={t("sheet.identity.concept")} className="sm:col-span-2">
                     <Input
                       value={form.concept ?? ""}
                       onChange={(e) => patch({ concept: e.target.value })}
                     />
                   </Field>
-                  <Field label="Point budget">
+                  <Field label={t("sheet.identity.pointBudget")}>
                     <Input
                       type="number"
                       value={form.point_budget}
                       onChange={(e) => patch({ point_budget: Number(e.target.value) })}
                     />
                   </Field>
-                  <Field label="Tech level">
+                  <Field label={t("sheet.identity.techLevel")}>
                     <Input
                       type="number"
                       value={form.tech_level}
                       onChange={(e) => patch({ tech_level: Number(e.target.value) })}
                     />
                   </Field>
-                  <Field label="Wealth">
+                  <Field label={t("sheet.identity.wealth")}>
                     <Input
                       value={form.wealth}
                       onChange={(e) => patch({ wealth: e.target.value })}
                     />
                   </Field>
-                  <Field label="Status">
+                  <Field label={t("sheet.identity.status")}>
                     <Input
                       type="number"
                       value={form.status}
@@ -634,9 +639,9 @@ function CharacterPage() {
 
               <div className="flex items-center justify-between rounded-md border border-border p-3">
                 <div>
-                  <Label>Treat as NPC</Label>
+                  <Label>{t("sheet.identity.npcLabel")}</Label>
                   <p className="text-xs text-muted-foreground">
-                    NPCs appear separately on GM tools.
+                    {t("sheet.identity.npcHint")}
                   </p>
                 </div>
                 <Switch checked={form.is_npc} onCheckedChange={(v) => patch({ is_npc: v })} />
@@ -648,11 +653,11 @@ function CharacterPage() {
               />
               <div className="space-y-3 border-t border-border pt-4">
                 <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  Appearance &amp; background
+                  {t("sheet.identity.appearanceTitle")}
                 </h3>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {APPEARANCE_FIELDS.map(([key, label]) => (
-                    <Field key={key} label={label}>
+                  {APPEARANCE_FIELDS.map((key) => (
+                    <Field key={key} label={t(`sheet.identity.appearance.${key}`)}>
                       <Input
                         value={String(appearance[key] ?? "")}
                         onChange={(e) =>
@@ -667,17 +672,19 @@ function CharacterPage() {
 
             <section className="panel space-y-4 p-5">
               <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Attributes
+                {t("sheet.tabs.attributes")}
               </h2>
               <div className="grid gap-4 sm:grid-cols-4">
                 {(
                   [
-                    ["ST", "st"],
-                    ["DX", "dx"],
-                    ["IQ", "iq"],
-                    ["HT", "ht"],
+                    ["st"],
+                    ["dx"],
+                    ["iq"],
+                    ["ht"],
                   ] as const
-                ).map(([label, key]) => (
+                ).map(([key]) => {
+                  const label = t(`sheet.stats.${key}`);
+                  return (
                   <Field key={key} label={label}>
                     <div className="flex items-center gap-1">
                       <Input
@@ -691,22 +698,23 @@ function CharacterPage() {
                         type="button"
                         variant="outline"
                         size="icon"
-                        aria-label={`Roll ${label}`}
-                        title={`Roll against ${label} ${sheet.stats[key]}`}
+                        aria-label={t("sheet.attributes.rollAria", { label })}
+                        title={t("sheet.attributes.rollTitle", { label, value: sheet.stats[key] })}
                         onClick={() => rollAttribute(label, sheet.stats[key])}
                       >
                         <Dices className="h-4 w-4" />
                       </Button>
                     </div>
                   </Field>
-                ))}
+                  );
+                })}
               </div>
               <div className="flex flex-wrap gap-2">
                 {(
                   [
-                    ["Will", sheet.stats.will],
-                    ["Per", sheet.stats.per],
-                    ["HT (FP)", sheet.stats.ht],
+                    [t("sheet.stats.will"), sheet.stats.will],
+                    [t("sheet.stats.per"), sheet.stats.per],
+                    [t("sheet.stats.htFp"), sheet.stats.ht],
                   ] as const
                 ).map(([label, value]) => (
                   <Button
@@ -722,20 +730,20 @@ function CharacterPage() {
               </div>
 
               <h3 className="pt-2 font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Secondary adjustments
+                {t("sheet.attributes.secondaryTitle")}
               </h3>
               <div className="grid gap-4 sm:grid-cols-3">
                 {(
                   [
-                    ["HP", "hp_delta"],
-                    ["Will", "will_delta"],
-                    ["Per", "per_delta"],
-                    ["FP", "fp_delta"],
-                    ["Basic Speed", "speed_delta"],
-                    ["Basic Move", "move_delta"],
+                    ["hp", "hp_delta"],
+                    ["will", "will_delta"],
+                    ["per", "per_delta"],
+                    ["fp", "fp_delta"],
+                    ["basicSpeed", "speed_delta"],
+                    ["basicMove", "move_delta"],
                   ] as const
-                ).map(([label, key]) => (
-                  <Field key={key} label={label}>
+                ).map(([statKey, key]) => (
+                  <Field key={key} label={t(`sheet.stats.${statKey}`)}>
                     <Input
                       type="number"
                       step={key === "speed_delta" ? "0.25" : "1"}
@@ -749,17 +757,14 @@ function CharacterPage() {
               </div>
               <div className="rounded-md border border-border bg-muted/20 p-3 text-sm text-muted-foreground">
                 {sheet.damage.status === "configured" ? (
-                  <>
-                    Basic damage ({sheet.damage.source}): thrust{" "}
-                    <span className="stat-value text-foreground">{sheet.damage.thrust}</span>, swing{" "}
-                    <span className="stat-value text-foreground">{sheet.damage.swing}</span>
-                  </>
+                  <Trans
+                    t={t}
+                    i18nKey="sheet.attributes.damageConfigured"
+                    values={{ source: sheet.damage.source, thrust: sheet.damage.thrust, swing: sheet.damage.swing }}
+                    components={{ 1: <span className="stat-value text-foreground" /> }}
+                  />
                 ) : (
-                  <>
-                    Basic damage: <span className="text-foreground">not configured</span>. No damage
-                    progression is installed, so thrust and swing are unavailable for this ST. Add a
-                    progression through a content pack or campaign house rules.
-                  </>
+                  <Trans t={t} i18nKey="sheet.attributes.damageUnconfigured" components={{ 1: <span className="text-foreground" /> }} />
                 )}
               </div>
             </section>
@@ -770,7 +775,7 @@ function CharacterPage() {
             {[...TRAIT_KINDS, ...LORE_KINDS].map((kind) => (
               <EntryGroup
                 key={kind}
-                title={`${kind}s`}
+                title={t(`sheet.kindLabels.${kind}`)}
                 kind={kind}
                 entries={entries.filter((e) => e.kind === kind)}
                 onAdd={() => openNew(kind)}
@@ -784,24 +789,24 @@ function CharacterPage() {
           {/* Skills */}
           <TabsContent value="skills" className="mt-6 space-y-6">
             <div className="flex flex-wrap gap-2">
-              <PlusButton label="Add skills from packs" onClick={() => setPickerKinds(["skill"])} />
+              <PlusButton label={t("sheet.addFromPack.skill")} onClick={() => setPickerKinds(["skill"])} />
               <PlusButton
-                label="Add techniques from packs"
+                label={t("sheet.addFromPack.technique")}
                 onClick={() => setPickerKinds(["technique"])}
               />
-              <PlusButton label="Add spells from packs" onClick={() => setPickerKinds(["spell"])} />
+              <PlusButton label={t("sheet.addFromPack.spell")} onClick={() => setPickerKinds(["spell"])} />
               <PlusButton
-                label="Create a custom skill"
+                label={t("sheet.addCustom.skill")}
                 variant="outline"
                 onClick={() => openNew("skill")}
               />
               <PlusButton
-                label="Create a custom technique"
+                label={t("sheet.addCustom.technique")}
                 variant="outline"
                 onClick={() => openNew("technique")}
               />
               <PlusButton
-                label="Create a custom spell or ability"
+                label={t("sheet.addCustom.spell")}
                 variant="outline"
                 onClick={() => openNew("spell")}
               />
@@ -810,12 +815,12 @@ function CharacterPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="w-24">Kind</TableHead>
-                    <TableHead className="w-24 text-right">Relative</TableHead>
-                    <TableHead className="w-20 text-right">Points</TableHead>
-                    <TableHead className="w-24 text-right">Level</TableHead>
-                    <TableHead className="w-64 text-right">Roll result</TableHead>
+                    <TableHead>{t("sheet.skillsTable.name")}</TableHead>
+                    <TableHead className="w-24">{t("sheet.skillsTable.kind")}</TableHead>
+                    <TableHead className="w-24 text-right">{t("sheet.skillsTable.relative")}</TableHead>
+                    <TableHead className="w-20 text-right">{t("sheet.skillsTable.points")}</TableHead>
+                    <TableHead className="w-24 text-right">{t("sheet.skillsTable.level")}</TableHead>
+                    <TableHead className="w-64 text-right">{t("sheet.skillsTable.rollResult")}</TableHead>
                     <TableHead className="w-28" />
                   </TableRow>
                 </TableHeader>
@@ -826,7 +831,7 @@ function CharacterPage() {
                         colSpan={7}
                         className="py-8 text-center text-sm text-muted-foreground"
                       >
-                        No skills yet.
+                        {t("sheet.skillsTable.empty")}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -849,7 +854,7 @@ function CharacterPage() {
                             {entry.kind}
                             {isCustomEntry(entry.source) ? (
                               <Badge variant="outline" className="ml-1">
-                                custom
+                                {t("sheet.source.custom")}
                               </Badge>
                             ) : null}
                           </TableCell>
@@ -868,7 +873,7 @@ function CharacterPage() {
                                 disabled={level.effective === null}
                                 onClick={() =>
                                   roll({
-                                    label: `${entry.name} skill check`,
+                                    label: t("sheet.rollLabels.skillCheck", { name: entry.name }),
                                     target: level.effective,
                                     characterId: id,
                                     contextKey: rollKey,
@@ -876,19 +881,29 @@ function CharacterPage() {
                                   })
                                 }
                               >
-                                <Dices className="mr-1 h-4 w-4" /> Roll
+                                <Dices className="mr-1 h-4 w-4" /> {t("sheet.actions.roll")}
                               </Button>
                               {latestRoll ? (
                                 <Badge variant={passed ? "default" : "destructive"}>
-                                  {latestRoll.outcome?.startsWith("critical") ? "Critical " : ""}
-                                  {passed ? "pass" : "failure"}
                                   {latestRoll.margin !== null
-                                    ? ` by ${Math.abs(latestRoll.margin)}`
-                                    : ""}
+                                    ? latestRoll.outcome?.startsWith("critical")
+                                      ? passed
+                                        ? t("sheet.rollOutcome.criticalPassMargin", { margin: Math.abs(latestRoll.margin) })
+                                        : t("sheet.rollOutcome.criticalFailureMargin", { margin: Math.abs(latestRoll.margin) })
+                                      : passed
+                                        ? t("sheet.rollOutcome.passMargin", { margin: Math.abs(latestRoll.margin) })
+                                        : t("sheet.rollOutcome.failureMargin", { margin: Math.abs(latestRoll.margin) })
+                                    : latestRoll.outcome?.startsWith("critical")
+                                      ? passed
+                                        ? t("sheet.rollOutcome.criticalPass")
+                                        : t("sheet.rollOutcome.criticalFailure")
+                                      : passed
+                                        ? t("sheet.rollOutcome.pass")
+                                        : t("sheet.rollOutcome.failure")}
                                 </Badge>
                               ) : level.effective === null ? (
                                 <span className="text-xs text-muted-foreground">
-                                  Not configured
+                                  {t("sheet.skillsTable.notConfigured")}
                                 </span>
                               ) : null}
                             </div>
@@ -912,34 +927,37 @@ function CharacterPage() {
           <TabsContent value="equipment" className="mt-6 space-y-4">
             <div className="flex flex-wrap items-center gap-3">
               <PlusButton
-                label="Add equipment from packs"
+                label={t("sheet.addFromPack.equipment")}
                 onClick={() => setPickerKinds(["equipment"])}
               />
               <PlusButton
-                label="Create a custom item"
+                label={t("sheet.addCustom.equipment")}
                 variant="outline"
                 onClick={() => openNew("equipment")}
               />
               <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                 <span>
-                  Carried{" "}
+                  {t("sheet.equipmentSummary.carried")}{" "}
                   <span className="stat-value text-foreground">
                     {sheet.encumbrance.carriedWeight}
                   </span>
                 </span>
                 <span>
-                  Total{" "}
+                  {t("sheet.equipmentSummary.total")}{" "}
                   <span className="stat-value text-foreground">
                     {sheet.encumbrance.totalWeight}
                   </span>
                 </span>
                 <span>
-                  Value{" "}
+                  {t("sheet.equipmentSummary.value")}{" "}
                   <span className="stat-value text-foreground">{sheet.encumbrance.totalCost}</span>
                 </span>
                 <Badge variant="outline">
-                  {sheet.encumbrance.label} · Move {sheet.encumbrance.effectiveMove} · Dodge{" "}
-                  {sheet.encumbrance.effectiveDodge}
+                  {t("sheet.equipmentSummary.moveDodge", {
+                    label: sheet.encumbrance.label,
+                    move: sheet.encumbrance.effectiveMove,
+                    dodge: sheet.encumbrance.effectiveDodge,
+                  })}
                 </Badge>
               </div>
             </div>
@@ -947,12 +965,12 @@ function CharacterPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead className="w-16 text-right">Qty</TableHead>
-                    <TableHead className="w-20 text-right">Weight</TableHead>
-                    <TableHead className="w-20 text-right">Cost</TableHead>
-                    <TableHead className="hidden w-16 text-right md:table-cell">DR</TableHead>
-                    <TableHead className="w-24">State</TableHead>
+                    <TableHead>{t("sheet.equipmentTable.item")}</TableHead>
+                    <TableHead className="w-16 text-right">{t("sheet.equipmentTable.qty")}</TableHead>
+                    <TableHead className="w-20 text-right">{t("sheet.equipmentTable.weight")}</TableHead>
+                    <TableHead className="w-20 text-right">{t("sheet.equipmentTable.cost")}</TableHead>
+                    <TableHead className="hidden w-16 text-right md:table-cell">{t("sheet.equipmentTable.dr")}</TableHead>
+                    <TableHead className="w-24">{t("sheet.equipmentTable.state")}</TableHead>
                     <TableHead className="w-28" />
                   </TableRow>
                 </TableHeader>
@@ -963,7 +981,7 @@ function CharacterPage() {
                         colSpan={7}
                         className="py-8 text-center text-sm text-muted-foreground"
                       >
-                        No equipment yet.
+                        {t("sheet.equipmentTable.empty")}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -984,7 +1002,7 @@ function CharacterPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant={e.data["carried"] === false ? "outline" : "default"}>
-                            {e.data["carried"] === false ? "Stored" : "Carried"}
+                            {e.data["carried"] === false ? t("sheet.equipmentTable.stored") : t("sheet.equipmentTable.carried")}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -1006,17 +1024,17 @@ function CharacterPage() {
             <section className="space-y-4">
               <div className="panel space-y-4 p-5">
                 <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                  Condition
+                  {t("sheet.combat.conditionTitle")}
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
-                  <Field label={`Current HP / ${sheet.stats.hp}`}>
+                  <Field label={t("sheet.combat.currentHp", { hp: sheet.stats.hp })}>
                     <Input
                       type="number"
                       value={form.current_hp ?? sheet.stats.hp}
                       onChange={(e) => patch({ current_hp: Number(e.target.value) })}
                     />
                   </Field>
-                  <Field label={`Current FP / ${sheet.stats.fp}`}>
+                  <Field label={t("sheet.combat.currentFp", { fp: sheet.stats.fp })}>
                     <Input
                       type="number"
                       value={form.current_fp ?? sheet.stats.fp}
@@ -1025,17 +1043,17 @@ function CharacterPage() {
                   </Field>
                 </div>
                 <div className="space-y-2">
-                  <Label>Conditions</Label>
+                  <Label>{t("sheet.combat.conditionsLabel")}</Label>
                   <div className="flex flex-wrap gap-1">
                     {form.conditions.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">None active.</p>
+                      <p className="text-xs text-muted-foreground">{t("sheet.combat.noConditions")}</p>
                     ) : (
                       form.conditions.map((c) => (
                         <Badge key={c} variant="outline" className="gap-1">
                           {c}
                           <button
                             type="button"
-                            aria-label={`Remove ${c}`}
+                            aria-label={t("sheet.combat.removeConditionAria", { condition: c })}
                             className="text-muted-foreground hover:text-foreground"
                             onClick={() =>
                               patch({ conditions: form.conditions.filter((x) => x !== c) })
@@ -1059,28 +1077,28 @@ function CharacterPage() {
                   >
                     <Input
                       value={conditionInput}
-                      placeholder="Add a condition…"
+                      placeholder={t("sheet.combat.addConditionPlaceholder")}
                       onChange={(e) => setConditionInput(e.target.value)}
                     />
                     <Button type="submit" variant="outline" size="sm">
-                      Add
+                      {tc("actions.add")}
                     </Button>
                   </form>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <Mini label="Move" value={sheet.encumbrance.effectiveMove} />
-                  <Mini label="Dodge" value={sheet.encumbrance.effectiveDodge} />
-                  <Mini label="Load" value={sheet.encumbrance.label} />
+                  <Mini label={t("sheet.stats.move")} value={sheet.encumbrance.effectiveMove} />
+                  <Mini label={t("sheet.stats.dodge")} value={sheet.encumbrance.effectiveDodge} />
+                  <Mini label={t("sheet.stats.load")} value={sheet.encumbrance.label} />
                 </div>
               </div>
 
               <div className="panel p-5">
                 <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                  DR by location
+                  {t("sheet.combat.drTitle")}
                 </h2>
                 {Object.keys(sheet.dr).length === 0 ? (
-                  <p className="mt-3 text-sm text-muted-foreground">No worn armour.</p>
+                  <p className="mt-3 text-sm text-muted-foreground">{t("sheet.combat.noArmour")}</p>
                 ) : (
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     {Object.entries(sheet.dr).map(([loc, dr]) => (
@@ -1092,39 +1110,42 @@ function CharacterPage() {
 
               <div className="panel p-5">
                 <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                  Quick rolls
+                  {t("sheet.combat.quickRollsTitle")}
                 </h2>
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   {(
                     [
-                      ["ST", sheet.stats.st],
-                      ["DX", sheet.stats.dx],
-                      ["IQ", sheet.stats.iq],
-                      ["HT", sheet.stats.ht],
-                      ["Will", sheet.stats.will],
-                      ["Per", sheet.stats.per],
+                      ["st", sheet.stats.st],
+                      ["dx", sheet.stats.dx],
+                      ["iq", sheet.stats.iq],
+                      ["ht", sheet.stats.ht],
+                      ["will", sheet.stats.will],
+                      ["per", sheet.stats.per],
                     ] as const
-                  ).map(([label, value]) => (
+                  ).map(([statKey, value]) => {
+                    const label = t(`sheet.stats.${statKey}`);
+                    return (
                     <Button
-                      key={label}
+                      key={statKey}
                       variant="outline"
                       size="sm"
                       onClick={() => rollAttribute(label, value)}
                     >
                       {label} {value}
                     </Button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </section>
 
             <section className="space-y-3">
               <h2 className="font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-                Attacks
+                {t("sheet.combat.attacksTitle")}
               </h2>
               {weaponEntries.length === 0 ? (
                 <div className="panel p-8 text-center text-sm text-muted-foreground">
-                  Add an equipment item with attack modes to see it here.
+                  {t("sheet.combat.noAttacks")}
                 </div>
               ) : (
                 weaponEntries.map((e) => {
@@ -1169,7 +1190,7 @@ function CharacterPage() {
                               }
                               onDamage={(expression) =>
                                 roll({
-                                  label: `${e.name} damage`,
+                                  label: t("sheet.rollLabels.damage", { name: e.name }),
                                   expression,
                                   characterId: id,
                                   campaignId,
@@ -1200,7 +1221,7 @@ function CharacterPage() {
           {/* Notes */}
           <TabsContent value="notes" className="mt-6">
             <div className="panel max-w-3xl p-5">
-              <Field label="Character notes">
+              <Field label={t("sheet.notes.label")}>
                 <Textarea
                   rows={14}
                   value={form.notes ?? ""}
@@ -1225,21 +1246,20 @@ function CharacterPage() {
                     <div className="flex items-center gap-3">
                       <History className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">{v.label || "Snapshot"}</p>
+                        <p className="text-sm font-medium">{v.label || t("sheet.history.snapshotLabel")}</p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(v.created_at).toLocaleString()}
                         </p>
                       </div>
                     </div>
                     <Button size="sm" variant="outline" onClick={() => setPendingRestore(v)}>
-                      Restore
+                      {t("sheet.history.restore")}
                     </Button>
                   </div>
                 ))
               ) : (
                 <p className="p-6 text-sm text-muted-foreground">
-                  No versions saved yet. Use “Save version” to snapshot the sheet before big
-                  changes.
+                  {t("sheet.history.empty", { saveVersion: t("sheet.saveVersion") })}
                 </p>
               )}
             </div>
@@ -1249,21 +1269,20 @@ function CharacterPage() {
         <AlertDialog open={!!pendingRestore} onOpenChange={(v) => !v && setPendingRestore(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Restore this snapshot?</AlertDialogTitle>
+              <AlertDialogTitle>{t("sheet.history.restoreTitle")}</AlertDialogTitle>
               <AlertDialogDescription>
-                The sheet is replaced with the saved snapshot. Ownership and campaign links are
-                kept. Save a version first if you want to keep the current state.
+                {t("sheet.history.restoreDescription")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
                   if (pendingRestore) restore.mutate(pendingRestore);
                   setPendingRestore(null);
                 }}
               >
-                Restore
+                {t("sheet.history.restore")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -1310,13 +1329,14 @@ function EntryGroup({
   onEdit: (e: CharacterEntry) => void;
   onDelete: (id: string) => void;
 }) {
+  const { t } = useT("characters");
   const [descFor, setDescFor] = useState<CharacterEntry | null>(null);
 
   const descParts = (e: CharacterEntry) => {
     const mods = (e.data["modifiers"] as { name: string; percent: number }[] | undefined) ?? [];
     return [
       isCustomEntry(e.source)
-        ? "custom"
+        ? t("sheet.source.custom")
         : String((e.source as Record<string, unknown>)["pack"] ?? ""),
       e.category,
       ...mods.map((m) => `${m.name} ${m.percent > 0 ? "+" : ""}${m.percent}%`),
@@ -1331,13 +1351,13 @@ function EntryGroup({
         </h2>
         <div className="flex flex-wrap gap-2">
           {onAddFromPack ? (
-            <PlusButton label={`Add ${kind}s from packs`} onClick={onAddFromPack} />
+            <PlusButton label={t(`sheet.addFromPack.${kind}`)} onClick={onAddFromPack} />
           ) : null}
-          <PlusButton label={`Create a custom ${kind}`} variant="outline" onClick={onAdd} />
+          <PlusButton label={t(`sheet.addCustom.${kind}`)} variant="outline" onClick={onAdd} />
         </div>
       </div>
       {entries.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">Nothing here yet.</p>
+        <p className="mt-3 text-sm text-muted-foreground">{t("sheet.entryGroup.empty")}</p>
       ) : (
         <ul className="mt-3 divide-y divide-border">
           {entries.map((e) => {
@@ -1353,7 +1373,7 @@ function EntryGroup({
                       <button
                         type="button"
                         className="ml-1.5 inline-flex align-middle text-muted-foreground hover:text-foreground"
-                        aria-label="Show description"
+                        aria-label={t("sheet.entryGroup.showDescriptionAria")}
                         onClick={() => setDescFor(e)}
                       >
                         <Info className="h-3.5 w-3.5" />
@@ -1378,7 +1398,7 @@ function EntryGroup({
           {descFor?.notes ? (
             <p className="whitespace-pre-wrap text-sm text-foreground">{descFor.notes}</p>
           ) : (
-            <p className="text-sm text-muted-foreground">No additional description.</p>
+            <p className="text-sm text-muted-foreground">{t("sheet.entryGroup.noDescription")}</p>
           )}
         </DialogContent>
       </Dialog>
@@ -1387,12 +1407,13 @@ function EntryGroup({
 }
 
 function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  const { t: tc } = useT("common");
   return (
     <div className="no-print flex shrink-0">
-      <Button size="icon" variant="ghost" onClick={onEdit} aria-label="Edit">
+      <Button size="icon" variant="ghost" onClick={onEdit} aria-label={tc("actions.edit")}>
         <Pencil className="h-4 w-4" />
       </Button>
-      <Button size="icon" variant="ghost" onClick={onDelete} aria-label="Delete">
+      <Button size="icon" variant="ghost" onClick={onDelete} aria-label={tc("actions.delete")}>
         <Trash2 className="h-4 w-4" />
       </Button>
     </div>

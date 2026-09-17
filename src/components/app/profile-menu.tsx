@@ -297,6 +297,25 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
               <Label>{t("profile.email")}</Label>
               <Input value={user?.email ?? ""} readOnly disabled />
             </div>
+            <div className="space-y-3 rounded-lg border border-destructive/40 p-4">
+              <div className="flex items-start gap-3">
+                <ShieldAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
+                <div>
+                  <h3 className="text-sm font-semibold text-destructive">{ts("danger.title")}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{ts("danger.description")}</p>
+                </div>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  setVerified(false);
+                  setWipeOpen(true);
+                }}
+              >
+                {ts("danger.eraseButton")}
+              </Button>
+            </div>
           </div>
           <DialogFooter>
             <Button onClick={() => save.mutate()} disabled={save.isPending}>
@@ -305,6 +324,44 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={wipeOpen}
+        onOpenChange={(next) => {
+          setWipeOpen(next);
+          if (!next) setVerified(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{ts("wipeDialog.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {ts("wipeDialog.description", { email: user?.email })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={wipe.isPending}>{tc("actions.cancel")}</AlertDialogCancel>
+            {verified ? (
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  wipe.mutate();
+                }}
+                disabled={wipe.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {wipe.isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                {ts("wipeDialog.deleteEverything")}
+              </AlertDialogAction>
+            ) : (
+              <Button onClick={confirmWithGoogle} disabled={verifying}>
+                {verifying ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                {ts("wipeDialog.confirmWithGoogle")}
+              </Button>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

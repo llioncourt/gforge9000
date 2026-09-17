@@ -14,8 +14,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useT } from "@/i18n/hooks";
-import { listAdaptationAssets, listFacts, listScenes } from "@/lib/adaptation/api";
+import { listAdaptationAssets, listFacts, listScenes, reviewFact } from "@/lib/adaptation/api";
 import { exportAdaptationBundle, exportProjectionBundle } from "@/lib/adaptation/bundle";
+import type { WizardStep } from "@/lib/adaptation/types";
 import type { StepProps } from "@/components/adaptation/adaptation-wizard";
 
 interface Problem {

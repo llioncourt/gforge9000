@@ -66,7 +66,7 @@ export function ValidationStep({ project }: StepProps) {
           </h5>
           <ul className="space-y-1 text-sm">
             {problems.map((problem) => (
-              <li key={problem.key}>{t(`validation.checks.${problem.key}`, { count: problem.count })}</li>
+              <li key={problem.key}>{t(`validation.checks.${problem.key}` as never, { count: problem.count } as never)}</li>
             ))}
           </ul>
         </section>
@@ -165,7 +165,7 @@ export function GenerateStep({ project, patch }: StepProps) {
       </div>
 
       <Dialog open={!!running}>
-        <DialogContent className="sm:max-w-md" hideClose>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t("generate.exporting")}</DialogTitle>
             <DialogDescription>{t("generate.description")}</DialogDescription>

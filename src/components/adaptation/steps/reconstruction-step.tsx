@@ -31,7 +31,10 @@ export function ReconstructionStep({ project, patch }: StepProps) {
       const output = await runReconstruction(
         project.id,
         snapshot,
-        { spoilerPolicy: project.spoiler_policy, instructions: instructions.trim() || undefined },
+        {
+          spoilerPolicy: project.spoiler_policy,
+          ...(instructions.trim() ? { instructions: instructions.trim() } : {}),
+        },
         (value) =>
           setProgress({
             label: value.label,

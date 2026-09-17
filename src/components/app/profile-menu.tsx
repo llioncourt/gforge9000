@@ -41,6 +41,8 @@ import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 
 const THEME_KEY = "ucf:light-theme";
+const WIPE_INTENT_KEY = "ucf:wipe-intent";
+const WIPE_INTENT_TTL = 5 * 60 * 1000;
 
 /** Applies the theme by switching the root class (light palette lives under .light). */
 function applyTheme(light: boolean) {
@@ -52,6 +54,8 @@ function applyTheme(light: boolean) {
 export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
   const { user } = useSession();
   const { t } = useT("navigation");
+  const { t: ts } = useT("settings");
+  const { t: tc } = useT("common");
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [light, setLight] = useState(false);

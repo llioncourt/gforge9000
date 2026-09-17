@@ -124,4 +124,3 @@ export const DEFAULT_VIEWER_SETTINGS: ViewerSettings = {
   animationPlaying: true,
   animationSpeed: 1,
 };
-

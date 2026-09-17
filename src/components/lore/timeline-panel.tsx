@@ -36,7 +36,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { getCampaign, updateCampaign } from "@/lib/api";
-import { createEntity, listEntities, type EntityRow } from "@/lib/lore";
+import { createEntities, createEntity, listEntities, type EntityRow } from "@/lib/lore";
 import { useSession } from "@/hooks/use-session";
 import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
@@ -193,46 +193,37 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
         if (row.minute) check.minute = Number(row.minute);
         const err = validateWorldDate(calendar, check);
         if (err)
-          throw new Error(t("timelinePanel.eventError", { index: i + 1, name: row.name, error: err }));
+          throw new Error(
+            t("timelinePanel.eventError", { index: i + 1, name: row.name, error: err }),
+          );
       }
     });
 
-    let done = 0;
-    // Imported in small batches so a long timeline does not take one round trip
-    // per event; order of creation does not matter here.
-    const BATCH = 8;
-    for (let start = 0; start < rows.length; start += BATCH) {
-      const batch = rows.slice(start, start + BATCH);
-      await Promise.all(
-        batch.map((row) =>
-          createEntity({
-            campaign_id: campaignId,
-            kind: "EVENT",
-            name: row.name,
-            status: row.status || "Historical",
-            visibility: row.visibility ?? (isGm ? "GM_ONLY" : "ALL_PLAYERS"),
-            summary: row.summary || null,
-            created_by: user!.id,
-            data: {
-              year: row.year ?? "",
-              month: row.month ?? "",
-              day: row.day ?? "",
-              hour: row.hour ?? "",
-              minute: row.minute ?? "",
-              era: row.era || calendar.era,
-              what_happened: row.what_happened ?? "",
-              consequences: row.consequences ?? "",
-              gm_truth: row.gm_truth ?? "",
-            },
-          } as never),
-        ),
-      );
-      done += batch.length;
-      report(
-        t("timelinePanel.importingEvents", { done, total: rows.length }),
-        20 + Math.round((done / Math.max(1, rows.length)) * 75),
-      );
-    }
+    report(t("timelinePanel.importingEvents", { done: 0, total: rows.length }), 25);
+    // Every event is written in a single step, so an import either lands whole
+    // or leaves the timeline exactly as it was.
+    const inserts = rows.map((row) => ({
+      campaign_id: campaignId,
+      kind: "EVENT",
+      name: row.name,
+      status: row.status || "Historical",
+      visibility: row.visibility ?? (isGm ? "GM_ONLY" : "ALL_PLAYERS"),
+      summary: row.summary || null,
+      created_by: user!.id,
+      data: {
+        year: row.year ?? "",
+        month: row.month ?? "",
+        day: row.day ?? "",
+        hour: row.hour ?? "",
+        minute: row.minute ?? "",
+        era: row.era || calendar.era,
+        what_happened: row.what_happened ?? "",
+        consequences: row.consequences ?? "",
+        gm_truth: row.gm_truth ?? "",
+      },
+    }));
+    await createEntities(inserts as never);
+    report(t("timelinePanel.importingEvents", { done: rows.length, total: rows.length }), 95);
 
     await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
     return t("timelinePanel.eventsImported", { count: rows.length });
@@ -690,7 +681,9 @@ function CalendarForm({
             }
           >
             <Plus className="mr-1 h-4 w-4" />{" "}
-            {t("timelinePanel.calendar.addMonth", { unit: draft.units.month.singular.toLowerCase() })}
+            {t("timelinePanel.calendar.addMonth", {
+              unit: draft.units.month.singular.toLowerCase(),
+            })}
           </Button>
         </TabsContent>
 
@@ -780,7 +773,9 @@ function CalendarForm({
                 seasons: [
                   ...d.seasons,
                   {
-                    name: t("timelinePanel.calendar.newSeasonName", { index: d.seasons.length + 1 }),
+                    name: t("timelinePanel.calendar.newSeasonName", {
+                      index: d.seasons.length + 1,
+                    }),
                     subtitle: "",
                     months: [],
                   },
@@ -910,7 +905,9 @@ function CalendarForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">{t("timelinePanel.calendar.leapNone")}</SelectItem>
-                <SelectItem value="gregorian">{t("timelinePanel.calendar.leapGregorian")}</SelectItem>
+                <SelectItem value="gregorian">
+                  {t("timelinePanel.calendar.leapGregorian")}
+                </SelectItem>
                 <SelectItem value="block">{t("timelinePanel.calendar.leapBlock")}</SelectItem>
               </SelectContent>
             </Select>
@@ -981,7 +978,8 @@ function CalendarForm({
                     <SelectContent>
                       {draft.months.map((m, i) => (
                         <SelectItem key={i} value={String(i)}>
-                          {m.name || t("timelinePanel.calendar.monthFallbackName", { index: i + 1 })}
+                          {m.name ||
+                            t("timelinePanel.calendar.monthFallbackName", { index: i + 1 })}
                         </SelectItem>
                       ))}
                     </SelectContent>

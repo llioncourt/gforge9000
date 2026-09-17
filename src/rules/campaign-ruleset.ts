@@ -94,17 +94,44 @@ export const RULESET_FIELDS: RulesetField[] = [
   { path: "weapon.accuracyBonusEnabled", group: "weapons", kind: "boolean" },
   { path: "weapon.bulkPenaltyEnabled", group: "weapons", kind: "boolean" },
   ...defaultRuleset.encumbrance.flatMap<RulesetField>((_tier, i) => [
-    { path: `encumbrance.${i}.multiplier`, group: "encumbrance", kind: "number", min: 0, step: 0.1 },
-    { path: `encumbrance.${i}.moveFactor`, group: "encumbrance", kind: "number", min: 0, max: 1, step: 0.05 },
+    {
+      path: `encumbrance.${i}.multiplier`,
+      group: "encumbrance",
+      kind: "number",
+      min: 0,
+      step: 0.1,
+    },
+    {
+      path: `encumbrance.${i}.moveFactor`,
+      group: "encumbrance",
+      kind: "number",
+      min: 0,
+      max: 1,
+      step: 0.05,
+    },
     { path: `encumbrance.${i}.dodgePenalty`, group: "encumbrance", kind: "integer", max: 0 },
   ]),
   ...defaultRuleset.health.hpThresholds.flatMap<RulesetField>((_row, i) => [
     { path: `health.hpThresholds.${i}.atOrBelow`, group: "health", kind: "number", step: 0.01 },
-    { path: `health.hpThresholds.${i}.moveFactor`, group: "health", kind: "number", min: 0, max: 1, step: 0.05 },
+    {
+      path: `health.hpThresholds.${i}.moveFactor`,
+      group: "health",
+      kind: "number",
+      min: 0,
+      max: 1,
+      step: 0.05,
+    },
   ]),
   ...defaultRuleset.health.fpThresholds.flatMap<RulesetField>((_row, i) => [
     { path: `health.fpThresholds.${i}.atOrBelow`, group: "health", kind: "number", step: 0.01 },
-    { path: `health.fpThresholds.${i}.moveFactor`, group: "health", kind: "number", min: 0, max: 1, step: 0.05 },
+    {
+      path: `health.fpThresholds.${i}.moveFactor`,
+      group: "health",
+      kind: "number",
+      min: 0,
+      max: 1,
+      step: 0.05,
+    },
   ]),
 ];
 
@@ -133,7 +160,11 @@ export function getAtPath(source: unknown, path: string): unknown {
 export function setAtPath<T>(source: T, path: string, value: unknown): T {
   const keys = path.split(".");
   const clone = (node: unknown): unknown =>
-    Array.isArray(node) ? [...node] : node && typeof node === "object" ? { ...(node as Unknown) } : node;
+    Array.isArray(node)
+      ? [...node]
+      : node && typeof node === "object"
+        ? { ...(node as Unknown) }
+        : node;
   const root = clone(source) as Unknown;
   let cursor: Unknown = root;
   for (let i = 0; i < keys.length - 1; i += 1) {
@@ -172,9 +203,9 @@ export function rulesetFromSettings(settings: unknown): Ruleset {
 
 /** Paths whose value differs from the default — used to flag edited fields. */
 export function changedPaths(rules: Ruleset): string[] {
-  return RULESET_FIELDS.filter((f) => !deepEqual(getAtPath(rules, f.path), getAtPath(defaultRuleset, f.path))).map(
-    (f) => f.path,
-  );
+  return RULESET_FIELDS.filter(
+    (f) => !deepEqual(getAtPath(rules, f.path), getAtPath(defaultRuleset, f.path)),
+  ).map((f) => f.path);
 }
 
 /** Coerces raw form input for a field; returns null when the input is unusable. */

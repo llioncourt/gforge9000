@@ -157,7 +157,11 @@ export function AiDraftDialog({
             disabled={generate.isPending || brief.trim().length < 3}
           >
             <Sparkles className="mr-2 size-4" />
-            {generate.isPending ? t("aiDraft.generating") : draft ? t("aiDraft.tryAgain") : t("aiDraft.generate")}
+            {generate.isPending
+              ? t("aiDraft.generating")
+              : draft
+                ? t("aiDraft.tryAgain")
+                : t("aiDraft.generate")}
           </Button>
           <Button onClick={() => save.mutate()} disabled={!draft || save.isPending}>
             {t("aiDraft.saveEntry")}

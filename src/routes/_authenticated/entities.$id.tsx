@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -61,6 +61,7 @@ import { useSession } from "@/hooks/use-session";
 import { revealEntityToPlayer, revokeEntityReveal } from "@/lib/reveal";
 import { isPlayerVisible } from "@/lib/visibility";
 import { useLoreRealtime } from "@/hooks/use-lore-realtime";
+import { decideSync } from "@/lib/form-sync";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { LibraryImagePicker } from "@/components/lore/library-image-picker";
@@ -143,8 +144,8 @@ function EntityPage() {
     setOwnImageBroken(false);
   }, [entity.data?.image_url]);
   const photoUrl = useQuery({
-    queryKey: ["entity-photo", entityImagePath],
-    queryFn: () => entityImageUrl(entityImagePath),
+    queryKey: ["entity-photo", entityImagePath, id],
+    queryFn: () => entityImageUrl(entityImagePath, id),
     enabled: !!entityImagePath,
   });
   // An entry image "from library" points at a campaign_assets file instead of
@@ -209,9 +210,29 @@ function EntityPage() {
   const backTab = entity.data?.kind === "EVENT" ? "timeline" : "lore";
 
   const [form, setForm] = useState<EntityRow | null>(null);
+  // The last copy that came from the server; used to tell edits apart from refreshes.
+  const baseline = useRef<EntityRow | null>(null);
+  const [staleWarning, setStaleWarning] = useState(false);
   useEffect(() => {
-    if (entity.data) setForm(entity.data);
+    const incoming = entity.data ?? null;
+    const decision = decideSync(baseline.current, form, incoming);
+    if (decision === "apply" && incoming) {
+      baseline.current = incoming;
+      setForm(incoming);
+      setStaleWarning(false);
+    } else if (decision === "keep-local") {
+      setStaleWarning(true);
+    }
+    // form is intentionally read, not tracked: this runs on server refreshes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entity.data]);
+
+  const takeServerVersion = () => {
+    if (!entity.data) return;
+    baseline.current = entity.data;
+    setForm(entity.data);
+    setStaleWarning(false);
+  };
 
   const revisions = useQuery({
     queryKey: ["lore-revisions", id],
@@ -231,7 +252,9 @@ function EntityPage() {
       return updateEntity(id, patch);
     },
     onSuccess: async (row) => {
+      baseline.current = row;
       setForm(row);
+      setStaleWarning(false);
       await queryClient.invalidateQueries({ queryKey: ["entity", id] });
       await queryClient.invalidateQueries({ queryKey: ["lore-revisions", id] });
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", row.campaign_id] });
@@ -252,7 +275,9 @@ function EntityPage() {
         data: (snapshot["data"] ?? {}) as never,
       }),
     onSuccess: async (row) => {
+      baseline.current = row;
       setForm(row);
+      setStaleWarning(false);
       toast.success(t("entityPage.toasts.versionRestored"));
       await queryClient.invalidateQueries({ queryKey: ["entity", id] });
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", row.campaign_id] });
@@ -288,7 +313,8 @@ function EntityPage() {
   });
   const dropRelationship = useMutation({
     mutationFn: (relId: string) => deleteRelationship(relId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["lore-relationships", campaignId] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["lore-relationships", campaignId] }),
     onError: (error: Error) => toast.error(error.message),
   });
 
@@ -362,6 +388,17 @@ function EntityPage() {
 
   return (
     <div className="space-y-6">
+      {staleWarning ? (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
+        >
+          <span>{t("entityPage.staleNotice")}</span>
+          <Button size="sm" variant="outline" onClick={takeServerVersion}>
+            {t("entityPage.staleDiscard")}
+          </Button>
+        </div>
+      ) : null}
       <PageHeader
         title={form.name}
         description={t("entityPage.headerDescription", {
@@ -628,7 +665,8 @@ function EntityPage() {
                       params={{ id: dataValue(form, "character_sheet_id") }}
                       search={{ from: `entity:${id}` }}
                     >
-                      <ExternalLink className="mr-2 size-4" /> {t("entityPage.image.openCharacterSheet")}
+                      <ExternalLink className="mr-2 size-4" />{" "}
+                      {t("entityPage.image.openCharacterSheet")}
                     </Link>
                   </Button>
                 ) : null}
@@ -724,7 +762,9 @@ function EntityPage() {
                     <Textarea
                       id={`field-${field.key}`}
                       rows={field.type === "list" ? 3 : 4}
-                      placeholder={field.type === "list" ? t("entityPage.details.onePerLine") : undefined}
+                      placeholder={
+                        field.type === "list" ? t("entityPage.details.onePerLine") : undefined
+                      }
                       value={value}
                       disabled={!canEdit}
                       onChange={(event) => setValue(event.target.value)}
@@ -881,7 +921,9 @@ function EntityPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>{t("entityPage.history.restoreDialogTitle")}</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              {t("entityPage.history.restoreDialogTitle")}
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
                               {t("entityPage.history.restoreDialogDescription")}
                             </AlertDialogDescription>
@@ -905,7 +947,9 @@ function EntityPage() {
         {isGm ? (
           <TabsContent value="reveals" className="space-y-4 pt-4">
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-muted-foreground">{t("entityPage.reveals.currentVisibility")}</span>
+              <span className="text-muted-foreground">
+                {t("entityPage.reveals.currentVisibility")}
+              </span>
               <VisibilityBadge visibility={form.visibility} isGm={isGm} />
             </div>
             <p className="text-muted-foreground text-sm">
@@ -917,23 +961,25 @@ function EntityPage() {
               {(members.data ?? [])
                 .filter((member) => member.role !== "gm" && member.user_id !== user?.id)
                 .map((member) => {
-                const granted = (grants.data ?? []).some((g) => g.user_id === member.user_id);
-                return (
-                  <li key={member.user_id} className="flex items-center gap-3 p-3">
-                    <span className="font-medium">
-                      {member.display_name ?? member.user_id.slice(0, 8)}
-                    </span>
-                    <Button
-                      variant={granted ? "default" : "outline"}
-                      size="sm"
-                      className="ml-auto"
-                      onClick={() => toggleGrant.mutate(member.user_id)}
-                    >
-                      {granted ? t("entityPage.reveals.revealed") : t("entityPage.reveals.reveal")}
-                    </Button>
-                  </li>
-                );
-              })}
+                  const granted = (grants.data ?? []).some((g) => g.user_id === member.user_id);
+                  return (
+                    <li key={member.user_id} className="flex items-center gap-3 p-3">
+                      <span className="font-medium">
+                        {member.display_name ?? member.user_id.slice(0, 8)}
+                      </span>
+                      <Button
+                        variant={granted ? "default" : "outline"}
+                        size="sm"
+                        className="ml-auto"
+                        onClick={() => toggleGrant.mutate(member.user_id)}
+                      >
+                        {granted
+                          ? t("entityPage.reveals.revealed")
+                          : t("entityPage.reveals.reveal")}
+                      </Button>
+                    </li>
+                  );
+                })}
             </ul>
           </TabsContent>
         ) : null}

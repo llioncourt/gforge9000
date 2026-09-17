@@ -10,6 +10,8 @@ export interface PortableCharacter {
   format: "universal-character-forge";
   version: 1;
   exported_at: string;
+  /** Stable identity of the exported sheet, when the exporter knew one. */
+  import_key?: string;
   character: CharacterRecord;
   entries: Omit<CharacterEntry, "id" | "character_id">[];
 }
@@ -56,13 +58,23 @@ const entrySchema = z
   })
   .passthrough();
 
-export const portableCharacterSchema = z.object({
-  format: z.literal("universal-character-forge"),
-  version: z.literal(PORTABLE_CHARACTER_VERSION),
-  exported_at: z.string().default(""),
-  character: characterSchema,
-  entries: z.array(entrySchema).default([]),
-});
+/**
+ * Top level is strict: an unknown key there means the file is not what it
+ * claims to be. `character` and `entries` stay permissive on purpose, so a
+ * sheet exported by a newer build (extra columns, extra entry data) still
+ * imports instead of being refused.
+ */
+export const portableCharacterSchema = z
+  .object({
+    format: z.literal("universal-character-forge"),
+    version: z.literal(PORTABLE_CHARACTER_VERSION),
+    exported_at: z.string().default(""),
+    /** Stable identity of the exported sheet; used to make re-imports idempotent. */
+    import_key: z.string().trim().max(200).optional(),
+    character: characterSchema,
+    entries: z.array(entrySchema).default([]),
+  })
+  .strict();
 
 export function toPortable(
   character: CharacterRecord,
@@ -72,6 +84,7 @@ export function toPortable(
     format: "universal-character-forge",
     version: 1,
     exported_at: new Date().toISOString(),
+    import_key: `ucf-character:${character.id}`,
     character,
     entries: entries.map(({ id: _id, character_id: _c, ...rest }) => rest),
   };
@@ -102,11 +115,12 @@ export function parsePortable(raw: string): PortableCharacter {
   if (!result.success) {
     const first = result.error.issues[0];
     const where = first?.path.length ? ` (${first.path.join(".")})` : "";
-    throw new Error(`This character file is not valid${where}: ${first?.message ?? "unknown problem"}`);
+    throw new Error(
+      `This character file is not valid${where}: ${first?.message ?? "unknown problem"}`,
+    );
   }
   return result.data as unknown as PortableCharacter;
 }
-
 
 export function download(filename: string, contents: string, mime = "application/json") {
   const blob = new Blob([contents], { type: mime });
@@ -124,7 +138,17 @@ function csvCell(value: unknown): string {
 }
 
 export function entriesToCsv(entries: CharacterEntry[], sheet: CharacterSheet): string {
-  const header = ["kind", "name", "category", "points", "levels", "level", "weight", "cost", "notes"];
+  const header = [
+    "kind",
+    "name",
+    "category",
+    "points",
+    "levels",
+    "level",
+    "weight",
+    "cost",
+    "notes",
+  ];
   const lines = [header.join(",")];
   for (const e of entries) {
     const level = sheet.skills.find((s) => s.entry.id === e.id)?.level.effective ?? "";
@@ -231,7 +255,8 @@ export function parsePortableLibrary(raw: string): PortableLibrary {
   }
   if (!Array.isArray(parsed.entries)) throw new Error("Library export has no entries array.");
   const entries = parsed.entries.map((entry, index) => {
-    if (!entry || typeof entry !== "object") throw new Error(`Entry ${index + 1} is not an object.`);
+    if (!entry || typeof entry !== "object")
+      throw new Error(`Entry ${index + 1} is not an object.`);
     if (typeof entry.name !== "string" || entry.name.trim() === "") {
       throw new Error(`Entry ${index + 1} is missing a name.`);
     }
@@ -397,7 +422,8 @@ export function parsePortablePack(raw: string): PortablePack {
   if (!Array.isArray(parsed.entries)) throw new Error("Pack export has no entries array.");
   const name = meta.name.trim();
   const entries = parsed.entries.map((entry, index) => {
-    if (!entry || typeof entry !== "object") throw new Error(`Entry ${index + 1} is not an object.`);
+    if (!entry || typeof entry !== "object")
+      throw new Error(`Entry ${index + 1} is not an object.`);
     if (typeof entry.name !== "string" || entry.name.trim() === "") {
       throw new Error(`Entry ${index + 1} is missing a name.`);
     }

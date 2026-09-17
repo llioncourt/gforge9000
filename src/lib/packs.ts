@@ -22,10 +22,7 @@ export function isPackAllowed(pack: string | null | undefined, allowed: string[]
   return allowed.some((a) => a.toLowerCase() === name.toLowerCase());
 }
 
-export function packGateReason(
-  pack: string | null | undefined,
-  allowed: string[],
-): string | null {
+export function packGateReason(pack: string | null | undefined, allowed: string[]): string | null {
   if (isPackAllowed(pack, allowed)) return null;
   return `Pack “${(pack ?? "").trim()}” is not enabled for this campaign.`;
 }
@@ -128,7 +125,6 @@ export function togglePackInList(allowed: string[], pack: string, enabled: boole
   const without = allowed.filter((a) => a.toLowerCase() !== pack.toLowerCase());
   return enabled ? [...without, pack] : without;
 }
-
 
 /**
  * Placeholder kept in a campaign allow list when a GM disables the only pack.

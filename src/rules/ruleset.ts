@@ -125,7 +125,10 @@ export function mergeRuleset(base: Ruleset, overrides?: DeepPartial<Ruleset> | n
     if (Array.isArray(value) || value === null || typeof value !== "object") {
       (out as unknown as Record<string, unknown>)[key] = value;
     } else {
-      (out as unknown as Record<string, unknown>)[key] = { ...(current as object), ...(value as object) };
+      (out as unknown as Record<string, unknown>)[key] = {
+        ...(current as object),
+        ...(value as object),
+      };
     }
   }
   return out;

@@ -114,10 +114,7 @@ export function SessionChroniclePanel({ campaignId, isGm }: { campaignId: string
     queryFn: () => listAdaptations(campaignId),
     enabled: isGm,
   });
-  const latestAdaptation = useMemo(
-    () => (adaptations.data ?? [])[0] ?? null,
-    [adaptations.data],
-  );
+  const latestAdaptation = useMemo(() => (adaptations.data ?? [])[0] ?? null, [adaptations.data]);
 
   const invalidateChronicles = () =>
     queryClient.invalidateQueries({ queryKey: ["session-chronicles", campaignId] });
@@ -223,7 +220,7 @@ export function SessionChroniclePanel({ campaignId, isGm }: { campaignId: string
   });
 
   const noteById = (id: string | null): NoteRow | null =>
-    id ? (notes.data ?? []).find((n) => n.id === id) ?? null : null;
+    id ? ((notes.data ?? []).find((n) => n.id === id) ?? null) : null;
 
   const grouped = useMemo(() => {
     const map = new Map<ChronicleItemType, SessionChronicleItem[]>();
@@ -234,7 +231,6 @@ export function SessionChroniclePanel({ campaignId, isGm }: { campaignId: string
 
   // Every hook above runs unconditionally; the GM check gates rendering only.
   if (!isGm) return null;
-
 
   return (
     <div className="space-y-6">

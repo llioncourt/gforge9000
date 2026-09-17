@@ -48,7 +48,6 @@ export function ScanStep({ project, patch }: StepProps) {
     (sources.data ?? []).map((source) => [source.source_key, source.label]),
   );
 
-
   const scan = useMutation({
     mutationFn: async () => {
       const before = await listAdaptationSources(project.id);
@@ -57,8 +56,7 @@ export function ScanStep({ project, patch }: StepProps) {
         project.campaign_id,
         (project.source_scope ?? {}) as ScanScope,
         project.source_mode,
-        (label, done, total) =>
-          setProgress({ label, percent: Math.round((done / total) * 100) }),
+        (label, done, total) => setProgress({ label, percent: Math.round((done / total) * 100) }),
       );
       const saved = await saveScan(project.id, snapshot);
       if (before.length) {
@@ -66,7 +64,9 @@ export function ScanStep({ project, patch }: StepProps) {
         if (!isEmptyChangeSet(changes)) {
           const scenes = await listScenes(project.id);
           changes.impact = impactMap(
-            [...changes.added, ...changes.changed, ...changes.removed].map((entry) => entry.source_key),
+            [...changes.added, ...changes.changed, ...changes.removed].map(
+              (entry) => entry.source_key,
+            ),
             scenes.map((scene) => ({
               kind: "scene" as const,
               stable_key: scene.stable_key,
@@ -166,9 +166,7 @@ export function ScanStep({ project, patch }: StepProps) {
                 <ul className="space-y-1 text-sm">
                   {openChange.impact.map((entry) => (
                     <li key={entry.source_key} className="flex items-center gap-2">
-                      <span>
-                        {sourceLabels.get(entry.source_key) ?? entry.source_key}
-                      </span>
+                      <span>{sourceLabels.get(entry.source_key) ?? entry.source_key}</span>
                       <Badge variant="outline" className="text-[10px]">
                         {entry.scene_keys.length}
                       </Badge>

@@ -159,7 +159,10 @@ export function ModelStageDialog({
     const el = stageRef.current;
     if (!el) return;
     if (document.fullscreenElement) void document.exitFullscreen();
-    else void el.requestFullscreen?.().catch(() => toast.error(t("sheet.model.fullscreenUnavailable")));
+    else
+      void el
+        .requestFullscreen?.()
+        .catch(() => toast.error(t("sheet.model.fullscreenUnavailable")));
   };
 
   const capture = () => {
@@ -275,9 +278,13 @@ export function ModelStageDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="original">{t("sheet.model.shadingOptions.original")}</SelectItem>
+                        <SelectItem value="original">
+                          {t("sheet.model.shadingOptions.original")}
+                        </SelectItem>
                         <SelectItem value="clay">{t("sheet.model.shadingOptions.clay")}</SelectItem>
-                        <SelectItem value="normal">{t("sheet.model.shadingOptions.normal")}</SelectItem>
+                        <SelectItem value="normal">
+                          {t("sheet.model.shadingOptions.normal")}
+                        </SelectItem>
                         <SelectItem value="xray">{t("sheet.model.shadingOptions.xray")}</SelectItem>
                       </SelectContent>
                     </Select>
@@ -298,11 +305,21 @@ export function ModelStageDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="studio">{t("sheet.model.lightingOptions.studio")}</SelectItem>
-                        <SelectItem value="dramatic">{t("sheet.model.lightingOptions.dramatic")}</SelectItem>
-                        <SelectItem value="noir">{t("sheet.model.lightingOptions.noir")}</SelectItem>
-                        <SelectItem value="sunset">{t("sheet.model.lightingOptions.sunset")}</SelectItem>
-                        <SelectItem value="flat">{t("sheet.model.lightingOptions.flat")}</SelectItem>
+                        <SelectItem value="studio">
+                          {t("sheet.model.lightingOptions.studio")}
+                        </SelectItem>
+                        <SelectItem value="dramatic">
+                          {t("sheet.model.lightingOptions.dramatic")}
+                        </SelectItem>
+                        <SelectItem value="noir">
+                          {t("sheet.model.lightingOptions.noir")}
+                        </SelectItem>
+                        <SelectItem value="sunset">
+                          {t("sheet.model.lightingOptions.sunset")}
+                        </SelectItem>
+                        <SelectItem value="flat">
+                          {t("sheet.model.lightingOptions.flat")}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </Row>
@@ -315,10 +332,16 @@ export function ModelStageDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="graphite">{t("sheet.model.backdropOptions.graphite")}</SelectItem>
+                        <SelectItem value="graphite">
+                          {t("sheet.model.backdropOptions.graphite")}
+                        </SelectItem>
                         <SelectItem value="ink">{t("sheet.model.backdropOptions.ink")}</SelectItem>
-                        <SelectItem value="paper">{t("sheet.model.backdropOptions.paper")}</SelectItem>
-                        <SelectItem value="void">{t("sheet.model.backdropOptions.void")}</SelectItem>
+                        <SelectItem value="paper">
+                          {t("sheet.model.backdropOptions.paper")}
+                        </SelectItem>
+                        <SelectItem value="void">
+                          {t("sheet.model.backdropOptions.void")}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </Row>
@@ -420,7 +443,9 @@ export function ModelStageDialog({
                           <Button
                             size="sm"
                             variant="ghost"
-                            aria-label={t("sheet.model.rotateMinus90Aria", { axis: t(`sheet.model.axisLabels.${labelKey}`) })}
+                            aria-label={t("sheet.model.rotateMinus90Aria", {
+                              axis: t(`sheet.model.axisLabels.${labelKey}`),
+                            })}
                             onClick={() => nudge(axis, -90)}
                           >
                             <RotateCcw className="h-3.5 w-3.5" />
@@ -428,7 +453,9 @@ export function ModelStageDialog({
                           <Button
                             size="sm"
                             variant="ghost"
-                            aria-label={t("sheet.model.rotatePlus90Aria", { axis: t(`sheet.model.axisLabels.${labelKey}`) })}
+                            aria-label={t("sheet.model.rotatePlus90Aria", {
+                              axis: t(`sheet.model.axisLabels.${labelKey}`),
+                            })}
                             onClick={() => nudge(axis, 90)}
                           >
                             <RotateCw className="h-3.5 w-3.5" />
@@ -494,7 +521,9 @@ export function ModelStageDialog({
                           ) : (
                             <Play className="mr-1 h-3.5 w-3.5" />
                           )}
-                          {settings.animationPlaying ? t("sheet.model.pause") : t("sheet.model.play")}
+                          {settings.animationPlaying
+                            ? t("sheet.model.pause")
+                            : t("sheet.model.play")}
                         </Button>
                       </div>
                       <SliderRow
@@ -536,7 +565,9 @@ export function ModelStageDialog({
                         </Row>
                       </dl>
                     ) : (
-                      <p className="text-[11px] text-muted-foreground">{t("sheet.model.loadingModel")}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {t("sheet.model.loadingModel")}
+                      </p>
                     )}
                   </div>
                 </TabsContent>

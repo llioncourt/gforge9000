@@ -4,17 +4,7 @@ import { AlertTriangle, CheckCircle2, Download, Wrench } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-
+import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -25,7 +15,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useT } from "@/i18n/hooks";
-import { listAdaptationAssets, listFacts, listScenes, reviewFact } from "@/lib/adaptation/api";
+import {
+  listAdaptationAssets,
+  listFacts,
+  listScenes,
+  reviewFact,
+  type AdaptationFactRow,
+} from "@/lib/adaptation/api";
+import { acceptableSelection, splitForReview } from "@/lib/adaptation/review";
 import { exportAdaptationBundle, exportProjectionBundle } from "@/lib/adaptation/bundle";
 import type { WizardStep } from "@/lib/adaptation/types";
 import type { StepProps } from "@/components/adaptation/adaptation-wizard";
@@ -35,13 +32,19 @@ interface Problem {
   count: number;
   /** Where the user goes to sort this one out. */
   step: WizardStep;
-  /** Ids of the pending facts, when a one-click confirm makes sense. */
-  factIds?: string[];
+  /** Pending statements, when they can be reviewed from here. */
+  facts?: AdaptationFactRow[];
 }
 
 function useProblems(projectId: string, project: StepProps["project"]) {
-  const facts = useQuery({ queryKey: ["adaptation-facts", projectId], queryFn: () => listFacts(projectId) });
-  const scenes = useQuery({ queryKey: ["adaptation-scenes", projectId], queryFn: () => listScenes(projectId) });
+  const facts = useQuery({
+    queryKey: ["adaptation-facts", projectId],
+    queryFn: () => listFacts(projectId),
+  });
+  const scenes = useQuery({
+    queryKey: ["adaptation-scenes", projectId],
+    queryFn: () => listScenes(projectId),
+  });
   const assets = useQuery({
     queryKey: ["adaptation-assets", projectId],
     queryFn: () => listAdaptationAssets(projectId),
@@ -52,18 +55,22 @@ function useProblems(projectId: string, project: StepProps["project"]) {
   if (!loading) {
     if (!(scenes.data ?? []).length)
       problems.push({ key: "noScenes", count: 0, step: "reconstruction" });
-    const unresolvedFacts = (facts.data ?? []).filter((fact) => fact.canon_status === "needs_review");
+    const unresolvedFacts = (facts.data ?? []).filter(
+      (fact) => fact.canon_status === "needs_review",
+    );
     if (unresolvedFacts.length)
       problems.push({
         key: "unresolvedFacts",
         count: unresolvedFacts.length,
         step: "canon",
-        factIds: unresolvedFacts.map((fact) => fact.id),
+        facts: unresolvedFacts,
       });
     const conflicts = (facts.data ?? []).filter((fact) => fact.provenance_type === "conflict");
-    if (conflicts.length) problems.push({ key: "conflicts", count: conflicts.length, step: "canon" });
+    if (conflicts.length)
+      problems.push({ key: "conflicts", count: conflicts.length, step: "canon" });
     const unresolvedAssets = (assets.data ?? []).filter(
-      (asset) => asset.resolution_status === "unresolved" || asset.resolution_status === "ambiguous",
+      (asset) =>
+        asset.resolution_status === "unresolved" || asset.resolution_status === "ambiguous",
     );
     if (unresolvedAssets.length)
       problems.push({ key: "unresolvedAssets", count: unresolvedAssets.length, step: "assets" });
@@ -87,9 +94,13 @@ function ProblemList({
 }) {
   const { t } = useT("adaptation");
   const queryClient = useQueryClient();
-  const [pendingConfirm, setPendingConfirm] = useState<string[] | null>(null);
+  const [reviewing, setReviewing] = useState<AdaptationFactRow[] | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
 
-  const confirmAll = useMutation({
+  const split = reviewing ? splitForReview(reviewing) : { reviewable: [], blocked: [] };
+  const chosen = reviewing ? acceptableSelection(reviewing, selected) : [];
+
+  const confirmSelected = useMutation({
     mutationFn: async (ids: string[]) => {
       for (const id of ids) await reviewFact(id, "confirmed");
     },
@@ -100,63 +111,106 @@ function ProblemList({
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const openReview = (facts: AdaptationFactRow[]) => {
+    setSelected([]);
+    setReviewing(facts);
+  };
+
   return (
     <>
-    <ul className="space-y-2 text-sm">
-      {problems.map((problem) => (
-        <li
-          key={problem.key}
-          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-2"
-        >
-          <span>
-            {String(t(`validation.checks.${problem.key}` as never, { count: problem.count } as never))}
-          </span>
-          <span className="flex items-center gap-2">
-            {problem.factIds?.length ? (
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={confirmAll.isPending}
-                onClick={() => setPendingConfirm(problem.factIds!)}
-              >
-                {t("validation.actions.confirmAll")}
-              </Button>
-            ) : null}
-            <Button size="sm" variant="outline" onClick={() => goTo(problem.step)}>
-              <Wrench className="mr-1 h-4 w-4" /> {t("validation.actions.fix")}
-            </Button>
-          </span>
-        </li>
-      ))}
-    </ul>
-    {/* Accepting unread assistant output in bulk is a deliberate choice, not a click. */}
-    <AlertDialog open={!!pendingConfirm} onOpenChange={(v) => !v && setPendingConfirm(null)}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            {t("validation.actions.confirmAllTitle", { count: pendingConfirm?.length ?? 0 })}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("validation.actions.confirmAllDescription")}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t("validation.actions.fix")}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              if (pendingConfirm) confirmAll.mutate(pendingConfirm);
-              setPendingConfirm(null);
-            }}
+      <ul className="space-y-2 text-sm">
+        {problems.map((problem) => (
+          <li
+            key={problem.key}
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-2"
           >
-            {t("validation.actions.confirmAllConfirm")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            <span>
+              {String(
+                t(`validation.checks.${problem.key}` as never, { count: problem.count } as never),
+              )}
+            </span>
+            <span className="flex items-center gap-2">
+              {problem.facts?.length ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={confirmSelected.isPending}
+                  onClick={() => openReview(problem.facts!)}
+                >
+                  {t("validation.actions.review")}
+                </Button>
+              ) : null}
+              <Button size="sm" variant="outline" onClick={() => goTo(problem.step)}>
+                <Wrench className="mr-1 h-4 w-4" /> {t("validation.actions.fix")}
+              </Button>
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {/* Nothing is accepted unread: each statement is shown and ticked on its own. */}
+      <Dialog open={!!reviewing} onOpenChange={(open) => !open && setReviewing(null)}>
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>{t("validation.actions.reviewTitle")}</DialogTitle>
+            <DialogDescription>{t("validation.actions.reviewDescription")}</DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[50vh] space-y-2 overflow-auto pr-1">
+            {split.reviewable.map((fact) => (
+              <label
+                key={fact.id}
+                className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm"
+              >
+                <Checkbox
+                  checked={selected.includes(fact.id)}
+                  onCheckedChange={(value) =>
+                    setSelected((prev) =>
+                      value === true ? [...prev, fact.id] : prev.filter((id) => id !== fact.id),
+                    )
+                  }
+                />
+                <span className="space-y-1">
+                  <span className="block">{fact.statement}</span>
+                  <span className="block text-xs text-muted-foreground">{fact.fact_type}</span>
+                </span>
+              </label>
+            ))}
+
+            {split.blocked.length ? (
+              <div className="space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3">
+                <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                  {t("validation.actions.reviewBlocked", { count: split.blocked.length })}
+                </p>
+                {split.blocked.map((fact) => (
+                  <p key={fact.id} className="text-sm text-muted-foreground">
+                    {fact.statement}
+                  </p>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <Button size="sm" variant="outline" onClick={() => setReviewing(null)}>
+              {t("validation.actions.reviewCancel")}
+            </Button>
+            <Button
+              size="sm"
+              disabled={!chosen.length || confirmSelected.isPending}
+              onClick={() => {
+                confirmSelected.mutate(chosen);
+                setReviewing(null);
+              }}
+            >
+              {t("validation.actions.reviewConfirm", { count: chosen.length })}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
-
 
 export function ValidationStep({ project, goTo }: StepProps) {
   const { t } = useT("adaptation");

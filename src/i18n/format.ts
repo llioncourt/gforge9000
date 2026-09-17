@@ -125,7 +125,8 @@ export function formatDuration(locale: string, seconds: number | null | undefine
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);
   const s = total % 60;
-  const pad = (n: number) => formatNumber(locale, n, { minimumIntegerDigits: 2, useGrouping: false });
+  const pad = (n: number) =>
+    formatNumber(locale, n, { minimumIntegerDigits: 2, useGrouping: false });
   return h > 0
     ? `${formatNumber(locale, h)}:${pad(m)}:${pad(s)}`
     : `${formatNumber(locale, m)}:${pad(s)}`;

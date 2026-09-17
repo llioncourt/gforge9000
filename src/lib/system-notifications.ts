@@ -1,11 +1,7 @@
 /** Browser (system) notifications for GM reveals. Pure helpers, no React. */
 
 export type NotificationPermissionState =
-  | "unsupported"
-  | "open-in-new-tab"
-  | "default"
-  | "granted"
-  | "denied";
+  "unsupported" | "open-in-new-tab" | "default" | "granted" | "denied";
 
 export function readNotificationPermission(): NotificationPermissionState {
   if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";

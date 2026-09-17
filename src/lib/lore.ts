@@ -31,9 +31,68 @@ export async function getEntity(id: string): Promise<EntityRow> {
   return unwrap(await rpc("list_entities_safe").eq("id", id).single()) as EntityRow;
 }
 
-
 export async function createEntity(input: TablesInsert<"entities">): Promise<EntityRow> {
   return unwrap(await supabase.from("entities").insert(input).select("*").single());
+}
+
+/** Inserts many entities in one statement: all of them land, or none do. */
+export async function createEntities(rows: TablesInsert<"entities">[]): Promise<EntityRow[]> {
+  if (rows.length === 0) return [];
+  return unwrap(await supabase.from("entities").insert(rows).select("*"));
+}
+
+/**
+ * Writes entities that carry an import key, updating the rows a previous
+ * import of the same file created instead of adding a second copy.
+ * Returns the row id for every import key handled.
+ */
+export async function upsertEntitiesByImportKey(
+  campaignId: string,
+  rows: (TablesInsert<"entities"> & { import_key: string })[],
+): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  if (rows.length === 0) return out;
+
+  const keys = rows.map((row) => row.import_key);
+  const existing = unwrap(
+    await supabase
+      .from("entities")
+      .select("id, import_key")
+      .eq("campaign_id", campaignId)
+      .in("import_key", keys),
+  );
+  const idByKey = new Map<string, string>();
+  for (const row of existing) if (row.import_key) idByKey.set(row.import_key, row.id);
+
+  const toInsert = rows.filter((row) => !idByKey.has(row.import_key));
+  const inserted = await createEntities(toInsert);
+  for (const row of inserted) if (row.import_key) out.set(row.import_key, row.id);
+
+  for (const row of rows) {
+    const id = idByKey.get(row.import_key);
+    if (!id) continue;
+    const { import_key: _key, campaign_id: _campaign, ...patch } = row;
+    await updateEntity(id, patch as TablesUpdate<"entities">);
+    out.set(row.import_key, id);
+  }
+  return out;
+}
+
+/** Inserts relationships, ignoring ones that already exist in the campaign. */
+export async function createRelationships(
+  rows: TablesInsert<"entity_relationships">[],
+): Promise<number> {
+  if (rows.length === 0) return 0;
+  const data = unwrap(
+    await supabase
+      .from("entity_relationships")
+      .upsert(rows, {
+        onConflict: "campaign_id,source_id,target_id,rel_type",
+        ignoreDuplicates: true,
+      })
+      .select("id"),
+  );
+  return data.length;
 }
 
 export async function updateEntity(
@@ -56,7 +115,6 @@ export async function listRelationships(campaignId: string): Promise<Relationshi
   ) as RelationshipRow[];
 }
 
-
 export async function createRelationship(
   input: TablesInsert<"entity_relationships">,
 ): Promise<RelationshipRow> {
@@ -69,15 +127,11 @@ export async function deleteRelationship(id: string): Promise<void> {
 }
 
 export async function listGrants(entityId: string): Promise<GrantRow[]> {
-  return unwrap(
-    await supabase.from("knowledge_grants").select("*").eq("entity_id", entityId),
-  );
+  return unwrap(await supabase.from("knowledge_grants").select("*").eq("entity_id", entityId));
 }
 
 export async function listCampaignGrants(campaignId: string): Promise<GrantRow[]> {
-  return unwrap(
-    await supabase.from("knowledge_grants").select("*").eq("campaign_id", campaignId),
-  );
+  return unwrap(await supabase.from("knowledge_grants").select("*").eq("campaign_id", campaignId));
 }
 
 export async function grantKnowledge(input: TablesInsert<"knowledge_grants">): Promise<GrantRow> {

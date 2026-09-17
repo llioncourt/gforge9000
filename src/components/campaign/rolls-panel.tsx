@@ -59,11 +59,17 @@ export function RollsPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
         {isGm ? t("rolls.descriptionGm") : t("rolls.descriptionPlayer")}
       </p>
       {rows.length === 0 ? (
-        <div className="panel p-8 text-center text-sm text-muted-foreground">{t("rolls.empty")}</div>
+        <div className="panel p-8 text-center text-sm text-muted-foreground">
+          {t("rolls.empty")}
+        </div>
       ) : (
         <div className="space-y-2">
           {rows.map((r) => (
-            <div key={r.id} data-search-id={r.id} className="panel flex items-center gap-3 p-3 text-sm">
+            <div
+              key={r.id}
+              data-search-id={r.id}
+              className="panel flex items-center gap-3 p-3 text-sm"
+            >
               <span className="stat-value w-10 shrink-0 text-center text-lg">{r.total}</span>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">
@@ -74,7 +80,9 @@ export function RollsPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
                   {r.display_name} · {r.expression} · {r.dice.join(" + ")}
-                  {r.target !== null ? ` · ${t("rolls.vsTarget", { target: r.target })}` : ""} · {f.dateTime(r.created_at)}
+                  {r.target !== null
+                    ? ` · ${t("rolls.vsTarget", { target: r.target })}`
+                    : ""} · {f.dateTime(r.created_at)}
                 </p>
               </div>
               {r.outcome ? (

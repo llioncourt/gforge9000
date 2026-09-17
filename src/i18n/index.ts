@@ -37,11 +37,7 @@ export function humanizeKey(key: string): string {
 const backend = {
   type: "backend" as const,
   init() {},
-  read(
-    language: string,
-    namespace: string,
-    callback: (err: unknown, data: unknown) => void,
-  ) {
+  read(language: string, namespace: string, callback: (err: unknown, data: unknown) => void) {
     const source = resolveSourceLocale(language);
     loadNamespace(source, namespace)
       .then((data) => {
@@ -63,10 +59,7 @@ function initialResources(locale: string) {
   const source = resolveSourceLocale(locale);
   const bundles = coreResources(source);
   const resources: Record<string, Record<string, unknown>> = {
-    [locale]:
-      locale === PSEUDO_LOCALE
-        ? (pseudoize(bundles) as Record<string, unknown>)
-        : bundles,
+    [locale]: locale === PSEUDO_LOCALE ? (pseudoize(bundles) as Record<string, unknown>) : bundles,
   };
   if (locale !== FALLBACK_LOCALE) {
     resources[FALLBACK_LOCALE] = coreResources(FALLBACK_LOCALE);

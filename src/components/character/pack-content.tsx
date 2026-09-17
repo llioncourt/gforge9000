@@ -16,7 +16,6 @@ import { listContentPacks, listLibrary, type LibraryRow } from "@/lib/api";
 import { rankSearch } from "@/lib/search";
 import { useT } from "@/i18n/hooks";
 
-
 /** Pack names that exist for this user: declared packs plus packs seen on entries. */
 export function useAvailablePacks() {
   const packs = useQuery({ queryKey: ["packs"], queryFn: listContentPacks });
@@ -132,10 +131,13 @@ export function PackPickerDialog({
     }));
   }, [library.data, kinds, packs, search]);
 
-
   const descParts = (e: LibraryRow) =>
-    [e.category, e.source_label, e.source_page ? `p. ${e.source_page}` : null, ...(e.tags ?? [])]
-      .filter(Boolean) as string[];
+    [
+      e.category,
+      e.source_label,
+      e.source_page ? `p. ${e.source_page}` : null,
+      ...(e.tags ?? []),
+    ].filter(Boolean) as string[];
 
   const hasDesc = (e: LibraryRow) =>
     !!(e.summary || e.category || e.source_label || e.source_page || (e.tags && e.tags.length));
@@ -174,7 +176,9 @@ export function PackPickerDialog({
                 className="flex items-center gap-2 rounded-md border border-border px-3 py-2"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium" title={e.name}>{e.name}</p>
+                  <p className="truncate text-sm font-medium" title={e.name}>
+                    {e.name}
+                  </p>
                 </div>
                 {hasDesc(e) && (
                   <button
@@ -207,7 +211,9 @@ export function PackPickerDialog({
                 )}
               </DialogHeader>
               {descFor.summary && (
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{descFor.summary}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {descFor.summary}
+                </p>
               )}
               {!descFor.summary && (
                 <p className="text-sm text-muted-foreground">{t("sheet.pack.noDetails")}</p>

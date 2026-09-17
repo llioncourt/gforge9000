@@ -73,7 +73,13 @@ describe("applyCatalogue keeps specialisations", () => {
   } as unknown as CatalogueEntry;
 
   it("re-appends the imported qualifier when the library entry has none", () => {
-    const entry = { kind: "skill", name: "Guns (Pistol)", points: 2, levels: 1, data: {} } as ImportedEntry;
+    const entry = {
+      kind: "skill",
+      name: "Guns (Pistol)",
+      points: 2,
+      levels: 1,
+      data: {},
+    } as ImportedEntry;
     const applied = applyCatalogue(entry, target);
     expect(applied.name).toBe("Guns (Pistol)");
     expect(applied.source?.["imported_as"]).toBeUndefined();
@@ -86,7 +92,13 @@ describe("applyCatalogue keeps specialisations", () => {
 
   it("does not double a qualifier the library entry already carries", () => {
     const qualified = { ...target, name: "Guns (Rifle)" } as CatalogueEntry;
-    const entry = { kind: "skill", name: "Guns (Rifle)", points: 2, levels: 1, data: {} } as ImportedEntry;
+    const entry = {
+      kind: "skill",
+      name: "Guns (Rifle)",
+      points: 2,
+      levels: 1,
+      data: {},
+    } as ImportedEntry;
     expect(applyCatalogue(entry, qualified).name).toBe("Guns (Rifle)");
   });
 });

@@ -1,4 +1,5 @@
 import type { TablesInsert } from "@/integrations/supabase/types";
+import { loreEntityImportKey } from "@/lib/import-identity";
 import type { EntityRow, RelationshipRow } from "@/lib/lore";
 import { normalizeVisibility } from "@/lib/visibility";
 
@@ -132,6 +133,9 @@ export function entityInserts(
     parent_key: e.parent_key,
     row: {
       campaign_id: campaignId,
+      // Stable identity of this record inside the campaign: importing the same
+      // file twice updates these rows instead of duplicating them.
+      import_key: loreEntityImportKey(e.key),
       kind: e.kind,
       name: e.name || "Untitled",
       status: e.status,

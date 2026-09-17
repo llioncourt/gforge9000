@@ -75,9 +75,25 @@ describe("F-15 fractional attribute costs round once at the total", () => {
 
 describe("F-17 a winning default is reported consistently", () => {
   it("relabels level and relative when the default beats the purchase", () => {
-    const stats = { st: 10, dx: 14, iq: 10, ht: 10, hp: 10, will: 10, per: 10, fp: 10, basicSpeed: 6, basicMove: 6, basicLift: 20, dodge: 9 };
+    const stats = {
+      st: 10,
+      dx: 14,
+      iq: 10,
+      ht: 10,
+      hp: 10,
+      will: 10,
+      per: 10,
+      fp: 10,
+      basicSpeed: 6,
+      basicMove: 6,
+      basicLift: 20,
+      dodge: 9,
+    };
     const level = skillLevel(
-      entry({ kind: "skill", data: { attribute: "IQ", difficulty: "A", points: 1, defaults: "DX-1" } }),
+      entry({
+        kind: "skill",
+        data: { attribute: "IQ", difficulty: "A", points: 1, defaults: "DX-1" },
+      }),
       stats,
     );
     expect(level.effective).toBe(13);
@@ -89,7 +105,10 @@ describe("F-17 a winning default is reported consistently", () => {
 
 describe("F-16 techniques without a declared default penalty", () => {
   it("flags the unknown cap instead of silently allowing unlimited levels", () => {
-    const result = techniqueLevel(entry({ kind: "technique", data: { difficulty: "A", points: 8 } }), 12);
+    const result = techniqueLevel(
+      entry({ kind: "technique", data: { difficulty: "A", points: 8 } }),
+      12,
+    );
     expect(result.penaltyUnknown).toBe(true);
     const known = techniqueLevel(
       entry({ kind: "technique", data: { difficulty: "A", points: 8, defaultPenalty: -2 } }),
@@ -113,7 +132,11 @@ describe("F-30 rate of fire keeps the jet marker", () => {
 describe("F-32 encumbrance boundaries with a fractional Basic Lift", () => {
   it("classifies an exact multiple of a fractional Basic Lift as the lower tier", () => {
     const entries = [
-      entry({ kind: "equipment", name: "load", data: { weight: 72.60000000000001, quantity: 1, carried: true } }),
+      entry({
+        kind: "equipment",
+        name: "load",
+        data: { weight: 72.60000000000001, quantity: 1, carried: true },
+      }),
     ];
     const result = computeEncumbrance(entries, { basicLift: 24.2, basicMove: 6, dodge: 9 });
     expect(result.level).toBe(2);

@@ -201,13 +201,18 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="shrink-0 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring" aria-label={t("header.accountMenu")}>
+          <button
+            className="shrink-0 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={t("header.accountMenu")}
+          >
             <UserAvatar name={name} avatarPath={data?.avatar_url} className="size-8" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-60">
           <DropdownMenuLabel className="truncate">
-            <span className="block truncate text-sm">{data?.display_name || t("account.yourAccount")}</span>
+            <span className="block truncate text-sm">
+              {data?.display_name || t("account.yourAccount")}
+            </span>
             <span className="block truncate text-xs font-normal text-muted-foreground">
               {user?.email}
             </span>
@@ -218,7 +223,11 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
           </DropdownMenuItem>
           <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm">
             <span>{t("profile.lightTheme")}</span>
-            <Switch checked={light} onCheckedChange={changeTheme} aria-label={t("profile.lightTheme")} />
+            <Switch
+              checked={light}
+              onCheckedChange={changeTheme}
+              aria-label={t("profile.lightTheme")}
+            />
           </div>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={onSignOut}>

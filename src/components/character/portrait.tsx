@@ -35,7 +35,8 @@ export function PortraitFrame({
       )}
     >
       {url ? (
-        <img decoding="async"
+        <img
+          decoding="async"
           src={url}
           alt={t("sheet.portrait.alt", { name })}
           className="h-full w-full object-cover object-top"
@@ -80,9 +81,12 @@ export function PortraitPanel({
   const signed = usePortraitUrl(path);
   const [preview, setPreview] = useState<string | null>(null);
 
-  useEffect(() => () => {
-    if (preview) URL.revokeObjectURL(preview);
-  }, [preview]);
+  useEffect(
+    () => () => {
+      if (preview) URL.revokeObjectURL(preview);
+    },
+    [preview],
+  );
 
   const upload = useMutation({
     mutationFn: async (file: File) => {

@@ -10,7 +10,13 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import { globalSearch, type CampaignTab, type MediaSubTab, type SearchHit, type SearchTarget } from "@/lib/global-search";
+import {
+  globalSearch,
+  type CampaignTab,
+  type MediaSubTab,
+  type SearchHit,
+  type SearchTarget,
+} from "@/lib/global-search";
 import { useDice } from "@/components/app/dice-context";
 import { useT } from "@/i18n/hooks";
 
@@ -68,7 +74,11 @@ export function CommandPalette({
       if (target.kind === "character") {
         void navigate({ to: "/characters/$id", params: { id: target.id } });
       } else if (target.kind === "entity") {
-        void navigate({ to: "/entities/$id", params: { id: target.id }, search: { from: target.from } });
+        void navigate({
+          to: "/entities/$id",
+          params: { id: target.id },
+          search: { from: target.from },
+        });
       } else if (target.kind === "campaign") {
         const search: { tab?: CampaignTab; item?: string; sub?: MediaSubTab } = {};
         if (target.tab) search.tab = target.tab;
@@ -84,11 +94,7 @@ export function CommandPalette({
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput
-        value={term}
-        onValueChange={setTerm}
-        placeholder={t("header.search")}
-      />
+      <CommandInput value={term} onValueChange={setTerm} placeholder={t("header.search")} />
       <CommandList>
         <CommandEmpty>
           {debounced.trim().length < 2
@@ -98,7 +104,10 @@ export function CommandPalette({
               : t("commandPalette.noResults")}
         </CommandEmpty>
         <CommandGroup heading={t("commandPalette.actions")}>
-          <CommandItem value="action new character" onSelect={() => go(() => navigate({ to: "/characters" }))}>
+          <CommandItem
+            value="action new character"
+            onSelect={() => go(() => navigate({ to: "/characters" }))}
+          >
             {t("commandPalette.newCharacter")}
           </CommandItem>
           <CommandItem
@@ -107,7 +116,10 @@ export function CommandPalette({
           >
             {t("commandPalette.rollQuickDice")}
           </CommandItem>
-          <CommandItem value="action campaigns" onSelect={() => go(() => navigate({ to: "/campaigns" }))}>
+          <CommandItem
+            value="action campaigns"
+            onSelect={() => go(() => navigate({ to: "/campaigns" }))}
+          >
             {t("commandPalette.campaigns")}
           </CommandItem>
         </CommandGroup>
@@ -115,7 +127,11 @@ export function CommandPalette({
         {groups.map(([groupKey, items]) => (
           <CommandGroup key={groupKey} heading={tk(groupKey)}>
             {items.map((hit) => (
-              <CommandItem key={hit.id} value={`${hit.id} ${hit.label}`} onSelect={() => openTarget(hit.target)}>
+              <CommandItem
+                key={hit.id}
+                value={`${hit.id} ${hit.label}`}
+                onSelect={() => openTarget(hit.target)}
+              >
                 {hit.labelKey ? tk(hit.labelKey) : hit.label}
                 {hit.sublabelKey ? (
                   <span className="ml-auto text-xs text-muted-foreground">

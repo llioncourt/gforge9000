@@ -17,7 +17,6 @@ export const AI_STAGES = [
   "chronology",
   "scenes",
   "enrichment",
-  "impact",
 ] as const;
 export type AiStage = (typeof AI_STAGES)[number];
 
@@ -122,19 +121,6 @@ export const enrichmentSchema = z.object({
   }),
 });
 
-export const impactSchema = z.object({
-  comic: z.object({
-    suggested_pages: z.number().int().min(1),
-    key_splashes: z.array(z.string()),
-    art_direction: z.string(),
-  }),
-  movie: z.object({
-    suggested_runtime_minutes: z.number().int().min(1),
-    act_breaks: z.array(z.string()),
-    style_notes: z.string(),
-  }),
-});
-
 export const STAGE_SCHEMAS = {
   digest: digestSchema,
   facts: factsSchema,
@@ -142,7 +128,6 @@ export const STAGE_SCHEMAS = {
   chronology: chronologySchema,
   scenes: scenesSchema,
   enrichment: enrichmentSchema,
-  impact: impactSchema,
 } as const;
 
 export type StageResult<S extends AiStage> = z.infer<(typeof STAGE_SCHEMAS)[S]>;
@@ -239,18 +224,6 @@ export const STAGE_JSON_SCHEMAS: Record<AiStage, Record<string, unknown>> = {
       tone: str(),
       genre: arr(str()),
       setting: str(),
-    }),
-  }),
-  impact: obj({
-    comic: obj({
-      suggested_pages: { type: "integer" },
-      key_splashes: arr(str()),
-      art_direction: str(),
-    }),
-    movie: obj({
-      suggested_runtime_minutes: { type: "integer" },
-      act_breaks: arr(str()),
-      style_notes: str(),
     }),
   }),
 };

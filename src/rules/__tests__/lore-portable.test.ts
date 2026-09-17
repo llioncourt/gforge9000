@@ -81,7 +81,9 @@ describe("lore portable format", () => {
   });
 
   it("round-trips through parse and rebuilds inserts", () => {
-    const raw = JSON.stringify(toPortableLore("Camp", [parent, child], [relationship(child.id, parent.id)]));
+    const raw = JSON.stringify(
+      toPortableLore("Camp", [parent, child], [relationship(child.id, parent.id)]),
+    );
     const parsed = parsePortableLore(raw);
     const planned = entityInserts(parsed, "new-camp");
     expect(planned.map((p) => p.row.name)).toEqual(["House Varn", "Ser Alia"]);
@@ -96,7 +98,10 @@ describe("lore portable format", () => {
 
   it("rejects foreign files", () => {
     expect(() => parsePortableLore('{"format":"something-else"}')).toThrow(/Unrecognised/);
-    const wrongVersion = JSON.stringify({ format: "ucf-campaign-lore", version: 9 } as unknown as PortableLore);
+    const wrongVersion = JSON.stringify({
+      format: "ucf-campaign-lore",
+      version: 9,
+    } as unknown as PortableLore);
     expect(() => parsePortableLore(wrongVersion)).toThrow(/version/);
   });
 });

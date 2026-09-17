@@ -120,7 +120,11 @@ export function PrintSheet({
         <PrintTable
           title={t("sheet.print.advantagesTitle")}
           head={[t("sheet.print.headTrait"), t("sheet.print.headLv"), t("sheet.print.headPts")]}
-          rows={traits.map((e) => [e.name, String(e.levels), String(e.points * Math.max(1, e.levels))])}
+          rows={traits.map((e) => [
+            e.name,
+            String(e.levels),
+            String(e.points * Math.max(1, e.levels)),
+          ])}
           emptyLabel={noValue}
         />
         <PrintTable

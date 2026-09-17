@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTransferTask } from "@/components/ui/transfer-dialog";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -275,7 +275,6 @@ function CharacterPage() {
   const save = useMutation({
     mutationFn: (patch: Partial<CharacterRow>) => updateCharacter(id, patch),
     onSuccess: () => {
-      dirty.current = false;
       setSaveError(false);
       queryClient.invalidateQueries({ queryKey: ["characters"] });
     },
@@ -285,16 +284,52 @@ function CharacterPage() {
     },
   });
 
-  // Debounced autosave of the character record.
+  // Autosave: one save at a time, and the newest edit always wins.
+  const latestForm = useRef<CharacterRow | null>(null);
+  latestForm.current = form;
+  const saving = useRef(false);
+
+  const flush = useCallback(() => {
+    const current = latestForm.current;
+    if (!current || !dirty.current || saving.current) return;
+    saving.current = true;
+    const sent = current;
+    const { id: _i, owner_id: _o, created_at: _c, updated_at: _u, ...patch } = current;
+    save.mutate(patch, {
+      onSuccess: () => {
+        // Only clear the flag when nothing was typed while the save was away.
+        if (latestForm.current === sent) dirty.current = false;
+      },
+      onSettled: () => {
+        saving.current = false;
+        if (dirty.current) flushRef.current?.();
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const flushRef = useRef(flush);
+  flushRef.current = flush;
+
   useEffect(() => {
     if (!form || !dirty.current) return;
-    const timer = setTimeout(() => {
-      const { id: _i, owner_id: _o, created_at: _c, updated_at: _u, ...patch } = form;
-      save.mutate(patch);
-    }, 700);
+    const timer = setTimeout(() => flushRef.current?.(), 700);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form]);
+
+  // Leaving the page (tab close, reload) while something is unsaved.
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (!dirty.current && !saving.current) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => {
+      window.removeEventListener("beforeunload", warn);
+      // Navigating away inside the app: send the pending edit right now.
+      flushRef.current?.();
+    };
+  }, []);
 
   const patch = (p: Partial<CharacterRow>) => {
     dirty.current = true;
@@ -442,7 +477,12 @@ function CharacterPage() {
   const appearance = (form.appearance ?? {}) as Record<string, string>;
   const campaignId = form.campaign_id ?? null;
   const rollAttribute = (label: string, target: number) =>
-    roll({ label: t("sheet.rollLabels.attributeCheck", { label }), target, characterId: id, campaignId });
+    roll({
+      label: t("sheet.rollLabels.attributeCheck", { label }),
+      target,
+      characterId: id,
+      campaignId,
+    });
 
   const gear = entries.filter((e) => e.kind === "equipment");
   const weaponEntries = gear.filter(
@@ -531,7 +571,11 @@ function CharacterPage() {
                 <Save className="mr-2 h-4 w-4" /> {t("sheet.saveVersion")}
               </Button>
               <span aria-live="polite" className="text-xs text-muted-foreground">
-                {save.isPending ? t("sheet.saving") : saveError ? t("sheet.notSaved") : t("sheet.allSaved")}
+                {save.isPending
+                  ? t("sheet.saving")
+                  : saveError
+                    ? t("sheet.notSaved")
+                    : t("sheet.allSaved")}
               </span>
             </div>
           }
@@ -647,9 +691,7 @@ function CharacterPage() {
               <div className="flex items-center justify-between rounded-md border border-border p-3">
                 <div>
                   <Label>{t("sheet.identity.npcLabel")}</Label>
-                  <p className="text-xs text-muted-foreground">
-                    {t("sheet.identity.npcHint")}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("sheet.identity.npcHint")}</p>
                 </div>
                 <Switch checked={form.is_npc} onCheckedChange={(v) => patch({ is_npc: v })} />
               </div>
@@ -682,37 +724,33 @@ function CharacterPage() {
                 {t("sheet.tabs.attributes")}
               </h2>
               <div className="grid gap-4 sm:grid-cols-4">
-                {(
-                  [
-                    ["st"],
-                    ["dx"],
-                    ["iq"],
-                    ["ht"],
-                  ] as const
-                ).map(([key]) => {
+                {([["st"], ["dx"], ["iq"], ["ht"]] as const).map(([key]) => {
                   const label = t(`sheet.stats.${key}`);
                   return (
-                  <Field key={key} label={label}>
-                    <div className="flex items-center gap-1">
-                      <Input
-                        type="number"
-                        value={form[key]}
-                        onChange={(e) =>
-                          patch({ [key]: Number(e.target.value) } as Partial<CharacterRow>)
-                        }
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        aria-label={t("sheet.attributes.rollAria", { label })}
-                        title={t("sheet.attributes.rollTitle", { label, value: sheet.stats[key] })}
-                        onClick={() => rollAttribute(label, sheet.stats[key])}
-                      >
-                        <Dices className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </Field>
+                    <Field key={key} label={label}>
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          value={form[key]}
+                          onChange={(e) =>
+                            patch({ [key]: Number(e.target.value) } as Partial<CharacterRow>)
+                          }
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          aria-label={t("sheet.attributes.rollAria", { label })}
+                          title={t("sheet.attributes.rollTitle", {
+                            label,
+                            value: sheet.stats[key],
+                          })}
+                          onClick={() => rollAttribute(label, sheet.stats[key])}
+                        >
+                          <Dices className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </Field>
                   );
                 })}
               </div>
@@ -767,11 +805,19 @@ function CharacterPage() {
                   <Trans
                     t={t}
                     i18nKey="sheet.attributes.damageConfigured"
-                    values={{ source: sheet.damage.source, thrust: sheet.damage.thrust, swing: sheet.damage.swing }}
+                    values={{
+                      source: sheet.damage.source,
+                      thrust: sheet.damage.thrust,
+                      swing: sheet.damage.swing,
+                    }}
                     components={{ 1: <span className="stat-value text-foreground" /> }}
                   />
                 ) : (
-                  <Trans t={t} i18nKey="sheet.attributes.damageUnconfigured" components={{ 1: <span className="text-foreground" /> }} />
+                  <Trans
+                    t={t}
+                    i18nKey="sheet.attributes.damageUnconfigured"
+                    components={{ 1: <span className="text-foreground" /> }}
+                  />
                 )}
               </div>
             </section>
@@ -796,12 +842,18 @@ function CharacterPage() {
           {/* Skills */}
           <TabsContent value="skills" className="mt-6 space-y-6">
             <div className="flex flex-wrap gap-2">
-              <PlusButton label={t("sheet.addFromPack.skill")} onClick={() => setPickerKinds(["skill"])} />
+              <PlusButton
+                label={t("sheet.addFromPack.skill")}
+                onClick={() => setPickerKinds(["skill"])}
+              />
               <PlusButton
                 label={t("sheet.addFromPack.technique")}
                 onClick={() => setPickerKinds(["technique"])}
               />
-              <PlusButton label={t("sheet.addFromPack.spell")} onClick={() => setPickerKinds(["spell"])} />
+              <PlusButton
+                label={t("sheet.addFromPack.spell")}
+                onClick={() => setPickerKinds(["spell"])}
+              />
               <PlusButton
                 label={t("sheet.addCustom.skill")}
                 variant="outline"
@@ -824,10 +876,18 @@ function CharacterPage() {
                   <TableRow>
                     <TableHead>{t("sheet.skillsTable.name")}</TableHead>
                     <TableHead className="w-24">{t("sheet.skillsTable.kind")}</TableHead>
-                    <TableHead className="w-24 text-right">{t("sheet.skillsTable.relative")}</TableHead>
-                    <TableHead className="w-20 text-right">{t("sheet.skillsTable.points")}</TableHead>
-                    <TableHead className="w-24 text-right">{t("sheet.skillsTable.level")}</TableHead>
-                    <TableHead className="w-64 text-right">{t("sheet.skillsTable.rollResult")}</TableHead>
+                    <TableHead className="w-24 text-right">
+                      {t("sheet.skillsTable.relative")}
+                    </TableHead>
+                    <TableHead className="w-20 text-right">
+                      {t("sheet.skillsTable.points")}
+                    </TableHead>
+                    <TableHead className="w-24 text-right">
+                      {t("sheet.skillsTable.level")}
+                    </TableHead>
+                    <TableHead className="w-64 text-right">
+                      {t("sheet.skillsTable.rollResult")}
+                    </TableHead>
                     <TableHead className="w-28" />
                   </TableRow>
                 </TableHeader>
@@ -895,11 +955,19 @@ function CharacterPage() {
                                   {latestRoll.margin !== null
                                     ? latestRoll.outcome?.startsWith("critical")
                                       ? passed
-                                        ? t("sheet.rollOutcome.criticalPassMargin", { margin: Math.abs(latestRoll.margin) })
-                                        : t("sheet.rollOutcome.criticalFailureMargin", { margin: Math.abs(latestRoll.margin) })
+                                        ? t("sheet.rollOutcome.criticalPassMargin", {
+                                            margin: Math.abs(latestRoll.margin),
+                                          })
+                                        : t("sheet.rollOutcome.criticalFailureMargin", {
+                                            margin: Math.abs(latestRoll.margin),
+                                          })
                                       : passed
-                                        ? t("sheet.rollOutcome.passMargin", { margin: Math.abs(latestRoll.margin) })
-                                        : t("sheet.rollOutcome.failureMargin", { margin: Math.abs(latestRoll.margin) })
+                                        ? t("sheet.rollOutcome.passMargin", {
+                                            margin: Math.abs(latestRoll.margin),
+                                          })
+                                        : t("sheet.rollOutcome.failureMargin", {
+                                            margin: Math.abs(latestRoll.margin),
+                                          })
                                     : latestRoll.outcome?.startsWith("critical")
                                       ? passed
                                         ? t("sheet.rollOutcome.criticalPass")
@@ -973,10 +1041,18 @@ function CharacterPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("sheet.equipmentTable.item")}</TableHead>
-                    <TableHead className="w-16 text-right">{t("sheet.equipmentTable.qty")}</TableHead>
-                    <TableHead className="w-20 text-right">{t("sheet.equipmentTable.weight")}</TableHead>
-                    <TableHead className="w-20 text-right">{t("sheet.equipmentTable.cost")}</TableHead>
-                    <TableHead className="hidden w-16 text-right md:table-cell">{t("sheet.equipmentTable.dr")}</TableHead>
+                    <TableHead className="w-16 text-right">
+                      {t("sheet.equipmentTable.qty")}
+                    </TableHead>
+                    <TableHead className="w-20 text-right">
+                      {t("sheet.equipmentTable.weight")}
+                    </TableHead>
+                    <TableHead className="w-20 text-right">
+                      {t("sheet.equipmentTable.cost")}
+                    </TableHead>
+                    <TableHead className="hidden w-16 text-right md:table-cell">
+                      {t("sheet.equipmentTable.dr")}
+                    </TableHead>
                     <TableHead className="w-24">{t("sheet.equipmentTable.state")}</TableHead>
                     <TableHead className="w-28" />
                   </TableRow>
@@ -1009,7 +1085,9 @@ function CharacterPage() {
                         </TableCell>
                         <TableCell>
                           <Badge variant={e.data["carried"] === false ? "outline" : "default"}>
-                            {e.data["carried"] === false ? t("sheet.equipmentTable.stored") : t("sheet.equipmentTable.carried")}
+                            {e.data["carried"] === false
+                              ? t("sheet.equipmentTable.stored")
+                              : t("sheet.equipmentTable.carried")}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -1053,7 +1131,9 @@ function CharacterPage() {
                   <Label>{t("sheet.combat.conditionsLabel")}</Label>
                   <div className="flex flex-wrap gap-1">
                     {form.conditions.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">{t("sheet.combat.noConditions")}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t("sheet.combat.noConditions")}
+                      </p>
                     ) : (
                       form.conditions.map((c) => (
                         <Badge key={c} variant="outline" className="gap-1">
@@ -1132,14 +1212,14 @@ function CharacterPage() {
                   ).map(([statKey, value]) => {
                     const label = t(`sheet.stats.${statKey}`);
                     return (
-                    <Button
-                      key={statKey}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => rollAttribute(label, value)}
-                    >
-                      {label} {value}
-                    </Button>
+                      <Button
+                        key={statKey}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => rollAttribute(label, value)}
+                      >
+                        {label} {value}
+                      </Button>
                     );
                   })}
                 </div>
@@ -1253,7 +1333,9 @@ function CharacterPage() {
                     <div className="flex items-center gap-3">
                       <History className="h-4 w-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm font-medium">{v.label || t("sheet.history.snapshotLabel")}</p>
+                        <p className="text-sm font-medium">
+                          {v.label || t("sheet.history.snapshotLabel")}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(v.created_at).toLocaleString()}
                         </p>
@@ -1302,9 +1384,7 @@ function CharacterPage() {
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>{t("sheet.deleteEntryTitle")}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {t("sheet.deleteEntryDescription")}
-              </AlertDialogDescription>
+              <AlertDialogDescription>{t("sheet.deleteEntryDescription")}</AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
@@ -1319,7 +1399,6 @@ function CharacterPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-
 
         <EntryDialog
           open={dialogOpen}

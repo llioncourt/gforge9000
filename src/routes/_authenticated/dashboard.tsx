@@ -46,7 +46,8 @@ function Dashboard() {
   });
 
   const loading = characters.isLoading || campaigns.isLoading;
-  const empty = !loading && (characters.data?.length ?? 0) === 0 && (campaigns.data?.length ?? 0) === 0;
+  const empty =
+    !loading && (characters.data?.length ?? 0) === 0 && (campaigns.data?.length ?? 0) === 0;
 
   return (
     <div>
@@ -63,21 +64,38 @@ function Dashboard() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Shield} label={t("stats.characters")} value={characters.data?.length} loading={loading} />
-        <StatCard icon={Users} label={t("stats.campaigns")} value={campaigns.data?.length} loading={loading} />
+        <StatCard
+          icon={Shield}
+          label={t("stats.characters")}
+          value={characters.data?.length}
+          loading={loading}
+        />
+        <StatCard
+          icon={Users}
+          label={t("stats.campaigns")}
+          value={campaigns.data?.length}
+          loading={loading}
+        />
         <StatCard
           icon={BookOpen}
           label={t("stats.libraryEntries")}
           value={library.data?.length}
           loading={library.isLoading}
         />
-        <StatCard icon={Dices} label={t("stats.rollsLogged")} value={rolls.data?.length} loading={rolls.isLoading} />
+        <StatCard
+          icon={Dices}
+          label={t("stats.rollsLogged")}
+          value={rolls.data?.length}
+          loading={rolls.isLoading}
+        />
       </div>
 
       {empty ? (
         <div className="panel mt-6 p-10 text-center">
           <h2 className="font-display text-lg font-semibold">{t("empty.title")}</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("empty.description")}</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            {t("empty.description")}
+          </p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             <Button onClick={() => newCharacter.mutate()}>{t("page.newCharacter")}</Button>
           </div>
@@ -103,7 +121,8 @@ function Dashboard() {
                     <div className="relative min-w-0 flex-1">
                       <p className="truncate font-medium">{c.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {c.concept || t("character.noConcept")} · {t("character.techLevel", { level: c.tech_level })}
+                        {c.concept || t("character.noConcept")} ·{" "}
+                        {t("character.techLevel", { level: c.tech_level })}
                       </p>
                     </div>
                     {c.is_npc ? (

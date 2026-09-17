@@ -37,10 +37,16 @@ export function buildImagePrompt(input: ImagePromptInput): string {
   }).filter((v): v is string => Boolean(v));
   if (details.length > 0) parts.push(`Appearance — ${details.join("; ")}.`);
 
-  const traits = (input.traits ?? []).map((t) => t.trim()).filter(Boolean).slice(0, 8);
+  const traits = (input.traits ?? [])
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .slice(0, 8);
   if (traits.length > 0) parts.push(`Notable traits: ${traits.join(", ")}.`);
 
-  const gear = (input.gear ?? []).map((g) => g.trim()).filter(Boolean).slice(0, 8);
+  const gear = (input.gear ?? [])
+    .map((g) => g.trim())
+    .filter(Boolean)
+    .slice(0, 8);
   if (gear.length > 0) parts.push(`Equipment and weapons: ${gear.join(", ")}.`);
 
   if (input.techLevel != null) parts.push(`Tech level ${input.techLevel} setting.`);

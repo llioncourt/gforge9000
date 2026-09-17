@@ -105,8 +105,7 @@ export function NotificationBell() {
     }
   };
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
 
   const toggleRead = useMutation({
     mutationFn: ({ id, read }: { id: string; read: boolean }) => markNotificationRead(id, read),
@@ -121,7 +120,12 @@ export function NotificationBell() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button size="icon" variant="ghost" className="relative shrink-0" aria-label={t("header.notifications")}>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="relative shrink-0"
+          aria-label={t("header.notifications")}
+        >
           <Bell className="h-4 w-4" />
           {unread > 0 ? (
             <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-content-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-4 text-primary-foreground">
@@ -133,18 +137,18 @@ export function NotificationBell() {
       <PopoverContent align="end" className="w-[22rem] p-0">
         {permission === "default" ? (
           <div className="flex items-center justify-between gap-2 border-b border-border bg-accent/20 px-3 py-2">
-            <p className="text-xs text-muted-foreground">
-              {t("notifications.enablePrompt")}
-            </p>
-            <Button size="sm" className="h-7 shrink-0 px-2 text-xs" onClick={() => void enableAlerts()}>
+            <p className="text-xs text-muted-foreground">{t("notifications.enablePrompt")}</p>
+            <Button
+              size="sm"
+              className="h-7 shrink-0 px-2 text-xs"
+              onClick={() => void enableAlerts()}
+            >
               <BellRing className="mr-1 size-3" /> {t("notifications.enable")}
             </Button>
           </div>
         ) : permission === "open-in-new-tab" ? (
           <div className="border-b border-border bg-accent/20 px-3 py-2">
-            <p className="text-xs text-muted-foreground">
-              {t("notifications.openInNewTab")}
-            </p>
+            <p className="text-xs text-muted-foreground">{t("notifications.openInNewTab")}</p>
           </div>
         ) : null}
         <div className="flex items-center justify-between border-b border-border px-3 py-2">
@@ -168,7 +172,9 @@ export function NotificationBell() {
               <Skeleton className="h-12 w-full rounded-md" />
             </div>
           ) : rows.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">{t("notifications.empty")}</p>
+            <p className="p-6 text-center text-sm text-muted-foreground">
+              {t("notifications.empty")}
+            </p>
           ) : (
             <ul className="divide-y divide-border">
               {rows.map((row) => (
@@ -199,8 +205,16 @@ export function NotificationBell() {
                     <button
                       type="button"
                       className="text-muted-foreground hover:text-foreground"
-                      aria-label={row.read_at ? t("notifications.markAsUnread") : t("notifications.markAsRead")}
-                      title={row.read_at ? t("notifications.markAsUnread") : t("notifications.markAsRead")}
+                      aria-label={
+                        row.read_at
+                          ? t("notifications.markAsUnread")
+                          : t("notifications.markAsRead")
+                      }
+                      title={
+                        row.read_at
+                          ? t("notifications.markAsUnread")
+                          : t("notifications.markAsRead")
+                      }
                       onClick={() => toggleRead.mutate({ id: row.id, read: !row.read_at })}
                     >
                       <Check className="size-4" />

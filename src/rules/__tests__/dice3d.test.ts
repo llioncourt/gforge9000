@@ -47,10 +47,7 @@ describe("3D dice face mapping", () => {
   it("snapping to the nearest axis keeps the same visible value", () => {
     const r = rng(7);
     for (let i = 0; i < 40; i++) {
-      const q = quatFromAxisAngle(
-        [r() * 2 - 1, r() * 2 - 1, r() * 2 - 1],
-        r() * Math.PI * 2,
-      );
+      const q = quatFromAxisAngle([r() * 2 - 1, r() * 2 - 1, r() * 2 - 1], r() * Math.PI * 2);
       const before = topFaceValue(q);
       const after = topFaceValue(snapQuat(q));
       expect(after).toBe(before);

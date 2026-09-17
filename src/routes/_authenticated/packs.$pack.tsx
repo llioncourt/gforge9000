@@ -260,7 +260,9 @@ function PackDetailPage() {
 
       <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="panel p-4">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">{t("detail.provenance")}</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">
+            {t("detail.provenance")}
+          </p>
           <p className="mt-2 text-sm">
             {group.sources.length
               ? group.sources.join(" · ")
@@ -270,8 +272,8 @@ function PackDetailPage() {
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             {t("detail.entries", { count: group.total })} ·{" "}
-            {group.kinds.map((k) => `${k.count} ${k.kind}`).join(", ") || t("detail.noEntriesYet")} ·
-            visibility {group.visibilities.join(", ") || (meta?.visibility ?? "private")}
+            {group.kinds.map((k) => `${k.count} ${k.kind}`).join(", ") || t("detail.noEntriesYet")}{" "}
+            · visibility {group.visibilities.join(", ") || (meta?.visibility ?? "private")}
           </p>
         </div>
 
@@ -430,7 +432,9 @@ function PackDetailPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => remove.mutate()}>{t("actions.deletePack")}</AlertDialogAction>
+            <AlertDialogAction onClick={() => remove.mutate()}>
+              {t("actions.deletePack")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -41,7 +41,10 @@ async function loadEncoder(origin: string): Promise<EncodeFn> {
       options: Record<string, unknown>,
     ) => Promise<ArrayBuffer>;
     return async (raw, width, height, options) =>
-      encode({ data: new Uint8ClampedArray(raw.buffer, 0, width * height * 4), width, height }, options);
+      encode(
+        { data: new Uint8ClampedArray(raw.buffer, 0, width * height * 4), width, height },
+        options,
+      );
   })();
   try {
     return await encoderPromise;

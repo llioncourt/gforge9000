@@ -67,7 +67,7 @@ function layout(rows: EntityRow[], edges: Edge[]): Node[] {
       const dx = link.b.x - link.a.x;
       const dy = link.b.y - link.a.y;
       const dist = Math.max(Math.hypot(dx, dy), 0.01);
-      const force = ((dist - 150) * 0.02) * cooling;
+      const force = (dist - 150) * 0.02 * cooling;
       const fx = (dx / dist) * force;
       const fy = (dy / dist) * force;
       link.a.x += fx;

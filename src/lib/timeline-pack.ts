@@ -170,7 +170,12 @@ export async function readTimelineFile(file: File): Promise<TimelineEventInput[]
       minute: str(row["minute"]),
       era: str(row["era"]),
       status: str(row["status"]),
-      visibility: visibility === "GM_ONLY" ? "GM_ONLY" : visibility === "ALL_PLAYERS" ? "ALL_PLAYERS" : undefined,
+      visibility:
+        visibility === "GM_ONLY"
+          ? "GM_ONLY"
+          : visibility === "ALL_PLAYERS"
+            ? "ALL_PLAYERS"
+            : undefined,
       summary: str(row["summary"]),
       what_happened: str(row["what_happened"]),
       consequences: str(row["consequences"]),

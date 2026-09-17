@@ -25,7 +25,13 @@ export function outcomeTone(outcome: string | null) {
   }
 }
 
-export function DiceTray({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function DiceTray({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
   const { t } = useT("dice");
   const { history, roll, clear } = useDice();
   const [expression, setExpression] = useState("3d6");
@@ -48,7 +54,11 @@ export function DiceTray({ open, onOpenChange }: { open: boolean; onOpenChange: 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="dice-expr">{t("tray.expression")}</Label>
-              <Input id="dice-expr" value={expression} onChange={(e) => setExpression(e.target.value)} />
+              <Input
+                id="dice-expr"
+                value={expression}
+                onChange={(e) => setExpression(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="dice-target">{t("tray.target")}</Label>

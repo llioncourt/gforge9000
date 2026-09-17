@@ -59,8 +59,10 @@ export function validateDamageProgression(p: DamageProgression): ProgressionIssu
     if (!Number.isFinite(row.st)) issues.push({ row: i, message: "ST must be a number." });
     if (seen.has(row.st)) issues.push({ row: i, message: `Duplicate row for ST ${row.st}.` });
     seen.add(row.st);
-    if (!EXPRESSION.test(row.thrust)) issues.push({ row: i, message: `Invalid thrust "${row.thrust}".` });
-    if (!EXPRESSION.test(row.swing)) issues.push({ row: i, message: `Invalid swing "${row.swing}".` });
+    if (!EXPRESSION.test(row.thrust))
+      issues.push({ row: i, message: `Invalid thrust "${row.thrust}".` });
+    if (!EXPRESSION.test(row.swing))
+      issues.push({ row: i, message: `Invalid swing "${row.swing}".` });
   });
   return issues;
 }
@@ -78,7 +80,8 @@ export function basicDamage(st: number, progression?: DamageProgression | null):
     if (row.st <= st) match = row;
     else break;
   }
-  if (!match) return { status: "out-of-range", thrust: null, swing: null, source: progression.label };
+  if (!match)
+    return { status: "out-of-range", thrust: null, swing: null, source: progression.label };
   const last = rows[rows.length - 1]!;
   return {
     status: st > last.st ? "out-of-range" : "configured",

@@ -228,7 +228,13 @@ export async function listAdaptationSources(adaptationId: string): Promise<Scann
       .from("adaptation_sources")
       .select("source_key, source_type, source_id, source_hash, metadata")
       .eq("adaptation_id", adaptationId),
-  ) as { source_key: string; source_type: string; source_id: string | null; source_hash: string; metadata: { label?: string } }[];
+  ) as {
+    source_key: string;
+    source_type: string;
+    source_id: string | null;
+    source_hash: string;
+    metadata: { label?: string };
+  }[];
   return rows.map((row) => ({
     source_key: row.source_key,
     source_type: row.source_type,
@@ -300,7 +306,10 @@ export async function listFacts(adaptationId: string): Promise<AdaptationFactRow
 
 export async function upsertFacts(
   adaptationId: string,
-  facts: Omit<AdaptationFactRow, "id" | "adaptation_id" | "created_at" | "updated_at" | "reviewed_by" | "reviewed_at">[],
+  facts: Omit<
+    AdaptationFactRow,
+    "id" | "adaptation_id" | "created_at" | "updated_at" | "reviewed_by" | "reviewed_at"
+  >[],
 ): Promise<void> {
   if (!facts.length) return;
   await ensureSession();
@@ -482,7 +491,11 @@ export async function listTargets(adaptationId: string) {
 export async function upsertTarget(
   adaptationId: string,
   targetSystem: "rx_comics" | "moviesmith",
-  patch: { target_project_external_id?: string | null; last_sync_hash?: string | null; metadata?: Record<string, unknown> },
+  patch: {
+    target_project_external_id?: string | null;
+    last_sync_hash?: string | null;
+    metadata?: Record<string, unknown>;
+  },
 ): Promise<void> {
   const { error } = await db.from("adaptation_targets").upsert(
     {

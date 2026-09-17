@@ -143,9 +143,7 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
       {isGm ? (
         <section className="panel p-5">
           <h2 className="font-display text-lg font-semibold">{t("soundFx.upload.title")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("soundFx.upload.description")}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("soundFx.upload.description")}</p>
           <div className="mt-4 space-y-1.5">
             <Label htmlFor="sound-fx-title">{t("soundFx.upload.titleLabel")}</Label>
             <Input
@@ -195,7 +193,9 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
       ) : null}
       {isGm && selected.length ? (
         <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-          <p className="text-sm text-muted-foreground">{t("soundFx.selectedCount", { count: selected.length })}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("soundFx.selectedCount", { count: selected.length })}
+          </p>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => setSelected([])}>
               {t("soundFx.clearSelection")}
@@ -296,7 +296,10 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                 className={`flex items-center gap-3 p-3 transition-colors ${isDragging ? "opacity-40" : ""} ${isOver ? "bg-accent/60" : ""}`}
               >
                 {isGm ? (
-                  <span className="cursor-grab text-muted-foreground" aria-label={t("soundFx.dragAria")}>
+                  <span
+                    className="cursor-grab text-muted-foreground"
+                    aria-label={t("soundFx.dragAria")}
+                  >
                     <GripVertical className="h-4 w-4" />
                   </span>
                 ) : null}
@@ -319,7 +322,10 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{effect.title}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {t("soundFx.fileSize", { name: effect.file_name, size: Math.max(1, Math.ceil(effect.byte_size / 1024)) })}
+                    {t("soundFx.fileSize", {
+                      name: effect.file_name,
+                      size: Math.max(1, Math.ceil(effect.byte_size / 1024)),
+                    })}
                   </p>
                 </div>
                 {isGm ? (

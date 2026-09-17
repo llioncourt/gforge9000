@@ -14,6 +14,7 @@
  * Classification: CONFIGURABLE (name reconciliation, not a game rule).
  */
 import { isPackAllowed } from "@/lib/packs";
+import { normalizeText } from "@/lib/text-normalize";
 
 export interface CatalogueEntry {
   kind: string;
@@ -43,20 +44,19 @@ export interface ImportedEntry {
 }
 
 /** Kinds that come from content packs; equipment/notes are free-form. */
-export const MATCHABLE_KINDS = ["advantage", "disadvantage", "perk", "quirk", "skill", "technique", "spell"];
-
-function normaliseText(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
+export const MATCHABLE_KINDS = [
+  "advantage",
+  "disadvantage",
+  "perk",
+  "quirk",
+  "skill",
+  "technique",
+  "spell",
+];
 
 /** The bare trait name, with any parenthetical qualifier removed. */
 export function normaliseName(value: string): string {
-  return normaliseText(value.replace(/\(.*?\)/g, " "));
+  return normalizeText(value.replace(/\(.*?\)/g, " "));
 }
 
 /** The raw text inside parentheses, e.g. "Pistol" in "Guns (Pistol)". */
@@ -72,7 +72,7 @@ export function rawQualifier(value: string): string {
  * stripped.
  */
 export function parseTraitName(value: string): { base: string; qualifier: string } {
-  return { base: normaliseName(value), qualifier: normaliseText(rawQualifier(value)) };
+  return { base: normaliseName(value), qualifier: normalizeText(rawQualifier(value)) };
 }
 
 /** Library rows the user may actually use, indexed by kind + normalised name. */
@@ -89,13 +89,36 @@ function baseKeyOf(kind: string, name: string): string {
   return `${kind}::${parseTraitName(name).base}`;
 }
 
-export function catalogueIndex(rows: CatalogueEntry[]): Map<string, CatalogueEntry> {
-  const index = new Map<string, CatalogueEntry>();
+/**
+ * Lookup structure for the deterministic pass.
+ *
+ * `exact` is keyed by kind + base + qualifier, so `Guns (Pistol)` and
+ * `Guns (Rifle)` are different keys and can never bind to one another.
+ * `generic` holds only catalogue rows with no qualifier at all, and
+ * `qualifiedCount` records how many qualified variants exist per base, which is
+ * what makes the "fall back to the generic row" decision unambiguous.
+ */
+export interface CatalogueIndex {
+  exact: Map<string, CatalogueEntry>;
+  generic: Map<string, CatalogueEntry>;
+  qualifiedCount: Map<string, number>;
+}
+
+export function catalogueIndex(rows: CatalogueEntry[]): CatalogueIndex {
+  const exact = new Map<string, CatalogueEntry>();
+  const generic = new Map<string, CatalogueEntry>();
+  const qualifiedCount = new Map<string, number>();
   for (const row of rows) {
     const key = keyOf(row.kind, row.name);
-    if (!index.has(key)) index.set(key, row);
+    if (!exact.has(key)) exact.set(key, row);
+    const baseKey = baseKeyOf(row.kind, row.name);
+    if (parseTraitName(row.name).qualifier) {
+      qualifiedCount.set(baseKey, (qualifiedCount.get(baseKey) ?? 0) + 1);
+    } else if (!generic.has(baseKey)) {
+      generic.set(baseKey, row);
+    }
   }
-  return index;
+  return { exact, generic, qualifiedCount };
 }
 
 export function isMatchable(entry: ImportedEntry): boolean {
@@ -103,23 +126,24 @@ export function isMatchable(entry: ImportedEntry): boolean {
 }
 
 /**
- * Deterministic pass: exact or normalised name match inside the same kind.
- * A qualified import may fall back to an unqualified library entry of the same
- * base name (the specialisation is preserved on apply), but never to a library
- * entry carrying a *different* qualifier.
+ * Deterministic pass: exact match on kind + base name + qualifier.
+ *
+ * A qualified import (`Guns (Pistol)`) may fall back to a *generic* catalogue
+ * row (`Guns`) only when such a row exists and the catalogue carries no
+ * qualified variants of that base — otherwise the correct variant is a guess
+ * and the entry is left unmatched for explicit resolution. An unqualified
+ * import never binds to a qualified row.
  */
-export function matchLocally(
-  entry: ImportedEntry,
-  index: Map<string, CatalogueEntry>,
-): CatalogueEntry | null {
+export function matchLocally(entry: ImportedEntry, index: CatalogueIndex): CatalogueEntry | null {
   if (!isMatchable(entry)) return null;
-  const exact = index.get(keyOf(entry.kind, entry.name));
+  const exact = index.exact.get(keyOf(entry.kind, entry.name));
   if (exact) return exact;
   const { qualifier } = parseTraitName(entry.name);
   if (!qualifier) return null;
-  return index.get(baseKeyOf(entry.kind, entry.name)) ?? null;
+  const baseKey = baseKeyOf(entry.kind, entry.name);
+  if ((index.qualifiedCount.get(baseKey) ?? 0) > 0) return null;
+  return index.generic.get(baseKey) ?? null;
 }
-
 
 export interface UnmatchedItem {
   kind: string;
@@ -127,10 +151,7 @@ export interface UnmatchedItem {
 }
 
 /** Entries the deterministic pass could not place, de-duplicated. */
-export function unmatchedItems(
-  entries: ImportedEntry[],
-  index: Map<string, CatalogueEntry>,
-): UnmatchedItem[] {
+export function unmatchedItems(entries: ImportedEntry[], index: CatalogueIndex): UnmatchedItem[] {
   const seen = new Set<string>();
   const out: UnmatchedItem[] = [];
   for (const entry of entries) {
@@ -189,12 +210,12 @@ export interface MatchResolution {
 /** Keeps only AI answers that point at a real catalogue entry of the same kind. */
 export function resolveMatches(
   resolutions: MatchResolution[],
-  index: Map<string, CatalogueEntry>,
+  index: CatalogueIndex,
 ): Map<string, CatalogueEntry> {
   const out = new Map<string, CatalogueEntry>();
   for (const r of resolutions) {
     if (!r || typeof r.match !== "string" || !r.match.trim()) continue;
-    const target = index.get(keyOf(r.kind, r.match));
+    const target = index.exact.get(keyOf(r.kind, r.match));
     if (!target) continue;
     out.set(keyOf(r.kind, r.source), target);
   }
@@ -223,7 +244,7 @@ export function applyCatalogue(entry: ImportedEntry, target: CatalogueEntry): Im
       ? `${target.name} (${importedQualifier})`
       : target.name;
   const specialization =
-    importedQualifier && (entry.data?.['specialization'] ?? "") === ""
+    importedQualifier && (entry.data?.["specialization"] ?? "") === ""
       ? { specialization: importedQualifier }
       : {};
   return {
@@ -243,7 +264,6 @@ export function applyCatalogue(entry: ImportedEntry, target: CatalogueEntry): Im
   };
 }
 
-
 export interface ReconcileResult {
   entries: ImportedEntry[];
   matched: number;
@@ -253,7 +273,7 @@ export interface ReconcileResult {
 /** Final pass: applies deterministic and AI matches; leftovers stay untouched. */
 export function reconcileEntries(
   entries: ImportedEntry[],
-  index: Map<string, CatalogueEntry>,
+  index: CatalogueIndex,
   aiMatches: Map<string, CatalogueEntry> = new Map(),
 ): ReconcileResult {
   let matched = 0;

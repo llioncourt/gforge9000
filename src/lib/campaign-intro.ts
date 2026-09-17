@@ -27,7 +27,9 @@ export function campaignVideoTypeLabel(type: string) {
   return type === "intro" ? "Intro" : type.charAt(0).toUpperCase() + type.slice(1);
 }
 
-export function validateCampaignVideoFile(file: Pick<File, "name" | "size" | "type">): string | null {
+export function validateCampaignVideoFile(
+  file: Pick<File, "name" | "size" | "type">,
+): string | null {
   const isMp4 = file.type.toLowerCase() === "video/mp4" || /\.mp4$/i.test(file.name);
   if (!isMp4) return "Use an MP4 video file.";
   if (file.size === 0) return "That video is empty.";
@@ -41,7 +43,9 @@ export function shouldBlockForCampaignIntro(
   intro: CampaignIntro | null | undefined,
   view: CampaignIntroView | null | undefined,
 ) {
-  return Boolean(intro && (!view || view.intro_version !== intro.version || !view.do_not_show_again));
+  return Boolean(
+    intro && (!view || view.intro_version !== intro.version || !view.do_not_show_again),
+  );
 }
 
 export async function listCampaignVideos(campaignId: string): Promise<CampaignVideo[]> {
@@ -65,7 +69,9 @@ export async function getCampaignIntro(campaignId: string): Promise<CampaignIntr
   return data;
 }
 
-export async function getMyCampaignIntroView(campaignId: string): Promise<CampaignIntroView | null> {
+export async function getMyCampaignIntroView(
+  campaignId: string,
+): Promise<CampaignIntroView | null> {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("You need to be signed in.");
   const { data, error } = await supabase
@@ -115,7 +121,9 @@ export async function uploadCampaignVideo(
   if (currentIntro) {
     const removed = await supabase.from("campaign_videos").delete().eq("id", currentIntro.id);
     if (removed.error) {
-      await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(thumbPath ? [path, thumbPath] : [path]);
+      await supabase.storage
+        .from(CAMPAIGN_INTRO_BUCKET)
+        .remove(thumbPath ? [path, thumbPath] : [path]);
       throw new Error(removed.error.message);
     }
   }
@@ -132,7 +140,9 @@ export async function uploadCampaignVideo(
     created_by: user.id,
   });
   if (error) {
-    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(thumbPath ? [path, thumbPath] : [path]);
+    await supabase.storage
+      .from(CAMPAIGN_INTRO_BUCKET)
+      .remove(thumbPath ? [path, thumbPath] : [path]);
     throw new Error(error.message);
   }
   if (currentIntro?.storage_path) {
@@ -140,7 +150,6 @@ export async function uploadCampaignVideo(
     if (currentIntro.thumb_path) stale.push(currentIntro.thumb_path);
     await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove(stale);
   }
-
 }
 
 export async function uploadCampaignIntro(campaignId: string, file: File) {
@@ -193,10 +202,14 @@ export async function setCampaignVideoThumb(video: CampaignVideo, blob: Blob) {
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
   const path = await uploadThumbBlob(video.campaign_id, user.id, blob);
-  const { error } = await supabase.from("campaign_videos").update({ thumb_path: path }).eq("id", video.id);
+  const { error } = await supabase
+    .from("campaign_videos")
+    .update({ thumb_path: path })
+    .eq("id", video.id);
   if (error) {
     await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([path]);
     throw new Error(error.message);
   }
-  if (video.thumb_path) await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([video.thumb_path]);
+  if (video.thumb_path)
+    await supabase.storage.from(CAMPAIGN_INTRO_BUCKET).remove([video.thumb_path]);
 }

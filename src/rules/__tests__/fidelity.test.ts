@@ -46,7 +46,15 @@ const base: CharacterRecord = {
 };
 
 function entry(over: Partial<CharacterEntry>): CharacterEntry {
-  return { id: Math.random().toString(), kind: "advantage", name: "x", points: 0, levels: 1, data: {}, ...over };
+  return {
+    id: Math.random().toString(),
+    kind: "advantage",
+    name: "x",
+    points: 0,
+    levels: 1,
+    data: {},
+    ...over,
+  };
 }
 
 const progression: DamageProgression = {
@@ -74,7 +82,11 @@ describe("basic damage is data-driven", () => {
   });
 
   it("looks up exact and lower-bound rows", () => {
-    expect(basicDamage(12, progression)).toMatchObject({ status: "configured", thrust: "1d-1", swing: "1d+2" });
+    expect(basicDamage(12, progression)).toMatchObject({
+      status: "configured",
+      thrust: "1d-1",
+      swing: "1d+2",
+    });
     expect(basicDamage(13, progression)).toMatchObject({ status: "configured", thrust: "1d-1" });
   });
 
@@ -124,7 +136,13 @@ describe("skill defaults", () => {
 
   it("gives an unpurchased skill its default level", () => {
     const stats = deriveStats({ ...base, dx: 12 });
-    const level = skillLevel(entry({ kind: "skill", data: { attribute: "DX", difficulty: "A", points: 0, defaults: "DX-4" } }), stats);
+    const level = skillLevel(
+      entry({
+        kind: "skill",
+        data: { attribute: "DX", difficulty: "A", points: 0, defaults: "DX-4" },
+      }),
+      stats,
+    );
     expect(level.fromDefault).toBe(true);
     expect(level.effective).toBe(8);
   });
@@ -132,7 +150,10 @@ describe("skill defaults", () => {
   it("never drops a purchased skill below its default", () => {
     const stats = deriveStats({ ...base, dx: 12 });
     const level = skillLevel(
-      entry({ kind: "skill", data: { attribute: "IQ", difficulty: "H", points: 1, defaults: "DX-1" } }),
+      entry({
+        kind: "skill",
+        data: { attribute: "IQ", difficulty: "H", points: 1, defaults: "DX-1" },
+      }),
       stats,
     );
     expect(level.effective).toBe(11);
@@ -140,8 +161,16 @@ describe("skill defaults", () => {
 
   it("resolves skill-to-skill defaults inside buildSheet", () => {
     const sheet = buildSheet({ ...base, iq: 12 }, [
-      entry({ kind: "skill", name: "Urban Navigation", data: { attribute: "IQ", difficulty: "A", points: 4 } }),
-      entry({ kind: "skill", name: "Cartography", data: { attribute: "IQ", difficulty: "A", points: 0, defaults: "Urban Navigation-3" } }),
+      entry({
+        kind: "skill",
+        name: "Urban Navigation",
+        data: { attribute: "IQ", difficulty: "A", points: 4 },
+      }),
+      entry({
+        kind: "skill",
+        name: "Cartography",
+        data: { attribute: "IQ", difficulty: "A", points: 0, defaults: "Urban Navigation-3" },
+      }),
     ]);
     expect(sheet.skills[1]!.level.effective).toBe(10);
   });
@@ -159,7 +188,10 @@ describe("techniques", () => {
 
   it("caps bought levels at the default penalty", () => {
     const t = techniqueLevel(
-      entry({ kind: "technique", data: { difficulty: "H", points: 8, defaultPenalty: -2, baseSkill: "Brawling" } }),
+      entry({
+        kind: "technique",
+        data: { difficulty: "H", points: 8, defaultPenalty: -2, baseSkill: "Brawling" },
+      }),
       12,
     );
     expect(t.levels).toBe(2);
@@ -168,7 +200,10 @@ describe("techniques", () => {
   });
 
   it("returns no level without a base skill level", () => {
-    expect(techniqueLevel(entry({ kind: "technique", data: { difficulty: "A", points: 2 } }), null).effective).toBeNull();
+    expect(
+      techniqueLevel(entry({ kind: "technique", data: { difficulty: "A", points: 2 } }), null)
+        .effective,
+    ).toBeNull();
   });
 });
 
@@ -181,7 +216,9 @@ describe("active defenses", () => {
   });
 
   it("honours ruleset overrides", () => {
-    const rules = mergeRuleset(defaultRuleset, { activeDefense: { ...defaultRuleset.activeDefense, parryBase: 4 } });
+    const rules = mergeRuleset(defaultRuleset, {
+      activeDefense: { ...defaultRuleset.activeDefense, parryBase: 4 },
+    });
     expect(parryFromSkill(13, rules)).toBe(10);
   });
 });

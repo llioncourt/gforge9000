@@ -148,7 +148,10 @@ export function calendarOf(settings: unknown): WorldCalendar {
 
   if (isOldFormat) {
     const daysPerMonth = num(value["days_per_month"]) ?? 30;
-    const months: MonthDef[] = (rawMonths as string[]).map((name) => ({ name, days: daysPerMonth }));
+    const months: MonthDef[] = (rawMonths as string[]).map((name) => ({
+      name,
+      days: daysPerMonth,
+    }));
     return {
       ...cloneDefaults(),
       era: typeof value["era"] === "string" ? value["era"] : "",
@@ -196,7 +199,9 @@ export function calendarOf(settings: unknown): WorldCalendar {
   const weekRaw = (value["week"] ?? {}) as Record<string, unknown>;
   const week: WeekDef = {
     daysPerWeek: num(weekRaw["daysPerWeek"]) ?? DEFAULT_WEEK.daysPerWeek,
-    dayNames: Array.isArray(weekRaw["dayNames"]) ? (weekRaw["dayNames"] as unknown[]).map(String) : [...DEFAULT_WEEK.dayNames],
+    dayNames: Array.isArray(weekRaw["dayNames"])
+      ? (weekRaw["dayNames"] as unknown[]).map(String)
+      : [...DEFAULT_WEEK.dayNames],
   };
 
   const daySubRaw = (value["daySubdivision"] ?? {}) as Record<string, unknown>;
@@ -263,7 +268,7 @@ export function isLeapYear(calendar: WorldCalendar, year: number): boolean {
       return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
     case "block": {
       // 1-based position within the block: cycle 10 of 10 → position 10, not 0.
-      const position = (((year - 1) % leapRule.block) + leapRule.block) % leapRule.block + 1;
+      const position = ((((year - 1) % leapRule.block) + leapRule.block) % leapRule.block) + 1;
       return leapRule.years.includes(position);
     }
   }
@@ -273,7 +278,11 @@ export function monthLength(calendar: WorldCalendar, monthIndex: number, year: n
   const month = calendar.months[monthIndex];
   if (!month) return 30;
   let days = month.days > 0 ? month.days : 30;
-  if (calendar.leapRule.kind === "block" && calendar.leapRule.month === monthIndex && isLeapYear(calendar, year)) {
+  if (
+    calendar.leapRule.kind === "block" &&
+    calendar.leapRule.month === monthIndex &&
+    isLeapYear(calendar, year)
+  ) {
     days += calendar.leapRule.extraDays;
   }
   if (calendar.leapRule.kind === "gregorian" && monthIndex === 1 && isLeapYear(calendar, year)) {
@@ -291,7 +300,12 @@ export function seasonOfMonth(calendar: WorldCalendar, monthIndex: number): Seas
 }
 
 /** Returns 0-based day-of-week index, or -1 when the calendar has no week. */
-export function dayOfWeek(calendar: WorldCalendar, year: number, month: number, day: number): number {
+export function dayOfWeek(
+  calendar: WorldCalendar,
+  year: number,
+  month: number,
+  day: number,
+): number {
   if (calendar.week.daysPerWeek < 1) return -1;
   const monthIdx = month - 1;
   let total = 0;
@@ -314,7 +328,9 @@ export interface WorldDate {
 }
 
 export function compareWorldDates(a: WorldDate, b: WorldDate): number {
-  return a.year - b.year || a.month - b.month || a.day - b.day || a.hour - b.hour || a.minute - b.minute;
+  return (
+    a.year - b.year || a.month - b.month || a.day - b.day || a.hour - b.hour || a.minute - b.minute
+  );
 }
 
 export function formatWorldDate(calendar: WorldCalendar, date: Partial<WorldDate>): string {
@@ -350,10 +366,16 @@ export function validateWorldDate(
   if (date.day < 1 || date.day > maxDay) {
     return `${u.day.singular} deve estar entre 1 e ${maxDay} em ${monthDef?.name ?? ""}`;
   }
-  if (date.hour !== undefined && (date.hour < 0 || date.hour >= calendar.daySubdivision.hoursPerDay)) {
+  if (
+    date.hour !== undefined &&
+    (date.hour < 0 || date.hour >= calendar.daySubdivision.hoursPerDay)
+  ) {
     return `${u.hour.singular} deve estar entre 0 e ${calendar.daySubdivision.hoursPerDay - 1}`;
   }
-  if (date.minute !== undefined && (date.minute < 0 || date.minute >= calendar.daySubdivision.minutesPerHour)) {
+  if (
+    date.minute !== undefined &&
+    (date.minute < 0 || date.minute >= calendar.daySubdivision.minutesPerHour)
+  ) {
     return `${u.minute.singular} deve estar entre 0 e ${calendar.daySubdivision.minutesPerHour - 1}`;
   }
   return null;
@@ -368,10 +390,8 @@ export function eventOrder(
   const data = (row.data ?? {}) as Record<string, unknown>;
   const year = num(data["year"]) ?? Number.POSITIVE_INFINITY;
   const rawMonth = String(data["month"] ?? "").trim();
-  const byName = calendar.months.findIndex(
-    (m) => m.name.toLowerCase() === rawMonth.toLowerCase(),
-  );
-  const month = byName >= 0 ? byName + 1 : num(rawMonth) ?? 0;
+  const byName = calendar.months.findIndex((m) => m.name.toLowerCase() === rawMonth.toLowerCase());
+  const month = byName >= 0 ? byName + 1 : (num(rawMonth) ?? 0);
   const day = num(data["day"]) ?? 0;
   const hour = num(data["hour"]) ?? 0;
   const minute = num(data["minute"]) ?? 0;
@@ -403,7 +423,10 @@ export const GREGORIAN_PRESET: WorldCalendar = {
     { name: "Inverno", subtitle: "", months: [5, 6, 7] },
     { name: "Primavera", subtitle: "", months: [8, 9, 10] },
   ],
-  week: { daysPerWeek: 7, dayNames: ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"] },
+  week: {
+    daysPerWeek: 7,
+    dayNames: ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"],
+  },
   daySubdivision: { hoursPerDay: 24, minutesPerHour: 60 },
   leapRule: { kind: "gregorian" },
   today: null,

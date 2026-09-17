@@ -48,13 +48,23 @@ import { useT } from "@/i18n/hooks";
 
 type Cell = { x: number; y: number };
 
-export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: string; isGm: boolean; focusMapId?: string | null }) {
+export function BattlePanel({
+  campaignId,
+  isGm,
+  focusMapId,
+}: {
+  campaignId: string;
+  isGm: boolean;
+  focusMapId?: string | null;
+}) {
   const { t } = useT("battle");
   const { t: tc } = useT("common");
   const queryClient = useQueryClient();
   const { user } = useSession();
   const [mapId, setMapId] = useState<string | null>(null);
-  useEffect(() => { if (focusMapId) setMapId(focusMapId); }, [focusMapId]);
+  useEffect(() => {
+    if (focusMapId) setMapId(focusMapId);
+  }, [focusMapId]);
   const [tool, setTool] = useState<"move" | "measure" | "fog">("move");
   const [show3d, setShow3d] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -376,7 +386,8 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
             <Input
               defaultValue={current.name}
               onBlur={(event) => {
-                if (event.target.value !== current.name) patchMap.mutate({ name: event.target.value });
+                if (event.target.value !== current.name)
+                  patchMap.mutate({ name: event.target.value });
               }}
             />
           </div>
@@ -429,7 +440,9 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
               type="number"
               step="0.1"
               defaultValue={Number(current.unit_per_cell)}
-              onBlur={(event) => patchMap.mutate({ unit_per_cell: Number(event.target.value) || 1 })}
+              onBlur={(event) =>
+                patchMap.mutate({ unit_per_cell: Number(event.target.value) || 1 })
+              }
             />
           </div>
           <div className="space-y-1">
@@ -480,9 +493,7 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
             </Select>
           </div>
           {availableCharacters.length === 0 && availableNpcs.length === 0 ? (
-            <p className="text-muted-foreground pb-2 text-xs">
-              {t("panel.allPlaced")}
-            </p>
+            <p className="text-muted-foreground pb-2 text-xs">{t("panel.allPlaced")}</p>
           ) : null}
         </div>
       ) : null}
@@ -502,7 +513,6 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
         onMove={(id, x, y) => moveToken.mutate({ id, x, y })}
         onToggleFog={toggleFog}
       />
-
 
       {selected ? (
         <div className="flex flex-wrap items-end gap-3 rounded-lg border p-3">
@@ -565,13 +575,13 @@ export function BattlePanel({ campaignId, isGm, focusMapId }: { campaignId: stri
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("panel.deleteMapTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("panel.deleteMapDescription")}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t("panel.deleteMapDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => removeMap.mutate()}>{tc("actions.delete")}</AlertDialogAction>
+            <AlertDialogAction onClick={() => removeMap.mutate()}>
+              {tc("actions.delete")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

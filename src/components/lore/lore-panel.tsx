@@ -258,6 +258,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                     <div className="flex h-full items-start gap-3">
                       <EntityThumb
                         path={row.image_url}
+                        entityId={row.id}
                         fallbackPath={sheetPortrait(row)}
                         name={row.name}
                       />

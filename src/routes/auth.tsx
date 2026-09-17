@@ -120,7 +120,6 @@ function AuthPage() {
             <Tabs defaultValue="signin">
               <h1 className="mb-6 font-display text-2xl font-semibold">{t("form.title")}</h1>
               <TabsList className="grid w-full grid-cols-2">
-
                 <TabsTrigger value="signin">{t("form.tabs.signin")}</TabsTrigger>
                 <TabsTrigger value="signup">{t("form.tabs.signup")}</TabsTrigger>
               </TabsList>

@@ -36,7 +36,10 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
   const [pickerFor, setPickerFor] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  const members = useQuery({ queryKey: ["members", campaignId], queryFn: () => listMembers(campaignId) });
+  const members = useQuery({
+    queryKey: ["members", campaignId],
+    queryFn: () => listMembers(campaignId),
+  });
   const entities = useQuery({
     queryKey: ["lore-entities", campaignId],
     queryFn: () => listEntities(campaignId),
@@ -118,9 +121,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
       if (!entity) return null;
       const sheetId = dataValue(entity, "character_sheet_id");
       if (!sheetId) return null;
-      return (
-        (characters.data ?? []).find((c) => c.id === sheetId)?.portrait_path ?? null
-      );
+      return (characters.data ?? []).find((c) => c.id === sheetId)?.portrait_path ?? null;
     };
     return (
       <div className="space-y-4">
@@ -147,6 +148,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                   <div className="flex items-start gap-3">
                     <EntityThumb
                       path={entity?.image_url}
+                      entityId={entity?.id}
                       fallbackPath={portraitFor(entity)}
                       name={entity?.name ?? tc("labels.untitled")}
                       className="size-14"
@@ -259,7 +261,9 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
               ) : null}
             </div>
             {mine.length === 0 ? (
-              <p className="text-muted-foreground text-sm">{t("playersPanel.emptyGmSideRecords")}</p>
+              <p className="text-muted-foreground text-sm">
+                {t("playersPanel.emptyGmSideRecords")}
+              </p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {mine.map((grant) => {

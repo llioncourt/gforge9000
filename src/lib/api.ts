@@ -112,6 +112,34 @@ export async function addEntry(input: TablesInsert<"character_entries">) {
   return unwrap(await supabase.from("character_entries").insert(input).select().single());
 }
 
+/** Writes many entries in a single statement: all of them land, or none do. */
+export async function addEntries(rows: TablesInsert<"character_entries">[]) {
+  if (rows.length === 0) return [];
+  return unwrap(await supabase.from("character_entries").insert(rows).select());
+}
+
+export async function deleteEntriesOf(characterId: string) {
+  const { error } = await supabase
+    .from("character_entries")
+    .delete()
+    .eq("character_id", characterId);
+  if (error) throw new Error(error.message);
+}
+
+/** Finds the sheet a previous import of the same file produced, if any. */
+export async function findCharacterByImportKey(key: string) {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return null;
+  const { data, error } = await supabase
+    .from("characters")
+    .select("id, name")
+    .eq("owner_id", auth.user.id)
+    .eq("import_key", key)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ?? null;
+}
+
 export async function updateEntry(id: string, patch: TablesUpdate<"character_entries">) {
   return unwrap(
     await supabase.from("character_entries").update(patch).eq("id", id).select().single(),
@@ -219,8 +247,6 @@ export async function transferCharacterOwner(characterId: string, newOwnerId: st
   if (error) throw new Error(error.message);
 }
 
-
-
 export async function listMembers(campaignId: string) {
   const members = unwrap(
     await supabase.from("campaign_members").select("*").eq("campaign_id", campaignId),
@@ -326,7 +352,6 @@ export async function listLibrary() {
   }
   return all;
 }
-
 
 export async function createLibraryEntry(input: TablesInsert<"library_entries">) {
   const { data: auth } = await supabase.auth.getUser();
@@ -483,7 +508,9 @@ export async function updateLibraryEntry(id: string, patch: TablesUpdate<"librar
   );
 }
 
-export async function importLibraryEntries(rows: Omit<TablesInsert<"library_entries">, "owner_id">[]) {
+export async function importLibraryEntries(
+  rows: Omit<TablesInsert<"library_entries">, "owner_id">[],
+) {
   const { data: auth } = await supabase.auth.getUser();
   if (!rows.length) return [] as LibraryRow[];
   const withPacks = rows.map((r) => ({
@@ -494,7 +521,12 @@ export async function importLibraryEntries(rows: Omit<TablesInsert<"library_entr
   return unwrap(
     await supabase
       .from("library_entries")
-      .insert(withPacks.map((r) => ({ ...r, owner_id: auth.user!.id })) as TablesInsert<"library_entries">[])
+      .insert(
+        withPacks.map((r) => ({
+          ...r,
+          owner_id: auth.user!.id,
+        })) as TablesInsert<"library_entries">[],
+      )
       .select(),
   );
 }
@@ -523,7 +555,9 @@ export async function listContentPacks() {
   return unwrap(await supabase.from("content_packs").select("*").order("name"));
 }
 
-export async function createContentPack(input: Partial<TablesInsert<"content_packs">> & { name: string }) {
+export async function createContentPack(
+  input: Partial<TablesInsert<"content_packs">> & { name: string },
+) {
   const { data: auth } = await supabase.auth.getUser();
   return unwrap(
     await supabase
@@ -585,13 +619,24 @@ export async function deletePackContents(name: string) {
       if (error) throw new Error(error.message);
     }
 
+    // Characters are grouped by the pack list they end up with, so identical
+    // results are written in one statement instead of one per character.
+    const groups = new Map<string, { packs: string[]; ids: string[] }>();
     for (const c of mine ?? []) {
       const packs = (c.packs ?? []) as string[];
-      if (packs.some((p) => p.toLowerCase() === name.toLowerCase())) {
+      if (!packs.some((p) => p.toLowerCase() === name.toLowerCase())) continue;
+      const next = packs.filter((p) => p.toLowerCase() !== name.toLowerCase());
+      const key = JSON.stringify(next);
+      const group = groups.get(key) ?? { packs: next, ids: [] };
+      group.ids.push(c.id);
+      groups.set(key, group);
+    }
+    for (const group of groups.values()) {
+      for (let i = 0; i < group.ids.length; i += 200) {
         const { error } = await supabase
           .from("characters")
-          .update({ packs: packs.filter((p) => p.toLowerCase() !== name.toLowerCase()) })
-          .eq("id", c.id);
+          .update({ packs: group.packs })
+          .in("id", group.ids.slice(i, i + 200));
         if (error) throw new Error(error.message);
       }
     }
@@ -611,8 +656,6 @@ export async function deleteContentPack(id: string, name: string) {
   if (error) throw new Error(error.message);
 }
 
-
-
 /** Moves a single library entry into (or out of) a pack. */
 export async function setLibraryEntryPack(entryId: string, pack: string | null) {
   return updateLibraryEntry(entryId, { pack });
@@ -624,38 +667,12 @@ export async function setLibraryEntryPack(entryId: string, pack: string | null) 
  * Deletes every record this account owns: characters and their entries,
  * versions and weapon state, campaigns, notes, memberships, library entries,
  * packs and roll history. The account itself is kept.
+ *
+ * Runs as a single database routine, so it either removes everything or
+ * nothing — a failure part way through can no longer leave a half-erased
+ * account behind.
  */
 export async function wipeAllMyData() {
-  const { data: auth } = await supabase.auth.getUser();
-  const uid = auth.user?.id;
-  if (!uid) throw new Error("You must be signed in.");
-
-  const { data: mine } = await supabase.from("characters").select("id").eq("owner_id", uid);
-  const ids = (mine ?? []).map((c) => c.id);
-
-  const fail = (error: { message: string } | null) => {
-    if (error) throw new Error(error.message);
-  };
-
-  if (ids.length) {
-    fail((await supabase.from("character_weapon_state").delete().in("character_id", ids)).error);
-    fail((await supabase.from("character_versions").delete().in("character_id", ids)).error);
-    fail((await supabase.from("character_entries").delete().in("character_id", ids)).error);
-  }
-  fail((await supabase.from("characters").delete().eq("owner_id", uid)).error);
-
-  const { data: myCampaigns } = await supabase.from("campaigns").select("id").eq("gm_id", uid);
-  const campaignIds = (myCampaigns ?? []).map((c) => c.id);
-  if (campaignIds.length) {
-    fail((await supabase.from("campaign_notes").delete().in("campaign_id", campaignIds)).error);
-    fail((await supabase.from("campaign_members").delete().in("campaign_id", campaignIds)).error);
-  }
-  fail((await supabase.from("campaign_notes").delete().eq("author_id", uid)).error);
-  fail((await supabase.from("campaign_members").delete().eq("user_id", uid)).error);
-  fail((await supabase.from("campaigns").delete().eq("gm_id", uid)).error);
-
-  fail((await supabase.from("roll_history").delete().eq("user_id", uid)).error);
-  fail((await supabase.from("library_entries").delete().eq("owner_id", uid)).error);
-  fail((await supabase.from("content_packs").delete().eq("owner_id", uid)).error);
+  const { error } = await supabase.rpc("wipe_all_my_data");
+  if (error) throw new Error(error.message);
 }
-

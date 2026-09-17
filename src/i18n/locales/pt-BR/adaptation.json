@@ -292,7 +292,13 @@
       "confirmedAll": "Fatos confirmados.",
       "confirmAllTitle": "Confirmar {{count}} pontos não revisados?",
       "confirmAllDescription": "Eles foram escritos pelo assistente e ninguém leu ainda. Confirmar marca todos como aceitos. Use Corrigir para ler um a um antes.",
-      "confirmAllConfirm": "Confirmar todos"
+      "confirmAllConfirm": "Confirmar todos",
+      "review": "Revisar",
+      "reviewTitle": "Revise estes pontos",
+      "reviewDescription": "Marque os pontos que você aceita. O que ficar desmarcado continua pendente.",
+      "reviewBlocked": "{{count}} ponto(s) apontam uma contradição e precisam ser resolvidos um a um.",
+      "reviewCancel": "Cancelar",
+      "reviewConfirm": "Aceitar {{count}} ponto(s)"
     }
   },
   "generate": {

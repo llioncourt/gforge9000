@@ -1,4 +1,4 @@
-import { createEntity, createRelationship, updateEntity } from "@/lib/lore";
+import { createRelationships, updateEntity, upsertEntitiesByImportKey } from "@/lib/lore";
 import { entityInserts, relationshipInserts, type PortableLore } from "@/lib/lore-portable";
 
 export interface LoreImportResult {
@@ -6,17 +6,27 @@ export interface LoreImportResult {
   relationships: number;
 }
 
-/** Imports a portable lore file into a campaign, preserving nesting and links. */
+/**
+ * Imports a portable lore file into a campaign, preserving nesting and links.
+ *
+ * Re-importing the same file updates the records it created before instead of
+ * adding a second copy: every entry carries a stable import key, and
+ * relationships are de-duplicated on (campaign, source, target, type).
+ */
 export async function importLore(
   campaignId: string,
   file: PortableLore,
 ): Promise<LoreImportResult> {
   const planned = entityInserts(file, campaignId);
-  const idByKey = new Map<string, string>();
+  const idByImportKey = await upsertEntitiesByImportKey(
+    campaignId,
+    planned.map((item) => item.row as typeof item.row & { import_key: string }),
+  );
 
+  const idByKey = new Map<string, string>();
   for (const item of planned) {
-    const created = await createEntity(item.row);
-    idByKey.set(item.key, created.id);
+    const id = idByImportKey.get(String(item.row.import_key));
+    if (id) idByKey.set(item.key, id);
   }
 
   for (const item of planned) {
@@ -28,7 +38,7 @@ export async function importLore(
   }
 
   const rels = relationshipInserts(file, campaignId, idByKey);
-  for (const rel of rels) await createRelationship(rel);
+  const written = await createRelationships(rels);
 
-  return { entities: idByKey.size, relationships: rels.length };
+  return { entities: idByKey.size, relationships: written };
 }

@@ -7,6 +7,7 @@
  */
 
 import type { AssetRole, ResolutionStatus } from "@/lib/adaptation/types";
+import { normalizeText } from "@/lib/text-normalize";
 import { stableKey } from "@/lib/adaptation/hash";
 
 export interface CandidateAsset {
@@ -60,15 +61,6 @@ function roleForKind(kind: string): AssetRole {
   return KIND_ROLE[kind.toUpperCase()] ?? "reference";
 }
 
-function normalize(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
 /**
  * Matches candidate files to entities. Name matching is deliberately strict —
  * a full normalized match on the name or an alias — so a near-miss is reported
@@ -81,7 +73,7 @@ export function resolveAssets(
   const byName = new Map<string, EntityTarget[]>();
   for (const entity of entities) {
     for (const label of [entity.name, ...entity.aliases]) {
-      const key = normalize(label);
+      const key = normalizeText(label);
       if (!key) continue;
       byName.set(key, [...(byName.get(key) ?? []), entity]);
     }
@@ -113,7 +105,7 @@ export function resolveAssets(
       };
     }
 
-    const matched = byName.get(normalize(candidate.title)) ?? [];
+    const matched = byName.get(normalizeText(candidate.title)) ?? [];
     if (matched.length === 1) {
       const entity = matched[0]!;
       return {

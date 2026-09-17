@@ -69,7 +69,6 @@ export function attributePoints(c: CharacterRecord, rules: Ruleset = defaultRule
   return rounded === 0 ? 0 : rounded;
 }
 
-
 /**
  * Basic damage moved to ./damage.ts and is now data-driven (CONFIGURABLE).
  * The previous formula here was an invented approximation and was removed.

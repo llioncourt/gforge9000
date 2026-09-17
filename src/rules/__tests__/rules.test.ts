@@ -39,7 +39,15 @@ const base: CharacterRecord = {
 };
 
 function entry(over: Partial<CharacterEntry>): CharacterEntry {
-  return { id: Math.random().toString(), kind: "advantage", name: "x", points: 0, levels: 1, data: {}, ...over };
+  return {
+    id: Math.random().toString(),
+    kind: "advantage",
+    name: "x",
+    points: 0,
+    levels: 1,
+    data: {},
+    ...over,
+  };
 }
 
 describe("derived stats", () => {
@@ -75,7 +83,11 @@ describe("point totals", () => {
       entry({ kind: "advantage", name: "Quick Reflexes", points: 15 }),
       entry({ kind: "disadvantage", name: "Code of Conduct", points: -10 }),
       entry({ kind: "quirk", name: "Hums when nervous", points: -1 }),
-      entry({ kind: "skill", name: "Urban Navigation", data: { attribute: "IQ", difficulty: "A", points: 4 } }),
+      entry({
+        kind: "skill",
+        name: "Urban Navigation",
+        data: { attribute: "IQ", difficulty: "A", points: 4 },
+      }),
     ];
     const p = computePoints({ ...base, point_budget: 100 }, entries);
     expect(p.advantages).toBe(15);
@@ -91,13 +103,17 @@ describe("point totals", () => {
     expect(modifiedCost(20, [{ name: "Limited", percent: -40 }])).toBe(12);
     expect(modifiedCost(20, [{ name: "Extended", percent: 100 }])).toBe(40);
     expect(
-      computePoints(base, [entry({ points: 10, levels: 1, data: { modifiers: [{ name: "L", percent: -50 }] } })])
-        .advantages,
+      computePoints(base, [
+        entry({ points: 10, levels: 1, data: { modifiers: [{ name: "L", percent: -50 }] } }),
+      ]).advantages,
     ).toBe(5);
   });
 
   it("ignores equipment in point totals", () => {
-    expect(computePoints(base, [entry({ kind: "equipment", points: 99, data: { weight: 1, cost: 1 } })]).total).toBe(0);
+    expect(
+      computePoints(base, [entry({ kind: "equipment", points: 99, data: { weight: 1, cost: 1 } })])
+        .total,
+    ).toBe(0);
   });
 
   it("recalculates after edits", () => {
@@ -145,22 +161,28 @@ describe("skills", () => {
 describe("encumbrance", () => {
   const stats = deriveStats({ ...base, st: 10 }); // BL 20
   it("reports no encumbrance under basic lift", () => {
-    const e = computeEncumbrance([entry({ kind: "equipment", data: { weight: 5, quantity: 2, carried: true } })], {
-      basicLift: stats.basicLift,
-      basicMove: stats.basicMove,
-      dodge: stats.dodge,
-    });
+    const e = computeEncumbrance(
+      [entry({ kind: "equipment", data: { weight: 5, quantity: 2, carried: true } })],
+      {
+        basicLift: stats.basicLift,
+        basicMove: stats.basicMove,
+        dodge: stats.dodge,
+      },
+    );
     expect(e.carriedWeight).toBe(10);
     expect(e.label).toBe("None");
     expect(e.effectiveMove).toBe(stats.basicMove);
   });
 
   it("steps up tiers and penalises move and dodge", () => {
-    const e = computeEncumbrance([entry({ kind: "equipment", data: { weight: 55, carried: true } })], {
-      basicLift: stats.basicLift,
-      basicMove: 5,
-      dodge: 8,
-    });
+    const e = computeEncumbrance(
+      [entry({ kind: "equipment", data: { weight: 55, carried: true } })],
+      {
+        basicLift: stats.basicLift,
+        basicMove: 5,
+        dodge: 8,
+      },
+    );
     expect(e.label).toBe("Medium");
     expect(e.effectiveMove).toBe(3);
     expect(e.effectiveDodge).toBe(6);
@@ -226,8 +248,16 @@ describe("full sheet", () => {
   it("assembles stats, points and encumbrance together", () => {
     const entries = [
       entry({ kind: "advantage", name: "Field Medic Training", points: 10 }),
-      entry({ kind: "skill", name: "Urban Navigation", data: { attribute: "IQ", difficulty: "A", points: 4 } }),
-      entry({ kind: "equipment", name: "Field Kit", data: { weight: 8, cost: 200, quantity: 1, carried: true, dr: 2, locations: ["Torso"] } }),
+      entry({
+        kind: "skill",
+        name: "Urban Navigation",
+        data: { attribute: "IQ", difficulty: "A", points: 4 },
+      }),
+      entry({
+        kind: "equipment",
+        name: "Field Kit",
+        data: { weight: 8, cost: 200, quantity: 1, carried: true, dr: 2, locations: ["Torso"] },
+      }),
     ];
     const sheet = buildSheet({ ...base, st: 11, iq: 12 }, entries);
     expect(sheet.points.total).toBe(10 + 4 + 10 + 40);
@@ -241,7 +271,14 @@ describe("imported skills with a stated level", () => {
   it("uses data.level when no points are purchased", () => {
     const stats = deriveStats(base);
     const level = skillLevel(
-      { id: "s1", kind: "skill", name: "Brawling", points: 0, levels: 1, data: { attribute: "DX", difficulty: "E", level: 13 } } as never,
+      {
+        id: "s1",
+        kind: "skill",
+        name: "Brawling",
+        points: 0,
+        levels: 1,
+        data: { attribute: "DX", difficulty: "E", level: 13 },
+      } as never,
       stats,
     );
     expect(level.effective).toBe(13);

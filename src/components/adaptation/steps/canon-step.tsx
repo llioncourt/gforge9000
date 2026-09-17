@@ -165,14 +165,18 @@ export function CanonStep({ project }: StepProps) {
               return (
                 <li key={fact.id} className="space-y-2 rounded-lg border p-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-medium">{subject?.name ?? t("canon.noSubject")}</span>
+                    <span className="text-sm font-medium">
+                      {subject?.name ?? t("canon.noSubject")}
+                    </span>
                     <Badge variant="outline" className="text-[10px]">
                       {t(`canon.filters.${fact.provenance_type}` as never, {
                         defaultValue: fact.provenance_type,
                       })}
                     </Badge>
                     <Badge variant="outline" className="text-[10px]">
-                      {t(`canon.counts.${fact.canon_status === "needs_review" ? "needsReview" : fact.canon_status}`)}
+                      {t(
+                        `canon.counts.${fact.canon_status === "needs_review" ? "needsReview" : fact.canon_status}`,
+                      )}
                     </Badge>
                     <span className="text-[10px] text-muted-foreground">
                       {t("canon.confidence", { value: Math.round((fact.confidence ?? 0) * 100) })}

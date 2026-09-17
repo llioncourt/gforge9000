@@ -49,9 +49,7 @@ export function useAccountLocale() {
       setLocale(next);
       if (!user) return;
       void setProfilePreferences(user.id, { locale: next })
-        .then(() =>
-          queryClient.invalidateQueries({ queryKey: ["profile-preferences", user.id] }),
-        )
+        .then(() => queryClient.invalidateQueries({ queryKey: ["profile-preferences", user.id] }))
         .catch(() => {
           /* the local choice still applies if the profile write fails */
         });

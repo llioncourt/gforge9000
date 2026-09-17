@@ -49,11 +49,7 @@ export function rollExpression(expr: string, rng: Rng = defaultRng): RollResult 
   return { dice, total: (sum + parsed.modifier) * parsed.multiplier, expression: expr };
 }
 
-export type Outcome =
-  | "critical success"
-  | "success"
-  | "failure"
-  | "critical failure";
+export type Outcome = "critical success" | "success" | "failure" | "critical failure";
 
 export interface SuccessRoll extends RollResult {
   target: number;

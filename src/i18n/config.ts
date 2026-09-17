@@ -30,8 +30,20 @@ export interface LocaleDefinition {
 export const DEFAULT_LOCALE = "en";
 export const FALLBACK_LOCALE = "en";
 
-/** Development-only locale that highlights untranslated strings. */
+/**
+ * Development-only locale that highlights untranslated strings. It is never
+ * offered in the language selector unless the developer turns it on explicitly
+ * with `VITE_PSEUDO=1 bun run dev`, so it can never appear for a real user.
+ */
 export const PSEUDO_LOCALE = "en-XA";
+
+/**
+ * The single gate for pseudo-localization. Reads build-time constants only, so
+ * the server and the client always agree (no hydration mismatch).
+ */
+export function pseudoEnabled(): boolean {
+  return import.meta.env?.DEV === true && import.meta.env?.["VITE_PSEUDO"] === "1";
+}
 
 export const LOCALES: readonly LocaleDefinition[] = [
   {
@@ -60,7 +72,7 @@ export const LOCALES: readonly LocaleDefinition[] = [
     nativeName: "Pseudo",
     dir: "ltr",
     fallback: FALLBACK_LOCALE,
-    enabled: import.meta.env?.DEV === true,
+    enabled: pseudoEnabled(),
     aliases: ["en-xa", "pseudo"],
     intlLocale: "en-US",
   },
@@ -100,14 +112,17 @@ function findLocale(input: string | null | undefined): LocaleDefinition | undefi
   const raw = input.trim();
   if (!raw) return undefined;
   const lower = raw.toLowerCase();
-  const exact = LOCALES.find(
+  // Locales switched off for this build are invisible: a stale "en-XA" saved in
+  // a cookie, in local storage or on the profile must never reach the screen.
+  const candidates = LOCALES.filter((l) => l.enabled);
+  const exact = candidates.find(
     (l) => l.code.toLowerCase() === lower || l.aliases.some((a) => a.toLowerCase() === lower),
   );
   if (exact) return exact;
   // Fall back to the primary subtag: "pt-AO" -> "pt" -> pt-BR
   const primary = lower.split("-")[0];
   if (!primary) return undefined;
-  return LOCALES.find(
+  return candidates.find(
     (l) =>
       l.code.toLowerCase().split("-")[0] === primary ||
       l.aliases.some((a) => a.toLowerCase().split("-")[0] === primary),

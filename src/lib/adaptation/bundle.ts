@@ -372,7 +372,7 @@ export async function buildAdaptationBundle(
     props,
     wardrobe: [],
     storyBible,
-    sources,
+    sources: sources.map((source) => ({ ...source, source_id: source.source_id ?? null })),
     snapshotHash: sources.length ? sources[0]!.source_hash : "",
   });
 

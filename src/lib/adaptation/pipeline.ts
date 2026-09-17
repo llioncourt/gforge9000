@@ -315,7 +315,7 @@ export async function runReconstruction(
   ): Promise<StageResult<S> | null> => {
     onProgress?.({ stage, chunk: chunkIndex + 1, chunks: chunkTotal, label: stage });
     try {
-      const response = await runAdaptationStage({
+      const response = (await runAdaptationStage({
         data: {
           adaptation_id: adaptationId,
           stage,
@@ -324,7 +324,7 @@ export async function runReconstruction(
           chunk_total: chunkTotal,
           ...(options.instructions ? { instructions: options.instructions } : {}),
         },
-      });
+      })) as { result: unknown };
       return response.result as StageResult<S>;
     } catch (error) {
       out.failures.push({ stage, chunk: chunkIndex, message: (error as Error).message });

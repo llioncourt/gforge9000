@@ -66,7 +66,7 @@ export function ValidationStep({ project }: StepProps) {
           </h5>
           <ul className="space-y-1 text-sm">
             {problems.map((problem) => (
-              <li key={problem.key}>{t(`validation.checks.${problem.key}` as never, { count: problem.count } as never)}</li>
+              <li key={problem.key}>{String(t(`validation.checks.${problem.key}` as never, { count: problem.count } as never))}</li>
             ))}
           </ul>
         </section>

@@ -324,8 +324,8 @@ export async function runReconstruction(
           chunk_total: chunkTotal,
           ...(options.instructions ? { instructions: options.instructions } : {}),
         },
-      })) as { result: unknown };
-      return response.result as StageResult<S>;
+      })) as { result: string };
+      return JSON.parse(response.result) as StageResult<S>;
     } catch (error) {
       out.failures.push({ stage, chunk: chunkIndex, message: (error as Error).message });
       return null;

@@ -48,6 +48,7 @@ export const runAdaptationStage = createServerFn({ method: "POST" })
       stage: data.stage,
       chunk_index: data.chunk_index,
       chunk_total: data.chunk_total,
-      result: result as Record<string, unknown>,
+      /** Serialized so the transport never has to guess at the shape. */
+      result: JSON.stringify(result),
     };
   });

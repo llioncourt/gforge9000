@@ -159,6 +159,7 @@ export const NAMESPACES = [
   "battle",
   "dice",
   "marketing",
+  "adaptation",
 ] as const;
 
 export type Namespace = (typeof NAMESPACES)[number];

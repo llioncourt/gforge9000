@@ -14,6 +14,513 @@ export type Database = {
   }
   public: {
     Tables: {
+      adaptation_asset_links: {
+        Row: {
+          adaptation_id: string
+          bucket: string | null
+          bundle_path: string | null
+          byte_size: number | null
+          canonical_entity_id: string | null
+          created_at: string
+          id: string
+          is_canonical: boolean
+          media_type: string | null
+          resolution_status: string
+          role: string
+          sha256: string | null
+          source_id: string | null
+          source_kind: string
+          storage_path: string | null
+          suggested_by: string
+          target_hints: Json
+          updated_at: string
+        }
+        Insert: {
+          adaptation_id: string
+          bucket?: string | null
+          bundle_path?: string | null
+          byte_size?: number | null
+          canonical_entity_id?: string | null
+          created_at?: string
+          id?: string
+          is_canonical?: boolean
+          media_type?: string | null
+          resolution_status?: string
+          role?: string
+          sha256?: string | null
+          source_id?: string | null
+          source_kind: string
+          storage_path?: string | null
+          suggested_by?: string
+          target_hints?: Json
+          updated_at?: string
+        }
+        Update: {
+          adaptation_id?: string
+          bucket?: string | null
+          bundle_path?: string | null
+          byte_size?: number | null
+          canonical_entity_id?: string | null
+          created_at?: string
+          id?: string
+          is_canonical?: boolean
+          media_type?: string | null
+          resolution_status?: string
+          role?: string
+          sha256?: string | null
+          source_id?: string | null
+          source_kind?: string
+          storage_path?: string | null
+          suggested_by?: string
+          target_hints?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adaptation_asset_links_adaptation_id_fkey"
+            columns: ["adaptation_id"]
+            isOneToOne: false
+            referencedRelation: "adaptation_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adaptation_asset_links_canonical_entity_id_fkey"
+            columns: ["canonical_entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adaptation_change_sets: {
+        Row: {
+          adaptation_id: string
+          added: Json
+          changed: Json
+          created_at: string
+          from_snapshot_id: string | null
+          id: string
+          impact: Json
+          removed: Json
+          status: string
+          to_snapshot_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          adaptation_id: string
+          added?: Json
+          changed?: Json
+          created_at?: string
+          from_snapshot_id?: string | null
+          id?: string
+          impact?: Json
+          removed?: Json
+          status?: string
+          to_snapshot_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adaptation_id?: string
+          added?: Json
+          changed?: Json
+          created_at?: string
+          from_snapshot_id?: string | null
+          id?: string
+          impact?: Json
+          removed?: Json
+          status?: string
+          to_snapshot_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adaptation_change_sets_adaptation_id_fkey"
+            columns: ["adaptation_id"]
+            isOneToOne: false
+            referencedRelation: "adaptation_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adaptation_change_sets_from_snapshot_id_fkey"
+            columns: ["from_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "adaptation_snapshots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adaptation_change_sets_to_snapshot_id_fkey"
+            columns: ["to_snapshot_id"]
+            isOneToOne: false
+            referencedRelation: "adaptation_snapshots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adaptation_facts: {
+        Row: {
+          adaptation_id: string
+          canon_status: string
+          confidence: number
+          conflict_with: Json
+          created_at: string
+          fact_type: string
+          gm_only: boolean
+          id: string
+          knowledge_scope: Json
+          provenance_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_refs: Json
+          stable_key: string
+          statement: string
+          subject_entity_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          adaptation_id: string
+          canon_status?: string
+          confidence?: number
+          conflict_with?: Json
+          created_at?: string
+          fact_type?: string
+          gm_only?: boolean
+          id?: string
+          knowledge_scope?: Json
+          provenance_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_refs?: Json
+          stable_key: string
+          statement: string
+          subject_entity_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adaptation_id?: string
+          canon_status?: string
+          confidence?: number
+          conflict_with?: Json
+          created_at?: string
+          fact_type?: string
+          gm_only?: boolean
+          id?: string
+          knowledge_scope?: Json
+          provenance_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_refs?: Json
+          stable_key?: string
+          statement?: string
+          subject_entity_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adaptation_facts_adaptation_id_fkey"
+            columns: ["adaptation_id"]
+            isOneToOne: false
+            referencedRelation: "adaptation_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adaptation_facts_subject_entity_id_fkey"
+            columns: ["subject_entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adaptation_projects: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          created_by: string
+          creative_settings: Json
+          id: string
+          name: string
+          source_mode: string
+          source_scope: Json
+          spoiler_policy: string
+          status: string
+          target_comic: boolean
+          target_movie: boolean
+          updated_at: string
+          version: number
+          wizard_step: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          created_by: string
+          creative_settings?: Json
+          id?: string
+          name: string
+          source_mode?: string
+          source_scope?: Json
+          spoiler_policy?: string
+          status?: string
+          target_comic?: boolean
+          target_movie?: boolean
+          updated_at?: string
+          version?: number
+          wizard_step?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          created_by?: string
+          creative_settings?: Json
+          id?: string
+          name?: string
+          source_mode?: string
+          source_scope?: Json
+          spoiler_policy?: string
+          status?: string
+          target_comic?: boolean
+          target_movie?: boolean
+          updated_at?: string
+          version?: number
+          wizard_step?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adaptation_projects_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adaptation_scenes: {
+        Row: {
+          adaptation_id: string
+          cast_entity_ids: string[]
+          content_hash: string
+          continuity_state: Json
+          created_at: string
+          dialogue: Json
+          dramatic_goal: string
+          gm_only: boolean
+          id: string
+          knowledge_state: Json
+          location_entity_id: string | null
+          manually_edited: boolean
+          narration: Json
+          prop_entity_ids: string[]
+          provenance_type: string
+          review_status: string
+          sequence_no: number
+          source_refs: Json
+          stable_key: string
+          story_beats: Json
+          synopsis: string
+          title: string
+          updated_at: string
+          wardrobe_refs: Json
+        }
+        Insert: {
+          adaptation_id: string
+          cast_entity_ids?: string[]
+          content_hash?: string
+          continuity_state?: Json
+          created_at?: string
+          dialogue?: Json
+          dramatic_goal?: string
+          gm_only?: boolean
+          id?: string
+          knowledge_state?: Json
+          location_entity_id?: string | null
+          manually_edited?: boolean
+          narration?: Json
+          prop_entity_ids?: string[]
+          provenance_type?: string
+          review_status?: string
+          sequence_no?: number
+          source_refs?: Json
+          stable_key: string
+          story_beats?: Json
+          synopsis?: string
+          title: string
+          updated_at?: string
+          wardrobe_refs?: Json
+        }
+        Update: {
+          adaptation_id?: string
+          cast_entity_ids?: string[]
+          content_hash?: string
+          continuity_state?: Json
+          created_at?: string
+          dialogue?: Json
+          dramatic_goal?: string
+          gm_only?: boolean
+          id?: string
+          knowledge_state?: Json
+          location_entity_id?: string | null
+          manually_edited?: boolean
+          narration?: Json
+          prop_entity_ids?: string[]
+          provenance_type?: string
+          review_status?: string
+          sequence_no?: number
+          source_refs?: Json
+          stable_key?: string
+          story_beats?: Json
+          synopsis?: string
+          title?: string
+          updated_at?: string
+          wardrobe_refs?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adaptation_scenes_adaptation_id_fkey"
+            columns: ["adaptation_id"]
+            isOneToOne: false
+            referencedRelation: "adaptation_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adaptation_scenes_location_entity_id_fkey"
+            columns: ["location_entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adaptation_snapshots: {
+        Row: {
+          adaptation_id: string
+          created_at: string
+          id: string
+          snapshot_hash: string
+          source_hashes: Json
+          stats: Json
+        }
+        Insert: {
+          adaptation_id: string
+          created_at?: string
+          id?: string
+          snapshot_hash: string
+          source_hashes?: Json
+          stats?: Json
+        }
+        Update: {
+          adaptation_id?: string
+          created_at?: string
+          id?: string
+          snapshot_hash?: string
+          source_hashes?: Json
+          stats?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adaptation_snapshots_adaptation_id_fkey"
+            columns: ["adaptation_id"]
+            isOneToOne: false
+            referencedRelation: "adaptation_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adaptation_sources: {
+        Row: {
+          adaptation_id: string
+          created_at: string
+          id: string
+          included: boolean
+          metadata: Json
+          source_hash: string
+          source_id: string | null
+          source_key: string
+          source_revision: string | null
+          source_type: string
+          updated_at: string
+        }
+        Insert: {
+          adaptation_id: string
+          created_at?: string
+          id?: string
+          included?: boolean
+          metadata?: Json
+          source_hash: string
+          source_id?: string | null
+          source_key: string
+          source_revision?: string | null
+          source_type: string
+          updated_at?: string
+        }
+        Update: {
+          adaptation_id?: string
+          created_at?: string
+          id?: string
+          included?: boolean
+          metadata?: Json
+          source_hash?: string
+          source_id?: string | null
+          source_key?: string
+          source_revision?: string | null
+          source_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adaptation_sources_adaptation_id_fkey"
+            columns: ["adaptation_id"]
+            isOneToOne: false
+            referencedRelation: "adaptation_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      adaptation_targets: {
+        Row: {
+          adaptation_id: string
+          created_at: string
+          id: string
+          last_sync_hash: string | null
+          last_synced_at: string | null
+          metadata: Json
+          target_object_external_id: string | null
+          target_project_external_id: string | null
+          target_system: string
+          updated_at: string
+        }
+        Insert: {
+          adaptation_id: string
+          created_at?: string
+          id?: string
+          last_sync_hash?: string | null
+          last_synced_at?: string | null
+          metadata?: Json
+          target_object_external_id?: string | null
+          target_project_external_id?: string | null
+          target_system: string
+          updated_at?: string
+        }
+        Update: {
+          adaptation_id?: string
+          created_at?: string
+          id?: string
+          last_sync_hash?: string | null
+          last_synced_at?: string | null
+          metadata?: Json
+          target_object_external_id?: string | null
+          target_project_external_id?: string | null
+          target_system?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adaptation_targets_adaptation_id_fkey"
+            columns: ["adaptation_id"]
+            isOneToOne: false
+            referencedRelation: "adaptation_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_assets: {
         Row: {
           byte_size: number
@@ -1508,6 +2015,174 @@ export type Database = {
             columns: ["character_id"]
             isOneToOne: false
             referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_chronicle_items: {
+        Row: {
+          campaign_id: string
+          character_id: string | null
+          chronicle_id: string
+          created_at: string
+          data: Json
+          detail: string
+          gm_only: boolean
+          id: string
+          item_type: string
+          provenance_type: string
+          review_status: string
+          sequence_no: number
+          source_refs: Json
+          subject_entity_id: string | null
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          character_id?: string | null
+          chronicle_id: string
+          created_at?: string
+          data?: Json
+          detail?: string
+          gm_only?: boolean
+          id?: string
+          item_type: string
+          provenance_type?: string
+          review_status?: string
+          sequence_no?: number
+          source_refs?: Json
+          subject_entity_id?: string | null
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          character_id?: string | null
+          chronicle_id?: string
+          created_at?: string
+          data?: Json
+          detail?: string
+          gm_only?: boolean
+          id?: string
+          item_type?: string
+          provenance_type?: string
+          review_status?: string
+          sequence_no?: number
+          source_refs?: Json
+          subject_entity_id?: string | null
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_chronicle_items_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_chronicle_items_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_chronicle_items_chronicle_id_fkey"
+            columns: ["chronicle_id"]
+            isOneToOne: false
+            referencedRelation: "session_chronicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_chronicle_items_subject_entity_id_fkey"
+            columns: ["subject_entity_id"]
+            isOneToOne: false
+            referencedRelation: "entities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_chronicles: {
+        Row: {
+          approved_recap: string
+          campaign_id: string
+          content_hash: string
+          created_at: string
+          created_by: string
+          id: string
+          in_world_date: Json | null
+          materials: Json
+          played_on: string | null
+          prep_note_id: string | null
+          raw_notes: string
+          recap_note_id: string | null
+          session_no: number | null
+          status: string
+          title: string
+          transcript: string
+          updated_at: string
+        }
+        Insert: {
+          approved_recap?: string
+          campaign_id: string
+          content_hash?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          in_world_date?: Json | null
+          materials?: Json
+          played_on?: string | null
+          prep_note_id?: string | null
+          raw_notes?: string
+          recap_note_id?: string | null
+          session_no?: number | null
+          status?: string
+          title: string
+          transcript?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_recap?: string
+          campaign_id?: string
+          content_hash?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          in_world_date?: Json | null
+          materials?: Json
+          played_on?: string | null
+          prep_note_id?: string | null
+          raw_notes?: string
+          recap_note_id?: string | null
+          session_no?: number | null
+          status?: string
+          title?: string
+          transcript?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_chronicles_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_chronicles_prep_note_id_fkey"
+            columns: ["prep_note_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_notes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_chronicles_recap_note_id_fkey"
+            columns: ["recap_note_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_notes"
             referencedColumns: ["id"]
           },
         ]

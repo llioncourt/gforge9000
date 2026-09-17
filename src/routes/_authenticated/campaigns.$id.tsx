@@ -119,6 +119,10 @@ const AssetsPanel = lazyPanel(() => import("@/components/lore/assets-panel"), "A
 const BattlePanel = lazyPanel(() => import("@/components/battle/battle-panel"), "BattlePanel");
 const RollsPanel = lazyPanel(() => import("@/components/campaign/rolls-panel"), "RollsPanel");
 const MediaPanel = lazyPanel(() => import("@/components/campaign/media-panel"), "MediaPanel");
+const AdaptationPanel = lazyPanel(
+  () => import("@/components/adaptation/adaptation-panel"),
+  "AdaptationPanel",
+);
 
 
 
@@ -138,6 +142,7 @@ export const CAMPAIGN_TABS = [
   "battle",
   "library",
   "rolls",
+  "adapt",
   "notes",
   "members",
   "rules",
@@ -177,6 +182,7 @@ export const Route = createFileRoute("/_authenticated/campaigns/$id")({
 function CampaignPage() {
   const { t } = useT("campaigns");
   const { t: tc } = useT("common");
+  const { t: ta } = useT("adaptation");
   const { id } = Route.useParams();
   const { tab: tabParam, item: itemParam, sub: subParam } = Route.useSearch();
   const { user } = useSession();
@@ -523,6 +529,7 @@ function CampaignPage() {
           <TabsTrigger value="battle">{t("tabs.battle")}</TabsTrigger>
           <TabsTrigger value="library">{t("tabs.library")}</TabsTrigger>
           <TabsTrigger value="rolls">{t("tabs.rolls")}</TabsTrigger>
+          {isGm ? <TabsTrigger value="adapt">{ta("tab")}</TabsTrigger> : null}
 
           <TabsTrigger value="notes">{t("tabs.notes")}</TabsTrigger>
           <TabsTrigger value="members">{t("tabs.members")}</TabsTrigger>
@@ -825,6 +832,15 @@ function CampaignPage() {
             <RollsPanel campaignId={id} isGm={isGm} />
           </Suspense>
         </TabsContent>
+
+        {isGm ? (
+          <TabsContent value="adapt" className="mt-6">
+            <Suspense fallback={<PanelFallback />}>
+              <AdaptationPanel campaignId={id} />
+            </Suspense>
+          </TabsContent>
+        ) : null}
+
 
         <TabsContent value="notes" className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
           <div className="space-y-3">

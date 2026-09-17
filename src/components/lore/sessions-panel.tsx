@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { addNote, deleteNote, listNotes, updateNote, type NoteRow } from "@/lib/api";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SessionChroniclePanel } from "@/components/adaptation/session-chronicle-panel";
 import { useT, useFormatters } from "@/i18n/hooks";
 
 const PREP = "session-prep";
@@ -46,7 +48,7 @@ function groupSessions(rows: NoteRow[]): Session[] {
   return [...byTitle.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+function SessionsListView({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
   const { t } = useT("lore");
   const { t: tc } = useT("common");
   const f = useFormatters();
@@ -211,6 +213,29 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const { t } = useT("adaptation");
+  const [view, setView] = useState<"sessions" | "chronicle">("sessions");
+
+  if (!isGm) return <SessionsListView campaignId={campaignId} isGm={isGm} />;
+
+  return (
+    <div className="space-y-6">
+      <Tabs value={view} onValueChange={(v) => setView(v as "sessions" | "chronicle")}>
+        <TabsList>
+          <TabsTrigger value="sessions">{t("chronicle.viewToggle.sessions")}</TabsTrigger>
+          <TabsTrigger value="chronicle">{t("chronicle.viewToggle.chronicle")}</TabsTrigger>
+        </TabsList>
+      </Tabs>
+      {view === "sessions" ? (
+        <SessionsListView campaignId={campaignId} isGm={isGm} />
+      ) : (
+        <SessionChroniclePanel campaignId={campaignId} isGm={isGm} />
+      )}
     </div>
   );
 }

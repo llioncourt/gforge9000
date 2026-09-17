@@ -141,6 +141,105 @@
     "houseRulesPlaceholder": "Table agreements, allowed content packs, campaign tone…",
     "save": "Save house rules"
   },
+  "rulesTuning": {
+    "title": "Adjustable rules",
+    "hint": "These are the values the character engine reads. Change them for this campaign only; anything you don't touch keeps its default.",
+    "save": "Save adjustable rules",
+    "saved": "Campaign rules saved.",
+    "reset": "Back to default",
+    "resetAll": "Reset everything to default",
+    "defaultValue": "Default: {{value}}",
+    "changedCount": "{{count}} changed from default",
+    "unlimited": "No limit",
+    "groups": {
+      "attributes": "Attribute costs",
+      "secondary": "Secondary stats",
+      "skills": "Skills and techniques",
+      "modifiers": "Trait modifiers",
+      "combat": "Combat and defenses",
+      "encumbrance": "Encumbrance",
+      "health": "Health thresholds",
+      "dice": "Dice rolls",
+      "weapons": "Weapons"
+    },
+    "columns": {
+      "row": "Row",
+      "multiplier": "x Basic Lift",
+      "moveFactor": "Move factor",
+      "dodgePenalty": "Dodge",
+      "atOrBelow": "At or below",
+      "hpThresholds": "Hit points",
+      "fpThresholds": "Fatigue"
+    },
+    "enums": {
+      "modifierRounding": {
+        "nearest": "Nearest",
+        "up": "Up",
+        "down": "Down"
+      },
+      "drStacking": {
+        "additive": "Add up",
+        "highest": "Highest only"
+      }
+    },
+    "fields": {
+      "attributeCost": {
+        "ST": "ST per point",
+        "DX": "DX per point",
+        "IQ": "IQ per point",
+        "HT": "HT per point"
+      },
+      "secondaryCost": {
+        "hp": "HP per point",
+        "will": "Will per point",
+        "per": "Perception per point",
+        "fp": "FP per point",
+        "speed": "Basic Speed per point",
+        "move": "Basic Move per level"
+      },
+      "basicLiftDivisor": "Basic Lift divisor",
+      "difficultyOffset": {
+        "E": "Easy offset",
+        "A": "Average offset",
+        "H": "Hard offset",
+        "VH": "Very Hard offset"
+      },
+      "technique": {
+        "firstLevelCost": {
+          "E": "Technique first level (Easy)",
+          "A": "Technique first level (Average)",
+          "H": "Technique first level (Hard)",
+          "VH": "Technique first level (Very Hard)"
+        },
+        "additionalLevelCost": {
+          "E": "Technique extra level (Easy)",
+          "A": "Technique extra level (Average)",
+          "H": "Technique extra level (Hard)",
+          "VH": "Technique extra level (Very Hard)"
+        }
+      },
+      "modifierRounding": "Rounding after modifiers",
+      "modifierFloorPercent": "Lowest total limitation (%)",
+      "dodgeBase": "Dodge bonus",
+      "activeDefense": {
+        "parryDivisor": "Parry divisor",
+        "parryBase": "Parry bonus",
+        "blockDivisor": "Block divisor",
+        "blockBase": "Block bonus",
+        "retreatBonus": "Retreat bonus"
+      },
+      "drStacking": "Armour on the same spot",
+      "criticalSuccessMax": "Critical success at or below",
+      "criticalFailureMin": "Critical failure at or above",
+      "autoFailMargin": "Automatic failure margin",
+      "weapon": {
+        "minimumRecoil": "Lowest usable recoil",
+        "maxAdditionalHits": "Cap on extra hits",
+        "accuracyBonusEnabled": "Use accuracy bonus",
+        "bulkPenaltyEnabled": "Use bulk penalty"
+      }
+    }
+  },
   "list": {
     "title": "Campaigns",
     "description": "Tables you run and tables you play at.",

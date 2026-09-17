@@ -64,6 +64,8 @@ import {
 import { listLibrary } from "@/lib/api";
 import { allowedPacksOf } from "@/lib/packs";
 import { buildSheet } from "@/rules";
+import { CampaignRules } from "@/components/campaign/campaign-rules";
+import { CAMPAIGN_RULESET_SETTING, rulesetFromSettings } from "@/rules/campaign-ruleset";
 import { useSession } from "@/hooks/use-session";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
 import { useT } from "@/i18n/hooks";
@@ -244,14 +246,16 @@ function CampaignPage() {
   const isGm = campaign.data?.gm_id === user?.id;
   const settings = (campaign.data?.settings ?? {}) as Record<string, unknown>;
 
+  const campaignRuleset = useMemo(() => rulesetFromSettings(settings), [settings]);
+
   const sheets = useMemo(() => {
     const byChar = new Map<string, ReturnType<typeof buildSheet>>();
     for (const c of roster.data ?? []) {
       const rows = (entries.data ?? []).filter((e) => e.character_id === c.id).map(toEntry);
-      byChar.set(c.id, buildSheet(toCharacterRecord(c), rows));
+      byChar.set(c.id, buildSheet(toCharacterRecord(c), rows, campaignRuleset));
     }
     return byChar;
-  }, [roster.data, entries.data]);
+  }, [roster.data, entries.data, campaignRuleset]);
 
   const createNpc = useMutation({
     mutationFn: () =>
@@ -1100,7 +1104,7 @@ function HouseRules({
     setPacks((prev) => (on ? [...new Set([...prev, name])] : prev.filter((p) => p !== name)));
 
   return (
-    <div className="panel max-w-2xl space-y-4 p-6">
+    <div className="panel max-w-4xl space-y-4 p-6">
       <section className="space-y-3">
         <div>
           <Label>{t("houseRules.cover.label")}</Label>
@@ -1210,6 +1214,13 @@ function HouseRules({
           {t("houseRules.packs.hint")}
         </p>
       </div>
+      <div className="border-t border-border" />
+      <CampaignRules
+        settings={settings}
+        disabled={disabled}
+        onSave={(overrides) => onSave({ [CAMPAIGN_RULESET_SETTING]: overrides })}
+      />
+      <div className="border-t border-border" />
       <div className="space-y-1.5">
         <Label>{t("houseRules.houseRulesLabel")}</Label>
         <Textarea

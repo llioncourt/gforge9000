@@ -198,33 +198,42 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
     });
 
     let done = 0;
-    for (const row of rows) {
-      await createEntity({
-        campaign_id: campaignId,
-        kind: "EVENT",
-        name: row.name,
-        status: row.status || "Historical",
-        visibility: row.visibility ?? (isGm ? "GM_ONLY" : "ALL_PLAYERS"),
-        summary: row.summary || null,
-        created_by: user!.id,
-        data: {
-          year: row.year ?? "",
-          month: row.month ?? "",
-          day: row.day ?? "",
-          hour: row.hour ?? "",
-          minute: row.minute ?? "",
-          era: row.era || calendar.era,
-          what_happened: row.what_happened ?? "",
-          consequences: row.consequences ?? "",
-          gm_truth: row.gm_truth ?? "",
-        },
-      } as never);
-      done += 1;
+    // Imported in small batches so a long timeline does not take one round trip
+    // per event; order of creation does not matter here.
+    const BATCH = 8;
+    for (let start = 0; start < rows.length; start += BATCH) {
+      const batch = rows.slice(start, start + BATCH);
+      await Promise.all(
+        batch.map((row) =>
+          createEntity({
+            campaign_id: campaignId,
+            kind: "EVENT",
+            name: row.name,
+            status: row.status || "Historical",
+            visibility: row.visibility ?? (isGm ? "GM_ONLY" : "ALL_PLAYERS"),
+            summary: row.summary || null,
+            created_by: user!.id,
+            data: {
+              year: row.year ?? "",
+              month: row.month ?? "",
+              day: row.day ?? "",
+              hour: row.hour ?? "",
+              minute: row.minute ?? "",
+              era: row.era || calendar.era,
+              what_happened: row.what_happened ?? "",
+              consequences: row.consequences ?? "",
+              gm_truth: row.gm_truth ?? "",
+            },
+          } as never),
+        ),
+      );
+      done += batch.length;
       report(
         t("timelinePanel.importingEvents", { done, total: rows.length }),
         20 + Math.round((done / Math.max(1, rows.length)) * 75),
       );
     }
+
     await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
     return t("timelinePanel.eventsImported", { count: rows.length });
   };

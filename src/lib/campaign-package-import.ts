@@ -19,6 +19,9 @@ import { convertToAvif, isImageFile } from "@/lib/image-avif";
 import { createEntity, createRelationship, updateEntity } from "@/lib/lore";
 import { uploadPortrait } from "@/lib/portrait";
 import { parsePortable } from "@/lib/portable";
+import { reconcileImportedEntries } from "@/lib/import-reconcile";
+import type { ImportedEntry } from "@/lib/trait-match";
+
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { normalizeVisibility } from "@/lib/visibility";
 
@@ -85,6 +88,10 @@ export async function importCampaignPackage(
       tech_level: manifest.campaign.settings?.tech_level ?? 8,
       house_rules: manifest.campaign.settings?.house_rules ?? "",
       allowed_sources: manifest.campaign.settings?.allowed_sources ?? ["user"],
+      ...(manifest.campaign.settings?.allowed_packs
+        ? { allowed_packs: manifest.campaign.settings.allowed_packs }
+        : {}),
+
     },
   });
 
@@ -198,7 +205,12 @@ async function importCharacters(
     ids.characters.set(entry.key, created.id);
 
     if (portable.entries.length) {
-      const rows = portable.entries.map((item, index) => ({
+      // Same reconciliation as the standalone character import, so identical
+      // character JSON canonicalises identically whatever wrapper it arrives in.
+      const { entries: reconciled } = await reconcileImportedEntries(
+        portable.entries as unknown as ImportedEntry[],
+      );
+      const rows = reconciled.map((item, index) => ({
         character_id: created.id,
         kind: item.kind,
         name: item.name,
@@ -208,11 +220,12 @@ async function importCharacters(
         data: (item.data ?? {}) as NonNullable<TablesInsert<"character_entries">["data"]>,
         notes: item.notes ?? null,
         source: (item.source ?? {}) as NonNullable<TablesInsert<"character_entries">["source"]>,
-        sort_order: item.sort_order ?? index,
+        sort_order: (item['sort_order'] as number | undefined) ?? index,
       }));
       const entriesResult = await supabase.from("character_entries").insert(rows);
       if (entriesResult.error) throw new Error(entriesResult.error.message);
     }
+
 
     if (entry.portrait_file) {
       const path = await uploadPortrait(created.id, fileFromZip(archive, entry.portrait_file));

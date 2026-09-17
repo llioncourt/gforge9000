@@ -46,11 +46,15 @@ export function deriveStats(c: CharacterRecord, rules: Ruleset = defaultRuleset)
   };
 }
 
-/** Point cost of primary attributes and secondary adjustments. */
+/**
+ * Point cost of primary attributes and secondary adjustments.
+ * Fractional costs (a quarter-step of Basic Speed under a non-default speed
+ * cost) accumulate at full precision and are rounded once at the total.
+ */
 export function attributePoints(c: CharacterRecord, rules: Ruleset = defaultRuleset): number {
   const a = rules.attributeCost;
   const s = rules.secondaryCost;
-  return (
+  const total =
     (c.st - 10) * a.ST +
     (c.dx - 10) * a.DX +
     (c.iq - 10) * a.IQ +
@@ -59,10 +63,12 @@ export function attributePoints(c: CharacterRecord, rules: Ruleset = defaultRule
     c.will_delta * s.will +
     c.per_delta * s.per +
     c.fp_delta * s.fp +
-    Math.round(Number(c.speed_delta ?? 0) * s.speed) +
-    c.move_delta * s.move
-  );
+    Number(c.speed_delta ?? 0) * s.speed +
+    c.move_delta * s.move;
+  const rounded = total < 0 ? -Math.round(-total) : Math.round(total);
+  return rounded === 0 ? 0 : rounded;
 }
+
 
 /**
  * Basic damage moved to ./damage.ts and is now data-driven (CONFIGURABLE).

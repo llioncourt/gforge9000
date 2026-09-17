@@ -49,6 +49,8 @@ export interface RateOfFire {
   multiProjectile: boolean;
   /** Projectiles per shot when multiProjectile. */
   projectilesPerShot: number;
+  /** True for the trailing "!" marker (jet / continuous fire). Carried, not interpreted. */
+  jet: boolean;
 }
 
 /**
@@ -58,16 +60,22 @@ export interface RateOfFire {
 export function parseRoF(raw?: string | null): Parsed<RateOfFire> {
   const t = text(raw);
   if (!t) return unconfigured();
-  const m = /^(\d+)(?:\s*[x*]\s*(\d+))?\s*!?$/i.exec(t);
+  const m = /^(\d+)(?:\s*[x*]\s*(\d+))?\s*(!?)$/i.exec(t);
   if (!m) return unresolved(t);
   const shots = parseInt(m[1]!, 10);
   if (shots < 1) return unresolved(t);
   const projectiles = m[2] ? parseInt(m[2], 10) : 1;
   return resolved(
-    { shotsPerAttack: shots, multiProjectile: Boolean(m[2]), projectilesPerShot: projectiles },
+    {
+      shotsPerAttack: shots,
+      multiProjectile: Boolean(m[2]),
+      projectilesPerShot: projectiles,
+      jet: m[3] === "!",
+    },
     t,
   );
 }
+
 
 /** Recoil must be a positive integer to be usable in any calculation. */
 export function parseRecoil(raw?: string | null, rules: Ruleset = defaultRuleset): Parsed<number> {

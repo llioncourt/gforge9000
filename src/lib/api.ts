@@ -574,13 +574,17 @@ export async function deletePackContents(name: string) {
       const s = (e.source ?? {}) as Record<string, unknown>;
       return typeof s["pack"] === "string" && s["pack"].toLowerCase() === name.toLowerCase();
     });
-    for (const e of affected) {
+    // One statement per batch instead of one per row: the new source value is
+    // identical for every affected entry.
+    for (let i = 0; i < affected.length; i += 200) {
+      const chunk = affected.slice(i, i + 200).map((e) => e.id);
       const { error } = await supabase
         .from("character_entries")
         .update({ source: { type: "custom" } })
-        .eq("id", e.id);
+        .in("id", chunk);
       if (error) throw new Error(error.message);
     }
+
     for (const c of mine ?? []) {
       const packs = (c.packs ?? []) as string[];
       if (packs.some((p) => p.toLowerCase() === name.toLowerCase())) {

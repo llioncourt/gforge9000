@@ -49,13 +49,17 @@ export function computeEncumbrance(
     if (e.carried) carriedWeight += w;
   }
   const bl = Math.max(1, opts.basicLift);
+  // Basic Lift is fractional (ST 11 => 24.2), so a tier boundary must be
+  // compared with a tolerance or floating point can push a load up a tier.
+  const EPSILON = 1e-9;
   let level = rules.encumbrance.length - 1;
   for (let i = 0; i < rules.encumbrance.length; i++) {
-    if (carriedWeight <= bl * rules.encumbrance[i]!.multiplier) {
+    if (carriedWeight <= bl * rules.encumbrance[i]!.multiplier + EPSILON) {
       level = i;
       break;
     }
   }
+
   const tier = rules.encumbrance[level]!;
   return {
     carriedWeight: Math.round(carriedWeight * 100) / 100,

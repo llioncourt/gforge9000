@@ -515,6 +515,8 @@
         "spells": "Spells",
         "other": "Other"
       }
-    }
+    },
+    "deleteEntryTitle": "Remove this item?",
+    "deleteEntryDescription": "It will be taken off the sheet. You can add it again later."
   }
 }

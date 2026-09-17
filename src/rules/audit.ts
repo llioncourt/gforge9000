@@ -110,8 +110,19 @@ export const RULES_AUDIT: RuleAuditEntry[] = [
     title: "Techniques",
     status: "CONFIGURABLE",
     implementation: "src/rules/skills.ts:techniqueLevel",
-    notes: "Level = base skill + default penalty + levels bought; bought levels capped by the penalty. Costs from ruleset.technique.",
+    notes:
+      "Level = base skill + default penalty + levels bought; bought levels capped by the penalty. Costs from ruleset.technique. When an entry declares no default penalty the cap is unknown: the engine reports penaltyUnknown and does not invent a cap.",
   },
+  {
+    id: "traits.prerequisites",
+    area: "traits",
+    title: "Trait and skill prerequisites",
+    status: "MISSING",
+    implementation: "none — prerequisites are stored on entries and read by no rule",
+    notes:
+      "Prerequisite strings round-trip through storage and export but are never validated or enforced. The UI must not imply that a sheet is prerequisite-legal.",
+  },
+
   {
     id: "equip.encumbrance",
     area: "equipment",

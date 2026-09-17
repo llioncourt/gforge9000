@@ -20,6 +20,16 @@ export interface PointBreakdown {
   remaining: number;
 }
 
+/** Removes the `-0` that arithmetic on negative costs can produce. */
+function normalizeZero(value: number): number {
+  return value === 0 ? 0 : value;
+}
+
+/** Rounds .5 away from zero, so -7.5 -> -8 just as 7.5 -> 8. */
+function roundHalfAwayFromZero(value: number): number {
+  return value < 0 ? -Math.round(-value) : Math.round(value);
+}
+
 /** Applies enhancement/limitation percentages to a base cost. */
 export function modifiedCost(
   base: number,
@@ -29,10 +39,14 @@ export function modifiedCost(
   const percent = modifiers.reduce((sum, m) => sum + (Number(m.percent) || 0), 0);
   const clamped = Math.max(rules.modifierFloorPercent, percent);
   const raw = base * (1 + clamped / 100);
-  if (rules.modifierRounding === "up") return base < 0 ? Math.floor(raw) : Math.ceil(raw);
-  if (rules.modifierRounding === "down") return base < 0 ? Math.ceil(raw) : Math.floor(raw);
-  return Math.round(raw);
+  // "up"/"down" mean larger/smaller in magnitude, so they mirror for negatives.
+  if (rules.modifierRounding === "up")
+    return normalizeZero(base < 0 ? Math.floor(raw) : Math.ceil(raw));
+  if (rules.modifierRounding === "down")
+    return normalizeZero(base < 0 ? Math.ceil(raw) : Math.floor(raw));
+  return normalizeZero(roundHalfAwayFromZero(raw));
 }
+
 
 export function entryCost(entry: CharacterEntry, rules: Ruleset = defaultRuleset): number {
   const modifiers = (entry.data?.modifiers as TraitModifier[] | undefined) ?? [];

@@ -262,6 +262,8 @@ function CharacterPage() {
   const [conditionInput, setConditionInput] = useState("");
   const [saveError, setSaveError] = useState(false);
   const [pendingRestore, setPendingRestore] = useState<VersionRow | null>(null);
+  const [pendingEntryDelete, setPendingEntryDelete] = useState<string | null>(null);
+
   const dirty = useRef(false);
   const exportTask = useTransferTask();
   const printPortraitUrl = usePortraitUrl(form?.portrait_path ?? null);
@@ -786,7 +788,7 @@ function CharacterPage() {
                 onAdd={() => openNew(kind)}
                 onAddFromPack={() => setPickerKinds([kind])}
                 onEdit={openEdit}
-                onDelete={(eid) => removeEntry.mutate(eid)}
+                onDelete={(eid) => setPendingEntryDelete(eid)}
               />
             ))}
           </TabsContent>
@@ -916,7 +918,7 @@ function CharacterPage() {
                           <TableCell className="text-right">
                             <RowActions
                               onEdit={() => openEdit(entry)}
-                              onDelete={() => removeEntry.mutate(entry.id)}
+                              onDelete={() => setPendingEntryDelete(entry.id)}
                             />
                           </TableCell>
                         </TableRow>
@@ -1013,7 +1015,7 @@ function CharacterPage() {
                         <TableCell className="text-right">
                           <RowActions
                             onEdit={() => openEdit(e)}
-                            onDelete={() => removeEntry.mutate(e.id)}
+                            onDelete={() => setPendingEntryDelete(e.id)}
                           />
                         </TableCell>
                       </TableRow>
@@ -1161,7 +1163,7 @@ function CharacterPage() {
                         <p className="font-medium">{e.name}</p>
                         <RowActions
                           onEdit={() => openEdit(e)}
-                          onDelete={() => removeEntry.mutate(e.id)}
+                          onDelete={() => setPendingEntryDelete(e.id)}
                         />
                       </div>
                       <div className="mt-3 space-y-2">
@@ -1292,6 +1294,32 @@ function CharacterPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <AlertDialog
+          open={!!pendingEntryDelete}
+          onOpenChange={(v) => !v && setPendingEntryDelete(null)}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("sheet.deleteEntryTitle")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("sheet.deleteEntryDescription")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (pendingEntryDelete) removeEntry.mutate(pendingEntryDelete);
+                  setPendingEntryDelete(null);
+                }}
+              >
+                {tc("actions.delete")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
 
         <EntryDialog
           open={dialogOpen}

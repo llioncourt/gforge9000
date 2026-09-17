@@ -515,6 +515,8 @@
         "spells": "Magias",
         "other": "Outro"
       }
-    }
+    },
+    "deleteEntryTitle": "Remover este item?",
+    "deleteEntryDescription": "Ele sairá da ficha. Você pode adicioná-lo de novo depois."
   }
 }

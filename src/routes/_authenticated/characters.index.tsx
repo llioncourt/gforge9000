@@ -119,25 +119,33 @@ function CharactersPage() {
     const { id: _ignored, ...character } = parsed.character;
     report(t("list.import.creatingCharacter"), 15);
     const row = await createCharacter(character as never);
-    report(t("list.import.matchingTraits"), 25);
-    // Reconcile trait names against enabled content before saving them.
-    const { entries } = await reconcileImportedEntries(
-      parsed.entries as unknown as ImportedEntry[],
-    );
-    let done = 0;
-    for (const entry of entries) {
-      await addEntry({ ...entry, character_id: row.id, data: entry.data ?? {} } as never);
-      done += 1;
-      report(
-        t("list.import.importingEntries", { done, total: entries.length }),
-        30 + Math.round((done / Math.max(1, entries.length)) * 65),
+    try {
+      report(t("list.import.matchingTraits"), 25);
+      // Reconcile trait names against enabled content before saving them.
+      const { entries } = await reconcileImportedEntries(
+        parsed.entries as unknown as ImportedEntry[],
       );
+      let done = 0;
+      for (const entry of entries) {
+        await addEntry({ ...entry, character_id: row.id, data: entry.data ?? {} } as never);
+        done += 1;
+        report(
+          t("list.import.importingEntries", { done, total: entries.length }),
+          30 + Math.round((done / Math.max(1, entries.length)) * 65),
+        );
+      }
+      await queryClient.invalidateQueries({ queryKey: ["characters"] });
+      setImportOpen(false);
+      navigate({ to: "/characters/$id", params: { id: row.id } });
+      return t("list.import.success", { name: row.name, count: entries.length });
+    } catch (error) {
+      // Never leave a half-imported character behind.
+      await deleteCharacter(row.id).catch(() => undefined);
+      await queryClient.invalidateQueries({ queryKey: ["characters"] });
+      throw error;
     }
-    await queryClient.invalidateQueries({ queryKey: ["characters"] });
-    setImportOpen(false);
-    navigate({ to: "/characters/$id", params: { id: row.id } });
-    return t("list.import.success", { name: row.name, count: entries.length });
   };
+
 
   const rows = (data ?? []).filter((c) =>
     `${c.name} ${c.concept ?? ""}`.toLowerCase().includes(search.toLowerCase()),

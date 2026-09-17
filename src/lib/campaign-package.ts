@@ -25,6 +25,8 @@ const settingsSchema = z
     tech_level: z.number().int().min(0).max(20).optional(),
     house_rules: text(20000).optional(),
     allowed_sources: z.array(text(80)).max(50).optional(),
+    allowed_packs: z.array(text(120)).max(200).optional(),
+
   })
   .strict();
 

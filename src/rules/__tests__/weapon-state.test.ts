@@ -74,6 +74,8 @@ describe("audit after persistence", () => {
     const entry = AUDIT.find((e) => e.id === "combat.ammo-persistence");
     expect(entry?.status).toBe("CONFIGURABLE");
     expect(AUDIT.filter((e) => e.status === "APPROXIMATION")).toHaveLength(0);
-    expect(AUDIT.filter((e) => e.status === "MISSING")).toHaveLength(0);
+    expect(AUDIT.filter((e) => e.status === "MISSING").map((e) => e.id)).toEqual([
+      "traits.prerequisites",
+    ]);
   });
 });

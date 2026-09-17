@@ -1333,7 +1333,7 @@ function EntryGroup({
           {onAddFromPack ? (
             <PlusButton label={`Add ${kind}s from packs`} onClick={onAddFromPack} />
           ) : null}
-          <PlusButton label={`Create a custom ${kind}`} variant="ghost" onClick={onAdd} />
+          <PlusButton label={`Create a custom ${kind}`} variant="outline" onClick={onAdd} />
         </div>
       </div>
       {entries.length === 0 ? (

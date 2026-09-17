@@ -211,5 +211,13 @@
     "descriptionPlayer": "Suas rolagens nesta campanha, mais recentes primeiro.",
     "empty": "Nenhuma rolagem ainda.",
     "vsTarget": "vs {{target}}"
+  },
+  "nav": {
+    "play": "Jogar",
+    "world": "Mundo",
+    "story": "História",
+    "cast": "Elenco",
+    "settings": "Ajustes",
+    "menu": "Menu"
   }
 }

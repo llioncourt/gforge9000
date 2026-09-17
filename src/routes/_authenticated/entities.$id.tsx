@@ -209,9 +209,29 @@ function EntityPage() {
   const backTab = entity.data?.kind === "EVENT" ? "timeline" : "lore";
 
   const [form, setForm] = useState<EntityRow | null>(null);
+  // The last copy that came from the server; used to tell edits apart from refreshes.
+  const baseline = useRef<EntityRow | null>(null);
+  const [staleWarning, setStaleWarning] = useState(false);
   useEffect(() => {
-    if (entity.data) setForm(entity.data);
+    const incoming = entity.data ?? null;
+    const decision = decideSync(baseline.current, form, incoming);
+    if (decision === "apply" && incoming) {
+      baseline.current = incoming;
+      setForm(incoming);
+      setStaleWarning(false);
+    } else if (decision === "keep-local") {
+      setStaleWarning(true);
+    }
+    // form is intentionally read, not tracked: this runs on server refreshes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entity.data]);
+
+  const takeServerVersion = () => {
+    if (!entity.data) return;
+    baseline.current = entity.data;
+    setForm(entity.data);
+    setStaleWarning(false);
+  };
 
   const revisions = useQuery({
     queryKey: ["lore-revisions", id],

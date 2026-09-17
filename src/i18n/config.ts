@@ -42,7 +42,7 @@ export const PSEUDO_LOCALE = "en-XA";
  * the server and the client always agree (no hydration mismatch).
  */
 export function pseudoEnabled(): boolean {
-  return import.meta.env?.DEV === true && import.meta.env?.VITE_PSEUDO === "1";
+  return import.meta.env?.DEV === true && import.meta.env?.["VITE_PSEUDO"] === "1";
 }
 
 export const LOCALES: readonly LocaleDefinition[] = [

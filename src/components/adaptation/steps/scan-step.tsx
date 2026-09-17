@@ -155,13 +155,13 @@ export function ScanStep({ project, patch }: StepProps) {
               {openChange.impact.length ? (
                 <ul className="space-y-1 text-sm">
                   {openChange.impact.map((entry) => (
-                    <li key={entry.id} className="flex items-center gap-2">
-                      <span>{entry.label}</span>
-                      {entry.manually_edited ? (
-                        <Badge variant="outline" className="text-[10px]">
-                          {t("scan.conflictsTitle")}
-                        </Badge>
-                      ) : null}
+                    <li key={entry.source_key} className="flex items-center gap-2">
+                      <span>
+                        {sourceLabels.get(entry.source_key) ?? entry.source_key}
+                      </span>
+                      <Badge variant="outline" className="text-[10px]">
+                        {entry.scene_keys.length}
+                      </Badge>
                     </li>
                   ))}
                 </ul>

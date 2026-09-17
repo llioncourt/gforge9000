@@ -31,7 +31,7 @@ const STAGE_PROMPTS: Record<AiStage, string> = {
   digest:
     "Summarise the source records below into a short digest: what the story is about, the live threads, and what is still unanswered.",
   facts:
-    "Extract discrete, checkable facts from the source records. One statement per fact. Tag provenance_type as campaign_canon when a campaign record states it outright, session_derived when it comes from a played session, and ai_inference when you are inferring it. Set confidence honestly.",
+    "Extract discrete, checkable facts from the source records. One statement per fact. Return at most 40 facts, choosing the most significant ones. Tag provenance_type as campaign_canon when a campaign record states it outright, session_derived when it comes from a played session, and ai_inference when you are inferring it. Set confidence honestly.",
   conflicts:
     "Find statements in the material below that contradict one another. Report each conflict with the statements involved and the sources behind them. Do not resolve them.",
   chronology:

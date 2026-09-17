@@ -726,7 +726,9 @@
     },
     "unknownEntity": "Desconhecido",
     "defaultCampaignName": "Campanha",
-    "headerDescription": "{{kind}} · {{campaign}}"
+    "headerDescription": "{{kind}} · {{campaign}}",
+    "staleNotice": "Outra pessoa alterou esta entrada. Suas edições continuam aqui e não foram substituídas.",
+    "staleDiscard": "Carregar a versão dela"
   },
   "storyPanel": {
     "collapseAria": "Recolher",

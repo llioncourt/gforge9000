@@ -726,7 +726,9 @@
     },
     "unknownEntity": "Unknown",
     "defaultCampaignName": "Campaign",
-    "headerDescription": "{{kind}} · {{campaign}}"
+    "headerDescription": "{{kind}} · {{campaign}}",
+    "staleNotice": "Someone else changed this entry. Your edits are still here and were not replaced.",
+    "staleDiscard": "Load their version"
   },
   "storyPanel": {
     "collapseAria": "Collapse",

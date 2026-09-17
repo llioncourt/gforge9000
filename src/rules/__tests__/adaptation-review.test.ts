@@ -32,3 +32,20 @@ describe("adaptation review selection", () => {
     expect(acceptableSelection(facts, ["a", "a", "b", "c", "zz"])).toEqual(["a"]);
   });
 });
+
+describe("editor refresh safety", () => {
+  it("applies a server refresh when nothing was typed", async () => {
+    const { decideSync } = await import("@/lib/form-sync");
+    expect(decideSync({ name: "A" }, { name: "A" }, { name: "B" })).toBe("apply");
+  });
+
+  it("keeps unsaved edits when the server moved on", async () => {
+    const { decideSync } = await import("@/lib/form-sync");
+    expect(decideSync({ name: "A" }, { name: "local" }, { name: "B" })).toBe("keep-local");
+  });
+
+  it("does nothing when the refresh carries no change", async () => {
+    const { decideSync } = await import("@/lib/form-sync");
+    expect(decideSync({ name: "A" }, { name: "local" }, { name: "A" })).toBe("noop");
+  });
+});

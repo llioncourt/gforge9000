@@ -14,7 +14,33 @@ import { allowedBySpoilerPolicy } from "@/lib/adaptation/spoilers";
  * server function.
  */
 
-export const DEFAULT_CHUNK_CHARS = 60_000;
+/**
+ * Small batches on purpose: one oversized batch keeps a single request open for
+ * many minutes, which reads as a run that never ends. Several small batches run
+ * side by side instead.
+ */
+export const DEFAULT_CHUNK_CHARS = 12_000;
+
+/** How many batches are sent at the same time. */
+export const CHUNK_CONCURRENCY = 3;
+
+/** Runs tasks with a bounded number in flight, preserving result order. */
+async function mapWithLimit<T, R>(
+  items: T[],
+  limit: number,
+  task: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor++;
+      results[index] = await task(items[index] as T, index);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
 
 export interface ContextChunk {
   index: number;

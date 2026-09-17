@@ -393,7 +393,7 @@ function EntityPage() {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+                    <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
                     <AlertDialogAction onClick={() => remove.mutate()}>
                       {t("entityPage.deleteDialog.confirm")}
                     </AlertDialogAction>
@@ -884,7 +884,7 @@ function EntityPage() {
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+                            <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
                             <AlertDialogAction onClick={() => restore.mutate(snapshot)}>
                               {t("entityPage.history.restore")}
                             </AlertDialogAction>

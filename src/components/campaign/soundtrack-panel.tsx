@@ -233,7 +233,7 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
       if (!coverEntry) throw new Error(t("soundtrack.errors.missingCover", { path: manifest.album.cover }));
       if (coverEntry.length > MAX_SOUNDTRACK_COVER_BYTES)
         throw new Error(t("soundtrack.errors.coverTooLarge"));
-      const cover = await coverToAvifBytes(manifest.album.cover, coverEntry, t);
+      const cover = await coverToAvifBytes(manifest.album.cover, coverEntry, t as Translate);
       const tracks = manifest.tracks.map((meta) => {
         const bytes = pick(meta.file);
         if (!bytes) throw new Error(t("soundtrack.errors.missingTrack", { file: meta.file }));
@@ -296,7 +296,7 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => void copySoundtrackPrompt(t)}
+              onClick={() => void copySoundtrackPrompt(t as Translate)}
             >
               <Sparkles className="mr-2 h-4 w-4" />
               {t("soundtrack.import.copyPrompt")}

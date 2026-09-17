@@ -61,6 +61,7 @@ const ScrollableTabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
 >(({ className, children, ...props }, ref) => {
+  const { t } = useT("common");
   const listRef = React.useRef<HTMLDivElement | null>(null);
   const [canLeft, setCanLeft] = React.useState(false);
   const [canRight, setCanRight] = React.useState(false);

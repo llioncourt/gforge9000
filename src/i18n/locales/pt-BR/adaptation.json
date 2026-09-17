@@ -1,0 +1,370 @@
+{
+  "tab": "Adaptar",
+  "panel": {
+    "title": "Estúdio de Adaptação de Campanha",
+    "subtitle": "Transforme esta campanha em um pacote de quadrinhos ou filme, sem alterar o que realmente aconteceu na mesa até você decidir.",
+    "empty": "Ainda não há adaptações. Crie uma para começar o assistente.",
+    "newButton": "Nova adaptação",
+    "openButton": "Abrir",
+    "renameButton": "Renomear",
+    "deleteButton": "Excluir",
+    "createDialog": {
+      "title": "Nomeie esta adaptação",
+      "nameLabel": "Nome da adaptação",
+      "namePlaceholder": "ex.: As Crônicas das Cinzas — Edição 1",
+      "submit": "Criar"
+    },
+    "renameDialog": {
+      "title": "Renomear adaptação",
+      "nameLabel": "Nome da adaptação",
+      "submit": "Salvar"
+    },
+    "deleteDialog": {
+      "title": "Excluir esta adaptação?",
+      "description": "\"{{name}}\" e tudo revisado dentro dela serão removidos. A campanha em si nunca é afetada.",
+      "confirm": "Excluir"
+    },
+    "status": {
+      "draft": "Rascunho",
+      "scanning": "Escaneando",
+      "reconstructing": "Reconstruindo",
+      "reviewing": "Em revisão",
+      "ready": "Pronta",
+      "generated": "Gerada",
+      "archived": "Arquivada"
+    },
+    "updated": "Atualizada {{when}}",
+    "toasts": {
+      "created": "Adaptação criada.",
+      "renamed": "Adaptação renomeada.",
+      "deleted": "Adaptação excluída."
+    }
+  },
+  "wizard": {
+    "backToList": "Voltar às adaptações",
+    "stepOf": "Etapa {{current}} de {{total}}",
+    "next": "Avançar",
+    "back": "Voltar",
+    "saveAndClose": "Salvar e fechar",
+    "saved": "Progresso salvo.",
+    "steps": {
+      "source": "Origem",
+      "scope": "Escopo",
+      "scan": "Escaneamento",
+      "reconstruction": "Reconstrução",
+      "timeline": "Linha do tempo",
+      "canon": "Revisão de cânone",
+      "assets": "Recursos",
+      "narrative": "Narrativa",
+      "comic": "Quadrinho",
+      "movie": "Filme",
+      "validation": "Validação",
+      "generate": "Gerar"
+    },
+    "failuresTitle": "Algumas etapas não terminaram",
+    "retryStage": "Repetir esta etapa",
+    "targetsLabel": "Produzindo:",
+    "targetComic": "Quadrinho",
+    "targetMovie": "Filme"
+  },
+  "source": {
+    "title": "Escolha o material de origem",
+    "description": "Escolha como esta adaptação deve ler a campanha: o que realmente foi jogado na mesa, o que foi planejado pelo mestre, ou ambos.",
+    "modeLabel": "Modo de origem",
+    "modes": {
+      "planned": "Material planejado — preparação do mestre, roteiros e lore como escritos",
+      "played": "Material jogado — apenas crônicas de sessão e recapitulações",
+      "mixed": "Misto — material planejado complementado pelo que realmente foi jogado"
+    },
+    "targetsLabel": "O que esta adaptação deve produzir?",
+    "targetComic": "Quadrinho",
+    "targetMovie": "Pacote de filme / animação"
+  },
+  "scope": {
+    "title": "Escopo e política de spoilers",
+    "description": "Decida de qual parte da campanha extrair e quanto dos segredos do mestre deve passar.",
+    "scopeLabel": "O que incluir",
+    "scopeModes": {
+      "whole": "A campanha inteira",
+      "branch": "Um ramo da história",
+      "entities": "Entradas de lore específicas",
+      "sessions": "Um intervalo de sessões ou crônicas específicas"
+    },
+    "branchLabel": "Entradas raiz",
+    "branchHint": "Todo descendente das entradas escolhidas é incluído.",
+    "entitiesLabel": "Entradas a incluir",
+    "sessionRangeLabel": "Intervalo de sessões",
+    "sessionFrom": "Da sessão",
+    "sessionTo": "Até a sessão",
+    "chroniclesLabel": "Ou escolha crônicas específicas",
+    "spoilerLabel": "Política de spoilers",
+    "spoilerPolicies": {
+      "revealed_only": "Apenas revelado — nada que os jogadores ainda não saibam",
+      "include_gm_truth": "Incluir verdade do mestre — todo segredo, para uma adaptação estendida",
+      "custom": "Personalizado — decidir item a item durante a revisão de cânone"
+    },
+    "includeLabel": "Também incluir",
+    "includeCharacters": "Personagens dos jogadores",
+    "includeAssets": "Imagens e arquivos enviados",
+    "includeMaps": "Mapas de batalha",
+    "includeMedia": "Vídeo, trilha sonora e efeitos sonoros",
+    "noEntities": "Esta campanha ainda não tem entradas de lore.",
+    "noChronicles": "Nenhuma crônica de sessão registrada ainda."
+  },
+  "scan": {
+    "title": "Escanear a campanha",
+    "description": "Lê o estado atual do escopo selecionado e compara com o último escaneamento, para que nada já revisado seja sobrescrito silenciosamente.",
+    "scanButton": "Escanear agora",
+    "rescanButton": "Escanear novamente",
+    "scanning": "Escaneando…",
+    "noSnapshotYet": "Esta adaptação ainda não foi escaneada.",
+    "lastScan": "Último escaneamento: {{when}}",
+    "statsTitle": "O que foi encontrado",
+    "diffTitle": "Alterações desde o último escaneamento",
+    "added": "Adicionado",
+    "changed": "Alterado",
+    "removed": "Removido",
+    "unchanged": "Inalterado",
+    "noDiff": "Nada mudou desde o último escaneamento.",
+    "impactTitle": "Cenas afetadas",
+    "impactNone": "Nenhuma cena adaptada é afetada.",
+    "conflictsTitle": "Cenas editadas manualmente",
+    "conflictsDescription": "Estas cenas foram alteradas manualmente nesta adaptação. Repetir o escaneamento nunca as sobrescreverá automaticamente — revise cada uma.",
+    "applyChanges": "Aplicar alterações aceitas",
+    "acceptAll": "Aceitar tudo",
+    "dismiss": "Dispensar sem aplicar",
+    "toasts": {
+      "scanned": "Escaneamento concluído.",
+      "applied": "Alterações aplicadas."
+    }
+  },
+  "reconstruction": {
+    "title": "Reconstruir fatos e cenas",
+    "description": "Processa o material da campanha para rascunhar fatos e cenas para revisão. Nada aqui altera o cânone da campanha até você aceitar.",
+    "instructionsLabel": "Instruções extras para esta execução (opcional)",
+    "instructionsPlaceholder": "ex.: Foque no arco do porto, mantenha o tom noir.",
+    "runButton": "Executar reconstrução",
+    "running": "Reconstruindo…",
+    "noRunYet": "A reconstrução ainda não foi executada.",
+    "resultsTitle": "Resultados do rascunho",
+    "factsFound": "{{count}} fatos rascunhados",
+    "scenesFound": "{{count}} cenas rascunhadas",
+    "failuresTitle": "Etapas que falharam",
+    "retryFailed": "Repetir etapas com falha",
+    "toasts": {
+      "done": "Reconstrução concluída.",
+      "saved": "Fatos e cenas rascunhados salvos."
+    }
+  },
+  "timeline": {
+    "title": "Linha do tempo e cronologia",
+    "description": "Revise a ordem reconstruída dos eventos. Fatos conflitantes são agrupados para você escolher qual versão pertence a esta adaptação.",
+    "sequence": "Sequência",
+    "conflictsTitle": "Fatos conflitantes",
+    "conflictsDescription": "Estes fatos se contradizem. Resolva-os aqui ou na revisão de cânone.",
+    "noConflicts": "Nenhum conflito detectado.",
+    "sceneList": "Cenas adaptadas em ordem",
+    "noScenes": "Nenhuma cena reconstruída ainda.",
+    "moveUp": "Mover para cima",
+    "moveDown": "Mover para baixo"
+  },
+  "canon": {
+    "title": "Revisão de cânone",
+    "description": "Todo fato começa como pendente de revisão. Aceitar um fato afeta apenas esta adaptação — aplicá-lo ao cânone da campanha é uma etapa separada e deliberada.",
+    "filters": {
+      "all": "Todos",
+      "confirmed": "Cânone confirmado",
+      "session_derived": "Derivados de sessão",
+      "ai_inference": "Inferências da IA",
+      "adaptation_created": "Somente da adaptação",
+      "conflict": "Conflitos",
+      "missingVisuals": "Sem referência visual"
+    },
+    "counts": {
+      "confirmed": "Confirmados",
+      "needsReview": "Pendentes de revisão",
+      "rejected": "Rejeitados",
+      "conflicts": "Conflitos",
+      "missingVisuals": "Sem referência visual"
+    },
+    "sourcesLabel": "Fontes",
+    "accept": "Aceitar",
+    "reject": "Rejeitar",
+    "edit": "Editar",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "applyToCanon": "Aplicar ao cânone da campanha",
+    "applyDialog": {
+      "title": "Aplicar este fato ao cânone da campanha?",
+      "description": "Isso atualizará a descrição de \"{{name}}\" na própria campanha. Todo jogador e mestre verá esta mudança, não apenas esta adaptação.",
+      "confirm": "Aplicar à campanha"
+    },
+    "empty": "Nenhum fato corresponde a este filtro.",
+    "confidence": "Confiança {{value}}%",
+    "noSubject": "Sem entrada vinculada",
+    "toasts": {
+      "reviewed": "Fato atualizado.",
+      "applied": "Aplicado ao cânone da campanha."
+    }
+  },
+  "assets": {
+    "title": "Recursos",
+    "description": "Associe imagens e arquivos enviados aos personagens, locais e objetos que aparecerão na adaptação.",
+    "resolveButton": "Resolver recursos",
+    "resolving": "Resolvendo…",
+    "counts": {
+      "resolved": "Resolvidos",
+      "unresolved": "Não resolvidos",
+      "ambiguous": "Ambíguos",
+      "missingVisuals": "Sem referência visual"
+    },
+    "roleLabel": "Papel",
+    "entityLabel": "Entrada vinculada",
+    "unlinked": "Não vinculado",
+    "markCanonical": "Marcar como canônico",
+    "confirm": "Confirmar",
+    "reject": "Rejeitar",
+    "noneYet": "Nenhum recurso resolvido ainda.",
+    "missingVisualsTitle": "Entradas sem referência visual",
+    "toasts": {
+      "resolved": "Recursos resolvidos.",
+      "updated": "Recurso atualizado."
+    }
+  },
+  "narrative": {
+    "title": "Configurações narrativas",
+    "description": "Defina o tom geral da adaptação antes de gerar as projeções de quadrinho ou filme.",
+    "toneLabel": "Tom",
+    "tonePlaceholder": "ex.: Sombrio, esperançoso, cômico",
+    "povLabel": "Ponto de vista",
+    "povPlaceholder": "ex.: Terceira pessoa, o grupo como conjunto",
+    "audienceLabel": "Público",
+    "audiencePlaceholder": "ex.: Jovem adulto, maduro",
+    "maxScenesLabel": "Máximo de cenas",
+    "maxScenesHint": "Deixe em branco para manter todas as cenas reconstruídas."
+  },
+  "comic": {
+    "title": "Configurações do quadrinho",
+    "description": "Configure a projeção de quadrinho que será exportada para a RX Comics.",
+    "seriesTitleLabel": "Título da série",
+    "seriesSubtitleLabel": "Subtítulo da série",
+    "issueNumberLabel": "Número da edição",
+    "issueTitleLabel": "Título da edição",
+    "pageTargetLabel": "Meta de páginas",
+    "pageTargetHint": "Deixe em branco para deixar a história decidir o número de páginas.",
+    "densityLabel": "Densidade de quadros",
+    "densities": {
+      "sparse": "Esparsa — quadros maiores e em menor número",
+      "standard": "Padrão",
+      "dense": "Densa — mais quadros por página"
+    },
+    "genreLabel": "Tags de gênero",
+    "genreHint": "Separadas por vírgula.",
+    "artDirectionLabel": "Direção de arte",
+    "artDirectionPlaceholder": "ex.: Traços pintados, noir de alto contraste"
+  },
+  "movie": {
+    "title": "Configurações do filme",
+    "description": "Configure a projeção de filme que será exportada para o MovieSmith.",
+    "titleLabel": "Título",
+    "loglineLabel": "Logline",
+    "runtimeLabel": "Duração alvo (minutos)",
+    "aspectRatioLabel": "Proporção de tela",
+    "languageLabel": "Idioma"
+  },
+  "validation": {
+    "title": "Validação",
+    "description": "Revise estes pontos antes de gerar. Nada aqui bloqueia a exportação, mas problemas não resolvidos costumam gerar um resultado mais fraco.",
+    "noProblems": "Nenhum problema encontrado.",
+    "problemsTitle": "Problemas encontrados",
+    "checks": {
+      "noScenes": "Nenhuma cena foi reconstruída ainda.",
+      "unresolvedFacts": "{{count}} fato(s) ainda precisam de revisão.",
+      "conflicts": "{{count}} conflito(s) não resolvido(s).",
+      "missingVisuals": "{{count}} entrada(s) sem referência visual.",
+      "unresolvedAssets": "{{count}} recurso(s) ainda não resolvido(s) ou ambíguo(s).",
+      "noComicConfig": "As configurações do quadrinho estão incompletas.",
+      "noMovieConfig": "As configurações do filme estão incompletas."
+    }
+  },
+  "generate": {
+    "title": "Gerar",
+    "description": "Exporte a adaptação como um pacote. Cada exportação baixa um arquivo ZIP pronto para entrega.",
+    "bundleTitle": "Pacote completo da adaptação",
+    "bundleDescription": "Tudo: fatos, cenas, recursos e cada projeção configurada.",
+    "bundleButton": "Exportar pacote completo",
+    "comicTitle": "Projeção de quadrinho",
+    "comicDescription": "Apenas o que a RX Comics precisa para montar a edição.",
+    "comicButton": "Exportar pacote de quadrinho",
+    "movieTitle": "Projeção de filme",
+    "movieDescription": "Apenas o que o MovieSmith precisa para montar o filme.",
+    "movieButton": "Exportar pacote de filme",
+    "problemsWarning": "Esta adaptação ainda tem problemas de validação. Você pode exportar mesmo assim.",
+    "exporting": "Preparando exportação…",
+    "toasts": {
+      "exported": "Pacote pronto."
+    }
+  },
+  "chronicle": {
+    "viewToggle": {
+      "sessions": "Sessões",
+      "chronicle": "Crônica"
+    },
+    "intro": "Registre sessões em profundidade: cole ou importe uma transcrição, deixe a reconstrução rascunhar descobertas e revise cada uma antes que chegue ao cânone da campanha.",
+    "newButton": "Nova crônica",
+    "titleLabel": "Título",
+    "sessionNoLabel": "Número da sessão",
+    "playedOnLabel": "Jogada em",
+    "deleteDialog": {
+      "title": "Excluir esta crônica?",
+      "description": "\"{{title}}\" e tudo revisado dentro dela serão removidos.",
+      "confirm": "Excluir"
+    },
+    "linkedPrep": "Nota de preparação vinculada",
+    "linkedRecap": "Nota de recapitulação vinculada",
+    "noLink": "Não vinculada",
+    "rawNotesLabel": "Notas brutas",
+    "rawNotesPlaceholder": "Notas livres feitas durante ou após a sessão.",
+    "transcriptLabel": "Transcrição",
+    "transcriptPlaceholder": "Cole a transcrição da sessão aqui.",
+    "transcriptImport": "Importar arquivo de transcrição",
+    "transcriptImportHint": ".txt, .md ou .json",
+    "materialsLabel": "Materiais da sessão",
+    "materialsImport": "Adicionar arquivo",
+    "materialsEmpty": "Nenhum material anexado ainda.",
+    "draftTitle": "Rascunho de reconstrução por IA",
+    "draftDescription": "Execute a reconstrução sobre a transcrição e as notas acima para rascunhar descobertas abaixo.",
+    "runButton": "Executar reconstrução",
+    "running": "Reconstruindo…",
+    "save": "Salvar",
+    "saved": "Salvo.",
+    "itemTypes": {
+      "actual_event": "Eventos reais",
+      "character_action": "Ações de personagens",
+      "discovery": "Descobertas",
+      "dialogue_highlight": "Destaques de diálogo",
+      "consequence": "Consequências",
+      "canon_change": "Mudanças de cânone",
+      "ai_reconstruction": "Reconstrução por IA"
+    },
+    "reviewStatus": {
+      "confirmed": "Confirmado",
+      "needs_review": "Pendente de revisão",
+      "rejected": "Rejeitado"
+    },
+    "accept": "Aceitar",
+    "reject": "Rejeitar",
+    "edit": "Editar",
+    "noItems": "Nada por aqui ainda.",
+    "approvedRecapLabel": "Recapitulação aprovada",
+    "approvedRecapPlaceholder": "A recapitulação final quando estiver satisfeito — é o que os jogadores veem.",
+    "approvedRecapHint": "Só o que você aprovar aqui chega à recapitulação vista pelos jogadores; o rascunho da reconstrução nunca é publicado sozinho.",
+    "toasts": {
+      "created": "Crônica criada.",
+      "deleted": "Crônica excluída.",
+      "updated": "Crônica atualizada.",
+      "reconstructed": "Descobertas do rascunho prontas para revisão.",
+      "itemUpdated": "Item atualizado."
+    }
+  }
+}

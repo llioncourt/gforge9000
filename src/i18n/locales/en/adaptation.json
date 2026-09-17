@@ -1,0 +1,370 @@
+{
+  "tab": "Adapt",
+  "panel": {
+    "title": "Campaign Adaptation Studio",
+    "subtitle": "Turn this campaign into a comic or movie package, without touching what actually happened at the table until you say so.",
+    "empty": "No adaptations yet. Start one to begin the wizard.",
+    "newButton": "New adaptation",
+    "openButton": "Open",
+    "renameButton": "Rename",
+    "deleteButton": "Delete",
+    "createDialog": {
+      "title": "Name this adaptation",
+      "nameLabel": "Adaptation name",
+      "namePlaceholder": "e.g. The Ashfall Chronicles — Issue 1",
+      "submit": "Create"
+    },
+    "renameDialog": {
+      "title": "Rename adaptation",
+      "nameLabel": "Adaptation name",
+      "submit": "Save"
+    },
+    "deleteDialog": {
+      "title": "Delete this adaptation?",
+      "description": "\"{{name}}\" and everything reviewed inside it will be removed. The campaign itself is never affected.",
+      "confirm": "Delete"
+    },
+    "status": {
+      "draft": "Draft",
+      "scanning": "Scanning",
+      "reconstructing": "Reconstructing",
+      "reviewing": "In review",
+      "ready": "Ready",
+      "generated": "Generated",
+      "archived": "Archived"
+    },
+    "updated": "Updated {{when}}",
+    "toasts": {
+      "created": "Adaptation created.",
+      "renamed": "Adaptation renamed.",
+      "deleted": "Adaptation deleted."
+    }
+  },
+  "wizard": {
+    "backToList": "Back to adaptations",
+    "stepOf": "Step {{current}} of {{total}}",
+    "next": "Next",
+    "back": "Back",
+    "saveAndClose": "Save and close",
+    "saved": "Progress saved.",
+    "steps": {
+      "source": "Source",
+      "scope": "Scope",
+      "scan": "Scan",
+      "reconstruction": "Reconstruction",
+      "timeline": "Timeline",
+      "canon": "Canon review",
+      "assets": "Assets",
+      "narrative": "Narrative",
+      "comic": "Comic",
+      "movie": "Movie",
+      "validation": "Validation",
+      "generate": "Generate"
+    },
+    "failuresTitle": "Some steps didn't complete",
+    "retryStage": "Retry this stage",
+    "targetsLabel": "Producing:",
+    "targetComic": "Comic",
+    "targetMovie": "Movie"
+  },
+  "source": {
+    "title": "Choose your source material",
+    "description": "Pick how this adaptation should read the campaign: what was actually played at the table, what was planned by the GM, or both.",
+    "modeLabel": "Source mode",
+    "modes": {
+      "planned": "Planned material — GM prep, outlines and lore as written",
+      "played": "Played material — session chronicles and recaps only",
+      "mixed": "Mixed — planned material filled in with what was actually played"
+    },
+    "targetsLabel": "What should this adaptation produce?",
+    "targetComic": "Comic book",
+    "targetMovie": "Movie / animation package"
+  },
+  "scope": {
+    "title": "Scope and spoiler policy",
+    "description": "Decide which part of the campaign to pull from and how much of the GM's secrets should be allowed through.",
+    "scopeLabel": "What to include",
+    "scopeModes": {
+      "whole": "The whole campaign",
+      "branch": "A story branch",
+      "entities": "Specific lore entries",
+      "sessions": "A session range or specific chronicles"
+    },
+    "branchLabel": "Root entries",
+    "branchHint": "Every descendant of the entries you pick is included.",
+    "entitiesLabel": "Entries to include",
+    "sessionRangeLabel": "Session range",
+    "sessionFrom": "From session",
+    "sessionTo": "To session",
+    "chroniclesLabel": "Or pick specific chronicles",
+    "spoilerLabel": "Spoiler policy",
+    "spoilerPolicies": {
+      "revealed_only": "Revealed only — nothing the players haven't already learned",
+      "include_gm_truth": "Include GM truth — every secret, for a director's-cut adaptation",
+      "custom": "Custom — decide item by item during canon review"
+    },
+    "includeLabel": "Also include",
+    "includeCharacters": "Player characters",
+    "includeAssets": "Uploaded images and files",
+    "includeMaps": "Battle maps",
+    "includeMedia": "Video, soundtrack and sound effects",
+    "noEntities": "This campaign has no lore entries yet.",
+    "noChronicles": "No session chronicles recorded yet."
+  },
+  "scan": {
+    "title": "Scan the campaign",
+    "description": "Reads the current state of the selected scope and compares it against the last scan, so nothing you've already reviewed is silently overwritten.",
+    "scanButton": "Scan now",
+    "rescanButton": "Scan again",
+    "scanning": "Scanning…",
+    "noSnapshotYet": "This adaptation hasn't been scanned yet.",
+    "lastScan": "Last scan: {{when}}",
+    "statsTitle": "What was found",
+    "diffTitle": "Changes since the last scan",
+    "added": "Added",
+    "changed": "Changed",
+    "removed": "Removed",
+    "unchanged": "Unchanged",
+    "noDiff": "Nothing changed since the last scan.",
+    "impactTitle": "Affected scenes",
+    "impactNone": "No adapted scenes are affected.",
+    "conflictsTitle": "Scenes you edited by hand",
+    "conflictsDescription": "These scenes were changed manually in this adaptation. Re-running the scan will never overwrite them automatically — review each one yourself.",
+    "applyChanges": "Apply accepted changes",
+    "acceptAll": "Accept all",
+    "dismiss": "Dismiss without applying",
+    "toasts": {
+      "scanned": "Scan complete.",
+      "applied": "Changes applied."
+    }
+  },
+  "reconstruction": {
+    "title": "Reconstruct facts and scenes",
+    "description": "Runs the campaign material through reconstruction to draft facts and scenes for review. Nothing here touches campaign canon until you accept it.",
+    "instructionsLabel": "Extra instructions for this run (optional)",
+    "instructionsPlaceholder": "e.g. Focus on the harbor arc, keep the tone noir.",
+    "runButton": "Run reconstruction",
+    "running": "Reconstructing…",
+    "noRunYet": "Reconstruction hasn't run yet.",
+    "resultsTitle": "Draft results",
+    "factsFound": "{{count}} facts drafted",
+    "scenesFound": "{{count}} scenes drafted",
+    "failuresTitle": "Stages that failed",
+    "retryFailed": "Retry failed stages",
+    "toasts": {
+      "done": "Reconstruction complete.",
+      "saved": "Draft facts and scenes saved."
+    }
+  },
+  "timeline": {
+    "title": "Timeline and chronology",
+    "description": "Review the reconstructed order of events. Conflicting facts are grouped so you can pick which version belongs in this adaptation.",
+    "sequence": "Sequence",
+    "conflictsTitle": "Conflicting facts",
+    "conflictsDescription": "These facts contradict each other. Resolve them here or in canon review.",
+    "noConflicts": "No conflicts detected.",
+    "sceneList": "Adapted scenes in order",
+    "noScenes": "No scenes reconstructed yet.",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
+  },
+  "canon": {
+    "title": "Canon review",
+    "description": "Every fact starts as needs review. Accepting a fact only affects this adaptation — applying it to campaign canon is a separate, deliberate step.",
+    "filters": {
+      "all": "All",
+      "confirmed": "Confirmed canon",
+      "session_derived": "From sessions",
+      "ai_inference": "AI inferences",
+      "adaptation_created": "Adaptation-only",
+      "conflict": "Conflicts",
+      "missingVisuals": "Missing visual references"
+    },
+    "counts": {
+      "confirmed": "Confirmed",
+      "needsReview": "Needs review",
+      "rejected": "Rejected",
+      "conflicts": "Conflicts",
+      "missingVisuals": "Missing visuals"
+    },
+    "sourcesLabel": "Sources",
+    "accept": "Accept",
+    "reject": "Reject",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "applyToCanon": "Apply to campaign canon",
+    "applyDialog": {
+      "title": "Apply this fact to campaign canon?",
+      "description": "This will update \"{{name}}\"'s description in the campaign itself. Every player and GM will see this change, not just this adaptation.",
+      "confirm": "Apply to campaign"
+    },
+    "empty": "No facts match this filter.",
+    "confidence": "Confidence {{value}}%",
+    "noSubject": "No linked entry",
+    "toasts": {
+      "reviewed": "Fact updated.",
+      "applied": "Applied to campaign canon."
+    }
+  },
+  "assets": {
+    "title": "Assets",
+    "description": "Match uploaded images and files to the characters, locations and props that will appear in the adaptation.",
+    "resolveButton": "Resolve assets",
+    "resolving": "Resolving…",
+    "counts": {
+      "resolved": "Resolved",
+      "unresolved": "Unresolved",
+      "ambiguous": "Ambiguous",
+      "missingVisuals": "Missing visual references"
+    },
+    "roleLabel": "Role",
+    "entityLabel": "Linked entry",
+    "unlinked": "Not linked",
+    "markCanonical": "Mark as canonical",
+    "confirm": "Confirm",
+    "reject": "Reject",
+    "noneYet": "No assets resolved yet.",
+    "missingVisualsTitle": "Entries with no visual reference",
+    "toasts": {
+      "resolved": "Assets resolved.",
+      "updated": "Asset updated."
+    }
+  },
+  "narrative": {
+    "title": "Narrative settings",
+    "description": "Shape the overall voice of the adaptation before generating comic or movie projections.",
+    "toneLabel": "Tone",
+    "tonePlaceholder": "e.g. Grim, hopeful, comedic",
+    "povLabel": "Point of view",
+    "povPlaceholder": "e.g. Third person, the party as an ensemble",
+    "audienceLabel": "Audience",
+    "audiencePlaceholder": "e.g. Young adult, mature",
+    "maxScenesLabel": "Maximum scenes",
+    "maxScenesHint": "Leave empty to keep every reconstructed scene."
+  },
+  "comic": {
+    "title": "Comic settings",
+    "description": "Configure the comic projection that will be exported for RX Comics.",
+    "seriesTitleLabel": "Series title",
+    "seriesSubtitleLabel": "Series subtitle",
+    "issueNumberLabel": "Issue number",
+    "issueTitleLabel": "Issue title",
+    "pageTargetLabel": "Page target",
+    "pageTargetHint": "Leave empty to let the story decide the page count.",
+    "densityLabel": "Panel density",
+    "densities": {
+      "sparse": "Sparse — fewer, bigger panels",
+      "standard": "Standard",
+      "dense": "Dense — more panels per page"
+    },
+    "genreLabel": "Genre tags",
+    "genreHint": "Comma-separated.",
+    "artDirectionLabel": "Art direction",
+    "artDirectionPlaceholder": "e.g. Painterly, high-contrast noir inks"
+  },
+  "movie": {
+    "title": "Movie settings",
+    "description": "Configure the movie projection that will be exported for MovieSmith.",
+    "titleLabel": "Title",
+    "loglineLabel": "Logline",
+    "runtimeLabel": "Runtime target (minutes)",
+    "aspectRatioLabel": "Aspect ratio",
+    "languageLabel": "Language"
+  },
+  "validation": {
+    "title": "Validation",
+    "description": "Review these before generating. Nothing here blocks export, but unresolved problems usually mean a weaker result.",
+    "noProblems": "No problems found.",
+    "problemsTitle": "Problems found",
+    "checks": {
+      "noScenes": "No scenes have been reconstructed yet.",
+      "unresolvedFacts": "{{count}} fact(s) still need review.",
+      "conflicts": "{{count}} unresolved conflict(s).",
+      "missingVisuals": "{{count}} entry(ies) have no visual reference.",
+      "unresolvedAssets": "{{count}} asset(s) are still unresolved or ambiguous.",
+      "noComicConfig": "Comic settings are incomplete.",
+      "noMovieConfig": "Movie settings are incomplete."
+    }
+  },
+  "generate": {
+    "title": "Generate",
+    "description": "Export the adaptation as a package. Each export downloads a ZIP file ready to hand off.",
+    "bundleTitle": "Complete adaptation bundle",
+    "bundleDescription": "Everything: facts, scenes, assets and every configured projection.",
+    "bundleButton": "Export complete bundle",
+    "comicTitle": "Comic projection",
+    "comicDescription": "Only what RX Comics needs to build the issue.",
+    "comicButton": "Export comic bundle",
+    "movieTitle": "Movie projection",
+    "movieDescription": "Only what MovieSmith needs to build the movie.",
+    "movieButton": "Export movie bundle",
+    "problemsWarning": "This adaptation still has validation problems. You can export anyway.",
+    "exporting": "Preparing export…",
+    "toasts": {
+      "exported": "Bundle ready."
+    }
+  },
+  "chronicle": {
+    "viewToggle": {
+      "sessions": "Sessions",
+      "chronicle": "Chronicle"
+    },
+    "intro": "Chronicle sessions in depth: paste or import a transcript, let reconstruction draft findings, then review each one before it ever reaches campaign canon.",
+    "newButton": "New chronicle",
+    "titleLabel": "Title",
+    "sessionNoLabel": "Session number",
+    "playedOnLabel": "Played on",
+    "deleteDialog": {
+      "title": "Delete this chronicle?",
+      "description": "\"{{title}}\" and everything reviewed inside it will be removed.",
+      "confirm": "Delete"
+    },
+    "linkedPrep": "Linked prep note",
+    "linkedRecap": "Linked recap note",
+    "noLink": "Not linked",
+    "rawNotesLabel": "Raw notes",
+    "rawNotesPlaceholder": "Freeform notes taken during or after the session.",
+    "transcriptLabel": "Transcript",
+    "transcriptPlaceholder": "Paste the session transcript here.",
+    "transcriptImport": "Import a transcript file",
+    "transcriptImportHint": ".txt, .md or .json",
+    "materialsLabel": "Session materials",
+    "materialsImport": "Add a file",
+    "materialsEmpty": "No materials attached yet.",
+    "draftTitle": "AI reconstruction draft",
+    "draftDescription": "Run reconstruction on the transcript and notes above to draft findings below.",
+    "runButton": "Run reconstruction",
+    "running": "Reconstructing…",
+    "save": "Save",
+    "saved": "Saved.",
+    "itemTypes": {
+      "actual_event": "Actual events",
+      "character_action": "Character actions",
+      "discovery": "Discoveries",
+      "dialogue_highlight": "Dialogue highlights",
+      "consequence": "Consequences",
+      "canon_change": "Canon changes",
+      "ai_reconstruction": "AI reconstruction"
+    },
+    "reviewStatus": {
+      "confirmed": "Confirmed",
+      "needs_review": "Needs review",
+      "rejected": "Rejected"
+    },
+    "accept": "Accept",
+    "reject": "Reject",
+    "edit": "Edit",
+    "noItems": "Nothing here yet.",
+    "approvedRecapLabel": "Approved recap",
+    "approvedRecapPlaceholder": "The final recap once you're happy with it — this is what players see.",
+    "approvedRecapHint": "Only what you approve here reaches the recap players see; the reconstruction draft never publishes on its own.",
+    "toasts": {
+      "created": "Chronicle created.",
+      "deleted": "Chronicle deleted.",
+      "updated": "Chronicle updated.",
+      "reconstructed": "Draft findings ready for review.",
+      "itemUpdated": "Item updated."
+    }
+  }
+}

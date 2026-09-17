@@ -98,6 +98,8 @@ function EntityPage() {
   const queryClient = useQueryClient();
   const { t } = useT("lore");
   const { t: tc } = useT("common");
+  // Entity kind/field/status labels come from data-driven key builders.
+  const tk = t as (key: string, options?: Record<string, unknown>) => string;
   const f = useFormatters();
 
   const entity = useQuery({ queryKey: ["entity", id], queryFn: () => getEntity(id) });
@@ -362,7 +364,7 @@ function EntityPage() {
       <PageHeader
         title={form.name}
         description={t("entityPage.headerDescription", {
-          kind: t(kindLabelKey(entity.data?.kind ?? "CUSTOM")),
+          kind: tk(kindLabelKey(entity.data?.kind ?? "CUSTOM")),
           campaign: campaign.data?.name ?? t("entityPage.defaultCampaignName"),
         })}
         actions={
@@ -442,7 +444,7 @@ function EntityPage() {
                 <SelectContent>
                   {def.statuses.map((status) => (
                     <SelectItem key={status} value={status}>
-                      {t(statusLabelKey(form.kind, status))}
+                      {tk(statusLabelKey(form.kind, status))}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -681,7 +683,7 @@ function EntityPage() {
               return (
                 <div key={field.key} className="space-y-2">
                   <Label htmlFor={`field-${field.key}`}>
-                    {t(fieldLabelKey(form.kind, field.key))}
+                    {tk(fieldLabelKey(form.kind, field.key))}
                     {field.gm ? (
                       <Badge variant="outline" className="ml-2">
                         {t("entityPage.details.gmBadge")}
@@ -704,7 +706,7 @@ function EntityPage() {
                       <SelectContent>
                         {(field.options ?? []).map((option) => (
                           <SelectItem key={option} value={option}>
-                            {t(optionLabelKey(form.kind, field.key, option))}
+                            {tk(optionLabelKey(form.kind, field.key, option))}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -745,7 +747,7 @@ function EntityPage() {
                   <SelectContent>
                     {RELATIONSHIP_TYPES.map((type) => (
                       <SelectItem key={type} value={type}>
-                        {t(relationshipLabelKey(type))}
+                        {tk(relationshipLabelKey(type))}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -787,7 +789,7 @@ function EntityPage() {
                 return (
                   <li key={row.id} className="flex items-center gap-3 p-3">
                     <span className="text-muted-foreground text-xs uppercase">
-                      {outgoing ? "→" : "←"} {t(relationshipLabelKey(row.rel_type))}
+                      {outgoing ? "→" : "←"} {tk(relationshipLabelKey(row.rel_type))}
                     </span>
                     <Link
                       to="/entities/$id"
@@ -824,7 +826,7 @@ function EntityPage() {
                 {mentions.map((row) => (
                   <li key={row.id} className="flex items-center gap-3 p-3">
                     <span className="text-muted-foreground text-xs uppercase">
-                      {t(kindLabelKey(row.kind))}
+                      {tk(kindLabelKey(row.kind))}
                     </span>
                     <Link
                       to="/entities/$id"

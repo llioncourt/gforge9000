@@ -22,6 +22,7 @@ import { listNotes, type NoteRow } from "@/lib/api";
 import { ASSET_BUCKET, uploadAssetFile } from "@/lib/assets";
 import { listAdaptations } from "@/lib/adaptation/api";
 import { runAdaptationStage } from "@/lib/adaptation/ai.functions";
+import type { StageResult } from "@/lib/adaptation/ai-schemas";
 import { CHRONICLE_ITEM_TYPES, type ChronicleItemType } from "@/lib/adaptation/types";
 import {
   addSessionChronicleItems,
@@ -50,8 +51,8 @@ async function extractTranscriptText(file: File): Promise<string> {
           if (typeof entry === "string") return entry;
           if (entry && typeof entry === "object") {
             const record = entry as Record<string, unknown>;
-            const speaker = record.speaker ?? record.name ?? record.author;
-            const text = record.text ?? record.line ?? record.content ?? record.message;
+            const speaker = record["speaker"] ?? record["name"] ?? record["author"];
+            const text = record["text"] ?? record["line"] ?? record["content"] ?? record["message"];
             if (typeof text === "string") {
               return speaker ? `${String(speaker)}: ${text}` : text;
             }
@@ -62,17 +63,13 @@ async function extractTranscriptText(file: File): Promise<string> {
     }
     if (parsed && typeof parsed === "object") {
       const record = parsed as Record<string, unknown>;
-      const candidate = record.transcript ?? record.text ?? record.content;
+      const candidate = record["transcript"] ?? record["text"] ?? record["content"];
       if (typeof candidate === "string") return candidate;
     }
     return raw;
   } catch {
     return raw;
   }
-}
-
-export function SessionChronoclePanelGuard() {
-  return null;
 }
 
 export function SessionChroniclePanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
@@ -187,7 +184,7 @@ export function SessionChroniclePanel({ campaignId, isGm }: { campaignId: string
     mutationFn: async () => {
       if (!selected || !latestAdaptation) return;
       const context = [selected.transcript, selected.raw_notes].filter(Boolean).join("\n\n---\n\n");
-      const response = await runAdaptationStage({
+      const response = (await runAdaptationStage({
         data: {
           adaptation_id: latestAdaptation.id,
           stage: "facts",
@@ -195,12 +192,12 @@ export function SessionChroniclePanel({ campaignId, isGm }: { campaignId: string
           chunk_index: 0,
           chunk_total: 1,
         },
-      });
+      })) as { result: StageResult<"facts"> };
       const existing = items.data ?? [];
       const nextSequence = existing.length
         ? Math.max(...existing.map((i) => i.sequence_no)) + 1
         : 0;
-      const rows = response.result.facts.map((fact, index) => ({
+      const rows = response.result.facts.map((fact, index: number) => ({
         chronicle_id: selected.id,
         campaign_id: campaignId,
         item_type: "ai_reconstruction" as ChronicleItemType,

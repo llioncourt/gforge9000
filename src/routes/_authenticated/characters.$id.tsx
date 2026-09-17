@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTransferTask } from "@/components/ui/transfer-dialog";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -275,7 +275,6 @@ function CharacterPage() {
   const save = useMutation({
     mutationFn: (patch: Partial<CharacterRow>) => updateCharacter(id, patch),
     onSuccess: () => {
-      dirty.current = false;
       setSaveError(false);
       queryClient.invalidateQueries({ queryKey: ["characters"] });
     },
@@ -294,11 +293,15 @@ function CharacterPage() {
     const current = latestForm.current;
     if (!current || !dirty.current || saving.current) return;
     saving.current = true;
+    const sent = current;
     const { id: _i, owner_id: _o, created_at: _c, updated_at: _u, ...patch } = current;
     save.mutate(patch, {
+      onSuccess: () => {
+        // Only clear the flag when nothing was typed while the save was away.
+        if (latestForm.current === sent) dirty.current = false;
+      },
       onSettled: () => {
         saving.current = false;
-        // An edit made while the save was in flight still needs saving.
         if (dirty.current) flushRef.current?.();
       },
     });

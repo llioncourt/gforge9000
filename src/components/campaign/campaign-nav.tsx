@@ -64,6 +64,15 @@ export function buildCampaignNavGroups(opts: {
 
   const groups: CampaignNavGroup[] = [
     {
+      id: "cast",
+      label: t("nav.cast"),
+      icon: Users,
+      items: [
+        { value: "roster", label: t("tabs.roster"), icon: UserSquare2 },
+        { value: "members", label: t("tabs.members"), icon: Users },
+      ],
+    },
+    {
       id: "play",
       label: t("nav.play"),
       icon: Dices,

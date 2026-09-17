@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { LogOut, UserRound } from "lucide-react";
+import { Loader2, LogOut, ShieldAlert, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,14 +22,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { UserAvatar } from "@/components/app/user-avatar";
-import { getProfile, setProfilePreferences, upsertProfile } from "@/lib/api";
+import { getProfile, setProfilePreferences, upsertProfile, wipeAllMyData } from "@/lib/api";
+import { lovable } from "@/integrations/lovable/index";
 import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 
 const THEME_KEY = "ucf:light-theme";
+const WIPE_INTENT_KEY = "ucf:wipe-intent";
+const WIPE_INTENT_TTL = 5 * 60 * 1000;
 
 /** Applies the theme by switching the root class (light palette lives under .light). */
 function applyTheme(light: boolean) {
@@ -41,12 +54,60 @@ function applyTheme(light: boolean) {
 export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
   const { user } = useSession();
   const { t } = useT("navigation");
+  const { t: ts } = useT("settings");
+  const { t: tc } = useT("common");
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [light, setLight] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [wipeOpen, setWipeOpen] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
+  // A full-page Google redirect returns here: restore the pending wipe intent.
+  useEffect(() => {
+    const raw = sessionStorage.getItem(WIPE_INTENT_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(WIPE_INTENT_KEY);
+    if (Date.now() - Number(raw) > WIPE_INTENT_TTL) return;
+    setVerified(true);
+    setOpen(true);
+    setWipeOpen(true);
+  }, []);
+
+  async function confirmWithGoogle() {
+    setVerifying(true);
+    sessionStorage.setItem(WIPE_INTENT_KEY, String(Date.now()));
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: `${window.location.origin}/dashboard`,
+      });
+      if ("redirected" in result && result.redirected) return;
+      if (result.error) throw result.error;
+      sessionStorage.removeItem(WIPE_INTENT_KEY);
+      setVerified(true);
+      toast.success(ts("toasts.identityConfirmed"));
+    } catch (e) {
+      sessionStorage.removeItem(WIPE_INTENT_KEY);
+      toast.error(e instanceof Error ? e.message : ts("toasts.identityFailed"));
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  const wipe = useMutation({
+    mutationFn: wipeAllMyData,
+    onSuccess: () => {
+      queryClient.clear();
+      setWipeOpen(false);
+      setVerified(false);
+      setOpen(false);
+      toast.success(ts("toasts.wiped"));
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const { data } = useQuery({
     queryKey: ["profile", user?.id],
@@ -236,6 +297,25 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
               <Label>{t("profile.email")}</Label>
               <Input value={user?.email ?? ""} readOnly disabled />
             </div>
+            <div className="space-y-3 rounded-lg border border-destructive/40 p-4">
+              <div className="flex items-start gap-3">
+                <ShieldAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
+                <div>
+                  <h3 className="text-sm font-semibold text-destructive">{ts("danger.title")}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{ts("danger.description")}</p>
+                </div>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  setVerified(false);
+                  setWipeOpen(true);
+                }}
+              >
+                {ts("danger.eraseButton")}
+              </Button>
+            </div>
           </div>
           <DialogFooter>
             <Button onClick={() => save.mutate()} disabled={save.isPending}>
@@ -244,6 +324,44 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={wipeOpen}
+        onOpenChange={(next) => {
+          setWipeOpen(next);
+          if (!next) setVerified(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{ts("wipeDialog.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {ts("wipeDialog.description", { email: user?.email })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={wipe.isPending}>{tc("actions.cancel")}</AlertDialogCancel>
+            {verified ? (
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  wipe.mutate();
+                }}
+                disabled={wipe.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {wipe.isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                {ts("wipeDialog.deleteEverything")}
+              </AlertDialogAction>
+            ) : (
+              <Button onClick={confirmWithGoogle} disabled={verifying}>
+                {verifying ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                {ts("wipeDialog.confirmWithGoogle")}
+              </Button>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

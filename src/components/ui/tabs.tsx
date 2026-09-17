@@ -3,6 +3,7 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/hooks";
 
 const Tabs = TabsPrimitive.Root;
 
@@ -146,7 +147,7 @@ const ScrollableTabsList = React.forwardRef<
     <div className="flex items-center gap-1">
       <button
         type="button"
-        aria-label="Scroll tabs left"
+        aria-label={t("a11y.scrollTabsLeft")}
         tabIndex={-1}
         onClick={() => scrollBy(-1)}
         className={cn(
@@ -161,7 +162,7 @@ const ScrollableTabsList = React.forwardRef<
       </TabsList>
       <button
         type="button"
-        aria-label="Scroll tabs right"
+        aria-label={t("a11y.scrollTabsRight")}
         tabIndex={-1}
         onClick={() => scrollBy(1)}
         className={cn(

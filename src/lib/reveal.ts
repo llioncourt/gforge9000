@@ -39,15 +39,21 @@ export async function revealEntityToPlayer(input: {
     granted_by: gmId,
   });
 
-  await createNotification({
-    user_id: userId,
-    campaign_id: entity.campaign_id,
-    entity_id: entity.id,
-    kind: "reveal",
-    title: `New record revealed: ${entity.name}`,
-    body: kindDef(entity.kind).label,
-    created_by: gmId,
-  });
+  // Best-effort: the reveal itself already succeeded, so a failed alert must
+  // not roll the GM back into an error with the grant already stored.
+  try {
+    await createNotification({
+      user_id: userId,
+      campaign_id: entity.campaign_id,
+      entity_id: entity.id,
+      kind: "reveal",
+      title: `New record revealed: ${entity.name}`,
+      body: kindDef(entity.kind).label,
+      created_by: gmId,
+    });
+  } catch {
+    /* the record is revealed; the bell alert is best-effort */
+  }
 
   // Background alert: reaches the player even with the app closed.
   try {

@@ -285,6 +285,11 @@
       "unresolvedAssets": "{{count}} recurso(s) ainda não resolvido(s) ou ambíguo(s).",
       "noComicConfig": "As configurações do quadrinho estão incompletas.",
       "noMovieConfig": "As configurações do filme estão incompletas."
+    },
+    "actions": {
+      "fix": "Resolver",
+      "confirmAll": "Confirmar tudo",
+      "confirmedAll": "Fatos confirmados."
     }
   },
   "generate": {
@@ -299,7 +304,7 @@
     "movieTitle": "Projeção de filme",
     "movieDescription": "Apenas o que o MovieSmith precisa para montar o filme.",
     "movieButton": "Exportar pacote de filme",
-    "problemsWarning": "Esta adaptação ainda tem problemas de validação. Você pode exportar mesmo assim.",
+    "problemsWarning": "Resolva estes pontos antes de exportar para um resultado melhor. Ainda assim é possível exportar.",
     "exporting": "Preparando exportação…",
     "toasts": {
       "exported": "Pacote pronto."

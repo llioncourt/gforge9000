@@ -22,6 +22,8 @@ export interface StepProps {
   project: AdaptationProject;
   patch: (patch: Partial<AdaptationProject>) => Promise<void>;
   patchCreative: (patch: CreativeSettings) => Promise<void>;
+  /** Lets a step send the user straight to the place that fixes an issue. */
+  goTo: (step: WizardStep) => void;
 }
 
 export function AdaptationWizard({
@@ -67,7 +69,12 @@ export function AdaptationWizard({
     await patch({ wizard_step: next });
   };
 
-  const props: StepProps = { project: current, patch, patchCreative };
+  const props: StepProps = {
+    project: current,
+    patch,
+    patchCreative,
+    goTo: (next) => void goto(next),
+  };
 
   return (
     <div className="space-y-6">

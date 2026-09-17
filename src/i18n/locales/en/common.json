@@ -135,9 +135,14 @@
     "dark": "Dark"
   },
   "a11y": {
-    "zoomImage": "Zoom {{name}}",
+    "more": "More",
+    "nextSlide": "Next slide",
     "previousSlide": "Previous slide",
-    "nextSlide": "Next slide"
+    "scrollTabsLeft": "Scroll tabs left",
+    "scrollTabsRight": "Scroll tabs right",
+    "sidebarDescription": "Displays the mobile sidebar.",
+    "sidebarTitle": "Sidebar",
+    "zoomImage": "Zoom {{name}}"
   },
   "transfer": {
     "starting": "Starting…",

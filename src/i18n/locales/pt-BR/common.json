@@ -135,9 +135,14 @@
     "dark": "Escuro"
   },
   "a11y": {
-    "zoomImage": "Ampliar {{name}}",
+    "more": "Mais",
+    "nextSlide": "Próximo slide",
     "previousSlide": "Slide anterior",
-    "nextSlide": "Próximo slide"
+    "scrollTabsLeft": "Rolar abas para a esquerda",
+    "scrollTabsRight": "Rolar abas para a direita",
+    "sidebarDescription": "Mostra a barra lateral no celular.",
+    "sidebarTitle": "Barra lateral",
+    "zoomImage": "Ampliar {{name}}"
   },
   "transfer": {
     "starting": "Iniciando…",

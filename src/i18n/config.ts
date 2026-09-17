@@ -72,7 +72,7 @@ export const LOCALES: readonly LocaleDefinition[] = [
     nativeName: "Pseudo",
     dir: "ltr",
     fallback: FALLBACK_LOCALE,
-    enabled: import.meta.env?.DEV === true,
+    enabled: pseudoEnabled(),
     aliases: ["en-xa", "pseudo"],
     intlLocale: "en-US",
   },

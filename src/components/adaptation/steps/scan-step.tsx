@@ -58,13 +58,9 @@ export function ScanStep({ project, patch }: StepProps) {
           changes.impact = impactMap(
             [...changes.added, ...changes.changed, ...changes.removed].map((entry) => entry.source_key),
             scenes.map((scene) => ({
-              kind: "scene",
-              id: scene.id,
-              label: scene.title,
-              source_keys: (scene.source_refs as { source_key?: string }[]).map(
-                (ref) => ref.source_key ?? "",
-              ),
-              manually_edited: scene.manually_edited,
+              kind: "scene" as const,
+              stable_key: scene.stable_key,
+              source_refs: scene.source_refs as SourceRef[],
             })),
           );
           await saveChangeSet(project.id, previousSnapshot?.id ?? null, saved.id, changes);

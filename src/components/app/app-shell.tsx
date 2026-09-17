@@ -9,7 +9,6 @@ import {
   Menu,
   PanelLeftClose,
   Search,
-  Settings,
   Shield,
   Users,
   X,
@@ -36,7 +35,6 @@ const NAV = [
   { to: "/campaigns", labelKey: "links.campaigns", icon: Users },
   { to: "/library", labelKey: "links.library", icon: BookOpen },
   { to: "/packs", labelKey: "links.packs", icon: Boxes },
-  { to: "/settings", labelKey: "links.settings", icon: Settings },
 ] as const;
 
 

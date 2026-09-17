@@ -50,11 +50,9 @@ export async function deleteEntity(id: string): Promise<void> {
 
 export async function listRelationships(campaignId: string): Promise<RelationshipRow[]> {
   return unwrap(
-    await supabase
-      .from("entity_relationships_safe")
-      .select("*")
-      .eq("campaign_id", campaignId)
-      .order("created_at", { ascending: true }),
+    await rpc("list_relationships_safe", { _campaign: campaignId }).order("created_at", {
+      ascending: true,
+    }),
   ) as RelationshipRow[];
 }
 

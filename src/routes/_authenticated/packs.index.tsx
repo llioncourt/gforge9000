@@ -184,7 +184,7 @@ function PacksPage() {
                 key={g.label}
                 to="/packs/$pack"
                 params={{ pack: packSlug(g.pack) }}
-                className="panel interactive-card relative flex flex-col p-4 hover:border-ring"
+                className="panel flex flex-col p-4 transition-colors hover:border-ring"
               >
                 <div className="flex items-start gap-2">
                   <Boxes className="mt-0.5 h-4 w-4 text-primary" />

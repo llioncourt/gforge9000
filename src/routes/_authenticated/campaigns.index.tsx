@@ -248,7 +248,7 @@ function CampaignsPage() {
                 key={c.id}
                 to="/campaigns/$id"
                 params={{ id: c.id }}
-                className="panel interactive-card relative flex min-h-[180px] flex-col overflow-hidden p-5 hover:border-ring"
+                className="panel hover-lift relative flex min-h-[180px] flex-col overflow-hidden p-5 transition-colors hover:border-ring"
               >
                 <CampaignCoverBg path={coverPath} />
                 <div className="relative flex items-start justify-between gap-2">

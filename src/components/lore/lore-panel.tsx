@@ -252,7 +252,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                     to="/entities/$id"
                     params={{ id: row.id }}
                     search={{ from: "lore" }}
-                    className="interactive-card hover:bg-accent/40 block h-full rounded-lg border p-3"
+                    className="hover:bg-accent/40 block h-full rounded-lg border p-3 transition"
                   >
                     <div className="flex h-full items-start gap-3">
                       <EntityThumb

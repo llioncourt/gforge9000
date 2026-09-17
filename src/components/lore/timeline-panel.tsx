@@ -301,7 +301,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
                     to="/entities/$id"
                     params={{ id: row.id }}
                     search={{ from: "timeline" }}
-                    className="panel interactive-card block p-4 hover:border-primary/50"
+                    className="panel block p-4 transition hover:border-primary/50"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="font-medium">{row.name}</h3>

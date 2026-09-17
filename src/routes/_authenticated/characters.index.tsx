@@ -203,7 +203,7 @@ function CharactersPage() {
                 <Link
                   to="/characters/$id"
                   params={{ id: c.id }}
-                  className="panel interactive-card relative flex h-full min-h-[120px] flex-col justify-end gap-1 overflow-hidden p-4 hover:border-ring"
+                  className="panel relative flex h-full min-h-[120px] flex-col justify-end gap-1 overflow-hidden p-4 transition-colors hover:border-ring"
                 >
                   <CardPortraitBg path={c.portrait_path} />
                   <div className="relative flex items-center justify-between gap-2">

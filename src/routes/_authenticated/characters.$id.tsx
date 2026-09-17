@@ -1,13 +1,11 @@
 import * as React from "react";
 import { useTransferTask } from "@/components/ui/transfer-dialog";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Download,
   Dices,
-  ArrowLeft,
-  FileSpreadsheet,
   History,
   Info,
   Pencil,
@@ -45,7 +43,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Table,
   TableBody,
@@ -150,7 +147,6 @@ const APPEARANCE_FIELDS: [string, string][] = [
 
 function CharacterPage() {
   const { id } = Route.useParams();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { roll, history } = useDice();
 
@@ -362,27 +358,20 @@ function CharacterPage() {
           description={form.concept ?? undefined}
           actions={
             <div className="no-print flex flex-wrap items-center gap-2">
-              <CharacterHeaderAction
-                label="Back"
-                icon={<ArrowLeft className="h-4 w-4" />}
-                onClick={() => {
-                  if (window.history.length > 1) window.history.back();
-                  else void navigate({ to: "/characters" });
-                }}
-              />
-              <CharacterHeaderAction
-                label="Print character"
-                icon={<Printer className="h-4 w-4" />}
+              <Button
+                variant="outline"
                 onClick={() => {
                   const prev = document.title;
                   document.title = form.name || "Untitled character";
                   window.print();
                   document.title = prev;
                 }}
-              />
-              <CharacterHeaderAction
-                label="Copy image generation prompt"
-                icon={<Sparkles className="h-4 w-4" />}
+              >
+                <Printer className="mr-2 h-4 w-4" /> Print
+              </Button>
+              <Button
+                variant="outline"
+                aria-label="Copy image generation prompt"
                 onClick={() => {
                   const prompt = buildImagePrompt({
                     name: form.name,
@@ -397,10 +386,11 @@ function CharacterPage() {
                     .then(() => toast.success("Image prompt copied to clipboard."))
                     .catch(() => toast.error("Could not copy the prompt."));
                 }}
-              />
-              <CharacterHeaderAction
-                label="Export character as JSON"
-                icon={<Download className="h-4 w-4" />}
+              >
+                <Sparkles className="mr-2 h-4 w-4" /> Prompt
+              </Button>
+              <Button
+                variant="outline"
                 disabled={exportTask.busy}
                 onClick={() =>
                   void exportTask.run("Exporting character (JSON)", async (report) => {
@@ -415,10 +405,11 @@ function CharacterPage() {
                     return `Exported ${form.name} with ${entries.length} entries.`;
                   })
                 }
-              />
-              <CharacterHeaderAction
-                label="Export character as CSV"
-                icon={<FileSpreadsheet className="h-4 w-4" />}
+              >
+                <Download className="mr-2 h-4 w-4" /> JSON
+              </Button>
+              <Button
+                variant="outline"
                 disabled={exportTask.busy}
                 onClick={() =>
                   void exportTask.run("Exporting character (CSV)", async (report) => {
@@ -429,20 +420,15 @@ function CharacterPage() {
                     return `Exported ${entries.length} entries.`;
                   })
                 }
-              />
-              <CharacterHeaderAction
-                label="Duplicate character"
-                icon={<Copy className="h-4 w-4" />}
-                disabled={clone.isPending}
-                onClick={() => clone.mutate()}
-              />
-              <CharacterHeaderAction
-                label="Save version"
-                icon={<Save className="h-4 w-4" />}
-                disabled={snapshot.isPending}
-                variant="default"
-                onClick={() => snapshot.mutate()}
-              />
+              >
+                CSV
+              </Button>
+              <Button variant="outline" onClick={() => clone.mutate()} disabled={clone.isPending}>
+                <Copy className="mr-2 h-4 w-4" /> Duplicate
+              </Button>
+              <Button onClick={() => snapshot.mutate()} disabled={snapshot.isPending}>
+                <Save className="mr-2 h-4 w-4" /> Save version
+              </Button>
               <span aria-live="polite" className="text-xs text-muted-foreground">
                 {save.isPending ? "Saving…" : saveError ? "Not saved" : "All changes saved"}
               </span>
@@ -1319,38 +1305,6 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
         <Trash2 className="h-4 w-4" />
       </Button>
     </div>
-  );
-}
-
-function CharacterHeaderAction({
-  label,
-  icon,
-  onClick,
-  disabled = false,
-  variant = "outline",
-}: {
-  label: string;
-  icon: React.ReactNode;
-  onClick: () => void;
-  disabled?: boolean;
-  variant?: "default" | "outline";
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          size="icon"
-          variant={variant}
-          aria-label={label}
-          disabled={disabled}
-          onClick={onClick}
-        >
-          {icon}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
   );
 }
 

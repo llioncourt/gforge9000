@@ -205,7 +205,7 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
                     to="/entities/$id"
                     params={{ id: row.id }}
                     search={{ from: "story" }}
-                    className="interactive-card hover:bg-accent/40 rounded-md border p-2"
+                    className="hover:bg-accent/40 rounded-md border p-2 transition"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="truncate font-medium">{row.name}</span>

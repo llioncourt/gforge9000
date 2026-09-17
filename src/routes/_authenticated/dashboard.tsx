@@ -91,7 +91,7 @@ function Dashboard() {
                     key={c.id}
                     to="/characters/$id"
                     params={{ id: c.id }}
-                    className="panel interactive-card relative flex items-center gap-4 overflow-hidden p-4 hover:border-ring"
+                    className="panel relative flex items-center gap-4 overflow-hidden p-4 transition-colors hover:border-ring"
                   >
                     <CardPortraitBg path={c.portrait_path} />
                     <div className="relative min-w-0 flex-1">

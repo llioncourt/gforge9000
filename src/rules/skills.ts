@@ -118,7 +118,7 @@ export function skillLevel(
   if (rel === null) {
     // Imported/licensed content may state a final level directly instead of points.
     // EXACT: the stated level is authoritative when no point purchase exists.
-    const stated = entry.data['level'];
+    const stated = entry.data["level"];
     if (stated !== undefined && stated !== null && Number.isFinite(Number(stated))) {
       return {
         relative: null,
@@ -137,7 +137,13 @@ export function skillLevel(
         defaultFrom: fallback.from.from,
       };
     }
-    return { relative: null, effective: null, label: `${attr}—`, fromDefault: false, defaultFrom: null };
+    return {
+      relative: null,
+      effective: null,
+      label: `${attr}—`,
+      fromDefault: false,
+      defaultFrom: null,
+    };
   }
 
   const bought = attributeValue(attr, stats) + rel + bonus;
@@ -154,9 +160,14 @@ export function skillLevel(
     };
   }
   const relText = rel >= 0 ? `+${rel}` : `${rel}`;
-  return { relative: rel, effective: bought, label: `${attr}${relText}`, fromDefault: false, defaultFrom: null };
+  return {
+    relative: rel,
+    effective: bought,
+    label: `${attr}${relText}`,
+    fromDefault: false,
+    defaultFrom: null,
+  };
 }
-
 
 /** Points needed to reach a target relative level (inverse of relativeLevel). */
 export function pointsForRelativeLevel(
@@ -176,7 +187,11 @@ export function pointsForRelativeLevel(
  * (`rules.technique`); levels bought are capped by the technique's default
  * penalty when one is supplied.
  */
-export function techniqueLevels(points: number, difficulty: Difficulty, rules: Ruleset = defaultRuleset): number {
+export function techniqueLevels(
+  points: number,
+  difficulty: Difficulty,
+  rules: Ruleset = defaultRuleset,
+): number {
   if (points < 1) return 0;
   const first = rules.technique.firstLevelCost[difficulty];
   const extra = Math.max(1, rules.technique.additionalLevelCost[difficulty]);
@@ -205,7 +220,7 @@ export function techniqueLevel(
 ): TechniqueLevel {
   const difficulty = (entry.data.difficulty as Difficulty) ?? "A";
   const points = Number(entry.data.points ?? entry.points ?? 0);
-  const declared = entry.data['defaultPenalty'];
+  const declared = entry.data["defaultPenalty"];
   const penaltyUnknown =
     declared === undefined || declared === null || !Number.isFinite(Number(declared));
   const penalty = penaltyUnknown ? 0 : Number(declared);
@@ -221,4 +236,3 @@ export function techniqueLevel(
     label: `${entry.data.baseSkill ?? "base"}${penalty ? penalty : ""}${levels ? `+${levels}` : ""}`,
   };
 }
-

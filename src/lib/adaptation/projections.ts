@@ -131,8 +131,12 @@ function panelsForScene(scene: AdaptationScene, input: ProjectionInput): PanelEn
   const propNames = namesOf(input.props, scene.prop_entity_ids);
   const locationName = nameOf(input.locations, scene.location_entity_id);
   const assetKeys = [
-    ...input.cast.filter((c) => scene.cast_entity_ids.includes(c.entity_id ?? "")).flatMap((c) => c.asset_keys),
-    ...input.locations.filter((l) => l.entity_id === scene.location_entity_id).flatMap((l) => l.asset_keys),
+    ...input.cast
+      .filter((c) => scene.cast_entity_ids.includes(c.entity_id ?? ""))
+      .flatMap((c) => c.asset_keys),
+    ...input.locations
+      .filter((l) => l.entity_id === scene.location_entity_id)
+      .flatMap((l) => l.asset_keys),
   ];
 
   const beats = scene.story_beats.length

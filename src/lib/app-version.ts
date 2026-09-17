@@ -1,5 +1,4 @@
-export const APP_BUILD_ID =
-  typeof __APP_BUILD_ID__ === "string" ? __APP_BUILD_ID__ : "test-build";
+export const APP_BUILD_ID = typeof __APP_BUILD_ID__ === "string" ? __APP_BUILD_ID__ : "test-build";
 
 const APP_ASSET_PATTERN = /(?:src=["'])([^"']*\/assets\/index-[^"']+\.js)(?:["'])/i;
 

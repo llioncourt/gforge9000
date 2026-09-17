@@ -53,10 +53,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   // its own i18n instance.
   return (
     <I18nProvider initialLocale={detectLocale()}>
-      <ErrorScreen error={error} onRetry={() => {
-        router.invalidate();
-        reset();
-      }} />
+      <ErrorScreen
+        error={error}
+        onRetry={() => {
+          router.invalidate();
+          reset();
+        }}
+      />
     </I18nProvider>
   );
 }

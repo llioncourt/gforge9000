@@ -275,9 +275,7 @@ function PacksPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("newDialog.title")}</DialogTitle>
-            <DialogDescription>
-              {t("newDialog.description")}
-            </DialogDescription>
+            <DialogDescription>{t("newDialog.description")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
             <div className="space-y-1.5">

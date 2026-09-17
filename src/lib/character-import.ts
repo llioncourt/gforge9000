@@ -19,7 +19,10 @@ import type { ImportedEntry } from "@/lib/trait-match";
 export interface CharacterImportDeps {
   findByImportKey: (key: string) => Promise<{ id: string } | null>;
   createCharacter: (input: Record<string, unknown>) => Promise<{ id: string; name: string }>;
-  updateCharacter: (id: string, patch: Record<string, unknown>) => Promise<{ id: string; name: string }>;
+  updateCharacter: (
+    id: string,
+    patch: Record<string, unknown>,
+  ) => Promise<{ id: string; name: string }>;
   deleteCharacter: (id: string) => Promise<void>;
   deleteEntriesOf: (characterId: string) => Promise<void>;
   addEntries: (characterId: string, entries: ImportedEntry[]) => Promise<void>;

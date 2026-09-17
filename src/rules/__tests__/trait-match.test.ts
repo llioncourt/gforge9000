@@ -27,7 +27,13 @@ function lib(partial: Partial<CatalogueEntry> & { kind: string; name: string }):
 }
 
 const rows: CatalogueEntry[] = [
-  lib({ kind: "advantage", name: "Combat Reflexes", base_points: 15, pack: "Core", category: "Mental" }),
+  lib({
+    kind: "advantage",
+    name: "Combat Reflexes",
+    base_points: 15,
+    pack: "Core",
+    category: "Mental",
+  }),
   lib({ kind: "advantage", name: "Acute Vision", base_points: 2, cost_per_level: 2, pack: "Core" }),
   lib({ kind: "skill", name: "Stealth", pack: "Core" }),
   lib({ kind: "advantage", name: "Psychic Bolt", base_points: 10, pack: "Psi" }),
@@ -106,7 +112,13 @@ describe("applying a match", () => {
   it("takes identity and points from the library but keeps character data", () => {
     const target = rows[1]!; // Acute Vision, 2 + 2/level
     const applied = applyCatalogue(
-      entry({ kind: "advantage", name: "Visão Aguçada", levels: 3, points: 0, data: { note: "x" } }),
+      entry({
+        kind: "advantage",
+        name: "Visão Aguçada",
+        levels: 3,
+        points: 0,
+        data: { note: "x" },
+      }),
       target,
     );
     expect(applied.name).toBe("Acute Vision");

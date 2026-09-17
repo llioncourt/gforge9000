@@ -65,6 +65,6 @@ export function rankSearch<T>(
       return { row, index, score: searchScore(query, name, fields) };
     })
     .filter((item) => item.score >= 0)
-    .sort((a, b) => (b.score - a.score) || (a.index - b.index))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
     .map((item) => item.row);
 }

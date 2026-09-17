@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { canonicalJson, hashValue, sha256Hex, stableHash, stableKey } from "@/lib/adaptation/hash";
 import { allowedBySpoilerPolicy, deriveKnowledgeState } from "@/lib/adaptation/spoilers";
-import { diffSources, planSceneUpdates, toSourceMap, isEmptyChangeSet } from "@/lib/adaptation/diff";
+import {
+  diffSources,
+  planSceneUpdates,
+  toSourceMap,
+  isEmptyChangeSet,
+} from "@/lib/adaptation/diff";
 import { dedupeByHash, resolveAssets, resolverStats } from "@/lib/adaptation/assets";
 import {
   adaptationManifestSchema,
@@ -14,7 +19,12 @@ import {
 } from "@/lib/adaptation/protocol";
 import { buildComicProjection, buildMovieProjection } from "@/lib/adaptation/projections";
 import { buildScanSnapshot, expandBranch, type ScanRecord } from "@/lib/adaptation/scanner";
-import { applyConflicts, buildContextChunks, toDraftFacts, toDraftScenes } from "@/lib/adaptation/pipeline";
+import {
+  applyConflicts,
+  buildContextChunks,
+  toDraftFacts,
+  toDraftScenes,
+} from "@/lib/adaptation/pipeline";
 
 // ------------------------------------------------------------------ hashing
 
@@ -378,9 +388,17 @@ describe("pipeline mapping", () => {
             cast: ["Joe"],
             location: "River House",
             props: [],
-            beats: [{ order: 0, description: "Hammer falls.", emotion: "tense", actors: ["Joseph"] }],
+            beats: [
+              { order: 0, description: "Hammer falls.", emotion: "tense", actors: ["Joseph"] },
+            ],
             dialogue: [
-              { order: 0, speaker: "Joseph", line: "Hold still.", delivery: null, balloon_type: "balloon" },
+              {
+                order: 0,
+                speaker: "Joseph",
+                line: "Hold still.",
+                delivery: null,
+                balloon_type: "balloon",
+              },
             ],
             narration: [],
             continuity: [{ key: "time_of_day", value: "night" }],
@@ -441,8 +459,22 @@ function scene(index: number) {
       { order: 1, description: "Beat two", emotion: null, entity_ids: [] },
     ],
     dialogue: [
-      { order: 0, speaker: "Joseph", speaker_entity_id: "e1", line: "Hi", delivery: null, balloon_type: "balloon" },
-      { order: 1, speaker: "Joseph", speaker_entity_id: "e1", line: "Think", delivery: null, balloon_type: "thought" },
+      {
+        order: 0,
+        speaker: "Joseph",
+        speaker_entity_id: "e1",
+        line: "Hi",
+        delivery: null,
+        balloon_type: "balloon",
+      },
+      {
+        order: 1,
+        speaker: "Joseph",
+        speaker_entity_id: "e1",
+        line: "Think",
+        delivery: null,
+        balloon_type: "thought",
+      },
     ],
     narration: [{ order: 0, text: "Later…", placement: "caption" }],
     cast_entity_ids: ["e1"],
@@ -600,7 +632,9 @@ describe("adaptation package v1", () => {
   it("refuses a fact with no source", () => {
     const manifest = manifestFixture();
     manifest.facts[0]!.source_refs = [];
-    expect(validateAdaptationManifest(manifest)).toContain('Fact "fact:1" has no source reference.');
+    expect(validateAdaptationManifest(manifest)).toContain(
+      'Fact "fact:1" has no source reference.',
+    );
   });
 
   it("allows an adaptation-only fact without a source", () => {
@@ -612,8 +646,14 @@ describe("adaptation package v1", () => {
 
   it("catches the same file bundled twice", () => {
     const manifest = manifestFixture();
-    manifest.assets.push({ ...manifest.assets[0]!, asset_key: "asset:2", file: "assets/character/copy.avif" });
-    expect(validateAdaptationManifest(manifest).join(" ")).toMatch(/duplicate the same file content/);
+    manifest.assets.push({
+      ...manifest.assets[0]!,
+      asset_key: "asset:2",
+      file: "assets/character/copy.avif",
+    });
+    expect(validateAdaptationManifest(manifest).join(" ")).toMatch(
+      /duplicate the same file content/,
+    );
   });
 
   it("catches a bible record pointing at a missing file", () => {

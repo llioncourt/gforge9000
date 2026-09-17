@@ -8,10 +8,12 @@ export const getPushPublicKey = createServerFn({ method: "GET" }).handler(async 
 
 export const savePushSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { endpoint: string; p256dh: string; auth: string; userAgent?: string }) => {
-    if (!input?.endpoint || !input.p256dh || !input.auth) throw new Error("Invalid subscription");
-    return input;
-  })
+  .inputValidator(
+    (input: { endpoint: string; p256dh: string; auth: string; userAgent?: string }) => {
+      if (!input?.endpoint || !input.p256dh || !input.auth) throw new Error("Invalid subscription");
+      return input;
+    },
+  )
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("push_subscriptions").upsert(
       {
@@ -50,7 +52,8 @@ export const sendRevealPush = createServerFn({ method: "POST" })
       url?: string;
       tag?: string;
     }) => {
-      if (!input?.campaignId || !input.userId || !input.title) throw new Error("Invalid push request");
+      if (!input?.campaignId || !input.userId || !input.title)
+        throw new Error("Invalid push request");
       return input;
     },
   )

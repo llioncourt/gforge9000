@@ -115,11 +115,12 @@ export function parsePortable(raw: string): PortableCharacter {
   if (!result.success) {
     const first = result.error.issues[0];
     const where = first?.path.length ? ` (${first.path.join(".")})` : "";
-    throw new Error(`This character file is not valid${where}: ${first?.message ?? "unknown problem"}`);
+    throw new Error(
+      `This character file is not valid${where}: ${first?.message ?? "unknown problem"}`,
+    );
   }
   return result.data as unknown as PortableCharacter;
 }
-
 
 export function download(filename: string, contents: string, mime = "application/json") {
   const blob = new Blob([contents], { type: mime });
@@ -137,7 +138,17 @@ function csvCell(value: unknown): string {
 }
 
 export function entriesToCsv(entries: CharacterEntry[], sheet: CharacterSheet): string {
-  const header = ["kind", "name", "category", "points", "levels", "level", "weight", "cost", "notes"];
+  const header = [
+    "kind",
+    "name",
+    "category",
+    "points",
+    "levels",
+    "level",
+    "weight",
+    "cost",
+    "notes",
+  ];
   const lines = [header.join(",")];
   for (const e of entries) {
     const level = sheet.skills.find((s) => s.entry.id === e.id)?.level.effective ?? "";
@@ -244,7 +255,8 @@ export function parsePortableLibrary(raw: string): PortableLibrary {
   }
   if (!Array.isArray(parsed.entries)) throw new Error("Library export has no entries array.");
   const entries = parsed.entries.map((entry, index) => {
-    if (!entry || typeof entry !== "object") throw new Error(`Entry ${index + 1} is not an object.`);
+    if (!entry || typeof entry !== "object")
+      throw new Error(`Entry ${index + 1} is not an object.`);
     if (typeof entry.name !== "string" || entry.name.trim() === "") {
       throw new Error(`Entry ${index + 1} is missing a name.`);
     }
@@ -410,7 +422,8 @@ export function parsePortablePack(raw: string): PortablePack {
   if (!Array.isArray(parsed.entries)) throw new Error("Pack export has no entries array.");
   const name = meta.name.trim();
   const entries = parsed.entries.map((entry, index) => {
-    if (!entry || typeof entry !== "object") throw new Error(`Entry ${index + 1} is not an object.`);
+    if (!entry || typeof entry !== "object")
+      throw new Error(`Entry ${index + 1} is not an object.`);
     if (typeof entry.name !== "string" || entry.name.trim() === "") {
       throw new Error(`Entry ${index + 1} is missing a name.`);
     }

@@ -15,7 +15,6 @@ const SEPARATOR = "::";
 const AREAS = [PORTRAIT_BUCKET, ASSET_BUCKET] as const;
 export type ImageArea = (typeof AREAS)[number];
 
-
 export function resolveImageRef(
   reference: string,
   entityId?: string,
@@ -23,7 +22,8 @@ export function resolveImageRef(
   const split = reference.indexOf(SEPARATOR);
   if (split > 0) {
     const area = reference.slice(0, split) as ImageArea;
-    if (AREAS.includes(area)) return { bucket: area, path: reference.slice(split + SEPARATOR.length) };
+    if (AREAS.includes(area))
+      return { bucket: area, path: reference.slice(split + SEPARATOR.length) };
   }
   const owner = reference.split("/")[1];
   const bucket: ImageArea = entityId && owner === entityId ? PORTRAIT_BUCKET : ASSET_BUCKET;

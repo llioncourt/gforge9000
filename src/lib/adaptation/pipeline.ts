@@ -106,7 +106,6 @@ export function buildContextChunks(
     return a.order - b.order;
   });
 
-
   const chunks: ContextChunk[] = [];
   let current: { key: string; text: string }[] = [];
   let size = 0;
@@ -146,16 +145,11 @@ export interface DraftFact {
 }
 
 /** Turns a validated `facts` stage result into reviewable draft rows. */
-export function toDraftFacts(
-  result: StageResult<"facts">,
-  snapshot: ScanSnapshot,
-): DraftFact[] {
+export function toDraftFacts(result: StageResult<"facts">, snapshot: ScanSnapshot): DraftFact[] {
   return result.facts.map((fact) => {
     const refs = sourceRefs(fact.source_keys, snapshot);
     const entityId = entityIdFor(fact.subject_source_key, snapshot);
-    const record = fact.subject_source_key
-      ? snapshot.records[fact.subject_source_key]
-      : undefined;
+    const record = fact.subject_source_key ? snapshot.records[fact.subject_source_key] : undefined;
     return {
       stable_key: stableKey("fact", fact.subject, fact.statement),
       subject_entity_id: entityId,
@@ -177,10 +171,7 @@ export function toDraftFacts(
 }
 
 /** Marks the facts named in a `conflicts` result so the review screen can group them. */
-export function applyConflicts(
-  facts: DraftFact[],
-  result: StageResult<"conflicts">,
-): DraftFact[] {
+export function applyConflicts(facts: DraftFact[], result: StageResult<"conflicts">): DraftFact[] {
   const byStatement = new Map(facts.map((fact) => [fact.statement.trim(), fact]));
   for (const conflict of result.conflicts) {
     const primary = byStatement.get(conflict.statement.trim());
@@ -253,7 +244,9 @@ export function toDraftScenes(
           order: beat.order,
           description: beat.description,
           emotion: beat.emotion,
-          entity_ids: beat.actors.map((actor) => byName.get(normalizeText(actor)) ?? "").filter(Boolean),
+          entity_ids: beat.actors
+            .map((actor) => byName.get(normalizeText(actor)) ?? "")
+            .filter(Boolean),
         })),
         dialogue: scene.dialogue.map((line) => ({
           order: line.order,
@@ -267,7 +260,9 @@ export function toDraftScenes(
         cast_entity_ids: scene.cast
           .map((name) => byName.get(normalizeText(name)))
           .filter((id): id is string => !!id),
-        location_entity_id: scene.location ? byName.get(normalizeText(scene.location)) ?? null : null,
+        location_entity_id: scene.location
+          ? (byName.get(normalizeText(scene.location)) ?? null)
+          : null,
         prop_entity_ids: scene.props
           .map((name) => byName.get(normalizeText(name)))
           .filter((id): id is string => !!id),
@@ -443,6 +438,13 @@ export async function runReconstruction(
     done += 1;
   }
 
-  onProgress?.({ stage: "enrichment", chunk: 1, chunks: 1, label: "enrichment", done: total, total });
+  onProgress?.({
+    stage: "enrichment",
+    chunk: 1,
+    chunks: 1,
+    label: "enrichment",
+    done: total,
+    total,
+  });
   return out;
 }

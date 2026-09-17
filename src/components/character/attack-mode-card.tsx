@@ -83,7 +83,9 @@ export function AttackModeCard({
         (p) => (p === "none" ? "No" : String(p)),
         (raw) => t("sheet.attack.unresolved", { raw }),
       )}
-      {field(t("sheet.entryDialog.weaponFields.acc"), weapon.accuracy, String, (raw) => t("sheet.attack.unresolved", { raw }))}
+      {field(t("sheet.entryDialog.weaponFields.acc"), weapon.accuracy, String, (raw) =>
+        t("sheet.attack.unresolved", { raw }),
+      )}
       {field(
         t("sheet.entryDialog.weaponFields.range"),
         weapon.range,
@@ -94,11 +96,17 @@ export function AttackModeCard({
         t("sheet.entryDialog.weaponFields.rof"),
         weapon.rof,
         (r) =>
-          r.multiProjectile ? `${r.shotsPerAttack}x${r.projectilesPerShot}` : String(r.shotsPerAttack),
+          r.multiProjectile
+            ? `${r.shotsPerAttack}x${r.projectilesPerShot}`
+            : String(r.shotsPerAttack),
         (raw) => t("sheet.attack.unresolved", { raw }),
       )}
-      {field(t("sheet.entryDialog.weaponFields.bulk"), weapon.bulk, String, (raw) => t("sheet.attack.unresolved", { raw }))}
-      {field(t("sheet.entryDialog.weaponFields.rcl"), weapon.recoil, String, (raw) => t("sheet.attack.unresolved", { raw }))}
+      {field(t("sheet.entryDialog.weaponFields.bulk"), weapon.bulk, String, (raw) =>
+        t("sheet.attack.unresolved", { raw }),
+      )}
+      {field(t("sheet.entryDialog.weaponFields.rcl"), weapon.recoil, String, (raw) =>
+        t("sheet.attack.unresolved", { raw }),
+      )}
       {ammo ? (
         <span className="flex items-center gap-2 text-xs text-muted-foreground">
           {t("sheet.attack.shots")}
@@ -128,7 +136,10 @@ export function AttackModeCard({
           </Button>
         </span>
       ) : weapon.shots.status === "unresolved" ? (
-        <Meta label={t("sheet.attack.shots")} value={t("sheet.attack.unresolved", { raw: weapon.shots.raw })} />
+        <Meta
+          label={t("sheet.attack.shots")}
+          value={t("sheet.attack.unresolved", { raw: weapon.shots.raw })}
+        />
       ) : null}
       <div className="ml-auto flex gap-2">
         <Button size="sm" onClick={onAttack}>
@@ -139,9 +150,7 @@ export function AttackModeCard({
             size="sm"
             variant="outline"
             onClick={() =>
-              onDamage(
-                weapon.damage.status === "rollable" ? weapon.damage.expression : "",
-              )
+              onDamage(weapon.damage.status === "rollable" ? weapon.damage.expression : "")
             }
           >
             {t("sheet.attack.damageButton")}

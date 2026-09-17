@@ -4,16 +4,29 @@ import { CampaignVideosPanel } from "@/components/campaign/intro-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollableTabsList, Tabs, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 
-const SoundtrackPanel = lazy(() => import("@/components/campaign/soundtrack-panel").then((mod) => ({ default: mod.SoundtrackPanel })));
-const SoundFxPanel = lazy(() => import("@/components/campaign/sound-fx-panel").then((mod) => ({ default: mod.SoundFxPanel })));
+const SoundtrackPanel = lazy(() =>
+  import("@/components/campaign/soundtrack-panel").then((mod) => ({
+    default: mod.SoundtrackPanel,
+  })),
+);
+const SoundFxPanel = lazy(() =>
+  import("@/components/campaign/sound-fx-panel").then((mod) => ({ default: mod.SoundFxPanel })),
+);
 
 export type MediaTab = "videos" | "soundtrack" | "sound-fx";
 
 function MediaFallback() {
-  return <div className="space-y-3"><Skeleton className="h-40 w-full rounded-lg" /><Skeleton className="h-24 w-full rounded-lg" /></div>;
+  return (
+    <div className="space-y-3">
+      <Skeleton className="h-40 w-full rounded-lg" />
+      <Skeleton className="h-24 w-full rounded-lg" />
+    </div>
+  );
 }
 
-function useMediaT() { return useT("media"); }
+function useMediaT() {
+  return useT("media");
+}
 
 export function MediaPanel({
   campaignId,

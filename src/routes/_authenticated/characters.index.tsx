@@ -132,7 +132,8 @@ function CharactersPage() {
           addEntries: async (characterId, entries) => {
             await addEntries(
               entries.map(
-                (entry) => ({ ...entry, character_id: characterId, data: entry.data ?? {} }) as never,
+                (entry) =>
+                  ({ ...entry, character_id: characterId, data: entry.data ?? {} }) as never,
               ),
             );
           },
@@ -157,7 +158,6 @@ function CharactersPage() {
       throw error;
     }
   };
-
 
   const rows = (data ?? []).filter((c) =>
     `${c.name} ${c.concept ?? ""}`.toLowerCase().includes(search.toLowerCase()),
@@ -240,7 +240,10 @@ function CharactersPage() {
                     {c.concept || t("list.noConcept")}
                   </p>
                   <p className="relative text-xs text-muted-foreground">
-                    <span className="stat-value">{t("list.points", { count: c.point_budget })}</span> · TL {c.tech_level}
+                    <span className="stat-value">
+                      {t("list.points", { count: c.point_budget })}
+                    </span>{" "}
+                    · TL {c.tech_level}
                   </p>
                 </Link>
                 <div
@@ -272,7 +275,9 @@ function CharactersPage() {
                 <TableHead>{t("list.table.name")}</TableHead>
                 <TableHead className="hidden sm:table-cell">{t("list.table.concept")}</TableHead>
                 <TableHead className="w-20 text-right">{t("list.table.budget")}</TableHead>
-                <TableHead className="hidden w-16 text-right md:table-cell">{t("list.table.tl")}</TableHead>
+                <TableHead className="hidden w-16 text-right md:table-cell">
+                  {t("list.table.tl")}
+                </TableHead>
                 <TableHead className="w-24">{t("list.table.status")}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
@@ -320,7 +325,11 @@ function CharactersPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={c.approved ? "default" : "outline"}>
-                        {c.is_npc ? t("list.npc") : c.approved ? t("list.approved") : t("list.draft")}
+                        {c.is_npc
+                          ? t("list.npc")
+                          : c.approved
+                            ? t("list.approved")
+                            : t("list.draft")}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -344,10 +353,10 @@ function CharactersPage() {
       <AlertDialog open={pendingDelete !== null} onOpenChange={(o) => !o && setPendingDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("list.deleteConfirmTitle", { name: pendingDelete?.name ?? "" })}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("list.deleteConfirmBody")}
-            </AlertDialogDescription>
+            <AlertDialogTitle>
+              {t("list.deleteConfirmTitle", { name: pendingDelete?.name ?? "" })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t("list.deleteConfirmBody")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>

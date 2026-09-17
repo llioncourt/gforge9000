@@ -8,12 +8,12 @@ import { useT } from "@/i18n/hooks";
 const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => {
   const { t } = useT("common");
   return (
-  <nav
-    role="navigation"
-    aria-label={t("pagination.nav")}
-    className={cn("mx-auto flex w-full justify-center", className)}
-    {...props}
-  />
+    <nav
+      role="navigation"
+      aria-label={t("pagination.nav")}
+      className={cn("mx-auto flex w-full justify-center", className)}
+      {...props}
+    />
   );
 };
 Pagination.displayName = "Pagination";
@@ -56,15 +56,15 @@ const PaginationPrevious = ({
 }: React.ComponentProps<typeof PaginationLink>) => {
   const { t } = useT("common");
   return (
-  <PaginationLink
-    aria-label={t("pagination.goToPrevious")}
-    size="default"
-    className={cn("gap-1 pl-2.5", className)}
-    {...props}
-  >
-    <ChevronLeft className="h-4 w-4" />
-    <span>{t("actions.previous")}</span>
-  </PaginationLink>
+    <PaginationLink
+      aria-label={t("pagination.goToPrevious")}
+      size="default"
+      className={cn("gap-1 pl-2.5", className)}
+      {...props}
+    >
+      <ChevronLeft className="h-4 w-4" />
+      <span>{t("actions.previous")}</span>
+    </PaginationLink>
   );
 };
 PaginationPrevious.displayName = "PaginationPrevious";
@@ -72,15 +72,15 @@ PaginationPrevious.displayName = "PaginationPrevious";
 const PaginationNext = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => {
   const { t } = useT("common");
   return (
-  <PaginationLink
-    aria-label={t("pagination.goToNext")}
-    size="default"
-    className={cn("gap-1 pr-2.5", className)}
-    {...props}
-  >
-    <span>{t("actions.next")}</span>
-    <ChevronRight className="h-4 w-4" />
-  </PaginationLink>
+    <PaginationLink
+      aria-label={t("pagination.goToNext")}
+      size="default"
+      className={cn("gap-1 pr-2.5", className)}
+      {...props}
+    >
+      <span>{t("actions.next")}</span>
+      <ChevronRight className="h-4 w-4" />
+    </PaginationLink>
   );
 };
 PaginationNext.displayName = "PaginationNext";
@@ -88,14 +88,14 @@ PaginationNext.displayName = "PaginationNext";
 const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => {
   const { t } = useT("common");
   return (
-  <span
-    aria-hidden
-    className={cn("flex h-9 w-9 items-center justify-center", className)}
-    {...props}
-  >
-    <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">{t("pagination.morePages")}</span>
-  </span>
+    <span
+      aria-hidden
+      className={cn("flex h-9 w-9 items-center justify-center", className)}
+      {...props}
+    >
+      <MoreHorizontal className="h-4 w-4" />
+      <span className="sr-only">{t("pagination.morePages")}</span>
+    </span>
   );
 };
 PaginationEllipsis.displayName = "PaginationEllipsis";

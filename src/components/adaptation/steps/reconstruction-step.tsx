@@ -88,8 +88,12 @@ export function ReconstructionStep({ project, patch }: StepProps) {
       {result ? (
         <section className="space-y-2 rounded-lg border p-3">
           <h5 className="text-sm font-semibold">{t("reconstruction.resultsTitle")}</h5>
-          <p className="text-sm">{t("reconstruction.factsFound", { count: result.facts.length })}</p>
-          <p className="text-sm">{t("reconstruction.scenesFound", { count: result.scenes.length })}</p>
+          <p className="text-sm">
+            {t("reconstruction.factsFound", { count: result.facts.length })}
+          </p>
+          <p className="text-sm">
+            {t("reconstruction.scenesFound", { count: result.scenes.length })}
+          </p>
           {result.failures.length ? (
             <div className="space-y-1">
               <h6 className="text-xs font-semibold uppercase text-muted-foreground">

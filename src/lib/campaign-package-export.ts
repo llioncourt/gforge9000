@@ -16,7 +16,16 @@ import { toPackageVisibility } from "@/lib/visibility";
 
 type Visibility = "gm" | "players" | "public";
 
-const VIDEO_TYPES = ["intro", "recap", "cutscene", "trailer", "handout", "vision", "dream", "other"] as const;
+const VIDEO_TYPES = [
+  "intro",
+  "recap",
+  "cutscene",
+  "trailer",
+  "handout",
+  "vision",
+  "dream",
+  "other",
+] as const;
 type VideoType = (typeof VIDEO_TYPES)[number];
 
 function extensionOf(path: string, fallback: string) {
@@ -120,16 +129,17 @@ export async function buildCampaignPackageZip(
 
   step("Reading campaign…");
   const campaign = await getCampaign(campaignId);
-  const [notes, entities, relationships, assets, maps, videos, soundFx, soundtracks] = await Promise.all([
-    listNotes(campaignId),
-    listEntities(campaignId),
-    listRelationships(campaignId),
-    listAssets(campaignId),
-    listMaps(campaignId),
-    listCampaignVideos(campaignId),
-    listCampaignSoundFx(campaignId),
-    listCampaignSoundtracks(campaignId),
-  ]);
+  const [notes, entities, relationships, assets, maps, videos, soundFx, soundtracks] =
+    await Promise.all([
+      listNotes(campaignId),
+      listEntities(campaignId),
+      listRelationships(campaignId),
+      listAssets(campaignId),
+      listMaps(campaignId),
+      listCampaignVideos(campaignId),
+      listCampaignSoundFx(campaignId),
+      listCampaignSoundtracks(campaignId),
+    ]);
   const { data: characterRows } = await supabase
     .from("characters")
     .select("*")
@@ -150,14 +160,16 @@ export async function buildCampaignPackageZip(
   done = 1;
   emit();
 
-
   const rawSettings = (campaign.settings ?? {}) as Record<string, unknown>;
   const settings: NonNullable<CampaignPackageManifest["campaign"]["settings"]> = {};
-  if (typeof rawSettings["point_limit"] === "number") settings.point_limit = rawSettings["point_limit"];
+  if (typeof rawSettings["point_limit"] === "number")
+    settings.point_limit = rawSettings["point_limit"];
   if (typeof rawSettings["disadvantage_limit"] === "number")
     settings.disadvantage_limit = rawSettings["disadvantage_limit"];
-  if (typeof rawSettings["tech_level"] === "number") settings.tech_level = rawSettings["tech_level"];
-  if (typeof rawSettings["house_rules"] === "string") settings.house_rules = rawSettings["house_rules"];
+  if (typeof rawSettings["tech_level"] === "number")
+    settings.tech_level = rawSettings["tech_level"];
+  if (typeof rawSettings["house_rules"] === "string")
+    settings.house_rules = rawSettings["house_rules"];
   if (Array.isArray(rawSettings["allowed_sources"]))
     settings.allowed_sources = (rawSettings["allowed_sources"] as unknown[]).filter(
       (value): value is string => typeof value === "string",
@@ -166,7 +178,6 @@ export async function buildCampaignPackageZip(
     settings.allowed_packs = (rawSettings["allowed_packs"] as unknown[]).filter(
       (value): value is string => typeof value === "string",
     );
-
 
   // --- characters -----------------------------------------------------------
   step("Exporting characters…");
@@ -177,7 +188,14 @@ export async function buildCampaignPackageZip(
     const portable = toPortable(toCharacterRecord(row), entries.map(toEntry));
     const jsonPath = bundle.reserve("characters", row.name, "json");
     bundle.add(jsonPath, new TextEncoder().encode(JSON.stringify(portable, null, 2)));
-    const portraitPath = await copy(bundle, PORTRAIT_BUCKET, row.portrait_path, "images", `${row.name}-portrait`, "avif");
+    const portraitPath = await copy(
+      bundle,
+      PORTRAIT_BUCKET,
+      row.portrait_path,
+      "images",
+      `${row.name}-portrait`,
+      "avif",
+    );
     const key = `char:${row.id}`;
     characterKeyById.set(row.id, key);
     manifestCharacters.push({
@@ -197,7 +215,9 @@ export async function buildCampaignPackageZip(
   for (const entity of entities) {
     const imagePath = await copy(bundle, "auto", entity.image_url, "images", entity.name, "avif");
     const parentKey = entity.parent_id ? entityKeyById.get(entity.parent_id) : undefined;
-    const characterKey = entity.character_id ? characterKeyById.get(entity.character_id) : undefined;
+    const characterKey = entity.character_id
+      ? characterKeyById.get(entity.character_id)
+      : undefined;
     manifestEntities.push({
       key: entityKeyById.get(entity.id)!,
       kind: entity.kind,
@@ -267,7 +287,9 @@ export async function buildCampaignPackageZip(
       visible_to_players: map.visible_to_players,
       ...(image ? { file: image } : {}),
       objects: objects.map((object) => {
-        const characterKey = object.character_id ? characterKeyById.get(object.character_id) : undefined;
+        const characterKey = object.character_id
+          ? characterKeyById.get(object.character_id)
+          : undefined;
         const data = (object.data ?? {}) as Record<string, unknown>;
         // Tokens pinned to a lore entry keep that link across the round trip.
         const entityId = typeof data["entity_id"] === "string" ? data["entity_id"] : undefined;
@@ -287,7 +309,6 @@ export async function buildCampaignPackageZip(
           ...(entityKey ? { entity_key: entityKey } : {}),
         };
       }),
-
     });
     tick();
   }
@@ -296,7 +317,14 @@ export async function buildCampaignPackageZip(
   step("Exporting videos…");
   const manifestVideos: CampaignPackageManifest["videos"] = [];
   for (const video of videos) {
-    const file = await copy(bundle, CAMPAIGN_INTRO_BUCKET, video.storage_path, "videos", video.title, "mp4");
+    const file = await copy(
+      bundle,
+      CAMPAIGN_INTRO_BUCKET,
+      video.storage_path,
+      "videos",
+      video.title,
+      "mp4",
+    );
     tick();
     if (!file) continue;
     const type = (VIDEO_TYPES as readonly string[]).includes(video.video_type)
@@ -308,7 +336,14 @@ export async function buildCampaignPackageZip(
   step("Exporting sound FX…");
   const manifestSoundFx: CampaignPackageManifest["sound_fx"] = [];
   for (const effect of soundFx) {
-    const file = await copy(bundle, CAMPAIGN_SOUND_FX_BUCKET, effect.storage_path, "sounds", effect.title, "mp3");
+    const file = await copy(
+      bundle,
+      CAMPAIGN_SOUND_FX_BUCKET,
+      effect.storage_path,
+      "sounds",
+      effect.title,
+      "mp3",
+    );
     tick();
     if (file) manifestSoundFx.push({ title: effect.title, file });
   }
@@ -360,7 +395,9 @@ export async function buildCampaignPackageZip(
       release_year: album.release_year,
       game_slug: (album as { game_slug?: string | null }).game_slug ?? null,
       status:
-        (album as { status?: string | null }).status === "draft" ? ("draft" as const) : ("published" as const),
+        (album as { status?: string | null }).status === "draft"
+          ? ("draft" as const)
+          : ("published" as const),
       cover,
       tracks,
     });

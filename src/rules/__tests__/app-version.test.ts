@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  extractAppAssetId,
-  isNewAppAssetAvailable,
-  isNewBuildAvailable,
-} from "@/lib/app-version";
+import { extractAppAssetId, isNewAppAssetAvailable, isNewBuildAvailable } from "@/lib/app-version";
 
 describe("app version checks", () => {
   it("detects a different deployed build", () => {

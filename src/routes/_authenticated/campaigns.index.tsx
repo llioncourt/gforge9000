@@ -39,7 +39,6 @@ import { Progress } from "@/components/ui/progress";
 import { buildCampaignPackageZip, type CampaignExportStep } from "@/lib/campaign-package-export";
 import { metaText } from "@/i18n/meta";
 
-
 export const Route = createFileRoute("/_authenticated/campaigns/")({
   staticData: { sitemap: false },
   head: () => ({
@@ -235,9 +234,7 @@ function CampaignsPage() {
       ) : (data?.length ?? 0) === 0 ? (
         <div className="panel p-10 text-center">
           <Users className="mx-auto h-6 w-6 text-muted-foreground" />
-          <p className="mt-3 text-sm text-muted-foreground">
-            {t("list.empty")}
-          </p>
+          <p className="mt-3 text-sm text-muted-foreground">{t("list.empty")}</p>
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -343,13 +340,16 @@ function CampaignsPage() {
           }}
         >
           <DialogHeader>
-            <DialogTitle>{t("list.export.title", { name: exportName || t("list.export.fallbackName") })}</DialogTitle>
+            <DialogTitle>
+              {t("list.export.title", { name: exportName || t("list.export.fallbackName") })}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Progress value={exportError ? 100 : (exportStep?.percent ?? 0)} />
             <div className="flex items-center justify-between text-sm">
               <span className={exportError ? "text-destructive" : "text-muted-foreground"}>
-                {exportError ?? (exportDone ? t("list.export.downloaded") : (exportStep?.label ?? ""))}
+                {exportError ??
+                  (exportDone ? t("list.export.downloaded") : (exportStep?.label ?? ""))}
               </span>
               <span className="tabular-nums text-muted-foreground">
                 {exportError ? "" : `${exportStep?.percent ?? 0}%`}

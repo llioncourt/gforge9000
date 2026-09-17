@@ -20,7 +20,7 @@ export async function importLore(
   const planned = entityInserts(file, campaignId);
   const idByImportKey = await upsertEntitiesByImportKey(
     campaignId,
-    planned.map((item) => item.row as (typeof item.row) & { import_key: string }),
+    planned.map((item) => item.row as typeof item.row & { import_key: string }),
   );
 
   const idByKey = new Map<string, string>();

@@ -28,7 +28,11 @@ describe("adaptation review selection", () => {
   });
 
   it("drops unacceptable or duplicated ids from a selection", () => {
-    const facts = [fact("a"), fact("b", { provenance_type: "conflict" }), fact("c", { canon_status: "confirmed" })];
+    const facts = [
+      fact("a"),
+      fact("b", { provenance_type: "conflict" }),
+      fact("c", { canon_status: "confirmed" }),
+    ];
     expect(acceptableSelection(facts, ["a", "a", "b", "c", "zz"])).toEqual(["a"]);
   });
 });

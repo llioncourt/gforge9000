@@ -313,7 +313,8 @@ function EntityPage() {
   });
   const dropRelationship = useMutation({
     mutationFn: (relId: string) => deleteRelationship(relId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["lore-relationships", campaignId] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["lore-relationships", campaignId] }),
     onError: (error: Error) => toast.error(error.message),
   });
 
@@ -664,7 +665,8 @@ function EntityPage() {
                       params={{ id: dataValue(form, "character_sheet_id") }}
                       search={{ from: `entity:${id}` }}
                     >
-                      <ExternalLink className="mr-2 size-4" /> {t("entityPage.image.openCharacterSheet")}
+                      <ExternalLink className="mr-2 size-4" />{" "}
+                      {t("entityPage.image.openCharacterSheet")}
                     </Link>
                   </Button>
                 ) : null}
@@ -760,7 +762,9 @@ function EntityPage() {
                     <Textarea
                       id={`field-${field.key}`}
                       rows={field.type === "list" ? 3 : 4}
-                      placeholder={field.type === "list" ? t("entityPage.details.onePerLine") : undefined}
+                      placeholder={
+                        field.type === "list" ? t("entityPage.details.onePerLine") : undefined
+                      }
                       value={value}
                       disabled={!canEdit}
                       onChange={(event) => setValue(event.target.value)}
@@ -917,7 +921,9 @@ function EntityPage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>{t("entityPage.history.restoreDialogTitle")}</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              {t("entityPage.history.restoreDialogTitle")}
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
                               {t("entityPage.history.restoreDialogDescription")}
                             </AlertDialogDescription>
@@ -941,7 +947,9 @@ function EntityPage() {
         {isGm ? (
           <TabsContent value="reveals" className="space-y-4 pt-4">
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-muted-foreground">{t("entityPage.reveals.currentVisibility")}</span>
+              <span className="text-muted-foreground">
+                {t("entityPage.reveals.currentVisibility")}
+              </span>
               <VisibilityBadge visibility={form.visibility} isGm={isGm} />
             </div>
             <p className="text-muted-foreground text-sm">
@@ -953,23 +961,25 @@ function EntityPage() {
               {(members.data ?? [])
                 .filter((member) => member.role !== "gm" && member.user_id !== user?.id)
                 .map((member) => {
-                const granted = (grants.data ?? []).some((g) => g.user_id === member.user_id);
-                return (
-                  <li key={member.user_id} className="flex items-center gap-3 p-3">
-                    <span className="font-medium">
-                      {member.display_name ?? member.user_id.slice(0, 8)}
-                    </span>
-                    <Button
-                      variant={granted ? "default" : "outline"}
-                      size="sm"
-                      className="ml-auto"
-                      onClick={() => toggleGrant.mutate(member.user_id)}
-                    >
-                      {granted ? t("entityPage.reveals.revealed") : t("entityPage.reveals.reveal")}
-                    </Button>
-                  </li>
-                );
-              })}
+                  const granted = (grants.data ?? []).some((g) => g.user_id === member.user_id);
+                  return (
+                    <li key={member.user_id} className="flex items-center gap-3 p-3">
+                      <span className="font-medium">
+                        {member.display_name ?? member.user_id.slice(0, 8)}
+                      </span>
+                      <Button
+                        variant={granted ? "default" : "outline"}
+                        size="sm"
+                        className="ml-auto"
+                        onClick={() => toggleGrant.mutate(member.user_id)}
+                      >
+                        {granted
+                          ? t("entityPage.reveals.revealed")
+                          : t("entityPage.reveals.reveal")}
+                      </Button>
+                    </li>
+                  );
+                })}
             </ul>
           </TabsContent>
         ) : null}

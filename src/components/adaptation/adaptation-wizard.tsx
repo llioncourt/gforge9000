@@ -7,7 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useT } from "@/i18n/hooks";
-import { updateAdaptation, type AdaptationProject, type CreativeSettings } from "@/lib/adaptation/api";
+import {
+  updateAdaptation,
+  type AdaptationProject,
+  type CreativeSettings,
+} from "@/lib/adaptation/api";
 import { WIZARD_STEPS, type WizardStep } from "@/lib/adaptation/types";
 import { SourceStep, ScopeStep } from "@/components/adaptation/steps/scope-steps";
 import { ScanStep } from "@/components/adaptation/steps/scan-step";

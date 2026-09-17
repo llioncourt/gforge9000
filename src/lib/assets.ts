@@ -15,7 +15,11 @@ export const ASSET_TYPES = [
   "application/pdf",
 ];
 
-export function validateAssetFile(file: { type: string; size: number; name: string }): string | null {
+export function validateAssetFile(file: {
+  type: string;
+  size: number;
+  name: string;
+}): string | null {
   const type = (file.type || "").toLowerCase();
   const byExtension = /\.(png|jpe?g|webp|avif|gif|pdf)$/i.test(file.name);
   if (!ASSET_TYPES.includes(type) && !byExtension) {
@@ -35,7 +39,9 @@ export function assetPathFor(userId: string, campaignId: string, fileName: strin
 }
 
 export function isImageAsset(row: { mime_type: string; storage_path: string }): boolean {
-  return row.mime_type.startsWith("image/") || /\.(png|jpe?g|webp|avif|gif)$/i.test(row.storage_path);
+  return (
+    row.mime_type.startsWith("image/") || /\.(png|jpe?g|webp|avif|gif)$/i.test(row.storage_path)
+  );
 }
 
 export function formatBytes(bytes: number): string {
@@ -70,7 +76,10 @@ export async function uploadAssetFile(
   const path = assetPathFor(user.id, campaignId, stored.name);
   const { error } = await supabase.storage
     .from(ASSET_BUCKET)
-    .upload(path, stored, { contentType: stored.type || "application/octet-stream", upsert: false });
+    .upload(path, stored, {
+      contentType: stored.type || "application/octet-stream",
+      upsert: false,
+    });
   if (error) throw new Error(error.message);
   return { path, mimeType: stored.type || "application/octet-stream", byteSize: stored.size };
 }
@@ -98,7 +107,9 @@ export async function deleteAsset(row: AssetRow): Promise<void> {
 export async function assetUrl(path: string | null | undefined): Promise<string | null> {
   if (!path) return null;
   if (/^https?:\/\//i.test(path)) return path;
-  const { data, error } = await supabase.storage.from(ASSET_BUCKET).createSignedUrl(path, 60 * 60 * 8);
+  const { data, error } = await supabase.storage
+    .from(ASSET_BUCKET)
+    .createSignedUrl(path, 60 * 60 * 8);
   if (error) return null;
   return data?.signedUrl ?? null;
 }

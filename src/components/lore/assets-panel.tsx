@@ -87,8 +87,15 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
   });
 
   const patch = useMutation({
-    mutationFn: ({ id, ...rest }: { id: string; title?: string; caption?: string; visible_to_players?: boolean }) =>
-      updateAsset(id, rest),
+    mutationFn: ({
+      id,
+      ...rest
+    }: {
+      id: string;
+      title?: string;
+      caption?: string;
+      visible_to_players?: boolean;
+    }) => updateAsset(id, rest),
     onSuccess: () => invalidate(),
     onError: (error: Error) => toast.error(error.message),
   });
@@ -147,7 +154,11 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((row) => (
-            <article key={row.id} data-search-id={row.id} className="relative space-y-3 rounded-lg border p-3">
+            <article
+              key={row.id}
+              data-search-id={row.id}
+              className="relative space-y-3 rounded-lg border p-3"
+            >
               <VisibilityBadge
                 visibility={row.visible_to_players}
                 isGm={isGm}
@@ -221,7 +232,10 @@ export function AssetsPanel({ campaignId, isGm }: { campaignId: string; isGm: bo
         </div>
       )}
 
-      <AlertDialog open={confirmDelete !== null} onOpenChange={(open) => !open && setConfirmDelete(null)}>
+      <AlertDialog
+        open={confirmDelete !== null}
+        onOpenChange={(open) => !open && setConfirmDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("assets.deleteDialog.title")}</AlertDialogTitle>

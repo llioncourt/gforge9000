@@ -9,7 +9,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/i18n/hooks";
 import { listEntities } from "@/lib/lore";
 import { listSessionChronicles } from "@/lib/adaptation/chronicle-api";
-import { SOURCE_MODES, SPOILER_POLICIES, type SourceMode, type SpoilerPolicy } from "@/lib/adaptation/types";
+import {
+  SOURCE_MODES,
+  SPOILER_POLICIES,
+  type SourceMode,
+  type SpoilerPolicy,
+} from "@/lib/adaptation/types";
 import type { StepProps } from "@/components/adaptation/adaptation-wizard";
 import type { ScanScope } from "@/lib/adaptation/scanner";
 
@@ -87,7 +92,10 @@ export function ScopeStep({ project, patch }: StepProps) {
   const setScope = (next: Partial<ScanScope & { mode?: ScopeMode }>) =>
     void patch({ source_scope: { ...scope, ...next } as Record<string, unknown> });
 
-  const toggleId = (key: "entity_ids" | "root_entity_ids" | "session_chronicle_ids", id: string) => {
+  const toggleId = (
+    key: "entity_ids" | "root_entity_ids" | "session_chronicle_ids",
+    id: string,
+  ) => {
     const list = new Set((scope[key] as string[] | undefined) ?? []);
     if (list.has(id)) list.delete(id);
     else list.add(id);
@@ -254,7 +262,9 @@ export function ScopeStep({ project, patch }: StepProps) {
             <Checkbox
               id={key}
               checked={scope[key] !== false}
-              onCheckedChange={(checked) => setScope({ [key]: checked === true } as Partial<ScanScope>)}
+              onCheckedChange={(checked) =>
+                setScope({ [key]: checked === true } as Partial<ScanScope>)
+              }
             />
             <Label htmlFor={key} className="font-normal">
               {t(`scope.${label}`)}

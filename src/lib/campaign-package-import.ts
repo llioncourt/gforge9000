@@ -66,7 +66,9 @@ export async function importCampaignPackage(
   onProgress?: (step: string) => void,
 ): Promise<CampaignImportSummary> {
   if (file.size > MAX_CAMPAIGN_PACKAGE_BYTES) {
-    throw new Error(`The package is larger than ${Math.round(MAX_CAMPAIGN_PACKAGE_BYTES / 1024 / 1024)} MB.`);
+    throw new Error(
+      `The package is larger than ${Math.round(MAX_CAMPAIGN_PACKAGE_BYTES / 1024 / 1024)} MB.`,
+    );
   }
   const step = (label: string) => onProgress?.(label);
   step("Reading package…");
@@ -150,7 +152,17 @@ export async function importCampaignPackage(
   try {
     const ids: ImportIds = { characters: new Map(), entities: new Map() };
     await importCharacters(manifest, archive, campaignId, user.id, summary, step, ids, packageKey);
-    await importLoreSection(manifest, archive, campaignId, user.id, summary, step, ids, packageKey, firstImport);
+    await importLoreSection(
+      manifest,
+      archive,
+      campaignId,
+      user.id,
+      summary,
+      step,
+      ids,
+      packageKey,
+      firstImport,
+    );
     if (firstImport) {
       await importNotes(manifest, campaignId, user.id, summary, step);
       await importAssets(manifest, archive, campaignId, user.id, summary, step);
@@ -158,7 +170,10 @@ export async function importCampaignPackage(
       if (manifest.videos.length) {
         step("Importing videos…");
         for (const video of manifest.videos) {
-          await uploadCampaignVideo(campaignId, fileFromZip(archive, video.file), { title: video.title, videoType: video.type });
+          await uploadCampaignVideo(campaignId, fileFromZip(archive, video.file), {
+            title: video.title,
+            videoType: video.type,
+          });
           summary.videos += 1;
           if (video.type === "intro") summary.intro = true;
         }
@@ -251,7 +266,10 @@ async function importCharacters(
       const { error } = await supabase.from("characters").update(updates).eq("id", existing.id);
       if (error) throw new Error(error.message);
       characterId = existing.id;
-      const cleared = await supabase.from("character_entries").delete().eq("character_id", characterId);
+      const cleared = await supabase
+        .from("character_entries")
+        .delete()
+        .eq("character_id", characterId);
       if (cleared.error) throw new Error(cleared.error.message);
     } else {
       const { data: created, error } = await supabase
@@ -280,7 +298,7 @@ async function importCharacters(
         data: (item.data ?? {}) as NonNullable<TablesInsert<"character_entries">["data"]>,
         notes: item.notes ?? null,
         source: (item.source ?? {}) as NonNullable<TablesInsert<"character_entries">["source"]>,
-        sort_order: (item['sort_order'] as number | undefined) ?? index,
+        sort_order: (item["sort_order"] as number | undefined) ?? index,
       }));
       const entriesResult = await supabase.from("character_entries").insert(rows);
       if (entriesResult.error) throw new Error(entriesResult.error.message);
@@ -288,7 +306,10 @@ async function importCharacters(
 
     if (entry.portrait_file && !existing) {
       const path = await uploadPortrait(characterId, fileFromZip(archive, entry.portrait_file));
-      const update = await supabase.from("characters").update({ portrait_path: path }).eq("id", characterId);
+      const update = await supabase
+        .from("characters")
+        .update({ portrait_path: path })
+        .eq("id", characterId);
       if (update.error) throw new Error(update.error.message);
     }
     summary.characters += 1;
@@ -319,7 +340,8 @@ async function importLoreSection(
       .eq("campaign_id", campaignId)
       .in("import_key", keys);
     for (const row of rows ?? []) {
-      if (row.import_key) existingByKey.set(row.import_key, { id: row.id, image_url: row.image_url });
+      if (row.import_key)
+        existingByKey.set(row.import_key, { id: row.id, image_url: row.image_url });
     }
   }
 
@@ -332,7 +354,8 @@ async function importLoreSection(
       imagePath = await uploadLoreImage(archive, entity.image_file, campaignId, userId);
     }
     const data: Record<string, unknown> = { ...entity.data };
-    if (entity.character_key) data["character_sheet_id"] = ids.characters.get(entity.character_key) ?? null;
+    if (entity.character_key)
+      data["character_sheet_id"] = ids.characters.get(entity.character_key) ?? null;
     const payload = {
       campaign_id: campaignId,
       import_key: importKey,
@@ -348,7 +371,9 @@ async function importLoreSection(
       tags: entity.tags,
       sort_order: entity.sort_order,
       image_url: imagePath,
-      character_id: entity.character_key ? (ids.characters.get(entity.character_key) ?? null) : null,
+      character_id: entity.character_key
+        ? (ids.characters.get(entity.character_key) ?? null)
+        : null,
       data: data as NonNullable<TablesInsert<"entities">["data"]>,
     };
     if (previous) {
@@ -468,7 +493,9 @@ async function importMaps(
   if (!manifest.maps.length) return;
   step("Importing battle maps…");
   for (const map of manifest.maps) {
-    const imagePath = map.file ? await uploadMapImage(campaignId, fileFromZip(archive, map.file)) : null;
+    const imagePath = map.file
+      ? await uploadMapImage(campaignId, fileFromZip(archive, map.file))
+      : null;
     const created = await createMap({
       campaign_id: campaignId,
       name: map.name,
@@ -503,7 +530,9 @@ async function importMaps(
         color: object.color ?? null,
         hidden: object.hidden,
         image_url: tokenImage,
-        character_id: object.character_key ? (ids.characters.get(object.character_key) ?? null) : null,
+        character_id: object.character_key
+          ? (ids.characters.get(object.character_key) ?? null)
+          : null,
         data: data as NonNullable<TablesInsert<"map_objects">["data"]>,
         created_by: userId,
       });

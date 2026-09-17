@@ -31,7 +31,6 @@ export async function getEntity(id: string): Promise<EntityRow> {
   return unwrap(await rpc("list_entities_safe").eq("id", id).single()) as EntityRow;
 }
 
-
 export async function createEntity(input: TablesInsert<"entities">): Promise<EntityRow> {
   return unwrap(await supabase.from("entities").insert(input).select("*").single());
 }
@@ -87,7 +86,10 @@ export async function createRelationships(
   const data = unwrap(
     await supabase
       .from("entity_relationships")
-      .upsert(rows, { onConflict: "campaign_id,source_id,target_id,rel_type", ignoreDuplicates: true })
+      .upsert(rows, {
+        onConflict: "campaign_id,source_id,target_id,rel_type",
+        ignoreDuplicates: true,
+      })
       .select("id"),
   );
   return data.length;
@@ -113,7 +115,6 @@ export async function listRelationships(campaignId: string): Promise<Relationshi
   ) as RelationshipRow[];
 }
 
-
 export async function createRelationship(
   input: TablesInsert<"entity_relationships">,
 ): Promise<RelationshipRow> {
@@ -126,15 +127,11 @@ export async function deleteRelationship(id: string): Promise<void> {
 }
 
 export async function listGrants(entityId: string): Promise<GrantRow[]> {
-  return unwrap(
-    await supabase.from("knowledge_grants").select("*").eq("entity_id", entityId),
-  );
+  return unwrap(await supabase.from("knowledge_grants").select("*").eq("entity_id", entityId));
 }
 
 export async function listCampaignGrants(campaignId: string): Promise<GrantRow[]> {
-  return unwrap(
-    await supabase.from("knowledge_grants").select("*").eq("campaign_id", campaignId),
-  );
+  return unwrap(await supabase.from("knowledge_grants").select("*").eq("campaign_id", campaignId));
 }
 
 export async function grantKnowledge(input: TablesInsert<"knowledge_grants">): Promise<GrantRow> {

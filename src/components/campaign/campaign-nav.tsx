@@ -27,13 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 type IconType = typeof Boxes;
 
@@ -111,9 +105,7 @@ export function buildCampaignNavGroups(opts: {
     },
   ];
 
-  const standalone: CampaignNavItem[] = [
-    { value: "media", label: t("tabs.media"), icon: Film },
-  ];
+  const standalone: CampaignNavItem[] = [{ value: "media", label: t("tabs.media"), icon: Film }];
 
   return { groups, standalone };
 }
@@ -186,7 +178,10 @@ export function CampaignNav({
                     <DropdownMenuItem
                       key={item.value}
                       onSelect={() => select(item.value)}
-                      style={{ animation: `nav-item-in 220ms ease-out both`, animationDelay: `${index * 35}ms` }}
+                      style={{
+                        animation: `nav-item-in 220ms ease-out both`,
+                        animationDelay: `${index * 35}ms`,
+                      }}
                       className={cn(
                         "cursor-pointer gap-2",
                         active && "bg-accent text-accent-foreground",

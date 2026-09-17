@@ -169,9 +169,7 @@ export async function listMapObjects(mapId: string): Promise<MapObjectRow[]> {
   );
 }
 
-export async function createMapObject(
-  input: TablesInsert<"map_objects">,
-): Promise<MapObjectRow> {
+export async function createMapObject(input: TablesInsert<"map_objects">): Promise<MapObjectRow> {
   return unwrap(await supabase.from("map_objects").insert(input).select("*").single());
 }
 

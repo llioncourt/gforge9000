@@ -36,10 +36,18 @@ function evaluate(
   };
 }
 
-export function hpState(current: number | null | undefined, max: number, rules: Ruleset = defaultRuleset) {
+export function hpState(
+  current: number | null | undefined,
+  max: number,
+  rules: Ruleset = defaultRuleset,
+) {
   return evaluate(current ?? max, max, rules.health.hpThresholds);
 }
 
-export function fpState(current: number | null | undefined, max: number, rules: Ruleset = defaultRuleset) {
+export function fpState(
+  current: number | null | undefined,
+  max: number,
+  rules: Ruleset = defaultRuleset,
+) {
   return evaluate(current ?? max, max, rules.health.fpThresholds);
 }

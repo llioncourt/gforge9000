@@ -74,11 +74,7 @@ export function CampaignRules({
     }
     if (field.kind === "enum") {
       return (
-        <Select
-          value={String(value)}
-          disabled={disabled}
-          onValueChange={(v) => setField(field, v)}
-        >
+        <Select value={String(value)} disabled={disabled} onValueChange={(v) => setField(field, v)}>
           <SelectTrigger aria-label={fieldLabel(field)}>
             <SelectValue />
           </SelectTrigger>

@@ -37,7 +37,10 @@ export function fitWithin(
 ): { width: number; height: number } {
   if (width <= max && height <= max) return { width, height };
   const ratio = Math.min(max / width, max / height);
-  return { width: Math.max(1, Math.round(width * ratio)), height: Math.max(1, Math.round(height * ratio)) };
+  return {
+    width: Math.max(1, Math.round(width * ratio)),
+    height: Math.max(1, Math.round(height * ratio)),
+  };
 }
 
 async function canvasFromFile(file: Blob, max: number) {
@@ -53,7 +56,11 @@ async function canvasFromFile(file: Blob, max: number) {
   return { canvas, ctx, width, height };
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob | null> {
+function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  type: string,
+  quality: number,
+): Promise<Blob | null> {
   return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
 }
 

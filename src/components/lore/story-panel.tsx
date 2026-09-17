@@ -48,10 +48,7 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
     return map;
   }, [rows]);
 
-  const roots = useMemo(
-    () => rows.filter((row) => row.kind === "ARC" && !row.parent_id),
-    [rows],
-  );
+  const roots = useMemo(() => rows.filter((row) => row.kind === "ARC" && !row.parent_id), [rows]);
 
   const orphans = useMemo(
     () =>
@@ -157,7 +154,9 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
     <div className="space-y-8">
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold tracking-wide uppercase">{t("storyPanel.outlineTitle")}</h3>
+          <h3 className="text-sm font-semibold tracking-wide uppercase">
+            {t("storyPanel.outlineTitle")}
+          </h3>
           {isGm ? (
             <Button
               size="sm"
@@ -188,11 +187,11 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
       </section>
 
       <section className="space-y-4">
-        <h3 className="text-sm font-semibold tracking-wide uppercase">{t("storyPanel.sideTitle")}</h3>
+        <h3 className="text-sm font-semibold tracking-wide uppercase">
+          {t("storyPanel.sideTitle")}
+        </h3>
         {sideGroups.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            {t("storyPanel.sideEmpty")}
-          </p>
+          <p className="text-muted-foreground text-sm">{t("storyPanel.sideEmpty")}</p>
         ) : (
           sideGroups.map((group) => (
             <div key={group.kind} className="space-y-2">

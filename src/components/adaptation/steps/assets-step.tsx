@@ -171,7 +171,9 @@ export function AssetsStep({ project }: StepProps) {
                     {t("assets.roleLabel")}
                     <Select
                       value={row.role}
-                      onValueChange={(value) => update.mutate({ id: row.id, patch: { role: value } })}
+                      onValueChange={(value) =>
+                        update.mutate({ id: row.id, patch: { role: value } })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -205,7 +207,9 @@ export function AssetsStep({ project }: StepProps) {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => update.mutate({ id: row.id, patch: { resolution_status: "rejected" } })}
+                    onClick={() =>
+                      update.mutate({ id: row.id, patch: { resolution_status: "rejected" } })
+                    }
                   >
                     <X className="mr-1 h-3.5 w-3.5" /> {t("assets.reject")}
                   </Button>

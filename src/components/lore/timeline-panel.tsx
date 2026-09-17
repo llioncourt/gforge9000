@@ -193,14 +193,13 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
         if (row.minute) check.minute = Number(row.minute);
         const err = validateWorldDate(calendar, check);
         if (err)
-          throw new Error(t("timelinePanel.eventError", { index: i + 1, name: row.name, error: err }));
+          throw new Error(
+            t("timelinePanel.eventError", { index: i + 1, name: row.name, error: err }),
+          );
       }
     });
 
-    report(
-      t("timelinePanel.importingEvents", { done: 0, total: rows.length }),
-      25,
-    );
+    report(t("timelinePanel.importingEvents", { done: 0, total: rows.length }), 25);
     // Every event is written in a single step, so an import either lands whole
     // or leaves the timeline exactly as it was.
     const inserts = rows.map((row) => ({
@@ -224,10 +223,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
       },
     }));
     await createEntities(inserts as never);
-    report(
-      t("timelinePanel.importingEvents", { done: rows.length, total: rows.length }),
-      95,
-    );
+    report(t("timelinePanel.importingEvents", { done: rows.length, total: rows.length }), 95);
 
     await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
     return t("timelinePanel.eventsImported", { count: rows.length });
@@ -685,7 +681,9 @@ function CalendarForm({
             }
           >
             <Plus className="mr-1 h-4 w-4" />{" "}
-            {t("timelinePanel.calendar.addMonth", { unit: draft.units.month.singular.toLowerCase() })}
+            {t("timelinePanel.calendar.addMonth", {
+              unit: draft.units.month.singular.toLowerCase(),
+            })}
           </Button>
         </TabsContent>
 
@@ -775,7 +773,9 @@ function CalendarForm({
                 seasons: [
                   ...d.seasons,
                   {
-                    name: t("timelinePanel.calendar.newSeasonName", { index: d.seasons.length + 1 }),
+                    name: t("timelinePanel.calendar.newSeasonName", {
+                      index: d.seasons.length + 1,
+                    }),
                     subtitle: "",
                     months: [],
                   },
@@ -905,7 +905,9 @@ function CalendarForm({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">{t("timelinePanel.calendar.leapNone")}</SelectItem>
-                <SelectItem value="gregorian">{t("timelinePanel.calendar.leapGregorian")}</SelectItem>
+                <SelectItem value="gregorian">
+                  {t("timelinePanel.calendar.leapGregorian")}
+                </SelectItem>
                 <SelectItem value="block">{t("timelinePanel.calendar.leapBlock")}</SelectItem>
               </SelectContent>
             </Select>
@@ -976,7 +978,8 @@ function CalendarForm({
                     <SelectContent>
                       {draft.months.map((m, i) => (
                         <SelectItem key={i} value={String(i)}>
-                          {m.name || t("timelinePanel.calendar.monthFallbackName", { index: i + 1 })}
+                          {m.name ||
+                            t("timelinePanel.calendar.monthFallbackName", { index: i + 1 })}
                         </SelectItem>
                       ))}
                     </SelectContent>

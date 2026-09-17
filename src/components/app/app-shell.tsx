@@ -37,7 +37,6 @@ const NAV = [
   { to: "/packs", labelKey: "links.packs", icon: Boxes },
 ] as const;
 
-
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -80,142 +79,159 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <CampaignSoundtrackProvider pathname={pathname}>
-    <div className="relative min-h-screen">
-      <AmbientBackground />
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
-      <DiceTray open={trayOpen} onOpenChange={setTrayOpen} />
-      <DiceOverlay />
+      <div className="relative min-h-screen">
+        <AmbientBackground />
+        <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+        <DiceTray open={trayOpen} onOpenChange={setTrayOpen} />
+        <DiceOverlay />
 
-
-      <aside
-        className={cn(
-          "no-print fixed inset-y-0 left-0 z-40 w-[17rem] max-w-[85vw] border-r border-sidebar-border/70 bg-sidebar/80 backdrop-blur-xl transition-transform duration-300 ease-out will-change-transform lg:w-64",
-          open ? "translate-x-0" : "-translate-x-full",
-          collapsed ? "lg:-translate-x-full" : "lg:translate-x-0",
-        )}
-      >
-        <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5">
-          <div className="grid h-8 w-8 place-content-center rounded-md bg-primary text-primary-foreground">
-            <Dices className="h-4 w-4" />
-          </div>
-          <div className="leading-tight">
-            <p className="font-display text-sm font-semibold text-sidebar-foreground">
-              {t("brand.name")}
-            </p>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              {t("brand.tagline")}
-            </p>
-          </div>
-          <button
-            className="ml-auto text-muted-foreground hover:text-foreground lg:hidden"
-            onClick={() => setOpen(false)}
-            aria-label={t("sidebar.close")}
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <button
-            className="ml-auto hidden text-muted-foreground hover:text-foreground lg:block"
-            onClick={() => toggleCollapsed(true)}
-            aria-label={t("sidebar.collapse")}
-            title={t("sidebar.collapse")}
-          >
-            <PanelLeftClose className="h-4 w-4" />
-          </button>
-        </div>
-
-        <nav className="space-y-1 p-3">
-          {NAV.map(({ to, labelKey, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              activeProps={{
-                className:
-                  "bg-sidebar-accent text-sidebar-accent-foreground font-medium ring-1 ring-sidebar-border",
-              }}
+        <aside
+          className={cn(
+            "no-print fixed inset-y-0 left-0 z-40 w-[17rem] max-w-[85vw] border-r border-sidebar-border/70 bg-sidebar/80 backdrop-blur-xl transition-transform duration-300 ease-out will-change-transform lg:w-64",
+            open ? "translate-x-0" : "-translate-x-full",
+            collapsed ? "lg:-translate-x-full" : "lg:translate-x-0",
+          )}
+        >
+          <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-5">
+            <div className="grid h-8 w-8 place-content-center rounded-md bg-primary text-primary-foreground">
+              <Dices className="h-4 w-4" />
+            </div>
+            <div className="leading-tight">
+              <p className="font-display text-sm font-semibold text-sidebar-foreground">
+                {t("brand.name")}
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                {t("brand.tagline")}
+              </p>
+            </div>
+            <button
+              className="ml-auto text-muted-foreground hover:text-foreground lg:hidden"
+              onClick={() => setOpen(false)}
+              aria-label={t("sidebar.close")}
             >
-              <Icon className="h-4 w-4" />
-              {t(labelKey)}
-            </Link>
-          ))}
-        </nav>
+              <X className="h-4 w-4" />
+            </button>
+            <button
+              className="ml-auto hidden text-muted-foreground hover:text-foreground lg:block"
+              onClick={() => toggleCollapsed(true)}
+              aria-label={t("sidebar.collapse")}
+              title={t("sidebar.collapse")}
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </button>
+          </div>
 
-        <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-sidebar-border p-3">
-          <Button variant="outline" size="sm" className="w-full justify-start gap-2" onClick={() => setTrayOpen(true)}>
-            <Dices className="h-4 w-4" /> {t("header.diceTray")}
-          </Button>
-          <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={signOut}>
-            <LogOut className="h-4 w-4" /> {t("header.signOut")}
-          </Button>
-          <Link to="/legal" className="block px-2 text-[11px] text-muted-foreground hover:text-foreground">
-            {t("links.legal")}
-          </Link>
-        </div>
-      </aside>
+          <nav className="space-y-1 p-3">
+            {NAV.map(({ to, labelKey, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                activeProps={{
+                  className:
+                    "bg-sidebar-accent text-sidebar-accent-foreground font-medium ring-1 ring-sidebar-border",
+                }}
+              >
+                <Icon className="h-4 w-4" />
+                {t(labelKey)}
+              </Link>
+            ))}
+          </nav>
 
-      <div className={cn("relative z-10 transition-[padding] duration-300", collapsed ? "" : "lg:pl-64")}>
-        <div className="sticky top-0 z-30">
-          <AppUpdateNotice />
-        <header className="glass-bar no-print flex h-16 items-center gap-2 border-b border-border/70 px-3 sm:gap-3 sm:px-4">
-          <button
-            className={cn(
-              "-ml-1 grid h-10 w-10 shrink-0 place-content-center rounded-md text-foreground transition-colors hover:bg-secondary",
-              collapsed ? "" : "lg:hidden",
-            )}
-            onClick={() => {
-              setOpen(true);
-              if (collapsed) toggleCollapsed(false);
-            }}
-            aria-label={t("sidebar.open")}
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <button
-            onClick={() => setPaletteOpen(true)}
-            className="glass-soft flex h-10 min-w-0 flex-1 max-w-md items-center gap-2 rounded-md px-3 text-sm text-muted-foreground transition-colors hover:border-ring"
-          >
-            <Search className="h-4 w-4 shrink-0" />
-            <span className="truncate">{t("header.search")}</span>
-          </button>
-          <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="absolute inset-x-0 bottom-0 space-y-2 border-t border-sidebar-border p-3">
             <Button
+              variant="outline"
               size="sm"
-              variant="secondary"
-              className="gap-2"
-              aria-label={t("header.rollDice")}
+              className="w-full justify-start gap-2"
               onClick={() => setTrayOpen(true)}
             >
-              <Dices className="h-4 w-4" />
-              <span className="hidden sm:inline">{t("header.roll")}</span>
+              <Dices className="h-4 w-4" /> {t("header.diceTray")}
             </Button>
-            <LanguageSelector className="hidden sm:inline-flex" />
-            <NotificationBell />
-            <ProfileMenu onSignOut={signOut} />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start gap-2"
+              onClick={signOut}
+            >
+              <LogOut className="h-4 w-4" /> {t("header.signOut")}
+            </Button>
+            <Link
+              to="/legal"
+              className="block px-2 text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              {t("links.legal")}
+            </Link>
           </div>
-        </header>
+        </aside>
+
+        <div
+          className={cn(
+            "relative z-10 transition-[padding] duration-300",
+            collapsed ? "" : "lg:pl-64",
+          )}
+        >
+          <div className="sticky top-0 z-30">
+            <AppUpdateNotice />
+            <header className="glass-bar no-print flex h-16 items-center gap-2 border-b border-border/70 px-3 sm:gap-3 sm:px-4">
+              <button
+                className={cn(
+                  "-ml-1 grid h-10 w-10 shrink-0 place-content-center rounded-md text-foreground transition-colors hover:bg-secondary",
+                  collapsed ? "" : "lg:hidden",
+                )}
+                onClick={() => {
+                  setOpen(true);
+                  if (collapsed) toggleCollapsed(false);
+                }}
+                aria-label={t("sidebar.open")}
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setPaletteOpen(true)}
+                className="glass-soft flex h-10 min-w-0 flex-1 max-w-md items-center gap-2 rounded-md px-3 text-sm text-muted-foreground transition-colors hover:border-ring"
+              >
+                <Search className="h-4 w-4 shrink-0" />
+                <span className="truncate">{t("header.search")}</span>
+              </button>
+              <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="gap-2"
+                  aria-label={t("header.rollDice")}
+                  onClick={() => setTrayOpen(true)}
+                >
+                  <Dices className="h-4 w-4" />
+                  <span className="hidden sm:inline">{t("header.roll")}</span>
+                </Button>
+                <LanguageSelector className="hidden sm:inline-flex" />
+                <NotificationBell />
+                <ProfileMenu onSignOut={signOut} />
+              </div>
+            </header>
+          </div>
+
+          <main className="safe-b min-h-[calc(100vh-4rem)] px-3 py-5 sm:px-6 sm:py-6 lg:px-8">
+            {children}
+          </main>
+
+          <footer className="no-print border-t border-border px-6 py-6 text-xs leading-relaxed text-muted-foreground">
+            {t("footer.disclaimer")}{" "}
+            <Link to="/legal" className="underline hover:text-foreground">
+              {t("footer.policyLink")}
+            </Link>
+            .
+          </footer>
         </div>
 
-        <main className="safe-b min-h-[calc(100vh-4rem)] px-3 py-5 sm:px-6 sm:py-6 lg:px-8">
-          {children}
-        </main>
-
-        <footer className="no-print border-t border-border px-6 py-6 text-xs leading-relaxed text-muted-foreground">
-          {t("footer.disclaimer")}{" "}
-          <Link to="/legal" className="underline hover:text-foreground">
-            {t("footer.policyLink")}
-          </Link>
-          .
-        </footer>
+        {open ? (
+          <button
+            className="fixed inset-0 z-30 bg-background/60 backdrop-blur-sm lg:hidden"
+            aria-label={t("sidebar.closeOverlay")}
+            onClick={() => setOpen(false)}
+          />
+        ) : null}
       </div>
-
-      {open ? (
-        <button
-          className="fixed inset-0 z-30 bg-background/60 backdrop-blur-sm lg:hidden"
-          aria-label={t("sidebar.closeOverlay")}
-          onClick={() => setOpen(false)}
-        />
-      ) : null}
-    </div>
     </CampaignSoundtrackProvider>
   );
 }

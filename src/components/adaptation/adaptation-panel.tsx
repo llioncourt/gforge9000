@@ -53,8 +53,7 @@ export function AdaptationPanel({ campaignId }: { campaignId: string }) {
     queryFn: () => listAdaptations(campaignId),
   });
 
-  const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["adaptations", campaignId] });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["adaptations", campaignId] });
 
   const create = useMutation({
     mutationFn: () => createAdaptation({ campaign_id: campaignId, name: name.trim() }),
@@ -129,7 +128,10 @@ export function AdaptationPanel({ campaignId }: { campaignId: string }) {
       ) : adaptations.data?.length ? (
         <div className="space-y-3">
           {adaptations.data.map((project) => (
-            <article key={project.id} className="panel flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+            <article
+              key={project.id}
+              className="panel flex flex-col gap-3 p-4 sm:flex-row sm:items-center"
+            >
               <div className="flex-1 space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h4 className="font-display text-base font-semibold">{project.name}</h4>

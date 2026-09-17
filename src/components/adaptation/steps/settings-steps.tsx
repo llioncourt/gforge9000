@@ -14,7 +14,8 @@ import type { StepProps } from "@/components/adaptation/adaptation-wizard";
 export function NarrativeStep({ project, patchCreative }: StepProps) {
   const { t } = useT("adaptation");
   const narrative = project.creative_settings?.narrative ?? {};
-  const set = (patch: Record<string, unknown>) => void patchCreative({ narrative: { ...narrative, ...patch } });
+  const set = (patch: Record<string, unknown>) =>
+    void patchCreative({ narrative: { ...narrative, ...patch } });
 
   return (
     <div className="space-y-6">
@@ -71,7 +72,8 @@ export function NarrativeStep({ project, patchCreative }: StepProps) {
 export function ComicStep({ project, patchCreative }: StepProps) {
   const { t } = useT("adaptation");
   const comic = project.creative_settings?.comic ?? {};
-  const set = (patch: Record<string, unknown>) => void patchCreative({ comic: { ...comic, ...patch } });
+  const set = (patch: Record<string, unknown>) =>
+    void patchCreative({ comic: { ...comic, ...patch } });
 
   return (
     <div className="space-y-6">
@@ -179,7 +181,8 @@ export function ComicStep({ project, patchCreative }: StepProps) {
 export function MovieStep({ project, patchCreative }: StepProps) {
   const { t } = useT("adaptation");
   const movie = project.creative_settings?.movie ?? {};
-  const set = (patch: Record<string, unknown>) => void patchCreative({ movie: { ...movie, ...patch } });
+  const set = (patch: Record<string, unknown>) =>
+    void patchCreative({ movie: { ...movie, ...patch } });
 
   return (
     <div className="space-y-6">

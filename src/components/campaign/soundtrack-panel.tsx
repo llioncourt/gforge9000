@@ -130,7 +130,9 @@ function AlbumCover({ album }: { album: SoundtrackAlbum }) {
         </Button>
       </DialogTrigger>
       <DialogContent className="flex h-dvh w-screen max-w-none flex-col gap-0 overflow-hidden border-0 bg-background/95 p-0 sm:rounded-none">
-        <DialogTitle className="sr-only">{t("soundtrack.cover.altText", { title: album.title })}</DialogTitle>
+        <DialogTitle className="sr-only">
+          {t("soundtrack.cover.altText", { title: album.title })}
+        </DialogTitle>
         <DialogDescription className="sr-only">
           {t("soundtrack.cover.enlargedAlt", { title: album.title })}
         </DialogDescription>
@@ -230,7 +232,8 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
       if (positions.some((p, i) => p !== i + 1))
         throw new Error(t("soundtrack.errors.trackPositions"));
       const coverEntry = pick(manifest.album.cover);
-      if (!coverEntry) throw new Error(t("soundtrack.errors.missingCover", { path: manifest.album.cover }));
+      if (!coverEntry)
+        throw new Error(t("soundtrack.errors.missingCover", { path: manifest.album.cover }));
       if (coverEntry.length > MAX_SOUNDTRACK_COVER_BYTES)
         throw new Error(t("soundtrack.errors.coverTooLarge"));
       const cover = await coverToAvifBytes(manifest.album.cover, coverEntry, t as Translate);
@@ -281,16 +284,16 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
   });
   const album = player.albums[albumIndex],
     tracks = album
-      ? player.tracks.filter((tr) => tr.album_id === album.id).sort((a, b) => a.position - b.position)
+      ? player.tracks
+          .filter((tr) => tr.album_id === album.id)
+          .sort((a, b) => a.position - b.position)
       : [];
   return (
     <div className="space-y-6">
       {isGm ? (
         <section className="panel p-5">
           <h2 className="font-display text-lg font-semibold">{t("soundtrack.import.title")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t("soundtrack.import.description")}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("soundtrack.import.description")}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button
               type="button"
@@ -400,7 +403,9 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>{t("soundtrack.removeAlbumConfirmTitle")}</AlertDialogTitle>
+                        <AlertDialogTitle>
+                          {t("soundtrack.removeAlbumConfirmTitle")}
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
                           {t("soundtrack.removeAlbumConfirmBody", { title: album.title })}
                         </AlertDialogDescription>
@@ -454,9 +459,7 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
                 })}
               </ol>
               {!isGm ? (
-                <p className="mt-3 text-xs text-muted-foreground">
-                  {t("soundtrack.gmControlled")}
-                </p>
+                <p className="mt-3 text-xs text-muted-foreground">{t("soundtrack.gmControlled")}</p>
               ) : null}
             </div>
           </div>

@@ -38,8 +38,12 @@ function groupSessions(rows: NoteRow[]): Session[] {
   const byTitle = new Map<string, Session>();
   for (const row of rows) {
     if (row.kind !== PREP && row.kind !== RECAP) continue;
-    const current =
-      byTitle.get(row.title) ?? { title: row.title, prep: null, recap: null, createdAt: row.created_at };
+    const current = byTitle.get(row.title) ?? {
+      title: row.title,
+      prep: null,
+      recap: null,
+      createdAt: row.created_at,
+    };
     if (row.kind === PREP) current.prep = row;
     else current.recap = row;
     if (row.created_at < current.createdAt) current.createdAt = row.created_at;
@@ -63,7 +67,8 @@ function SessionsListView({ campaignId, isGm }: { campaignId: string; isGm: bool
 
   const create = useMutation({
     mutationFn: async () => {
-      const name = title.trim() || t("sessionsPanel.sessionPlaceholder", { n: sessions.length + 1 });
+      const name =
+        title.trim() || t("sessionsPanel.sessionPlaceholder", { n: sessions.length + 1 });
       await addNote({
         campaign_id: campaignId,
         title: name,
@@ -105,9 +110,7 @@ function SessionsListView({ campaignId, isGm }: { campaignId: string; isGm: bool
     <div className="space-y-6">
       <div className="panel flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
         <CalendarDays className="h-4 w-4 text-muted-foreground" />
-        <p className="flex-1 text-sm text-muted-foreground">
-          {t("sessionsPanel.intro")}
-        </p>
+        <p className="flex-1 text-sm text-muted-foreground">{t("sessionsPanel.intro")}</p>
         <div className="flex gap-2">
           <Input
             className="sm:w-56"

@@ -170,7 +170,9 @@ export function BattleGrid({
           {t("grid.resetView")}
         </button>
         {tool === "measure" ? (
-          <span>{measured ? t("grid.distance", { distance: measured }) : t("grid.measureHint")}</span>
+          <span>
+            {measured ? t("grid.distance", { distance: measured }) : t("grid.measureHint")}
+          </span>
         ) : null}
         {tool === "fog" ? <span>{t("grid.fogHint")}</span> : null}
       </div>
@@ -206,7 +208,8 @@ export function BattleGrid({
           }}
         >
           {imageUrl ? (
-            <img decoding="async"
+            <img
+              decoding="async"
               src={imageUrl}
               alt={map.name}
               draggable={false}
@@ -223,11 +226,7 @@ export function BattleGrid({
             />
           )}
 
-          <svg
-            className="pointer-events-none absolute top-0 left-0"
-            width={size.w}
-            height={size.h}
-          >
+          <svg className="pointer-events-none absolute top-0 left-0" width={size.w} height={size.h}>
             {map.grid_type === "square"
               ? [
                   ...Array.from({ length: cols + 1 }).map((_, i) => (
@@ -321,9 +320,9 @@ export function BattleGrid({
                 : null;
             const npc = character
               ? null
-              : npcs.find((candidate) => candidate.id === entityId) ??
+              : (npcs.find((candidate) => candidate.id === entityId) ??
                 npcs.find((candidate) => candidate.name === object.label) ??
-                null;
+                null);
             const dragging = drag?.id === object.id;
             const base = dragging
               ? { x: drag.x, y: drag.y }

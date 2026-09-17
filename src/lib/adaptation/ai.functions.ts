@@ -28,13 +28,18 @@ export const runAdaptationStage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     // Reading the adaptation with the caller's client proves GM access: RLS
     // returns nothing for anyone else.
-    const { data: project, error } = await (context.supabase as never as {
-      from: (t: string) => {
-        select: (c: string) => {
-          eq: (c: string, v: string) => { maybeSingle: () => Promise<{ data: unknown; error: unknown }> };
+    const { data: project, error } = await (
+      context.supabase as never as {
+        from: (t: string) => {
+          select: (c: string) => {
+            eq: (
+              c: string,
+              v: string,
+            ) => { maybeSingle: () => Promise<{ data: unknown; error: unknown }> };
+          };
         };
-      };
-    })
+      }
+    )
       .from("adaptation_projects")
       .select("id")
       .eq("id", data.adaptation_id)

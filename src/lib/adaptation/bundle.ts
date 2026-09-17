@@ -77,17 +77,20 @@ async function download(bucket: string, path: string): Promise<Uint8Array | null
   return new Uint8Array(await data.arrayBuffer());
 }
 
-function bibleRecord(entity: {
-  id: string;
-  name: string;
-  kind: string;
-  summary: string | null;
-  description: string | null;
-  player_description: string | null;
-  aliases: string[] | null;
-  tags: string[] | null;
-  visibility: string;
-}, assetKeys: string[]): BibleRecord {
+function bibleRecord(
+  entity: {
+    id: string;
+    name: string;
+    kind: string;
+    summary: string | null;
+    description: string | null;
+    player_description: string | null;
+    aliases: string[] | null;
+    tags: string[] | null;
+    visibility: string;
+  },
+  assetKeys: string[],
+): BibleRecord {
   return {
     entity_id: entity.id,
     key: slugify(entity.name) || entity.id,
@@ -97,7 +100,14 @@ function bibleRecord(entity: {
     visual_description: entity.summary ?? "",
     traits: entity.tags ?? [],
     asset_keys: assetKeys,
-    source_refs: [{ source_type: "entity", source_key: `entity:${entity.id}`, source_id: entity.id, label: entity.name }],
+    source_refs: [
+      {
+        source_type: "entity",
+        source_key: `entity:${entity.id}`,
+        source_id: entity.id,
+        label: entity.name,
+      },
+    ],
     gm_only: entity.visibility === "GM_ONLY" || entity.visibility === "UNREVEALED",
   };
 }
@@ -124,7 +134,13 @@ export function assembleManifest(args: {
   props: BibleRecord[];
   wardrobe: BibleRecord[];
   storyBible: StoryBible;
-  sources: { source_key: string; source_type: string; source_id: string | null; source_hash: string; label: string }[];
+  sources: {
+    source_key: string;
+    source_type: string;
+    source_id: string | null;
+    source_hash: string;
+    label: string;
+  }[];
   snapshotHash: string;
 }): AdaptationManifest {
   const {
@@ -207,7 +223,9 @@ export function assembleManifest(args: {
     targets: { comic, movie },
     sync: {
       sources,
-      scene_hashes: Object.fromEntries(scenes.map((scene) => [scene.stable_key, scene.content_hash])),
+      scene_hashes: Object.fromEntries(
+        scenes.map((scene) => [scene.stable_key, scene.content_hash]),
+      ),
       target_mapping_hints: {
         comic: comic ? { manifest_kind: "rx-comics-v2-manifest", manifest_version: "1.0" } : null,
         movie: movie ? { format: "moviesmith.movie.v1", scene_pack: "moviesmith.pack.v2" } : null,
@@ -401,7 +419,12 @@ function pack(files: Record<string, Uint8Array>): Uint8Array {
 export async function exportAdaptationBundle(
   project: AdaptationProject,
   onProgress?: ExportProgress,
-): Promise<{ bytes: Uint8Array; fileName: string; manifest: AdaptationManifest; problems: string[] }> {
+): Promise<{
+  bytes: Uint8Array;
+  fileName: string;
+  manifest: AdaptationManifest;
+  problems: string[];
+}> {
   const built = await buildAdaptationBundle(project, onProgress);
   return {
     bytes: pack(built.files),

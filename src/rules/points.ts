@@ -47,7 +47,6 @@ export function modifiedCost(
   return normalizeZero(roundHalfAwayFromZero(raw));
 }
 
-
 export function entryCost(entry: CharacterEntry, rules: Ruleset = defaultRuleset): number {
   const modifiers = (entry.data?.modifiers as TraitModifier[] | undefined) ?? [];
   if (entry.kind === "skill" || entry.kind === "technique" || entry.kind === "spell") {
@@ -125,7 +124,12 @@ export function checkLimits(
   const out: LimitViolation[] = [];
   const l = rules.limits;
   if (l.pointBudget !== null && breakdown.total > l.pointBudget)
-    out.push({ limit: "pointBudget", message: "Point total exceeds the campaign budget.", value: breakdown.total, allowed: l.pointBudget });
+    out.push({
+      limit: "pointBudget",
+      message: "Point total exceeds the campaign budget.",
+      value: breakdown.total,
+      allowed: l.pointBudget,
+    });
   if (l.disadvantageLimit !== null && breakdown.disadvantages < -Math.abs(l.disadvantageLimit))
     out.push({
       limit: "disadvantageLimit",
@@ -141,7 +145,12 @@ export function checkLimits(
       allowed: -Math.abs(l.quirkLimit),
     });
   if (l.techLevel !== null && character.tech_level > l.techLevel)
-    out.push({ limit: "techLevel", message: "Tech level exceeds the campaign setting.", value: character.tech_level, allowed: l.techLevel });
+    out.push({
+      limit: "techLevel",
+      message: "Tech level exceeds the campaign setting.",
+      value: character.tech_level,
+      allowed: l.techLevel,
+    });
   return out;
 }
 

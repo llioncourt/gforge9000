@@ -6,7 +6,11 @@
  * Pure data + fflate; no React.
  */
 import { strToU8, zipSync, unzipSync, strFromU8 } from "fflate";
-import { CAMPAIGN_SOUND_FX_MAX_BYTES, soundFxMime, validateSoundFxFile } from "@/lib/campaign-sound-fx";
+import {
+  CAMPAIGN_SOUND_FX_MAX_BYTES,
+  soundFxMime,
+  validateSoundFxFile,
+} from "@/lib/campaign-sound-fx";
 
 export const MAX_SOUND_FX_PER_IMPORT = 40;
 const MAX_MB = Math.round(CAMPAIGN_SOUND_FX_MAX_BYTES / (1024 * 1024));
@@ -166,7 +170,9 @@ export async function readSoundFxPack(file: File): Promise<SoundFxImportItem[]> 
     throw new Error(`Máximo de ${MAX_SOUND_FX_PER_IMPORT} efeitos por importação.`);
   }
 
-  const prefix = manifestKey.includes("/") ? manifestKey.slice(0, manifestKey.lastIndexOf("/") + 1) : "";
+  const prefix = manifestKey.includes("/")
+    ? manifestKey.slice(0, manifestKey.lastIndexOf("/") + 1)
+    : "";
 
   return list.map((raw, index) => {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
@@ -179,7 +185,10 @@ export async function readSoundFxPack(file: File): Promise<SoundFxImportItem[]> 
     if (!path) throw new Error(`Efeito ${index + 1}: o campo "file" é obrigatório.`);
 
     const wanted = `${prefix}${path}`.replace(/^\.\//, "").toLowerCase();
-    const key = Object.keys(entries).find((name) => name.toLowerCase() === wanted || name.toLowerCase().endsWith(`/${path.toLowerCase()}`));
+    const key = Object.keys(entries).find(
+      (name) =>
+        name.toLowerCase() === wanted || name.toLowerCase().endsWith(`/${path.toLowerCase()}`),
+    );
     if (!key) throw new Error(`Efeito ${index + 1}: o arquivo "${path}" não está no ZIP.`);
 
     const bytes = entries[key]!;

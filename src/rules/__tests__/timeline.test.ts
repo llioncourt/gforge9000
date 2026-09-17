@@ -67,7 +67,13 @@ describe("calendarOf — new format", () => {
     ]);
     expect(cal.seasons[0]?.months).toEqual([0, 1]);
     expect(cal.daySubdivision).toEqual({ hoursPerDay: 4, minutesPerHour: 4 });
-    expect(cal.leapRule).toEqual({ kind: "block", block: 10, years: [4, 7, 10], month: 1, extraDays: 1 });
+    expect(cal.leapRule).toEqual({
+      kind: "block",
+      block: 10,
+      years: [4, 7, 10],
+      month: 1,
+      extraDays: 1,
+    });
     expect(cal.today).toEqual({ year: 998, month: 2, day: 12, hour: 2, minute: 3 });
   });
 });
@@ -85,7 +91,9 @@ describe("event ordering", () => {
   };
 
   it("orders by custom month names", () => {
-    expect(eventOrder(row({ year: "998", month: "Highsun", day: "3" }), cal)).toEqual([998, 3, 3, 0, 0]);
+    expect(eventOrder(row({ year: "998", month: "Highsun", day: "3" }), cal)).toEqual([
+      998, 3, 3, 0, 0,
+    ]);
   });
 
   it("accepts numeric months", () => {
@@ -93,8 +101,14 @@ describe("event ordering", () => {
   });
 
   it("includes hour and minute in ordering", () => {
-    const a = eventOrder(row({ year: "998", month: "Highsun", day: "3", hour: "2", minute: "10" }), cal);
-    const b = eventOrder(row({ year: "998", month: "Highsun", day: "3", hour: "1", minute: "50" }), cal);
+    const a = eventOrder(
+      row({ year: "998", month: "Highsun", day: "3", hour: "2", minute: "10" }),
+      cal,
+    );
+    const b = eventOrder(
+      row({ year: "998", month: "Highsun", day: "3", hour: "1", minute: "50" }),
+      cal,
+    );
     expect(a).toEqual([998, 3, 3, 2, 10]);
     expect(b).toEqual([998, 3, 3, 1, 50]);
     // a has hour 2 > hour 1, so a should come after b

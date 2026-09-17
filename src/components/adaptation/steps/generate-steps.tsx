@@ -37,8 +37,14 @@ interface Problem {
 }
 
 function useProblems(projectId: string, project: StepProps["project"]) {
-  const facts = useQuery({ queryKey: ["adaptation-facts", projectId], queryFn: () => listFacts(projectId) });
-  const scenes = useQuery({ queryKey: ["adaptation-scenes", projectId], queryFn: () => listScenes(projectId) });
+  const facts = useQuery({
+    queryKey: ["adaptation-facts", projectId],
+    queryFn: () => listFacts(projectId),
+  });
+  const scenes = useQuery({
+    queryKey: ["adaptation-scenes", projectId],
+    queryFn: () => listScenes(projectId),
+  });
   const assets = useQuery({
     queryKey: ["adaptation-assets", projectId],
     queryFn: () => listAdaptationAssets(projectId),
@@ -49,7 +55,9 @@ function useProblems(projectId: string, project: StepProps["project"]) {
   if (!loading) {
     if (!(scenes.data ?? []).length)
       problems.push({ key: "noScenes", count: 0, step: "reconstruction" });
-    const unresolvedFacts = (facts.data ?? []).filter((fact) => fact.canon_status === "needs_review");
+    const unresolvedFacts = (facts.data ?? []).filter(
+      (fact) => fact.canon_status === "needs_review",
+    );
     if (unresolvedFacts.length)
       problems.push({
         key: "unresolvedFacts",
@@ -58,9 +66,11 @@ function useProblems(projectId: string, project: StepProps["project"]) {
         facts: unresolvedFacts,
       });
     const conflicts = (facts.data ?? []).filter((fact) => fact.provenance_type === "conflict");
-    if (conflicts.length) problems.push({ key: "conflicts", count: conflicts.length, step: "canon" });
+    if (conflicts.length)
+      problems.push({ key: "conflicts", count: conflicts.length, step: "canon" });
     const unresolvedAssets = (assets.data ?? []).filter(
-      (asset) => asset.resolution_status === "unresolved" || asset.resolution_status === "ambiguous",
+      (asset) =>
+        asset.resolution_status === "unresolved" || asset.resolution_status === "ambiguous",
     );
     if (unresolvedAssets.length)
       problems.push({ key: "unresolvedAssets", count: unresolvedAssets.length, step: "assets" });
@@ -201,7 +211,6 @@ function ProblemList({
     </>
   );
 }
-
 
 export function ValidationStep({ project, goTo }: StepProps) {
   const { t } = useT("adaptation");

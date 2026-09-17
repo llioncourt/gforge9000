@@ -24,7 +24,9 @@ export function PointsBar({ sheet, budget }: { sheet: CharacterSheet; budget: nu
     <div className="panel p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">{t("sheet.pointsBar.title")}</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">
+            {t("sheet.pointsBar.title")}
+          </p>
           <p className="stat-value text-3xl">
             {points.total}
             <span className="text-base text-muted-foreground"> / {budget}</span>
@@ -38,7 +40,10 @@ export function PointsBar({ sheet, budget }: { sheet: CharacterSheet; budget: nu
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
         <div
-          className={cn("h-full rounded-full transition-all", over ? "bg-destructive" : "bg-primary")}
+          className={cn(
+            "h-full rounded-full transition-all",
+            over ? "bg-destructive" : "bg-primary",
+          )}
           style={{ width: `${pct}%` }}
         />
       </div>

@@ -79,7 +79,7 @@ describe("gridless maps", () => {
 
 describe("helpers", () => {
   it("fits a one-cell token inside a pointy-top hex at 80% of the inscribed circle", () => {
-    const inscribed = 50 * Math.sqrt(3) / 2;
+    const inscribed = (50 * Math.sqrt(3)) / 2;
     expect(tokenDimensions(hex, 1)).toEqual({
       width: inscribed * 0.8,
       height: inscribed * 0.8,
@@ -99,9 +99,9 @@ describe("helpers", () => {
     expect(validateMapFile({ name: "map.png", type: "image/png", size: 1000 })).toBeNull();
     expect(validateMapFile({ name: "map.pdf", type: "application/pdf", size: 10 })).toMatch(/PNG/);
     expect(validateMapFile({ name: "map.png", type: "image/png", size: 0 })).toMatch(/empty/);
-    expect(
-      validateMapFile({ name: "map.png", type: "image/png", size: 40 * 1024 * 1024 }),
-    ).toMatch(/too large/);
+    expect(validateMapFile({ name: "map.png", type: "image/png", size: 40 * 1024 * 1024 })).toMatch(
+      /too large/,
+    );
   });
 
   it("stores map images under user and campaign folders", () => {

@@ -51,7 +51,10 @@ export function characterImportKey(source: CharacterIdentitySource): string {
   const fingerprint = canonicalJson({
     name: slugifyText(source.character.name),
     entries: source.entries
-      .map((entry) => `${entry.kind}:${slugifyText(entry.name)}:${entry.points ?? 0}:${entry.levels ?? 1}`)
+      .map(
+        (entry) =>
+          `${entry.kind}:${slugifyText(entry.name)}:${entry.points ?? 0}:${entry.levels ?? 1}`,
+      )
       .sort(),
   });
   return `ucf-character-hash:${stableHash(fingerprint)}`;
@@ -72,10 +75,6 @@ export function campaignPackageImportKey(manifest: unknown): string {
 }
 
 /** Identity of a record contained in a campaign package. */
-export function packageChildImportKey(
-  campaignKey: string,
-  kind: string,
-  key: string,
-): string {
+export function packageChildImportKey(campaignKey: string, kind: string, key: string): string {
   return `${campaignKey}#${kind}:${key.trim()}`;
 }

@@ -13,7 +13,11 @@ type ChangePayload = {
 
 function changedEntityId(payload: ChangePayload): string | undefined {
   return (
-    payload.new?.entity_id ?? payload.new?.id ?? payload.old?.entity_id ?? payload.old?.id ?? undefined
+    payload.new?.entity_id ??
+    payload.new?.id ??
+    payload.old?.entity_id ??
+    payload.old?.id ??
+    undefined
   );
 }
 

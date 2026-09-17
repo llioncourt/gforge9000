@@ -6,7 +6,11 @@ export const PORTRAIT_MAX_BYTES = 5 * 1024 * 1024;
 export const PORTRAIT_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif", "image/avif"];
 
 /** Pure validation so it can be unit-tested without a network. */
-export function validatePortraitFile(file: { type: string; size: number; name: string }): string | null {
+export function validatePortraitFile(file: {
+  type: string;
+  size: number;
+  name: string;
+}): string | null {
   const type = (file.type || "").toLowerCase();
   const byExtension = /\.(png|jpe?g|webp|gif|avif)$/i.test(file.name);
   if (!PORTRAIT_TYPES.includes(type) && !byExtension) {
@@ -30,7 +34,11 @@ export function portraitExtension(name: string, type: string): string {
 }
 
 /** Portraits live under `<user id>/<character id>/…`, which is what RLS checks. */
-export function portraitPathFor(userId: string, characterId: string, file: { name: string; type: string }) {
+export function portraitPathFor(
+  userId: string,
+  characterId: string,
+  file: { name: string; type: string },
+) {
   return `${userId}/${characterId}/${crypto.randomUUID()}.${portraitExtension(file.name, file.type)}`;
 }
 

@@ -58,7 +58,10 @@ export async function requestTraitMatches(
             },
           ],
         },
-        { role: "user", content: [{ type: "input_text", text: buildMatchPrompt(items, candidates) }] },
+        {
+          role: "user",
+          content: [{ type: "input_text", text: buildMatchPrompt(items, candidates) }],
+        },
       ],
       stream: true,
       store: false,

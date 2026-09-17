@@ -84,7 +84,9 @@ describe("campaign ruleset overrides", () => {
     const entries: CharacterEntry[] = [];
     const base = buildSheet(character, entries);
     const rules = rulesetFromSettings({
-      [CAMPAIGN_RULESET_SETTING]: overridesFromRuleset(setAtPath(defaultRuleset, "basicLiftDivisor", 10)),
+      [CAMPAIGN_RULESET_SETTING]: overridesFromRuleset(
+        setAtPath(defaultRuleset, "basicLiftDivisor", 10),
+      ),
     });
     const tuned = buildSheet(character, entries, rules);
     expect(tuned.stats.basicLift).toBeLessThan(base.stats.basicLift);

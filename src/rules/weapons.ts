@@ -76,7 +76,6 @@ export function parseRoF(raw?: string | null): Parsed<RateOfFire> {
   );
 }
 
-
 /** Recoil must be a positive integer to be usable in any calculation. */
 export function parseRecoil(raw?: string | null, rules: Ruleset = defaultRuleset): Parsed<number> {
   const t = text(raw);
@@ -252,9 +251,10 @@ export function additionalHits(
   if (rof < 2) return { status: "unavailable", reason: "not-rapid-fire" };
   if (opts.margin < 0) return { status: "unavailable", reason: "miss" };
 
-  const fired = opts.shotsAvailable === null || opts.shotsAvailable === undefined
-    ? rof
-    : Math.min(rof, Math.max(0, Math.floor(opts.shotsAvailable)));
+  const fired =
+    opts.shotsAvailable === null || opts.shotsAvailable === undefined
+      ? rof
+      : Math.min(rof, Math.max(0, Math.floor(opts.shotsAvailable)));
   const fromMargin = Math.floor(opts.margin / recoil);
   let cappedBy: "rof" | "shots" | "margin" | "limit" = "margin";
   let hits = fromMargin;
@@ -275,7 +275,13 @@ export function additionalHits(
  * ------------------------------------------------------------------ */
 
 export type DamageResolution =
-  | { status: "rollable"; expression: string; damageType: string | null; raw: string; usedBasicDamage: boolean }
+  | {
+      status: "rollable";
+      expression: string;
+      damageType: string | null;
+      raw: string;
+      usedBasicDamage: boolean;
+    }
   | { status: "unavailable"; reason: "no-progression" | "out-of-range"; raw: string }
   | { status: "unresolved"; raw: string }
   | { status: "unconfigured"; raw: null };

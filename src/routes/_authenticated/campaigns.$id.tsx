@@ -48,7 +48,6 @@ import {
   listCharacters,
   listEntriesForCharacters,
   listMembers,
-  
   removeMember,
   transferCampaignGm,
   transferCharacterOwner,
@@ -91,7 +90,6 @@ function lazyPanel<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   T extends Record<K, React.ComponentType<any>>,
 >(load: () => Promise<T>, name: K) {
-
   return lazy(async () => {
     try {
       return { default: (await load())[name] };
@@ -111,7 +109,6 @@ function lazyPanel<
   });
 }
 
-
 const LorePanel = lazyPanel(() => import("@/components/lore/lore-panel"), "LorePanel");
 const StoryPanel = lazyPanel(() => import("@/components/lore/story-panel"), "StoryPanel");
 const GraphPanel = lazyPanel(() => import("@/components/lore/graph-panel"), "GraphPanel");
@@ -126,8 +123,6 @@ const AdaptationPanel = lazyPanel(
   () => import("@/components/adaptation/adaptation-panel"),
   "AdaptationPanel",
 );
-
-
 
 function PanelFallback() {
   return <Skeleton className="h-64 w-full rounded-lg" />;
@@ -155,12 +150,15 @@ export type MediaSubTab = "videos" | "soundtrack" | "sound-fx";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   staticData: { sitemap: false },
-  validateSearch: (search: Record<string, unknown>): { tab?: CampaignTab; item?: string; sub?: MediaSubTab } => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { tab?: CampaignTab; item?: string; sub?: MediaSubTab } => {
     const tab = search["tab"];
     const item = search["item"];
     const sub = search["sub"];
     const out: { tab?: CampaignTab; item?: string; sub?: MediaSubTab } = {};
-    if (typeof tab === "string" && (CAMPAIGN_TABS as readonly string[]).includes(tab)) out.tab = tab as CampaignTab;
+    if (typeof tab === "string" && (CAMPAIGN_TABS as readonly string[]).includes(tab))
+      out.tab = tab as CampaignTab;
     if (typeof item === "string" && item) out.item = item;
     if (sub === "videos" || sub === "soundtrack" || sub === "sound-fx") out.sub = sub;
     return out;
@@ -264,7 +262,9 @@ function CampaignPage() {
         campaign_id: id,
         is_npc: true,
         approved: true,
-        point_budget: Number((campaign.data?.settings as Record<string, unknown>)?.["point_limit"] ?? 150),
+        point_budget: Number(
+          (campaign.data?.settings as Record<string, unknown>)?.["point_limit"] ?? 150,
+        ),
       } as never),
     onSuccess: (row) => {
       queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
@@ -296,7 +296,6 @@ function CampaignPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
-
 
   const removeMemberMut = useMutation({
     mutationFn: (userId: string) => removeMember(id, userId),
@@ -444,23 +443,22 @@ function CampaignPage() {
         description={campaign.data?.description ?? undefined}
         actions={
           <>
-          {isGm ? (
-            <Button onClick={() => createNpc.mutate()} disabled={createNpc.isPending}>
-              <Plus className="mr-2 h-4 w-4" /> {t("page.newNpc")}
+            {isGm ? (
+              <Button onClick={() => createNpc.mutate()} disabled={createNpc.isPending}>
+                <Plus className="mr-2 h-4 w-4" /> {t("page.newNpc")}
+              </Button>
+            ) : null}
+            <Button
+              variant="outline"
+              onClick={() => {
+                void navigator.clipboard.writeText(campaign.data?.invite_code ?? "");
+                toast.success(t("page.inviteCopied"));
+              }}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              <span className="font-mono">{campaign.data?.invite_code}</span>
             </Button>
-          ) : null}
-          <Button
-            variant="outline"
-            onClick={() => {
-              void navigator.clipboard.writeText(campaign.data?.invite_code ?? "");
-              toast.success(t("page.inviteCopied"));
-            }}
-          >
-            <Copy className="mr-2 h-4 w-4" />
-            <span className="font-mono">{campaign.data?.invite_code}</span>
-          </Button>
           </>
-
         }
       />
 
@@ -538,7 +536,12 @@ function CampaignPage() {
 
         <TabsContent value="media" className="mt-6">
           <Suspense fallback={<PanelFallback />}>
-            <MediaPanel campaignId={id} isGm={isGm} sub={subParam ?? null} focusId={itemParam ?? null} />
+            <MediaPanel
+              campaignId={id}
+              isGm={isGm}
+              sub={subParam ?? null}
+              focusId={itemParam ?? null}
+            />
           </Suspense>
         </TabsContent>
 
@@ -564,197 +567,220 @@ function CampaignPage() {
                   <div key={c.id} className="panel relative overflow-hidden p-4">
                     <CardPortraitBg path={c.portrait_path} />
                     <div className="relative">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <Link
-                          to="/characters/$id"
-                          params={{ id: c.id }}
-                          search={{ from: `campaign:${id}:${tabParam ?? "roster"}` }}
-                          className="font-display font-semibold hover:underline"
-                        >
-                          {c.name}
-                        </Link>
-                        {isGm ? (
-                          (() => {
-                            const names = (members.data ?? []).map((m) => m.display_name);
-                            const val = c.player_name ?? (c.is_npc ? "__npc__" : "__unassigned__");
-                            const orphan = c.player_name && !names.includes(c.player_name) && c.player_name !== "NPC";
-                            return (
-                              <div className="mt-0.5 flex items-center gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <Link
+                            to="/characters/$id"
+                            params={{ id: c.id }}
+                            search={{ from: `campaign:${id}:${tabParam ?? "roster"}` }}
+                            className="font-display font-semibold hover:underline"
+                          >
+                            {c.name}
+                          </Link>
+                          {isGm ? (
+                            (() => {
+                              const names = (members.data ?? []).map((m) => m.display_name);
+                              const val =
+                                c.player_name ?? (c.is_npc ? "__npc__" : "__unassigned__");
+                              const orphan =
+                                c.player_name &&
+                                !names.includes(c.player_name) &&
+                                c.player_name !== "NPC";
+                              return (
+                                <div className="mt-0.5 flex items-center gap-2">
+                                  {c.player_name ? (
+                                    <UserAvatar
+                                      name={c.player_name}
+                                      avatarPath={playerMember?.avatar_url}
+                                    />
+                                  ) : null}
+                                  <Select
+                                    value={val}
+                                    onValueChange={(v) =>
+                                      assignPlayer.mutate({
+                                        cid: c.id,
+                                        name: v === "__unassigned__" || v === "__npc__" ? null : v,
+                                      })
+                                    }
+                                  >
+                                    <SelectTrigger className="mt-0.5 h-7 w-full max-w-[180px] text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="__unassigned__">
+                                        {t("roster.unassigned")}
+                                      </SelectItem>
+                                      {c.is_npc && (
+                                        <SelectItem value="__npc__">{t("roster.npc")}</SelectItem>
+                                      )}
+                                      {members.data?.map((m) => (
+                                        <SelectItem key={m.user_id} value={m.display_name}>
+                                          {m.display_name}
+                                        </SelectItem>
+                                      ))}
+                                      {orphan && (
+                                        <SelectItem value={c.player_name!}>
+                                          {c.player_name}
+                                        </SelectItem>
+                                      )}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                               {c.player_name ? (
                                 <UserAvatar
                                   name={c.player_name}
                                   avatarPath={playerMember?.avatar_url}
                                 />
                               ) : null}
-                              <Select
-                                value={val}
-                                onValueChange={(v) =>
-                                  assignPlayer.mutate({
-                                    cid: c.id,
-                                    name: v === "__unassigned__" || v === "__npc__" ? null : v,
-                                  })
-                                }
-                              >
-                                <SelectTrigger className="mt-0.5 h-7 w-full max-w-[180px] text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="__unassigned__">{t("roster.unassigned")}</SelectItem>
-                                  {c.is_npc && <SelectItem value="__npc__">{t("roster.npc")}</SelectItem>}
-                                  {members.data?.map((m) => (
-                                    <SelectItem key={m.user_id} value={m.display_name}>
-                                      {m.display_name}
-                                    </SelectItem>
-                                  ))}
-                                  {orphan && (
-                                    <SelectItem value={c.player_name!}>{c.player_name}</SelectItem>
-                                  )}
-                                </SelectContent>
-                              </Select>
-                              </div>
-                            );
-                          })()
-                        ) : (
-                          <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                            {c.player_name ? (
-                              <UserAvatar
-                                name={c.player_name}
-                                avatarPath={playerMember?.avatar_url}
-                              />
-                            ) : null}
-                            {c.player_name || (c.is_npc ? t("roster.npc") : t("roster.playerCharacter"))}
-                          </p>
-                        )}
+                              {c.player_name ||
+                                (c.is_npc ? t("roster.npc") : t("roster.playerCharacter"))}
+                            </p>
+                          )}
+                        </div>
+                        <Badge variant={c.approved ? "default" : "outline"}>
+                          {c.approved ? t("roster.approved") : t("roster.pending")}
+                        </Badge>
                       </div>
-                      <Badge variant={c.approved ? "default" : "outline"}>
-                        {c.approved ? t("roster.approved") : t("roster.pending")}
-                      </Badge>
-                    </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-                      <Mini label={t("roster.stats.hp")} value={`${c.current_hp ?? sheet?.stats.hp ?? 0}/${sheet?.stats.hp ?? 0}`} />
-                      <Mini label={t("roster.stats.fp")} value={`${c.current_fp ?? sheet?.stats.fp ?? 0}/${sheet?.stats.fp ?? 0}`} />
-                      <Mini label={t("roster.stats.move")} value={sheet?.encumbrance.effectiveMove ?? 0} />
-                      <Mini label={t("roster.stats.dodge")} value={sheet?.encumbrance.effectiveDodge ?? 0} />
-                    </div>
-                    <div className="mt-2 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-                      <Mini label={t("roster.stats.st")} value={sheet?.stats.st ?? 0} />
-                      <Mini label={t("roster.stats.dx")} value={sheet?.stats.dx ?? 0} />
-                      <Mini label={t("roster.stats.iq")} value={sheet?.stats.iq ?? 0} />
-                      <Mini label={t("roster.stats.ht")} value={sheet?.stats.ht ?? 0} />
-                    </div>
-
-                    <p className="mt-3 text-xs text-muted-foreground">
-                      {t("roster.pointsSummary", {
-                        total: sheet?.points.total ?? 0,
-                        budget: c.point_budget,
-                        load: sheet?.encumbrance.label ?? "—",
-                        dr:
-                          Object.entries(sheet?.dr ?? {})
-                            .map(([k, v]) => `${k} ${v}`)
-                            .join(", ") || t("roster.drNone"),
-                      })}
-                    </p>
-                    {c.conditions.length ? (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {c.conditions.map((cond) => (
-                          <Badge key={cond} variant="outline" className="text-[10px]">
-                            {cond}
-                          </Badge>
-                        ))}
+                      <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+                        <Mini
+                          label={t("roster.stats.hp")}
+                          value={`${c.current_hp ?? sheet?.stats.hp ?? 0}/${sheet?.stats.hp ?? 0}`}
+                        />
+                        <Mini
+                          label={t("roster.stats.fp")}
+                          value={`${c.current_fp ?? sheet?.stats.fp ?? 0}/${sheet?.stats.fp ?? 0}`}
+                        />
+                        <Mini
+                          label={t("roster.stats.move")}
+                          value={sheet?.encumbrance.effectiveMove ?? 0}
+                        />
+                        <Mini
+                          label={t("roster.stats.dodge")}
+                          value={sheet?.encumbrance.effectiveDodge ?? 0}
+                        />
                       </div>
-                    ) : null}
-
-                    {isGm || c.owner_id === user?.id ? (
-                      <div className="mt-3 flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">{t("roster.owner")}</span>
-                        <Select
-                          value={c.owner_id}
-                          onValueChange={(v) => {
-                            if (v !== c.owner_id) transferOwner.mutate({ cid: c.id, userId: v });
-                          }}
-                          disabled={transferOwner.isPending}
-                        >
-                          <SelectTrigger className="h-7 w-full max-w-[180px] text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(members.data ?? []).some((m) => m.user_id === c.owner_id) ? null : (
-                              <SelectItem value={c.owner_id}>{t("roster.currentOwner")}</SelectItem>
-                            )}
-                            {members.data?.map((m) => (
-                              <SelectItem key={m.user_id} value={m.user_id}>
-                                {m.display_name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
+                        <Mini label={t("roster.stats.st")} value={sheet?.stats.st ?? 0} />
+                        <Mini label={t("roster.stats.dx")} value={sheet?.stats.dx ?? 0} />
+                        <Mini label={t("roster.stats.iq")} value={sheet?.stats.iq ?? 0} />
+                        <Mini label={t("roster.stats.ht")} value={sheet?.stats.ht ?? 0} />
                       </div>
-                    ) : null}
 
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        {t("roster.pointsSummary", {
+                          total: sheet?.points.total ?? 0,
+                          budget: c.point_budget,
+                          load: sheet?.encumbrance.label ?? "—",
+                          dr:
+                            Object.entries(sheet?.dr ?? {})
+                              .map(([k, v]) => `${k} ${v}`)
+                              .join(", ") || t("roster.drNone"),
+                        })}
+                      </p>
+                      {c.conditions.length ? (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {c.conditions.map((cond) => (
+                            <Badge key={cond} variant="outline" className="text-[10px]">
+                              {cond}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : null}
 
-
-                    {isGm ? (
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant={c.approved ? "outline" : "default"}
-                          onClick={() => approve.mutate({ cid: c.id, value: !c.approved })}
-                        >
-                          <Check className="mr-1 h-3.5 w-3.5" />
-                          {c.approved ? t("roster.revoke") : t("roster.approve")}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => cloneCharacter.mutate(c.id)}
-                          disabled={cloneCharacter.isPending}
-                        >
-                          {t("roster.duplicate")}
-                        </Button>
-                        <Button asChild size="sm" variant="ghost">
-                          <Link
-                            to="/characters/$id"
-                            params={{ id: c.id }}
-                            search={{ from: `campaign:${id}:${tabParam ?? "roster"}` }}
+                      {isGm || c.owner_id === user?.id ? (
+                        <div className="mt-3 flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">{t("roster.owner")}</span>
+                          <Select
+                            value={c.owner_id}
+                            onValueChange={(v) => {
+                              if (v !== c.owner_id) transferOwner.mutate({ cid: c.id, userId: v });
+                            }}
+                            disabled={transferOwner.isPending}
                           >
-                            {t("roster.openSheet")}
-                          </Link>
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive"
-                              disabled={removeFromCampaign.isPending}
+                            <SelectTrigger className="h-7 w-full max-w-[180px] text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(members.data ?? []).some((m) => m.user_id === c.owner_id) ? null : (
+                                <SelectItem value={c.owner_id}>
+                                  {t("roster.currentOwner")}
+                                </SelectItem>
+                              )}
+                              {members.data?.map((m) => (
+                                <SelectItem key={m.user_id} value={m.user_id}>
+                                  {m.display_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : null}
+
+                      {isGm ? (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            variant={c.approved ? "outline" : "default"}
+                            onClick={() => approve.mutate({ cid: c.id, value: !c.approved })}
+                          >
+                            <Check className="mr-1 h-3.5 w-3.5" />
+                            {c.approved ? t("roster.revoke") : t("roster.approve")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => cloneCharacter.mutate(c.id)}
+                            disabled={cloneCharacter.isPending}
+                          >
+                            {t("roster.duplicate")}
+                          </Button>
+                          <Button asChild size="sm" variant="ghost">
+                            <Link
+                              to="/characters/$id"
+                              params={{ id: c.id }}
+                              search={{ from: `campaign:${id}:${tabParam ?? "roster"}` }}
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>{t("roster.removeConfirmTitle")}</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {t("roster.removeConfirmBody", {
-                                  name: c.name,
-                                  npcNote: c.is_npc ? t("roster.removeConfirmNpcNote") : "",
-                                })}
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => removeFromCampaign.mutate(c.id)}
+                              {t("roster.openSheet")}
+                            </Link>
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive"
+                                disabled={removeFromCampaign.isPending}
                               >
-                                {t("roster.remove")}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    ) : null}
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  {t("roster.removeConfirmTitle")}
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  {t("roster.removeConfirmBody", {
+                                    name: c.name,
+                                    npcNote: c.is_npc ? t("roster.removeConfirmNpcNote") : "",
+                                  })}
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => removeFromCampaign.mutate(c.id)}>
+                                  {t("roster.remove")}
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 );
@@ -763,17 +789,26 @@ function CampaignPage() {
           )}
 
           <div className="panel p-4">
-            <h3 className="font-display text-sm font-semibold">{t("roster.submitSection.title")}</h3>
+            <h3 className="font-display text-sm font-semibold">
+              {t("roster.submitSection.title")}
+            </h3>
             <div className="mt-3 flex flex-wrap gap-2">
               {(mine.data ?? [])
                 .filter((c) => c.campaign_id !== id)
                 .map((c) => (
-                  <Button key={c.id} size="sm" variant="outline" onClick={() => attach.mutate(c.id)}>
+                  <Button
+                    key={c.id}
+                    size="sm"
+                    variant="outline"
+                    onClick={() => attach.mutate(c.id)}
+                  >
                     <Plus className="mr-1 h-3.5 w-3.5" /> {c.name}
                   </Button>
                 ))}
               {(mine.data ?? []).filter((c) => c.campaign_id !== id).length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("roster.submitSection.allSubmitted")}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t("roster.submitSection.allSubmitted")}
+                </p>
               ) : null}
             </div>
           </div>
@@ -841,7 +876,6 @@ function CampaignPage() {
           </TabsContent>
         ) : null}
 
-
         <TabsContent value="notes" className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
           <div className="space-y-3">
             <div className="w-full sm:w-60">
@@ -855,7 +889,9 @@ function CampaignPage() {
                   <SelectItem value="handout">{t("notes.filters.handout")}</SelectItem>
                   <SelectItem value="session">{t("notes.filters.session")}</SelectItem>
                   <SelectItem value="npc">{t("notes.filters.npc")}</SelectItem>
-                  <SelectItem value="party-inventory">{t("notes.filters.partyInventory")}</SelectItem>
+                  <SelectItem value="party-inventory">
+                    {t("notes.filters.partyInventory")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -871,7 +907,10 @@ function CampaignPage() {
                         <Badge variant="outline" className="text-[10px]">
                           {n.kind}
                         </Badge>
-                        <VisibilityBadge visibility={n.gm_only ? "GM_ONLY" : "ALL_PLAYERS"} isGm={isGm} />
+                        <VisibilityBadge
+                          visibility={n.gm_only ? "GM_ONLY" : "ALL_PLAYERS"}
+                          isGm={isGm}
+                        />
                       </div>
                       <Button
                         size="icon"
@@ -989,7 +1028,9 @@ function CampaignPage() {
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
-                  <Badge variant={m.role === "gm" ? "default" : "outline"}>{m.role === "gm" ? t("list.badge.gm") : t("list.badge.player")}</Badge>
+                  <Badge variant={m.role === "gm" ? "default" : "outline"}>
+                    {m.role === "gm" ? t("list.badge.gm") : t("list.badge.player")}
+                  </Badge>
                 </div>
               </div>
             ))}
@@ -1108,9 +1149,7 @@ function HouseRules({
       <section className="space-y-3">
         <div>
           <Label>{t("houseRules.cover.label")}</Label>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {t("houseRules.cover.hint")}
-          </p>
+          <p className="mt-1 text-xs text-muted-foreground">{t("houseRules.cover.hint")}</p>
         </div>
         {coverPath || coverPreview ? (
           <div className="relative aspect-[16/7] overflow-hidden rounded-lg border border-border">
@@ -1158,11 +1197,19 @@ function HouseRules({
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label>{t("houseRules.pointLimit")}</Label>
-          <Input value={pointLimit} onChange={(e) => setPointLimit(e.target.value)} disabled={disabled} />
+          <Input
+            value={pointLimit}
+            onChange={(e) => setPointLimit(e.target.value)}
+            disabled={disabled}
+          />
         </div>
         <div className="space-y-1.5">
           <Label>{t("houseRules.disadvantageLimit")}</Label>
-          <Input value={disadvLimit} onChange={(e) => setDisadvLimit(e.target.value)} disabled={disabled} />
+          <Input
+            value={disadvLimit}
+            onChange={(e) => setDisadvLimit(e.target.value)}
+            disabled={disabled}
+          />
         </div>
         <div className="space-y-1.5">
           <Label>{t("houseRules.techLevel")}</Label>
@@ -1172,9 +1219,7 @@ function HouseRules({
       <div className="space-y-2">
         <Label>{t("houseRules.packs.label")}</Label>
         {packOptions.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
-            {t("houseRules.packs.empty")}
-          </p>
+          <p className="text-xs text-muted-foreground">{t("houseRules.packs.empty")}</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
             {packOptions.map((p) => (
@@ -1210,9 +1255,7 @@ function HouseRules({
             {tc("actions.add")}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">
-          {t("houseRules.packs.hint")}
-        </p>
+        <p className="text-xs text-muted-foreground">{t("houseRules.packs.hint")}</p>
       </div>
       <div className="border-t border-border" />
       <CampaignRules

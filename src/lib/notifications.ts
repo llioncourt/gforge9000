@@ -18,9 +18,7 @@ export async function listNotifications(limit = 40): Promise<NotificationRow[]> 
   );
 }
 
-export async function createNotification(
-  input: TablesInsert<"notifications">,
-): Promise<void> {
+export async function createNotification(input: TablesInsert<"notifications">): Promise<void> {
   const { error } = await supabase.from("notifications").insert(input);
   if (error) throw new Error(error.message);
 }

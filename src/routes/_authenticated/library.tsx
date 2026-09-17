@@ -80,7 +80,7 @@ const KINDS = [
 export const Route = createFileRoute("/_authenticated/library")({
   staticData: { sitemap: false },
   validateSearch: (search: Record<string, unknown>): { item?: string } =>
-    typeof search['item'] === "string" ? { item: search['item'] } : {},
+    typeof search["item"] === "string" ? { item: search["item"] } : {},
   head: () => ({
     meta: [
       { title: metaText("library", "meta.title") },
@@ -182,7 +182,9 @@ function LibraryPage() {
       el.classList.add("search-flash");
       if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
       el.focus({ preventScroll: true });
-      setFoundLabel(el.getAttribute("data-search-label") ?? el.textContent?.trim().slice(0, 80) ?? "");
+      setFoundLabel(
+        el.getAttribute("data-search-label") ?? el.textContent?.trim().slice(0, 80) ?? "",
+      );
       clearTimer = window.setTimeout(() => {
         el.classList.remove("search-flash");
         window.history.replaceState(window.history.state, "", "/library");
@@ -213,7 +215,6 @@ function LibraryPage() {
       if (clearTimer) window.clearTimeout(clearTimer);
     };
   }, [itemParam]);
-
 
   const packs = useMemo(() => {
     const set = new Set<string>();
@@ -457,7 +458,9 @@ function LibraryPage() {
                 <p className="mt-3 text-[11px] text-muted-foreground">
                   {e.source_label}
                   {e.source_edition ? ` · ${e.source_edition}` : ""}
-                  {e.source_page ? ` · ${t("card.sourcePage", { page: e.source_page })}` : ""} · {t(`visibility.${e.visibility}`, { defaultValue: e.visibility })}
+                  {e.source_page
+                    ? ` · ${t("card.sourcePage", { page: e.source_page })}`
+                    : ""} · {t(`visibility.${e.visibility}`, { defaultValue: e.visibility })}
                 </p>
                 <div className="mt-auto flex items-center gap-1 pt-3">
                   <Button size="sm" variant="outline" onClick={() => setAddTarget(e)}>
@@ -499,9 +502,7 @@ function LibraryPage() {
         <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{form.id ? t("dialog.editTitle") : t("dialog.newTitle")}</DialogTitle>
-            <DialogDescription>
-              {t("dialog.description")}
-            </DialogDescription>
+            <DialogDescription>{t("dialog.description")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -589,9 +590,7 @@ function LibraryPage() {
             <div className="flex items-center justify-between rounded-md border border-border p-3">
               <div>
                 <Label>{t("dialog.sharePublicly")}</Label>
-                <p className="text-xs text-muted-foreground">
-                  {t("dialog.sharePubliclyHint")}
-                </p>
+                <p className="text-xs text-muted-foreground">{t("dialog.sharePubliclyHint")}</p>
               </div>
               <Switch
                 checked={form.visibility === "public"}
@@ -612,9 +611,7 @@ function LibraryPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("addDialog.title", { name: addTarget?.name })}</DialogTitle>
-            <DialogDescription>
-              {t("addDialog.description")}
-            </DialogDescription>
+            <DialogDescription>{t("addDialog.description")}</DialogDescription>
           </DialogHeader>
           <div className="max-h-[50vh] space-y-2 overflow-y-auto">
             {(characters.data ?? []).length === 0 ? (
@@ -632,7 +629,8 @@ function LibraryPage() {
                 >
                   <span>{c.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {gateFor(c.id, addTarget?.pack ?? null) ?? (c.is_npc ? t("addDialog.npc") : t("addDialog.pc"))}
+                    {gateFor(c.id, addTarget?.pack ?? null) ??
+                      (c.is_npc ? t("addDialog.npc") : t("addDialog.pc"))}
                   </span>
                 </Button>
               ))
@@ -644,10 +642,10 @@ function LibraryPage() {
       <AlertDialog open={!!pendingDelete} onOpenChange={(v) => !v && setPendingDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("deleteDialog.title", { name: pendingDelete?.name })}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("deleteDialog.description")}
-            </AlertDialogDescription>
+            <AlertDialogTitle>
+              {t("deleteDialog.title", { name: pendingDelete?.name })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteDialog.description")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>

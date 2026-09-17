@@ -65,7 +65,13 @@ export function useTransferTask() {
 
   const run = useCallback(
     async (title: string, task: (report: TransferReport) => Promise<string>) => {
-      setState({ title, label: t("transfer.starting"), percent: 0, phase: "running", message: null });
+      setState({
+        title,
+        label: t("transfer.starting"),
+        percent: 0,
+        phase: "running",
+        message: null,
+      });
       stopCreep();
       // When a task reports steps without a percentage, creep towards 90%.
       creep.current = window.setInterval(() => {
@@ -178,7 +184,13 @@ export function ImportDialog({
   };
 
   const start = async (file: File) => {
-    setState({ title, label: t("transfer.readingFile"), percent: 0, phase: "running", message: null });
+    setState({
+      title,
+      label: t("transfer.readingFile"),
+      percent: 0,
+      phase: "running",
+      message: null,
+    });
     stopCreep();
     creep.current = window.setInterval(() => {
       setState((current) =>

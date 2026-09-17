@@ -31,11 +31,7 @@ export type SyncDecision = "apply" | "keep-local" | "noop";
  * `keep-local` — the person has unsaved edits and the server moved on.
  * `noop` — nothing to do.
  */
-export function decideSync(
-  baseline: unknown,
-  current: unknown,
-  incoming: unknown,
-): SyncDecision {
+export function decideSync(baseline: unknown, current: unknown, incoming: unknown): SyncDecision {
   if (!incoming) return "noop";
   if (!current) return "apply";
   if (!hasLocalChanges(baseline, current)) {

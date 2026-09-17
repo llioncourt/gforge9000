@@ -473,11 +473,13 @@ export function validateAdaptationManifest(manifest: AdaptationManifest): string
   }
 
   const sequences = manifest.scenes.map((s) => s.sequence_no);
-  if (new Set(sequences).size !== sequences.length) problems.push("Duplicate scene sequence numbers.");
+  if (new Set(sequences).size !== sequences.length)
+    problems.push("Duplicate scene sequence numbers.");
 
   for (const fact of manifest.facts) {
     for (const key of fact.conflict_with) {
-      if (!factKeys.has(key)) problems.push(`Fact "${fact.stable_key}" conflicts with unknown "${key}".`);
+      if (!factKeys.has(key))
+        problems.push(`Fact "${fact.stable_key}" conflicts with unknown "${key}".`);
     }
     if (fact.provenance_type !== "adaptation_created" && fact.source_refs.length === 0) {
       problems.push(`Fact "${fact.stable_key}" has no source reference.`);
@@ -492,7 +494,12 @@ export function validateAdaptationManifest(manifest: AdaptationManifest): string
     }
   }
 
-  for (const record of [...manifest.cast, ...manifest.locations, ...manifest.props, ...manifest.wardrobe]) {
+  for (const record of [
+    ...manifest.cast,
+    ...manifest.locations,
+    ...manifest.props,
+    ...manifest.wardrobe,
+  ]) {
     for (const key of record.asset_keys) {
       if (!assetKeys.has(key)) problems.push(`"${record.name}" references unknown asset "${key}".`);
     }
@@ -504,7 +511,8 @@ export function validateAdaptationManifest(manifest: AdaptationManifest): string
     if (new Set(pages).size !== pages.length) problems.push("Duplicate comic page numbers.");
     for (const page of comic.target_projection.pages) {
       for (const key of page.scene_keys) {
-        if (!sceneKeys.has(key)) problems.push(`Comic page ${page.page_no} references unknown scene "${key}".`);
+        if (!sceneKeys.has(key))
+          problems.push(`Comic page ${page.page_no} references unknown scene "${key}".`);
       }
     }
   }
@@ -513,7 +521,9 @@ export function validateAdaptationManifest(manifest: AdaptationManifest): string
   if (movie) {
     for (const scene of movie.target_projection.scenes) {
       if (!sceneKeys.has(scene.scene_key)) {
-        problems.push(`Movie scene ${scene.scene_no} references unknown scene "${scene.scene_key}".`);
+        problems.push(
+          `Movie scene ${scene.scene_no} references unknown scene "${scene.scene_key}".`,
+        );
       }
     }
   }

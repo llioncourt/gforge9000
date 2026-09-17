@@ -44,7 +44,15 @@ export interface ImportedEntry {
 }
 
 /** Kinds that come from content packs; equipment/notes are free-form. */
-export const MATCHABLE_KINDS = ["advantage", "disadvantage", "perk", "quirk", "skill", "technique", "spell"];
+export const MATCHABLE_KINDS = [
+  "advantage",
+  "disadvantage",
+  "perk",
+  "quirk",
+  "skill",
+  "technique",
+  "spell",
+];
 
 /** The bare trait name, with any parenthetical qualifier removed. */
 export function normaliseName(value: string): string {
@@ -126,10 +134,7 @@ export function isMatchable(entry: ImportedEntry): boolean {
  * and the entry is left unmatched for explicit resolution. An unqualified
  * import never binds to a qualified row.
  */
-export function matchLocally(
-  entry: ImportedEntry,
-  index: CatalogueIndex,
-): CatalogueEntry | null {
+export function matchLocally(entry: ImportedEntry, index: CatalogueIndex): CatalogueEntry | null {
   if (!isMatchable(entry)) return null;
   const exact = index.exact.get(keyOf(entry.kind, entry.name));
   if (exact) return exact;
@@ -140,18 +145,13 @@ export function matchLocally(
   return index.generic.get(baseKey) ?? null;
 }
 
-
-
 export interface UnmatchedItem {
   kind: string;
   name: string;
 }
 
 /** Entries the deterministic pass could not place, de-duplicated. */
-export function unmatchedItems(
-  entries: ImportedEntry[],
-  index: CatalogueIndex,
-): UnmatchedItem[] {
+export function unmatchedItems(entries: ImportedEntry[], index: CatalogueIndex): UnmatchedItem[] {
   const seen = new Set<string>();
   const out: UnmatchedItem[] = [];
   for (const entry of entries) {
@@ -244,7 +244,7 @@ export function applyCatalogue(entry: ImportedEntry, target: CatalogueEntry): Im
       ? `${target.name} (${importedQualifier})`
       : target.name;
   const specialization =
-    importedQualifier && (entry.data?.['specialization'] ?? "") === ""
+    importedQualifier && (entry.data?.["specialization"] ?? "") === ""
       ? { specialization: importedQualifier }
       : {};
   return {
@@ -263,7 +263,6 @@ export function applyCatalogue(entry: ImportedEntry, target: CatalogueEntry): Im
     },
   };
 }
-
 
 export interface ReconcileResult {
   entries: ImportedEntry[];

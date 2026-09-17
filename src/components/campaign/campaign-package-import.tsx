@@ -66,9 +66,7 @@ export function CampaignPackageImport({
           <DialogContent className="max-h-[85vh] max-w-3xl overflow-hidden">
             <DialogHeader>
               <DialogTitle>{t("packageImport.dialog.title")}</DialogTitle>
-              <DialogDescription>
-                {t("packageImport.dialog.description")}
-              </DialogDescription>
+              <DialogDescription>{t("packageImport.dialog.description")}</DialogDescription>
             </DialogHeader>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -106,9 +104,7 @@ export function CampaignPackageImport({
           </DialogContent>
         </Dialog>
       </div>
-      <p className="text-xs text-muted-foreground">
-        {t("packageImport.hint")}
-      </p>
+      <p className="text-xs text-muted-foreground">{t("packageImport.hint")}</p>
       <ImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}

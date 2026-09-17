@@ -247,8 +247,6 @@ export async function transferCharacterOwner(characterId: string, newOwnerId: st
   if (error) throw new Error(error.message);
 }
 
-
-
 export async function listMembers(campaignId: string) {
   const members = unwrap(
     await supabase.from("campaign_members").select("*").eq("campaign_id", campaignId),
@@ -354,7 +352,6 @@ export async function listLibrary() {
   }
   return all;
 }
-
 
 export async function createLibraryEntry(input: TablesInsert<"library_entries">) {
   const { data: auth } = await supabase.auth.getUser();
@@ -511,7 +508,9 @@ export async function updateLibraryEntry(id: string, patch: TablesUpdate<"librar
   );
 }
 
-export async function importLibraryEntries(rows: Omit<TablesInsert<"library_entries">, "owner_id">[]) {
+export async function importLibraryEntries(
+  rows: Omit<TablesInsert<"library_entries">, "owner_id">[],
+) {
   const { data: auth } = await supabase.auth.getUser();
   if (!rows.length) return [] as LibraryRow[];
   const withPacks = rows.map((r) => ({
@@ -522,7 +521,12 @@ export async function importLibraryEntries(rows: Omit<TablesInsert<"library_entr
   return unwrap(
     await supabase
       .from("library_entries")
-      .insert(withPacks.map((r) => ({ ...r, owner_id: auth.user!.id })) as TablesInsert<"library_entries">[])
+      .insert(
+        withPacks.map((r) => ({
+          ...r,
+          owner_id: auth.user!.id,
+        })) as TablesInsert<"library_entries">[],
+      )
       .select(),
   );
 }
@@ -551,7 +555,9 @@ export async function listContentPacks() {
   return unwrap(await supabase.from("content_packs").select("*").order("name"));
 }
 
-export async function createContentPack(input: Partial<TablesInsert<"content_packs">> & { name: string }) {
+export async function createContentPack(
+  input: Partial<TablesInsert<"content_packs">> & { name: string },
+) {
   const { data: auth } = await supabase.auth.getUser();
   return unwrap(
     await supabase
@@ -650,8 +656,6 @@ export async function deleteContentPack(id: string, name: string) {
   if (error) throw new Error(error.message);
 }
 
-
-
 /** Moves a single library entry into (or out of) a pack. */
 export async function setLibraryEntryPack(entryId: string, pack: string | null) {
   return updateLibraryEntry(entryId, { pack });
@@ -672,4 +676,3 @@ export async function wipeAllMyData() {
   const { error } = await supabase.rpc("wipe_all_my_data");
   if (error) throw new Error(error.message);
 }
-

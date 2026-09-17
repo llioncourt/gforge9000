@@ -37,7 +37,11 @@ export async function collectAssetCandidates(
     });
   }
 
-  for (const character of characters as { id: string; name: string; portrait_path?: string | null }[]) {
+  for (const character of characters as {
+    id: string;
+    name: string;
+    portrait_path?: string | null;
+  }[]) {
     if (!character.portrait_path) continue;
     const linked = entities.find((entity) => entity.character_id === character.id);
     candidates.push({

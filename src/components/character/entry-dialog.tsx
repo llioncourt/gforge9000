@@ -48,10 +48,28 @@ export function emptyDraft(kind: EntryKind): EntryDraft {
     source: { label: "User created", edition: "", page: "", type: "user" },
   };
   if (kind === "skill" || kind === "technique" || kind === "spell") {
-    base.data = { attribute: "DX", difficulty: "A", points: 1, bonus: 0, specialization: "", defaults: "", prerequisites: "" };
+    base.data = {
+      attribute: "DX",
+      difficulty: "A",
+      points: 1,
+      bonus: 0,
+      specialization: "",
+      defaults: "",
+      prerequisites: "",
+    };
   }
   if (kind === "equipment") {
-    base.data = { quantity: 1, weight: 0, cost: 0, carried: true, tl: 8, legality: "", dr: 0, locations: [], weapons: [] };
+    base.data = {
+      quantity: 1,
+      weight: 0,
+      cost: 0,
+      carried: true,
+      tl: 8,
+      legality: "",
+      dr: 0,
+      locations: [],
+      weapons: [],
+    };
   }
   return base;
 }
@@ -84,7 +102,16 @@ const DIFFICULTY_KEYS = {
   H: "hard",
   VH: "veryHard",
 } as const satisfies Record<(typeof DIFFICULTY_VALUES)[number], string>;
-const LOCATION_VALUES = ["Skull", "Face", "Torso", "Vitals", "Arms", "Hands", "Legs", "Feet"] as const;
+const LOCATION_VALUES = [
+  "Skull",
+  "Face",
+  "Torso",
+  "Vitals",
+  "Arms",
+  "Hands",
+  "Legs",
+  "Feet",
+] as const;
 const LOCATION_KEYS = {
   Skull: "skull",
   Face: "face",
@@ -336,7 +363,10 @@ export function EntryDialog({
                 </div>
                 <div className="mt-2 space-y-2">
                   {weapons.map((w, i) => (
-                    <div key={i} className="grid grid-cols-2 gap-2 rounded-md border border-border p-3 sm:grid-cols-4">
+                    <div
+                      key={i}
+                      className="grid grid-cols-2 gap-2 rounded-md border border-border p-3 sm:grid-cols-4"
+                    >
                       {WEAPON_FIELD_KEYS.map(([key, labelKey]) => (
                         <Row key={key} label={t(`sheet.entryDialog.weaponFields.${labelKey}`)}>
                           <Input
@@ -355,9 +385,12 @@ export function EntryDialog({
                           type="button"
                           size="sm"
                           variant="ghost"
-                          onClick={() => setData({ weapons: weapons.filter((_, idx) => idx !== i) })}
+                          onClick={() =>
+                            setData({ weapons: weapons.filter((_, idx) => idx !== i) })
+                          }
                         >
-                          <Trash2 className="mr-1 h-3.5 w-3.5" /> {t("sheet.entryDialog.removeMode")}
+                          <Trash2 className="mr-1 h-3.5 w-3.5" />{" "}
+                          {t("sheet.entryDialog.removeMode")}
                         </Button>
                       </div>
                     </div>
@@ -447,7 +480,11 @@ export function EntryDialog({
           )}
 
           <Row label={t("sheet.entryDialog.notes")}>
-            <Textarea rows={3} value={local.notes} onChange={(e) => set({ notes: e.target.value })} />
+            <Textarea
+              rows={3}
+              value={local.notes}
+              onChange={(e) => set({ notes: e.target.value })}
+            />
           </Row>
 
           <div className="grid gap-4 sm:grid-cols-3">

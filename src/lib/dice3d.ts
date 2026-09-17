@@ -43,7 +43,12 @@ export function quatMul(a: Quat, b: Quat): Quat {
 export function quatFromAxisAngle(axis: Vec3, angle: number): Quat {
   const l = Math.hypot(...axis) || 1;
   const s = Math.sin(angle / 2);
-  return quatNormalize([(axis[0] / l) * s, (axis[1] / l) * s, (axis[2] / l) * s, Math.cos(angle / 2)]);
+  return quatNormalize([
+    (axis[0] / l) * s,
+    (axis[1] / l) * s,
+    (axis[2] / l) * s,
+    Math.cos(angle / 2),
+  ]);
 }
 
 export function rotateVec(q: Quat, v: Vec3): Vec3 {
@@ -85,7 +90,6 @@ function nearestAxis(v: Vec3): Vec3 {
   const out: Vec3 = [0, 0, 0];
   out[i as 0 | 1 | 2] = (v[i as 0 | 1 | 2] ?? 0) >= 0 ? 1 : -1;
   return out;
-
 }
 
 function cross(a: Vec3, b: Vec3): Vec3 {
@@ -146,16 +150,36 @@ export function snapQuat(q: Quat): Quat {
   let out: Quat;
   if (trace > 0) {
     const s = Math.sqrt(trace + 1) * 2;
-    out = [(at(2, 1) - at(1, 2)) / s, (at(0, 2) - at(2, 0)) / s, (at(1, 0) - at(0, 1)) / s, 0.25 * s];
+    out = [
+      (at(2, 1) - at(1, 2)) / s,
+      (at(0, 2) - at(2, 0)) / s,
+      (at(1, 0) - at(0, 1)) / s,
+      0.25 * s,
+    ];
   } else if (at(0, 0) > at(1, 1) && at(0, 0) > at(2, 2)) {
     const s = Math.sqrt(1 + at(0, 0) - at(1, 1) - at(2, 2)) * 2;
-    out = [0.25 * s, (at(0, 1) + at(1, 0)) / s, (at(0, 2) + at(2, 0)) / s, (at(2, 1) - at(1, 2)) / s];
+    out = [
+      0.25 * s,
+      (at(0, 1) + at(1, 0)) / s,
+      (at(0, 2) + at(2, 0)) / s,
+      (at(2, 1) - at(1, 2)) / s,
+    ];
   } else if (at(1, 1) > at(2, 2)) {
     const s = Math.sqrt(1 + at(1, 1) - at(0, 0) - at(2, 2)) * 2;
-    out = [(at(0, 1) + at(1, 0)) / s, 0.25 * s, (at(1, 2) + at(2, 1)) / s, (at(0, 2) - at(2, 0)) / s];
+    out = [
+      (at(0, 1) + at(1, 0)) / s,
+      0.25 * s,
+      (at(1, 2) + at(2, 1)) / s,
+      (at(0, 2) - at(2, 0)) / s,
+    ];
   } else {
     const s = Math.sqrt(1 + at(2, 2) - at(0, 0) - at(1, 1)) * 2;
-    out = [(at(0, 2) + at(2, 0)) / s, (at(1, 2) + at(2, 1)) / s, 0.25 * s, (at(1, 0) - at(0, 1)) / s];
+    out = [
+      (at(0, 2) + at(2, 0)) / s,
+      (at(1, 2) + at(2, 1)) / s,
+      0.25 * s,
+      (at(1, 0) - at(0, 1)) / s,
+    ];
   }
   return quatNormalize(out);
 }
@@ -163,8 +187,6 @@ export function snapQuat(q: Quat): Quat {
 function dot(a: Vec3, b: Vec3): number {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
-
-
 
 export interface DieState {
   pos: Vec3;
@@ -287,9 +309,7 @@ function step(die: DieState, dt: number, tray: TrayBounds): DieState {
 
   const quat = integrateRotation(die.quat, angVel, dt);
   const slow =
-    touching &&
-    Math.hypot(vx, vy, vz) < SLEEP_LINEAR &&
-    Math.hypot(...angVel) < SLEEP_ANGULAR;
+    touching && Math.hypot(vx, vy, vz) < SLEEP_LINEAR && Math.hypot(...angVel) < SLEEP_ANGULAR;
   const restTime = slow ? die.restTime + dt : 0;
   const settled = restTime >= SLEEP_TIME;
 

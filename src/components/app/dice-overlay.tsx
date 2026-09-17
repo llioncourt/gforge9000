@@ -51,7 +51,12 @@ export function DiceOverlay() {
           <p className="min-w-0 flex-1 truncate text-sm font-medium">
             {pending?.request.label ?? settled?.label}
           </p>
-          <Button size="icon" variant="ghost" aria-label={t("overlay.closeTray")} onClick={closeTray}>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={t("overlay.closeTray")}
+            onClick={closeTray}
+          >
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -95,7 +100,9 @@ export function DiceOverlay() {
               <span className="stat-value text-2xl">{settled.total}</span>
               <span className="text-xs text-muted-foreground">
                 {settled.expression} · {settled.dice.join(" + ")}
-                {settled.target !== null ? ` · ${t("overlay.vsTarget", { target: settled.target })}` : ""}
+                {settled.target !== null
+                  ? ` · ${t("overlay.vsTarget", { target: settled.target })}`
+                  : ""}
               </span>
               {settled.outcome ? (
                 <Badge variant="outline" className={cn(outcomeTone(settled.outcome))}>
@@ -110,12 +117,7 @@ export function DiceOverlay() {
             <span className="text-sm text-muted-foreground">{t("overlay.rolling")}</span>
           )}
           <div className="ml-auto flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={rerollPending}
-              disabled={!settled}
-            >
+            <Button size="sm" variant="outline" onClick={rerollPending} disabled={!settled}>
               <RotateCcw className="mr-1 h-3.5 w-3.5" /> {t("overlay.reroll")}
             </Button>
             <Button size="sm" onClick={closeTray}>

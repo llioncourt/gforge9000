@@ -57,7 +57,16 @@ function lookup(bundle: MetaBundle | undefined, path: string): string | undefine
  * Returns an empty string only if the key is missing in every locale.
  */
 export function metaText(
-  namespace: "marketing" | "auth" | "dashboard" | "library" | "settings" | "packs" | "characters" | "campaigns" | "lore",
+  namespace:
+    | "marketing"
+    | "auth"
+    | "dashboard"
+    | "library"
+    | "settings"
+    | "packs"
+    | "characters"
+    | "campaigns"
+    | "lore",
   path: string,
   vars?: Record<string, string | number>,
 ): string {

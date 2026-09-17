@@ -9,7 +9,12 @@
  * thin IO wrapper that feeds it.
  */
 
-import { getCampaign, listCampaignCharacters, listEntriesForCharacters, listNotes } from "@/lib/api";
+import {
+  getCampaign,
+  listCampaignCharacters,
+  listEntriesForCharacters,
+  listNotes,
+} from "@/lib/api";
 import { listAssets } from "@/lib/assets";
 import { listMapObjects, listMaps } from "@/lib/battlemap";
 import { listCampaignVideos } from "@/lib/campaign-intro";
@@ -168,7 +173,9 @@ export async function scanCampaign(
   );
   const selected = entities.filter(
     (entity) =>
-      (explicit.size === 0 && branch.size === 0) || explicit.has(entity.id) || branch.has(entity.id),
+      (explicit.size === 0 && branch.size === 0) ||
+      explicit.has(entity.id) ||
+      branch.has(entity.id),
   );
   const selectedIds = new Set(selected.map((entity) => entity.id));
 

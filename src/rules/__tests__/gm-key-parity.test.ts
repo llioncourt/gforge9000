@@ -6,7 +6,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { ENTITY_KINDS } from "@/lib/entity-kinds";
+import { KINDS } from "@/lib/entity-kinds";
 
 function databaseKeyMap(): Record<string, string[]> {
   const dir = "supabase/migrations";
@@ -30,7 +30,7 @@ describe("GM-only field parity", () => {
 
   it("matches the fields the app marks as GM-only", () => {
     const fromApp: Record<string, string[]> = {};
-    for (const kind of ENTITY_KINDS) {
+    for (const kind of KINDS) {
       const keys = kind.fields.filter((f) => f.gm).map((f) => f.key).sort();
       if (keys.length) fromApp[kind.kind] = keys;
     }

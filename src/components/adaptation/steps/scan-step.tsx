@@ -19,6 +19,7 @@ import {
 } from "@/lib/adaptation/api";
 import { diffSources, impactMap, isEmptyChangeSet, toSourceMap } from "@/lib/adaptation/diff";
 import { scanCampaign, type ScanScope } from "@/lib/adaptation/scanner";
+import type { SourceRef } from "@/lib/adaptation/types";
 import type { StepProps } from "@/components/adaptation/adaptation-wizard";
 
 export function ScanStep({ project, patch }: StepProps) {
@@ -38,6 +39,15 @@ export function ScanStep({ project, patch }: StepProps) {
 
   const latest = snapshots.data?.[0] ?? null;
   const openChange = changeSets.data?.find((set) => set.status === "open") ?? null;
+
+  const sources = useQuery({
+    queryKey: ["adaptation-sources", project.id],
+    queryFn: () => listAdaptationSources(project.id),
+  });
+  const sourceLabels = new Map(
+    (sources.data ?? []).map((source) => [source.source_key, source.label]),
+  );
+
 
   const scan = useMutation({
     mutationFn: async () => {

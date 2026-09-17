@@ -517,24 +517,19 @@ function CampaignPage() {
           })
         }
       >
-        <ScrollableTabsList>
-          <TabsTrigger value="media">{t("tabs.media")}</TabsTrigger>
-          <TabsTrigger value="roster">{t("tabs.roster")}</TabsTrigger>
-          <TabsTrigger value="lore">{t("tabs.lore")}</TabsTrigger>
-          <TabsTrigger value="story">{t("tabs.story")}</TabsTrigger>
-          <TabsTrigger value="graph">{t("tabs.graph")}</TabsTrigger>
-          <TabsTrigger value="reveals">{t("tabs.reveals")}</TabsTrigger>
-          <TabsTrigger value="sessions">{t("tabs.sessions")}</TabsTrigger>
-          <TabsTrigger value="timeline">{t("tabs.timeline")}</TabsTrigger>
-          <TabsTrigger value="battle">{t("tabs.battle")}</TabsTrigger>
-          <TabsTrigger value="library">{t("tabs.library")}</TabsTrigger>
-          <TabsTrigger value="rolls">{t("tabs.rolls")}</TabsTrigger>
-          {isGm ? <TabsTrigger value="adapt">{ta("tab")}</TabsTrigger> : null}
-
-          <TabsTrigger value="notes">{t("tabs.notes")}</TabsTrigger>
-          <TabsTrigger value="members">{t("tabs.members")}</TabsTrigger>
-          <TabsTrigger value="rules">{t("tabs.rules")}</TabsTrigger>
-        </ScrollableTabsList>
+        <CampaignNav
+          value={tabParam ?? "roster"}
+          isGm={isGm}
+          adaptLabel={ta("tab")}
+          onChange={(v) =>
+            navigate({
+              to: "/campaigns/$id",
+              params: { id },
+              search: { tab: v as CampaignTab },
+              replace: true,
+            })
+          }
+        />
 
         <TabsContent value="media" className="mt-6">
           <Suspense fallback={<PanelFallback />}>

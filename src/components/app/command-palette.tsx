@@ -111,13 +111,13 @@ export function CommandPalette({
         </CommandGroup>
         {groups.length ? <CommandSeparator /> : null}
         {groups.map(([groupKey, items]) => (
-          <CommandGroup key={groupKey} heading={t(groupKey)}>
+          <CommandGroup key={groupKey} heading={tk(groupKey)}>
             {items.map((hit) => (
               <CommandItem key={hit.id} value={`${hit.id} ${hit.label}`} onSelect={() => openTarget(hit.target)}>
-                {hit.labelKey ? t(hit.labelKey) : hit.label}
+                {hit.labelKey ? tk(hit.labelKey) : hit.label}
                 {hit.sublabelKey ? (
                   <span className="ml-auto text-xs text-muted-foreground">
-                    {t(hit.sublabelKey, hit.sublabelParams)}
+                    {tk(hit.sublabelKey, hit.sublabelParams)}
                   </span>
                 ) : hit.sublabel ? (
                   <span className="ml-auto text-xs text-muted-foreground">{hit.sublabel}</span>

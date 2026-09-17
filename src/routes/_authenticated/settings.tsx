@@ -41,6 +41,9 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function SettingsPage() {
   const { t } = useT("settings");
   const { t: tRules } = useT("rules");
+  const { t: tc } = useT("common");
+  // Rule ids come from data, so their audit labels are resolved dynamically.
+  const tRuleKey = tRules as (key: string) => string;
   const { user } = useSession();
   const queryClient = useQueryClient();
 

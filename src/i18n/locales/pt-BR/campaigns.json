@@ -141,6 +141,105 @@
     "houseRulesPlaceholder": "Acordos de mesa, pacotes de conteúdo permitidos, tom da campanha…",
     "save": "Salvar regras da casa"
   },
+  "rulesTuning": {
+    "title": "Regras ajustáveis",
+    "hint": "Estes são os valores usados nas fichas. Altere-os só nesta campanha; o que você não mexer mantém o valor padrão.",
+    "save": "Salvar regras ajustáveis",
+    "saved": "Regras da campanha salvas.",
+    "reset": "Voltar ao padrão",
+    "resetAll": "Restaurar tudo ao padrão",
+    "defaultValue": "Padrão: {{value}}",
+    "changedCount": "{{count}} alterado(s) em relação ao padrão",
+    "unlimited": "Sem limite",
+    "groups": {
+      "attributes": "Custos de atributos",
+      "secondary": "Atributos secundários",
+      "skills": "Perícias e técnicas",
+      "modifiers": "Modificadores de vantagens",
+      "combat": "Combate e defesas",
+      "encumbrance": "Carga",
+      "health": "Limiares de saúde",
+      "dice": "Rolagens",
+      "weapons": "Armas"
+    },
+    "columns": {
+      "row": "Linha",
+      "multiplier": "x Carga Básica",
+      "moveFactor": "Fator de deslocamento",
+      "dodgePenalty": "Esquiva",
+      "atOrBelow": "Igual ou abaixo de",
+      "hpThresholds": "Pontos de vida",
+      "fpThresholds": "Fadiga"
+    },
+    "enums": {
+      "modifierRounding": {
+        "nearest": "Mais próximo",
+        "up": "Para cima",
+        "down": "Para baixo"
+      },
+      "drStacking": {
+        "additive": "Somar",
+        "highest": "Somente o maior"
+      }
+    },
+    "fields": {
+      "attributeCost": {
+        "ST": "ST por ponto",
+        "DX": "DX por ponto",
+        "IQ": "IQ por ponto",
+        "HT": "HT por ponto"
+      },
+      "secondaryCost": {
+        "hp": "PV por ponto",
+        "will": "Vontade por ponto",
+        "per": "Percepção por ponto",
+        "fp": "PF por ponto",
+        "speed": "Velocidade Básica por ponto",
+        "move": "Deslocamento Básico por nível"
+      },
+      "basicLiftDivisor": "Divisor da Carga Básica",
+      "difficultyOffset": {
+        "E": "Ajuste Fácil",
+        "A": "Ajuste Médio",
+        "H": "Ajuste Difícil",
+        "VH": "Ajuste Muito Difícil"
+      },
+      "technique": {
+        "firstLevelCost": {
+          "E": "Primeiro nível de técnica (Fácil)",
+          "A": "Primeiro nível de técnica (Médio)",
+          "H": "Primeiro nível de técnica (Difícil)",
+          "VH": "Primeiro nível de técnica (Muito Difícil)"
+        },
+        "additionalLevelCost": {
+          "E": "Nível extra de técnica (Fácil)",
+          "A": "Nível extra de técnica (Médio)",
+          "H": "Nível extra de técnica (Difícil)",
+          "VH": "Nível extra de técnica (Muito Difícil)"
+        }
+      },
+      "modifierRounding": "Arredondamento após modificadores",
+      "modifierFloorPercent": "Limitação total mínima (%)",
+      "dodgeBase": "Bônus de Esquiva",
+      "activeDefense": {
+        "parryDivisor": "Divisor de Aparar",
+        "parryBase": "Bônus de Aparar",
+        "blockDivisor": "Divisor de Bloquear",
+        "blockBase": "Bônus de Bloquear",
+        "retreatBonus": "Bônus de recuo"
+      },
+      "drStacking": "Armaduras no mesmo local",
+      "criticalSuccessMax": "Sucesso crítico com valor até",
+      "criticalFailureMin": "Falha crítica com valor a partir de",
+      "autoFailMargin": "Margem de falha automática",
+      "weapon": {
+        "minimumRecoil": "Recuo mínimo utilizável",
+        "maxAdditionalHits": "Limite de acertos extras",
+        "accuracyBonusEnabled": "Usar bônus de precisão",
+        "bulkPenaltyEnabled": "Usar penalidade de volume"
+      }
+    }
+  },
   "list": {
     "title": "Campanhas",
     "description": "Mesas que você mestra e mesas em que você joga.",

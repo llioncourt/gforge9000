@@ -76,6 +76,7 @@ function ProblemList({
 }) {
   const { t } = useT("adaptation");
   const queryClient = useQueryClient();
+  const [pendingConfirm, setPendingConfirm] = useState<string[] | null>(null);
 
   const confirmAll = useMutation({
     mutationFn: async (ids: string[]) => {
@@ -89,6 +90,7 @@ function ProblemList({
   });
 
   return (
+    <>
     <ul className="space-y-2 text-sm">
       {problems.map((problem) => (
         <li
@@ -104,7 +106,7 @@ function ProblemList({
                 size="sm"
                 variant="secondary"
                 disabled={confirmAll.isPending}
-                onClick={() => confirmAll.mutate(problem.factIds!)}
+                onClick={() => setPendingConfirm(problem.factIds!)}
               >
                 {t("validation.actions.confirmAll")}
               </Button>
@@ -116,8 +118,34 @@ function ProblemList({
         </li>
       ))}
     </ul>
+    {/* Accepting unread assistant output in bulk is a deliberate choice, not a click. */}
+    <AlertDialog open={!!pendingConfirm} onOpenChange={(v) => !v && setPendingConfirm(null)}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {t("validation.actions.confirmAllTitle", { count: pendingConfirm?.length ?? 0 })}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {t("validation.actions.confirmAllDescription")}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t("validation.actions.fix")}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              if (pendingConfirm) confirmAll.mutate(pendingConfirm);
+              setPendingConfirm(null);
+            }}
+          >
+            {t("validation.actions.confirmAllConfirm")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
+
 
 export function ValidationStep({ project, goTo }: StepProps) {
   const { t } = useT("adaptation");

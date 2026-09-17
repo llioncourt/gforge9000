@@ -289,7 +289,10 @@
     "actions": {
       "fix": "Fix",
       "confirmAll": "Confirm all",
-      "confirmedAll": "Facts confirmed."
+      "confirmedAll": "Facts confirmed.",
+      "confirmAllTitle": "Confirm {{count}} unreviewed points?",
+      "confirmAllDescription": "These were written by the assistant and nobody has read them yet. Confirming marks them all as accepted. Use Fix to read them one by one first.",
+      "confirmAllConfirm": "Confirm them all"
     }
   },
   "generate": {

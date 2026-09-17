@@ -289,7 +289,10 @@
     "actions": {
       "fix": "Resolver",
       "confirmAll": "Confirmar tudo",
-      "confirmedAll": "Fatos confirmados."
+      "confirmedAll": "Fatos confirmados.",
+      "confirmAllTitle": "Confirmar {{count}} pontos não revisados?",
+      "confirmAllDescription": "Eles foram escritos pelo assistente e ninguém leu ainda. Confirmar marca todos como aceitos. Use Corrigir para ler um a um antes.",
+      "confirmAllConfirm": "Confirmar todos"
     }
   },
   "generate": {

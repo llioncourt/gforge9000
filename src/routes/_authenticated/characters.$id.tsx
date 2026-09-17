@@ -285,16 +285,48 @@ function CharacterPage() {
     },
   });
 
-  // Debounced autosave of the character record.
+  // Autosave: one save at a time, and the newest edit always wins.
+  const latestForm = useRef<CharacterRow | null>(null);
+  latestForm.current = form;
+  const saving = useRef(false);
+
+  const flush = useCallback(() => {
+    const current = latestForm.current;
+    if (!current || !dirty.current || saving.current) return;
+    saving.current = true;
+    const { id: _i, owner_id: _o, created_at: _c, updated_at: _u, ...patch } = current;
+    save.mutate(patch, {
+      onSettled: () => {
+        saving.current = false;
+        // An edit made while the save was in flight still needs saving.
+        if (dirty.current) flushRef.current?.();
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const flushRef = useRef(flush);
+  flushRef.current = flush;
+
   useEffect(() => {
     if (!form || !dirty.current) return;
-    const timer = setTimeout(() => {
-      const { id: _i, owner_id: _o, created_at: _c, updated_at: _u, ...patch } = form;
-      save.mutate(patch);
-    }, 700);
+    const timer = setTimeout(() => flushRef.current?.(), 700);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form]);
+
+  // Leaving the page (tab close, reload) while something is unsaved.
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (!dirty.current && !saving.current) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => {
+      window.removeEventListener("beforeunload", warn);
+      // Navigating away inside the app: send the pending edit right now.
+      flushRef.current?.();
+    };
+  }, []);
 
   const patch = (p: Partial<CharacterRow>) => {
     dirty.current = true;

@@ -37,7 +37,7 @@ const STAGE_PROMPTS: Record<AiStage, string> = {
   chronology:
     "Put the listed happenings into the order they occurred in the story world. Mark certainty honestly; use \"unknown\" when the sources do not say.",
   scenes:
-    "Turn the material into adapted scenes for a visual retelling: title, synopsis, dramatic goal, beats, dialogue and narration. Keep the cast, location and props limited to names present in the material. Cite source_keys for every scene.",
+    "Turn the material into adapted scenes for a visual retelling: title, synopsis, dramatic goal, beats, dialogue and narration. Return at most 8 scenes. Keep the cast, location and props limited to names present in the material. Cite source_keys for every scene.",
   enrichment:
     "Suggest purely presentational additions (wardrobe, set dressing, transitions, motifs) that make the scenes filmable, plus a story bible. These are inventions for the adaptation, not campaign facts.",
   impact:

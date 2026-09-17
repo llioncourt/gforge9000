@@ -239,16 +239,6 @@ export function CampaignNav({
               <SheetTitle>{t("nav.menu")}</SheetTitle>
             </SheetHeader>
             <div className="mt-4 space-y-5">
-              <div className="space-y-1">
-                {standalone.map((item) => (
-                  <MobileItem
-                    key={item.value}
-                    item={item}
-                    active={value === item.value}
-                    onSelect={select}
-                  />
-                ))}
-              </div>
               {groups.map((group) => (
                 <div key={group.id} className="space-y-1">
                   <p className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -264,6 +254,16 @@ export function CampaignNav({
                   ))}
                 </div>
               ))}
+              <div className="space-y-1">
+                {standalone.map((item) => (
+                  <MobileItem
+                    key={item.value}
+                    item={item}
+                    active={value === item.value}
+                    onSelect={select}
+                  />
+                ))}
+              </div>
             </div>
           </SheetContent>
         </Sheet>

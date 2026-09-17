@@ -24,6 +24,30 @@ function unwrap<T>(res: { data: T; error: { message: string } | null }): NonNull
   return res.data as NonNullable<T>;
 }
 
+/**
+ * Long runs (scan + reconstruction) can outlive the current access token.
+ * Refresh it before writing so the request is not sent as an anonymous caller,
+ * which the row policies reject.
+ */
+async function ensureSession(): Promise<void> {
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) throw new Error("Your session expired. Sign in again to save this work.");
+  const expiresAt = (data.session.expires_at ?? 0) * 1000;
+  if (expiresAt && expiresAt - Date.now() < 120_000) {
+    const { data: refreshed, error } = await supabase.auth.refreshSession();
+    if (error || !refreshed.session) {
+      throw new Error("Your session expired. Sign in again to save this work.");
+    }
+  }
+}
+
+/** Keeps the last row for each key so one batch never upserts the same key twice. */
+function dedupeByKey<T extends { stable_key?: string }>(rows: T[]): T[] {
+  const byKey = new Map<string, T>();
+  for (const row of rows) byKey.set(row.stable_key ?? "", row);
+  return [...byKey.values()];
+}
+
 export interface CreativeSettings {
   comic?: Partial<ComicConfig>;
   movie?: Partial<MovieConfig>;

@@ -19,7 +19,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useT } from "@/i18n";
+import { useT } from "@/i18n/hooks";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

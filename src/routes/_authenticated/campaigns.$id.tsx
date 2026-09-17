@@ -246,6 +246,8 @@ function CampaignPage() {
   const isGm = campaign.data?.gm_id === user?.id;
   const settings = (campaign.data?.settings ?? {}) as Record<string, unknown>;
 
+  const campaignRuleset = useMemo(() => rulesetFromSettings(settings), [settings]);
+
   const sheets = useMemo(() => {
     const byChar = new Map<string, ReturnType<typeof buildSheet>>();
     for (const c of roster.data ?? []) {
@@ -253,7 +255,7 @@ function CampaignPage() {
       byChar.set(c.id, buildSheet(toCharacterRecord(c), rows, campaignRuleset));
     }
     return byChar;
-  }, [roster.data, entries.data]);
+  }, [roster.data, entries.data, campaignRuleset]);
 
   const createNpc = useMutation({
     mutationFn: () =>
@@ -1102,7 +1104,7 @@ function HouseRules({
     setPacks((prev) => (on ? [...new Set([...prev, name])] : prev.filter((p) => p !== name)));
 
   return (
-    <div className="panel max-w-2xl space-y-4 p-6">
+    <div className="panel max-w-4xl space-y-4 p-6">
       <section className="space-y-3">
         <div>
           <Label>{t("houseRules.cover.label")}</Label>

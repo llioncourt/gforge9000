@@ -79,6 +79,7 @@ import {
   type EntryKind,
   type WeaponMode,
 } from "@/rules";
+import { rulesetFromSettings } from "@/rules/campaign-ruleset";
 import { AttackModeCard } from "@/components/character/attack-mode-card";
 import {
   attackModeKey,
@@ -303,8 +304,8 @@ function CharacterPage() {
     [entriesQuery.data],
   );
   const sheet = useMemo(
-    () => (form ? buildSheet(toCharacterRecord(form), entries) : null),
-    [form, entries],
+    () => (form ? buildSheet(toCharacterRecord(form), entries, campaignRuleset) : null),
+    [form, entries, campaignRuleset],
   );
 
   const [dialogOpen, setDialogOpen] = useState(false);

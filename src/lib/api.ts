@@ -408,6 +408,8 @@ export type CharactersViewMode = "list" | "grid";
 type ProfilePreferences = {
   characters_view?: CharactersViewMode;
   theme?: "light" | "dark";
+  /** BCP-47 interface language chosen by the user (see src/i18n/config.ts). */
+  locale?: string;
 } & Record<string, unknown>;
 
 /** Reads the caller's stored UI preferences (generic JSON bag on the profile). */

@@ -1,0 +1,37 @@
+{
+  "page": {
+    "title": "Dashboard",
+    "description": "Everything on your table right now.",
+    "newCharacter": "New character"
+  },
+  "stats": {
+    "characters": "Characters",
+    "campaigns": "Campaigns",
+    "libraryEntries": "Library entries",
+    "rollsLogged": "Rolls logged"
+  },
+  "empty": {
+    "title": "Nothing forged yet",
+    "description": "Create a blank character to see the engine working end to end."
+  },
+  "sections": {
+    "recentCharacters": "Recent characters",
+    "recentRolls": "Recent rolls"
+  },
+  "character": {
+    "noConcept": "No concept set",
+    "techLevel": "TL {{level}}",
+    "npc": "NPC",
+    "points": "{{count}} pts"
+  },
+  "rolls": {
+    "vsTarget": "vs {{target}}",
+    "none": "No rolls logged yet.",
+    "outcome": {
+      "success": "Success",
+      "failure": "Failure",
+      "critical success": "Critical success",
+      "critical failure": "Critical failure"
+    }
+  }
+}

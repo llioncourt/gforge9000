@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/command";
 import { globalSearch, type CampaignTab, type MediaSubTab, type SearchHit, type SearchTarget } from "@/lib/global-search";
 import { useDice } from "@/components/app/dice-context";
+import { useT } from "@/i18n/hooks";
 
 export function CommandPalette({
   open,
@@ -22,6 +23,7 @@ export function CommandPalette({
 }) {
   const navigate = useNavigate();
   const { roll } = useDice();
+  const { t } = useT("navigation");
   const [term, setTerm] = useState("");
   const [debounced, setDebounced] = useState("");
 
@@ -47,9 +49,9 @@ export function CommandPalette({
   const groups = useMemo(() => {
     const map = new Map<string, SearchHit[]>();
     for (const hit of hits) {
-      const list = map.get(hit.group) ?? [];
+      const list = map.get(hit.groupKey) ?? [];
       list.push(hit);
-      map.set(hit.group, list);
+      map.set(hit.groupKey, list);
     }
     return [...map.entries()];
   }, [hits]);
@@ -83,37 +85,41 @@ export function CommandPalette({
       <CommandInput
         value={term}
         onValueChange={setTerm}
-        placeholder="Search ANYTHING!"
+        placeholder={t("header.search")}
       />
       <CommandList>
         <CommandEmpty>
           {debounced.trim().length < 2
-            ? "Type at least two letters to search."
+            ? t("commandPalette.typeToSearch")
             : isFetching
-              ? "Searching…"
-              : "Nothing matched."}
+              ? t("commandPalette.searching")
+              : t("commandPalette.noResults")}
         </CommandEmpty>
-        <CommandGroup heading="Actions">
+        <CommandGroup heading={t("commandPalette.actions")}>
           <CommandItem value="action new character" onSelect={() => go(() => navigate({ to: "/characters" }))}>
-            New character
+            {t("commandPalette.newCharacter")}
           </CommandItem>
           <CommandItem
             value="action roll 3d6"
             onSelect={() => go(() => roll({ label: "Quick 3d6", target: 10 }))}
           >
-            Roll 3d6 vs 10
+            {t("commandPalette.rollQuickDice")}
           </CommandItem>
           <CommandItem value="action campaigns" onSelect={() => go(() => navigate({ to: "/campaigns" }))}>
-            Campaigns
+            {t("commandPalette.campaigns")}
           </CommandItem>
         </CommandGroup>
         {groups.length ? <CommandSeparator /> : null}
-        {groups.map(([group, items]) => (
-          <CommandGroup key={group} heading={group}>
+        {groups.map(([groupKey, items]) => (
+          <CommandGroup key={groupKey} heading={t(groupKey)}>
             {items.map((hit) => (
               <CommandItem key={hit.id} value={`${hit.id} ${hit.label}`} onSelect={() => openTarget(hit.target)}>
-                {hit.label}
-                {hit.sublabel ? (
+                {hit.labelKey ? t(hit.labelKey) : hit.label}
+                {hit.sublabelKey ? (
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    {t(hit.sublabelKey, hit.sublabelParams)}
+                  </span>
+                ) : hit.sublabel ? (
                   <span className="ml-auto text-xs text-muted-foreground">{hit.sublabel}</span>
                 ) : null}
               </CommandItem>

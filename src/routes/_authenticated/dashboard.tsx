@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createCharacter, listCampaigns, listCharacters, listLibrary, listRolls } from "@/lib/api";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
+import { useT } from "@/i18n/hooks";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   staticData: { sitemap: false },
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
+  const { t } = useT("dashboard");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const characters = useQuery({ queryKey: ["characters"], queryFn: listCharacters });
@@ -48,32 +50,35 @@ function Dashboard() {
   return (
     <div>
       <PageHeader
-        title="Dashboard"
-        description="Everything on your table right now."
+        title={t("page.title")}
+        description={t("page.description")}
         actions={
           <>
             <Button onClick={() => newCharacter.mutate()} disabled={newCharacter.isPending}>
-              <Plus className="mr-2 h-4 w-4" /> New character
+              <Plus className="mr-2 h-4 w-4" /> {t("page.newCharacter")}
             </Button>
           </>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Shield} label="Characters" value={characters.data?.length} loading={loading} />
-        <StatCard icon={Users} label="Campaigns" value={campaigns.data?.length} loading={loading} />
-        <StatCard icon={BookOpen} label="Library entries" value={library.data?.length} loading={library.isLoading} />
-        <StatCard icon={Dices} label="Rolls logged" value={rolls.data?.length} loading={rolls.isLoading} />
+        <StatCard icon={Shield} label={t("stats.characters")} value={characters.data?.length} loading={loading} />
+        <StatCard icon={Users} label={t("stats.campaigns")} value={campaigns.data?.length} loading={loading} />
+        <StatCard
+          icon={BookOpen}
+          label={t("stats.libraryEntries")}
+          value={library.data?.length}
+          loading={library.isLoading}
+        />
+        <StatCard icon={Dices} label={t("stats.rollsLogged")} value={rolls.data?.length} loading={rolls.isLoading} />
       </div>
 
       {empty ? (
         <div className="panel mt-6 p-10 text-center">
-          <h2 className="font-display text-lg font-semibold">Nothing forged yet</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Create a blank character to see the engine working end to end.
-          </p>
+          <h2 className="font-display text-lg font-semibold">{t("empty.title")}</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{t("empty.description")}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
-            <Button onClick={() => newCharacter.mutate()}>New character</Button>
+            <Button onClick={() => newCharacter.mutate()}>{t("page.newCharacter")}</Button>
           </div>
         </div>
       ) : null}
@@ -81,7 +86,7 @@ function Dashboard() {
       <div className="mt-8 grid gap-6 lg:grid-cols-3">
         <section className="min-w-0 lg:col-span-2">
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-            Recent characters
+            {t("sections.recentCharacters")}
           </h2>
           <div className="space-y-2">
             {loading
@@ -97,11 +102,17 @@ function Dashboard() {
                     <div className="relative min-w-0 flex-1">
                       <p className="truncate font-medium">{c.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {c.concept || "No concept set"} · TL {c.tech_level}
+                        {c.concept || t("character.noConcept")} · {t("character.techLevel", { level: c.tech_level })}
                       </p>
                     </div>
-                    {c.is_npc ? <Badge variant="outline" className="relative">NPC</Badge> : null}
-                    <span className="stat-value relative shrink-0 text-sm">{c.point_budget} pts</span>
+                    {c.is_npc ? (
+                      <Badge variant="outline" className="relative">
+                        {t("character.npc")}
+                      </Badge>
+                    ) : null}
+                    <span className="stat-value relative shrink-0 text-sm">
+                      {t("character.points", { count: c.point_budget })}
+                    </span>
                   </Link>
                 ))}
           </div>
@@ -109,7 +120,7 @@ function Dashboard() {
 
         <section className="min-w-0">
           <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-            Recent rolls
+            {t("sections.recentRolls")}
           </h2>
           <div className="space-y-2">
             {rolls.isLoading ? (
@@ -122,18 +133,18 @@ function Dashboard() {
                     <p className="truncate">{r.label}</p>
                     <p className="truncate text-xs text-muted-foreground">
                       {r.expression}
-                      {r.target !== null ? ` vs ${r.target}` : ""}
+                      {r.target !== null ? ` ${t("rolls.vsTarget", { target: r.target })}` : ""}
                     </p>
                   </div>
                   {r.outcome ? (
                     <Badge variant="outline" className="shrink-0 text-[10px]">
-                      {r.outcome}
+                      {t(`rolls.outcome.${r.outcome}`, { defaultValue: r.outcome })}
                     </Badge>
                   ) : null}
                 </div>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No rolls logged yet.</p>
+              <p className="text-sm text-muted-foreground">{t("rolls.none")}</p>
             )}
           </div>
         </section>

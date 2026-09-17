@@ -6,6 +6,7 @@ import { portraitUrl } from "@/lib/portrait";
 import { DEFAULT_VIEWER_SETTINGS, modelUrl, parseModelTransform } from "@/lib/model3d";
 import type { MapObjectRow } from "@/lib/battlemap";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/hooks";
 
 const ModelViewer = lazy(() => import("@/components/character/model-viewer"));
 
@@ -43,7 +44,8 @@ export function MapToken({
   dimmed: boolean;
   use3d: boolean;
 }) {
-  const label = object.label || character?.name || "Token";
+  const { t } = useT("battle");
+  const label = object.label || character?.name || t("grid.defaultTokenLabel");
 
   const portrait = useQuery({
     queryKey: ["portrait-url", character?.portrait_path],
@@ -110,7 +112,7 @@ export function MapToken({
       )}
       {object.hidden ? (
         <span className="bg-background/80 absolute right-0 bottom-0 rounded-tl px-1 text-[9px]">
-          hidden
+          {t("token.hidden")}
         </span>
       ) : null}
     </div>

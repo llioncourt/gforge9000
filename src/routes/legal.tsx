@@ -1,110 +1,78 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useT } from "@/i18n/hooks";
+import { metaLocale, metaText } from "@/i18n/meta";
 
 export const Route = createFileRoute("/legal")({
   staticData: { sitemap: true },
   head: () => ({
     meta: [
-      { title: "Legal & content policy — Universal Character Forge" },
-      {
-        name: "description",
-        content:
-          "Unofficial status, trademark notice and the content policy governing user-entered and imported material in Universal Character Forge.",
-      },
-      { property: "og:title", content: "Legal & content policy — Universal Character Forge" },
-      {
-        property: "og:description",
-        content: "Unofficial status, trademark notice and content policy.",
-      },
+      { title: metaText("marketing", "meta.legal.title") },
+      { name: "description", content: metaText("marketing", "meta.legal.description") },
+      { property: "og:title", content: metaText("marketing", "meta.legal.title") },
+      { property: "og:description", content: metaText("marketing", "meta.legal.ogDescription") },
+      { property: "og:locale", content: metaLocale() },
     ],
   }),
   component: LegalPage,
 });
 
 function LegalPage() {
+  const { t } = useT("marketing");
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-3xl px-6 py-16">
         <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Back
+          {t("legal.back")}
         </Link>
-        <h1 className="mt-6 font-display text-3xl font-bold">Legal &amp; content policy</h1>
+        <h1 className="mt-6 font-display text-3xl font-bold">{t("legal.title")}</h1>
 
         <div className="mt-8 space-y-8 text-sm leading-relaxed text-muted-foreground">
           <section className="panel p-6">
             <h2 className="font-display text-lg font-semibold text-foreground">
-              Unofficial and independent
+              {t("legal.unofficial.title")}
             </h2>
-            <p className="mt-2">
-              Universal Character Forge is an independent, unofficial companion application. It is
-              not published, licensed, endorsed or sponsored by Steve Jackson Games Incorporated.
-              Nothing in this application should be read as an official product or as a statement
-              made on behalf of Steve Jackson Games.
-            </p>
+            <p className="mt-2">{t("legal.unofficial.body")}</p>
           </section>
 
           <section className="panel p-6">
-            <h2 className="font-display text-lg font-semibold text-foreground">Trademarks</h2>
-            <p className="mt-2">
-              GURPS is a trademark of Steve Jackson Games Incorporated. Any reference to GURPS
-              Fourth Edition in this application is descriptive and informational only — it
-              indicates that the tool&apos;s generic rules engine is intended to be usable
-              alongside that ruleset. All trademarks remain the property of their respective
-              owners.
-            </p>
+            <h2 className="font-display text-lg font-semibold text-foreground">
+              {t("legal.trademarks.title")}
+            </h2>
+            <p className="mt-2">{t("legal.trademarks.body")}</p>
           </section>
 
           <section className="panel p-6">
-            <h2 className="font-display text-lg font-semibold text-foreground">Content policy</h2>
+            <h2 className="font-display text-lg font-semibold text-foreground">
+              {t("legal.contentPolicy.title")}
+            </h2>
             <ul className="mt-2 list-disc space-y-2 pl-5">
-              <li>
-                No rulebook prose, trait descriptions, tables, artwork or logos from any publisher
-                are bundled with this application.
-              </li>
-              <li>
-                Standard stat labels such as ST, DX, IQ, HT, HP, Will, Per and FP are used as
-                short interoperability identifiers, not as reproduced text.
-              </li>
-              <li>
-                Calculation formulas in this tool are our own generic implementations and are
-                configurable per campaign. They are approximations, not transcriptions of any
-                published table.
-              </li>
-              <li>
-                You are responsible for the content you enter. Do not paste copyrighted text you
-                are not licensed to reproduce, and do not share it publicly through the library.
-              </li>
+              <li>{t("legal.contentPolicy.items.noRulebook")}</li>
+              <li>{t("legal.contentPolicy.items.statLabels")}</li>
+              <li>{t("legal.contentPolicy.items.formulas")}</li>
+              <li>{t("legal.contentPolicy.items.userResponsibility")}</li>
             </ul>
           </section>
 
           <section className="panel p-6">
             <h2 className="font-display text-lg font-semibold text-foreground">
-              Licensed content packs
+              {t("legal.licensedPacks.title")}
             </h2>
-            <p className="mt-2">
-              The library is architected so that official or licensed source packs can be installed
-              separately in the future, with their own permissions and provenance metadata, without
-              changing the rules engine. No such pack is included today.
-            </p>
+            <p className="mt-2">{t("legal.licensedPacks.body")}</p>
           </section>
 
           <section className="panel p-6">
             <h2 className="font-display text-lg font-semibold text-foreground">
-              Import and export
+              {t("legal.importExport.title")}
             </h2>
-            <p className="mt-2">
-              JSON is the canonical portable format for your data. Adapters for other character
-              tools are designed for but not yet implemented; this application does not claim
-              compatibility with any third-party file format until such an adapter ships.
-            </p>
+            <p className="mt-2">{t("legal.importExport.body")}</p>
           </section>
 
           <section className="panel p-6">
-            <h2 className="font-display text-lg font-semibold text-foreground">Your data</h2>
-            <p className="mt-2">
-              Characters, campaigns and library entries are isolated per account and per campaign
-              role. Game Masters can view characters submitted to their campaign; other players
-              cannot read your private content.
-            </p>
+            <h2 className="font-display text-lg font-semibold text-foreground">
+              {t("legal.yourData.title")}
+            </h2>
+            <p className="mt-2">{t("legal.yourData.body")}</p>
           </section>
         </div>
       </div>

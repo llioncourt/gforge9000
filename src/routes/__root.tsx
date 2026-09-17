@@ -16,22 +16,25 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { DiceProvider } from "@/components/app/dice-context";
 import { PwaRegister } from "@/components/app/pwa-register";
 import { supabase } from "@/integrations/supabase/client";
+import { I18nProvider } from "@/i18n/provider";
+import { detectLocale } from "@/i18n/detect";
+import { localeDirection } from "@/i18n/config";
+import { useT } from "@/i18n/hooks";
 
 function NotFoundComponent() {
+  const { t } = useT("errors");
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="font-display text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          This page doesn&apos;t exist or has been moved.
-        </p>
+        <h1 className="font-display text-7xl font-bold text-foreground">{t("notFound.code")}</h1>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{t("notFound.title")}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{t("notFound.description")}</p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            {t("notFound.goHome")}
           </Link>
         </div>
       </div>
@@ -46,28 +49,39 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
+  // The root error boundary can render outside the app providers, so it brings
+  // its own i18n instance.
+  return (
+    <I18nProvider initialLocale={detectLocale()}>
+      <ErrorScreen error={error} onRetry={() => {
+        router.invalidate();
+        reset();
+      }} />
+    </I18nProvider>
+  );
+}
+
+function ErrorScreen({ error, onRetry }: { error: Error; onRetry: () => void }) {
+  const { t } = useT("errors");
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn&apos;t load
+          {t("boundary.title")}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
+            onClick={onRetry}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            {t("boundary.retry")}
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            {t("boundary.goHome")}
           </a>
         </div>
       </div>
@@ -125,8 +139,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const locale = detectLocale();
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} dir={localeDirection(locale)} className="dark">
       <head>
         <HeadContent />
       </head>
@@ -153,13 +168,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider delayDuration={200}>
-        <DiceProvider>
-          <PwaRegister />
-          <Outlet />
-          <Toaster position="top-right" richColors />
-        </DiceProvider>
-      </TooltipProvider>
+      <I18nProvider initialLocale={detectLocale()}>
+        <TooltipProvider delayDuration={200}>
+          <DiceProvider>
+            <PwaRegister />
+            <Outlet />
+            <Toaster position="top-right" richColors />
+          </DiceProvider>
+        </TooltipProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

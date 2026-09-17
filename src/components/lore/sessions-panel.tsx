@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { addNote, deleteNote, listNotes, updateNote, type NoteRow } from "@/lib/api";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
+import { useT, useFormatters } from "@/i18n/hooks";
 
 const PREP = "session-prep";
 const RECAP = "session";
@@ -46,6 +47,9 @@ function groupSessions(rows: NoteRow[]): Session[] {
 }
 
 export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const { t } = useT("lore");
+  const { t: tc } = useT("common");
+  const f = useFormatters();
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [removing, setRemoving] = useState<Session | null>(null);
@@ -57,7 +61,7 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
 
   const create = useMutation({
     mutationFn: async () => {
-      const name = title.trim() || `Session ${sessions.length + 1}`;
+      const name = title.trim() || t("sessionsPanel.sessionPlaceholder", { n: sessions.length + 1 });
       await addNote({
         campaign_id: campaignId,
         title: name,
@@ -78,7 +82,7 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
     onSuccess: () => {
       setTitle("");
       invalidate();
-      toast.success("Session added.");
+      toast.success(t("sessionsPanel.sessionAdded"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -100,17 +104,17 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
       <div className="panel flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
         <CalendarDays className="h-4 w-4 text-muted-foreground" />
         <p className="flex-1 text-sm text-muted-foreground">
-          Prep is GM only. The recap is shared with the table. Both live alongside the campaign notes.
+          {t("sessionsPanel.intro")}
         </p>
         <div className="flex gap-2">
           <Input
             className="sm:w-56"
-            placeholder={`Session ${sessions.length + 1}`}
+            placeholder={t("sessionsPanel.sessionPlaceholder", { n: sessions.length + 1 })}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
           <Button onClick={() => create.mutate()} disabled={create.isPending}>
-            <Plus className="mr-1 h-4 w-4" /> New session
+            <Plus className="mr-1 h-4 w-4" /> {t("sessionsPanel.newSession")}
           </Button>
         </div>
       </div>
@@ -129,13 +133,13 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
                 <h3 className="font-display text-base font-semibold">{session.title}</h3>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-[10px]">
-                    {new Date(session.createdAt).toLocaleDateString()}
+                    {f.date(session.createdAt)}
                   </Badge>
                   {isGm ? (
                     <Button
                       size="icon"
                       variant="ghost"
-                      aria-label="Delete session"
+                      aria-label={t("sessionsPanel.deleteSessionAria")}
                       onClick={() => setRemoving(session)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -147,8 +151,8 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
                 {isGm ? (
                   <div className="space-y-2">
                     <SessionField
-                      label="Prep (GM only)"
-                      placeholder="Scenes to run, NPCs on deck, clues to drop, opening beat."
+                      label={t("sessionsPanel.prepLabel")}
+                      placeholder={t("sessionsPanel.prepPlaceholder")}
                       note={session.prep}
                       onCreate={(body) =>
                         addNote({
@@ -166,8 +170,8 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
                 ) : null}
                 <div className="space-y-2">
                   <SessionField
-                    label="Recap (shared)"
-                    placeholder="What happened, who did what, where the party ended up."
+                    label={t("sessionsPanel.recapLabel")}
+                    placeholder={t("sessionsPanel.recapPlaceholder")}
                     note={session.recap}
                     readOnly={!isGm && !session.recap}
                     onCreate={(body) =>
@@ -188,21 +192,21 @@ export function SessionsPanel({ campaignId, isGm }: { campaignId: string; isGm: 
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">No sessions yet.</p>
+        <p className="text-sm text-muted-foreground">{t("sessionsPanel.noSessionsYet")}</p>
       )}
 
       <AlertDialog open={!!removing} onOpenChange={(open) => !open && setRemoving(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this session?</AlertDialogTitle>
+            <AlertDialogTitle>{t("sessionsPanel.deleteDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Prep and recap for “{removing?.title}” will be removed. This cannot be undone.
+              {t("sessionsPanel.deleteDialog.description", { title: removing?.title })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => removing && remove.mutate(removing)}>
-              Delete
+              {tc("actions.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -226,6 +230,8 @@ function SessionField({
   onCreate: (body: string) => Promise<unknown>;
   onSave: (body: string) => Promise<unknown>;
 }) {
+  const { t } = useT("lore");
+  const { t: tc } = useT("common");
   const [draft, setDraft] = useState(note?.body ?? "");
   const [saving, setSaving] = useState(false);
   const dirty = draft !== (note?.body ?? "");
@@ -234,7 +240,7 @@ function SessionField({
     return (
       <div className="space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-        <p className="text-sm text-muted-foreground">Nothing shared yet.</p>
+        <p className="text-sm text-muted-foreground">{t("sessionsPanel.nothingSharedYet")}</p>
       </div>
     );
   }
@@ -244,7 +250,7 @@ function SessionField({
     try {
       if (note) await onSave(draft);
       else await onCreate(draft);
-      toast.success("Saved.");
+      toast.success(tc("states.saved"));
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -262,7 +268,7 @@ function SessionField({
         onChange={(e) => setDraft(e.target.value)}
       />
       <Button size="sm" variant="outline" onClick={save} disabled={!dirty || saving}>
-        <Save className="mr-1 h-4 w-4" /> Save
+        <Save className="mr-1 h-4 w-4" /> {tc("actions.save")}
       </Button>
     </div>
   );

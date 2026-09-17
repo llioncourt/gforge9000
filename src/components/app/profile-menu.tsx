@@ -27,6 +27,7 @@ import { UserAvatar } from "@/components/app/user-avatar";
 import { getProfile, setProfilePreferences, upsertProfile } from "@/lib/api";
 import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { useSession } from "@/hooks/use-session";
+import { useT } from "@/i18n/hooks";
 
 const THEME_KEY = "ucf:light-theme";
 
@@ -39,6 +40,7 @@ function applyTheme(light: boolean) {
 /** Header account menu: profile editing, theme switch and sign out. */
 export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
   const { user } = useSession();
+  const { t } = useT("navigation");
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [light, setLight] = useState(false);
@@ -99,7 +101,7 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
       });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["portrait"] });
-      toast.success("Photo updated.");
+      toast.success(t("profile.photoUpdated"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -117,7 +119,7 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
       });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["portrait"] });
-      toast.success("Photo removed.");
+      toast.success(t("profile.photoRemoved"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -126,40 +128,40 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
     mutationFn: () => upsertProfile(user!.id, { display_name: displayName, bio }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
-      toast.success("Profile saved.");
+      toast.success(t("profile.saved"));
       setOpen(false);
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const name = data?.display_name || user?.email || "Account";
+  const name = data?.display_name || user?.email || t("account.fallbackName");
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="shrink-0 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring" aria-label="Account menu">
+          <button className="shrink-0 rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring" aria-label={t("header.accountMenu")}>
             <UserAvatar name={name} avatarPath={data?.avatar_url} className="size-8" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-60">
           <DropdownMenuLabel className="truncate">
-            <span className="block truncate text-sm">{data?.display_name || "Your account"}</span>
+            <span className="block truncate text-sm">{data?.display_name || t("account.yourAccount")}</span>
             <span className="block truncate text-xs font-normal text-muted-foreground">
               {user?.email}
             </span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setOpen(true)}>
-            <UserRound className="mr-2 size-4" /> Profile
+            <UserRound className="mr-2 size-4" /> {t("account.profile")}
           </DropdownMenuItem>
           <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm">
-            <span>Light theme</span>
-            <Switch checked={light} onCheckedChange={changeTheme} aria-label="Light theme" />
+            <span>{t("profile.lightTheme")}</span>
+            <Switch checked={light} onCheckedChange={changeTheme} aria-label={t("profile.lightTheme")} />
           </div>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={onSignOut}>
-            <LogOut className="mr-2 size-4" /> Sign out
+            <LogOut className="mr-2 size-4" /> {t("header.signOut")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -167,7 +169,7 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Profile</DialogTitle>
+            <DialogTitle>{t("profile.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-start gap-4">
@@ -176,7 +178,7 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
                   loading="lazy"
                   decoding="async"
                   src={avatarPreview}
-                  alt="Your profile photo"
+                  alt={t("profile.photoAlt")}
                   className="size-20 shrink-0 rounded-full border border-border object-cover"
                 />
               ) : (
@@ -187,15 +189,15 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
                 />
               )}
               <div className="flex-1 space-y-2">
-                <Label>Profile photo</Label>
+                <Label>{t("profile.photo")}</Label>
                 <FileDropzone
                   accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
                   compact
                   loading={uploadPhoto.isPending}
-                  loadingLabel="Uploading photo…"
+                  loadingLabel={t("profile.uploadingPhoto")}
                   label={
                     <span className="text-xs text-muted-foreground">
-                      Drop an image here — it is converted to AVIF automatically
+                      {t("profile.dropPhotoHint")}
                     </span>
                   }
                   onFiles={(files) => files[0] && uploadPhoto.mutate(files[0])}
@@ -208,13 +210,13 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
                     onClick={() => removePhoto.mutate()}
                     disabled={removePhoto.isPending}
                   >
-                    Remove photo
+                    {t("profile.removePhoto")}
                   </Button>
                 ) : null}
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="menu-display">Display name</Label>
+              <Label htmlFor="menu-display">{t("profile.displayName")}</Label>
               <Input
                 id="menu-display"
                 value={displayName}
@@ -222,7 +224,7 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="menu-bio">About you</Label>
+              <Label htmlFor="menu-bio">{t("profile.aboutYou")}</Label>
               <Textarea
                 id="menu-bio"
                 rows={4}
@@ -231,13 +233,13 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Email</Label>
+              <Label>{t("profile.email")}</Label>
               <Input value={user?.email ?? ""} readOnly disabled />
             </div>
           </div>
           <DialogFooter>
             <Button onClick={() => save.mutate()} disabled={save.isPending}>
-              Save profile
+              {t("profile.save")}
             </Button>
           </DialogFooter>
         </DialogContent>

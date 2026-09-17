@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "home": {
+      "title": "Universal Character Forge — GURPS 4e Character Builder",
+      "description": "Build GURPS 4e characters, run campaigns, and roll dice with a data-driven rules engine. Unofficial companion to GURPS Fourth Edition."
+    },
+    "legal": {
+      "title": "Legal & content policy — Universal Character Forge",
+      "description": "Unofficial status, trademark notice and the content policy governing user-entered and imported material in Universal Character Forge.",
+      "ogDescription": "Unofficial status, trademark notice and content policy."
+    }
+  },
+  "brand": {
+    "short": "Character Forge",
+    "full": "Universal Character Forge"
+  },
+  "nav": {
+    "legal": "Legal",
+    "signIn": "Sign in"
+  },
+  "hero": {
+    "eyebrow": "GURPS 4e compatible · unofficial",
+    "title": "A modern forge for universal characters",
+    "body": "Point budgets that add up, a combat-ready sheet you can roll from, and campaigns your table can actually run — built on an open, data-driven rules engine.",
+    "startBuilding": "Start building",
+    "contentPolicy": "Content policy"
+  },
+  "features": {
+    "pointEngine": {
+      "title": "Live point engine",
+      "body": "Attributes, traits, skills and encumbrance recalculate deterministically through a tested rules layer — not scattered UI maths."
+    },
+    "dataDriven": {
+      "title": "Everything is data",
+      "body": "Traits carry cost, levels, modifiers, prerequisites, tags, visibility and source metadata. Add your own, or import packs later."
+    },
+    "rollableSheet": {
+      "title": "Rollable sheet",
+      "body": "Click any skill or attack to roll 3d6 against its target number and see margin of success at a glance."
+    },
+    "campaigns": {
+      "title": "Campaigns & GM tools",
+      "body": "Invite codes, character approval, roster with combat-ready stat cards, shared notes, handouts and private GM notes."
+    },
+    "portable": {
+      "title": "Portable by default",
+      "body": "JSON export/import is the canonical format, with CSV extracts and a printable sheet."
+    },
+    "yourContent": {
+      "title": "Your content, your rules",
+      "body": "No rulebook text is bundled. Seed content is original and generic; campaign house rules override engine formulas."
+    }
+  },
+  "footer": {
+    "disclaimer": "GURPS is a trademark of Steve Jackson Games Incorporated. Universal Character Forge is an unofficial, independent tool and is not affiliated with, endorsed or sponsored by Steve Jackson Games. No rulebook text, tables or artwork are reproduced.",
+    "fullPolicy": "Full policy"
+  },
+  "legal": {
+    "back": "← Back",
+    "title": "Legal & content policy",
+    "unofficial": {
+      "title": "Unofficial and independent",
+      "body": "Universal Character Forge is an independent, unofficial companion application. It is not published, licensed, endorsed or sponsored by Steve Jackson Games Incorporated. Nothing in this application should be read as an official product or as a statement made on behalf of Steve Jackson Games."
+    },
+    "trademarks": {
+      "title": "Trademarks",
+      "body": "GURPS is a trademark of Steve Jackson Games Incorporated. Any reference to GURPS Fourth Edition in this application is descriptive and informational only — it indicates that the tool's generic rules engine is intended to be usable alongside that ruleset. All trademarks remain the property of their respective owners."
+    },
+    "contentPolicy": {
+      "title": "Content policy",
+      "items": {
+        "noRulebook": "No rulebook prose, trait descriptions, tables, artwork or logos from any publisher are bundled with this application.",
+        "statLabels": "Standard stat labels such as ST, DX, IQ, HT, HP, Will, Per and FP are used as short interoperability identifiers, not as reproduced text.",
+        "formulas": "Calculation formulas in this tool are our own generic implementations and are configurable per campaign. They are approximations, not transcriptions of any published table.",
+        "userResponsibility": "You are responsible for the content you enter. Do not paste copyrighted text you are not licensed to reproduce, and do not share it publicly through the library."
+      }
+    },
+    "licensedPacks": {
+      "title": "Licensed content packs",
+      "body": "The library is architected so that official or licensed source packs can be installed separately in the future, with their own permissions and provenance metadata, without changing the rules engine. No such pack is included today."
+    },
+    "importExport": {
+      "title": "Import and export",
+      "body": "JSON is the canonical portable format for your data. Adapters for other character tools are designed for but not yet implemented; this application does not claim compatibility with any third-party file format until such an adapter ships."
+    },
+    "yourData": {
+      "title": "Your data",
+      "body": "Characters, campaigns and library entries are isolated per account and per campaign role. Game Masters can view characters submitted to their campaign; other players cannot read your private content."
+    }
+  }
+}

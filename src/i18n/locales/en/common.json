@@ -1,0 +1,161 @@
+{
+  "app": {
+    "name": "Universal Character Forge",
+    "shortName": "Char Forge"
+  },
+  "actions": {
+    "add": "Add",
+    "apply": "Apply",
+    "back": "Back",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "close": "Close",
+    "confirm": "Confirm",
+    "copy": "Copy",
+    "create": "Create",
+    "delete": "Delete",
+    "disable": "Disable",
+    "done": "Done",
+    "download": "Download",
+    "duplicate": "Duplicate",
+    "edit": "Edit",
+    "enable": "Enable",
+    "export": "Export",
+    "filter": "Filter",
+    "import": "Import",
+    "next": "Next",
+    "open": "Open",
+    "pause": "Pause",
+    "play": "Play",
+    "preview": "Preview",
+    "previous": "Previous",
+    "print": "Print",
+    "refresh": "Refresh",
+    "remove": "Remove",
+    "rename": "Rename",
+    "reset": "Reset",
+    "retry": "Try again",
+    "save": "Save",
+    "search": "Search",
+    "select": "Select",
+    "selectAll": "Select all",
+    "send": "Send",
+    "share": "Share",
+    "sort": "Sort",
+    "submit": "Submit",
+    "upload": "Upload",
+    "view": "View",
+    "zoom": "Zoom"
+  },
+  "labels": {
+    "actions": "Actions",
+    "all": "All",
+    "created": "Created",
+    "date": "Date",
+    "description": "Description",
+    "details": "Details",
+    "kind": "Kind",
+    "language": "Language",
+    "name": "Name",
+    "none": "None",
+    "notes": "Notes",
+    "optional": "Optional",
+    "required": "Required",
+    "status": "Status",
+    "tags": "Tags",
+    "theme": "Theme",
+    "title": "Title",
+    "type": "Type",
+    "untitled": "Untitled",
+    "updated": "Updated",
+    "visibility": "Visibility"
+  },
+  "states": {
+    "empty": "Nothing here yet",
+    "error": "Something went wrong",
+    "loading": "Loading…",
+    "noResults": "No results found",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "uploading": "Uploading…"
+  },
+  "messages": {
+    "confirmDeleteTitle": "Delete {{name}}?",
+    "confirmDeleteBody": "This action cannot be undone.",
+    "copied": "Copied to clipboard",
+    "deleted": "{{name}} was deleted",
+    "saveFailed": "Could not save: {{error}}",
+    "saved": "Changes saved",
+    "unsavedChanges": "You have unsaved changes"
+  },
+  "counts": {
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} items",
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "results_one": "{{count}} result",
+    "results_other": "{{count}} results"
+  },
+  "pagination": {
+    "page": "Page {{page}} of {{total}}",
+    "next": "Next page",
+    "previous": "Previous page",
+    "perPage": "Per page",
+    "nav": "Pagination",
+    "goToPrevious": "Go to previous page",
+    "goToNext": "Go to next page",
+    "morePages": "More pages"
+  },
+  "forms": {
+    "validation": {
+      "required": "This field is required",
+      "email": "Enter a valid email address",
+      "min": "Use at least {{count}} characters",
+      "max": "Use at most {{count}} characters",
+      "number": "Enter a valid number",
+      "positive": "Enter a value greater than zero"
+    }
+  },
+  "upload": {
+    "dropzone": "Drag a file here or click to choose",
+    "dropzoneActive": "Drop the file to upload",
+    "tooLarge": "File is too large (max {{size}})",
+    "invalidType": "Unsupported file type",
+    "failed": "Upload failed: {{error}}",
+    "success": "Upload complete",
+    "importing": "Importing…"
+  },
+  "language": {
+    "label": "Language",
+    "change": "Change language",
+    "current": "Current language: {{language}}"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "a11y": {
+    "zoomImage": "Zoom {{name}}",
+    "previousSlide": "Previous slide",
+    "nextSlide": "Next slide"
+  },
+  "transfer": {
+    "starting": "Starting…",
+    "readingFile": "Reading file…",
+    "importAnother": "Import another",
+    "progress": "Progress",
+    "genericError": "Something went wrong.",
+    "importFailed": "Import failed."
+  },
+  "pageHeader": {
+    "more": "more…",
+    "less": "less…"
+  },
+  "aiGuide": {
+    "help": "Give this Markdown file and your source PDF to an AI. It explains exactly how to produce a valid import file for this importer.",
+    "download": "Download AI conversion guide (.md)"
+  },
+  "dropzone": {
+    "default": "Drop a file here, or click to browse"
+  }
+}

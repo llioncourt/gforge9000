@@ -43,6 +43,7 @@ import { parsePortablePack } from "@/lib/portable";
 import { campaignsEnablingPack, groupEntriesByPack, makeGroup, type PackGroup } from "@/lib/packs";
 import { useSession } from "@/hooks/use-session";
 import { packSlug } from "@/lib/pack-slug";
+import { useT } from "@/i18n/hooks";
 
 export const Route = createFileRoute("/_authenticated/packs/")({
   staticData: { sitemap: false },
@@ -69,6 +70,8 @@ export const Route = createFileRoute("/_authenticated/packs/")({
 function PacksPage() {
   const queryClient = useQueryClient();
   const { user } = useSession();
+  const { t } = useT("packs");
+  const { t: tc } = useT("common");
   const library = useQuery({ queryKey: ["library"], queryFn: listLibrary });
   const packsQuery = useQuery({ queryKey: ["content-packs"], queryFn: listContentPacks });
   const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: listCampaigns });
@@ -100,7 +103,7 @@ function PacksPage() {
     mutationFn: () => createContentPack({ name: name.trim(), description: description || null }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["content-packs"] });
-      toast.success("Pack created.");
+      toast.success(t("toasts.created"));
       setOpen(false);
       setName("");
       setDescription("");
@@ -109,9 +112,9 @@ function PacksPage() {
   });
 
   const importPackFile = async (file: File, report: (label: string, percent?: number) => void) => {
-    report("Reading file…", 10);
+    report(t("import.reading"), 10);
     const parsed = parsePortablePack(await file.text());
-    report(`Creating pack “${parsed.pack.name}”…`, 35);
+    report(t("import.creating", { name: parsed.pack.name }), 35);
     await createContentPack({
       name: parsed.pack.name,
       description: parsed.pack.description,
@@ -119,12 +122,12 @@ function PacksPage() {
       source_edition: parsed.pack.source_edition,
       source_type: parsed.pack.source_type,
     }).catch(() => undefined);
-    report(`Importing ${parsed.entries.length} entries…`, 55);
+    report(t("import.importing", { count: parsed.entries.length }), 55);
     const rows = await importLibraryEntries(parsed.entries as never);
-    report("Refreshing packs…", 90);
+    report(t("import.refreshing"), 90);
     await queryClient.invalidateQueries({ queryKey: ["library"] });
     await queryClient.invalidateQueries({ queryKey: ["content-packs"] });
-    return `Imported ${rows.length} entries into “${parsed.pack.name}”.`;
+    return t("import.done", { count: rows.length, name: parsed.pack.name });
   };
 
   const removePack = useMutation({
@@ -132,7 +135,7 @@ function PacksPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["library"] });
       queryClient.invalidateQueries({ queryKey: ["content-packs"] });
-      toast.success("Pack deleted.");
+      toast.success(t("toasts.deleted"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -140,11 +143,11 @@ function PacksPage() {
   return (
     <div>
       <PageHeader
-        title="Packs"
-        description="Content packs group your library into reusable sets you can curate, share and enable per campaign."
+        title={t("page.title")}
+        description={t("page.description")}
         actions={
           <Button onClick={() => setOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> New pack
+            <Plus className="mr-2 h-4 w-4" /> {t("page.newPack")}
           </Button>
         }
       />
@@ -152,13 +155,13 @@ function PacksPage() {
       <div className="mb-4 grid gap-3 lg:grid-cols-[1fr_320px]">
         <Input
           className="max-w-xs"
-          placeholder="Search packs…"
+          placeholder={t("filters.searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <div className="grid gap-2">
           <Button variant="outline" onClick={() => setImportOpen(true)}>
-            <Upload className="mr-2 h-4 w-4" /> Import a pack
+            <Upload className="mr-2 h-4 w-4" /> {t("actions.importPack")}
           </Button>
           <AiConversionGuideButton kind="pack" />
         </div>
@@ -172,7 +175,7 @@ function PacksPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="panel p-10 text-center text-sm text-muted-foreground">
-          No packs yet. Create one, or import a pack JSON file.
+          {t("empty.noPacks")}
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -191,12 +194,12 @@ function PacksPage() {
                   <div className="min-w-0">
                     <p className="truncate font-medium">{g.label}</p>
                     <p className="text-xs text-muted-foreground">
-                      {g.total} entr{g.total === 1 ? "y" : "ies"}
+                      {t("card.entries", { count: g.total })}
                     </p>
                   </div>
                   {meta && user?.id && meta.owner_id !== user.id ? (
                     <Badge variant="secondary" className="ml-auto text-[10px]">
-                      Shared
+                      {t("card.shared")}
                     </Badge>
                   ) : null}
                 </div>
@@ -216,13 +219,13 @@ function PacksPage() {
                 <p className="mt-3 text-[11px] text-muted-foreground">
                   {g.sources.length
                     ? g.sources.join(" · ")
-                    : (meta?.source_label ?? "User content")}
+                    : (meta?.source_label ?? t("card.userContent"))}
                   {g.visibilities.length ? ` · ${g.visibilities.join(", ")}` : ""}
                 </p>
                 <p className="mt-auto pt-3 text-[11px] text-muted-foreground">
                   {enabledIn.length
-                    ? `Enabled in ${enabledIn.map((c) => c.name).join(", ")}`
-                    : "Not enabled in any campaign you run"}
+                    ? t("card.enabledIn", { campaigns: enabledIn.map((c) => c.name).join(", ") })
+                    : t("card.notEnabled")}
                 </p>
                 {meta && user?.id && meta.owner_id === user.id ? (
                   <div
@@ -237,27 +240,25 @@ function PacksPage() {
                         <button
                           type="button"
                           className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                          aria-label="Delete pack"
+                          aria-label={t("deleteDialog.deletePackAria")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete this pack?</AlertDialogTitle>
+                          <AlertDialogTitle>{t("deleteDialog.confirmTitle")}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This permanently removes “{g.label}” and every entry inside it.
-                            Campaigns that had this pack enabled will lose access to its content.
-                            This cannot be undone.
+                            {t("deleteDialog.confirmDescriptionList", { name: g.label })}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => removePack.mutate({ id: meta.id, name: g.pack })}
                             disabled={removePack.isPending}
                           >
-                            Delete pack
+                            {t("actions.deletePack")}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -273,18 +274,18 @@ function PacksPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New content pack</DialogTitle>
+            <DialogTitle>{t("newDialog.title")}</DialogTitle>
             <DialogDescription>
-              A pack groups your own library entries. Every entry belongs to a pack.
+              {t("newDialog.description")}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="pack-name">Name</Label>
+              <Label htmlFor="pack-name">{t("newDialog.name")}</Label>
               <Input id="pack-name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="pack-desc">Description</Label>
+              <Label htmlFor="pack-desc">{t("newDialog.description2")}</Label>
               <Textarea
                 id="pack-desc"
                 rows={3}
@@ -295,11 +296,11 @@ function PacksPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {tc("actions.cancel")}
             </Button>
             <Button onClick={() => create.mutate()} disabled={!name.trim() || create.isPending}>
               <Download className="mr-2 hidden h-4 w-4" />
-              Create pack
+              {t("newDialog.create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -308,10 +309,10 @@ function PacksPage() {
       <ImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}
-        title="Import pack"
-        description="Drop a Universal Character Forge pack JSON file."
+        title={t("importDialog.title")}
+        description={t("importDialog.description")}
         accept="application/json,.json"
-        label="Drop the pack JSON here, or click to browse"
+        label={t("importDialog.dropLabel")}
         run={importPackFile}
       />
     </div>

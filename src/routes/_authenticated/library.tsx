@@ -60,6 +60,7 @@ import {
   toPortableLibrary,
 } from "@/lib/portable";
 import { useSession } from "@/hooks/use-session";
+import { useT } from "@/i18n/hooks";
 
 const KINDS = [
   "advantage",
@@ -146,6 +147,8 @@ function toForm(row: LibraryRow): LibraryForm {
 function LibraryPage() {
   const queryClient = useQueryClient();
   const { user } = useSession();
+  const { t } = useT("library");
+  const { t: tc } = useT("common");
   const { data, isLoading } = useQuery({ queryKey: ["library"], queryFn: listLibrary });
   const characters = useQuery({ queryKey: ["characters"], queryFn: listCharacters });
   const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: listCampaigns });
@@ -244,7 +247,7 @@ function LibraryPage() {
         : createLibraryEntry({ ...payload(form), data: {} } as never),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["library"] });
-      toast.success(form.id ? "Entry updated." : "Library entry created.");
+      toast.success(form.id ? t("toasts.updated") : t("toasts.created"));
       setOpen(false);
       setForm(blankForm);
     },
@@ -255,7 +258,7 @@ function LibraryPage() {
     mutationFn: deleteLibraryEntry,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["library"] });
-      toast.success("Entry removed.");
+      toast.success(t("toasts.removed"));
       setPendingDelete(null);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -265,13 +268,13 @@ function LibraryPage() {
     file: File,
     report: (label: string, percent?: number) => void,
   ) => {
-    report("Reading file…", 10);
+    report(t("import.reading"), 10);
     const parsed = parsePortableLibrary(await file.text());
-    report(`Importing ${parsed.entries.length} entries…`, 45);
+    report(t("import.importing", { count: parsed.entries.length }), 45);
     const rows = await importLibraryEntries(parsed.entries as never);
-    report("Refreshing library…", 90);
+    report(t("import.refreshing"), 90);
     await queryClient.invalidateQueries({ queryKey: ["library"] });
-    return `Imported ${rows.length} entr${rows.length === 1 ? "y" : "ies"}.`;
+    return t("import.done", { count: rows.length });
   };
 
   const gateFor = (characterId: string, pack: string | null) => {
@@ -294,7 +297,7 @@ function LibraryPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["entries"] });
-      toast.success("Added to character.");
+      toast.success(t("toasts.addedToCharacter"));
       setAddTarget(null);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -317,42 +320,42 @@ function LibraryPage() {
   return (
     <div>
       <PageHeader
-        title="Library"
-        description="Your own traits, skills and gear, grouped into content packs with full provenance."
+        title={t("page.title")}
+        description={t("page.description")}
         actions={
           <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" /> Import
+              <Upload className="mr-2 h-4 w-4" /> {t("actions.import")}
             </Button>
             <Button
               variant="outline"
               disabled={exportTask.busy}
               onClick={() =>
-                void exportTask.run("Exporting library (JSON)", async (report) => {
-                  report("Building file…", 40);
+                void exportTask.run(t("export.task"), async (report) => {
+                  report(t("export.building"), 40);
                   const contents = JSON.stringify(portable, null, 2);
-                  report("Downloading…", 85);
+                  report(t("export.downloading"), 85);
                   download("ucf-library.json", contents);
-                  return `Exported ${portable.entries.length} entries.`;
+                  return t("export.done", { count: portable.entries.length });
                 })
               }
             >
-              <Download className="mr-2 h-4 w-4" /> Export JSON
+              <Download className="mr-2 h-4 w-4" /> {t("actions.exportJson")}
             </Button>
             <Button
               variant="outline"
               disabled={exportTask.busy}
               onClick={() =>
-                void exportTask.run("Exporting library (CSV)", async (report) => {
-                  report("Building file…", 40);
+                void exportTask.run(t("export.taskCsv"), async (report) => {
+                  report(t("export.building"), 40);
                   const contents = libraryToCsv(portable.entries);
-                  report("Downloading…", 85);
+                  report(t("export.downloading"), 85);
                   download("ucf-library.csv", contents, "text/csv");
-                  return `Exported ${portable.entries.length} entries.`;
+                  return t("export.done", { count: portable.entries.length });
                 })
               }
             >
-              CSV
+              {t("actions.exportCsv")}
             </Button>
             <Button
               onClick={() => {
@@ -360,7 +363,7 @@ function LibraryPage() {
                 setOpen(true);
               }}
             >
-              <Plus className="mr-2 h-4 w-4" /> New entry
+              <Plus className="mr-2 h-4 w-4" /> {t("actions.newEntry")}
             </Button>
           </>
         }
@@ -370,7 +373,7 @@ function LibraryPage() {
         <div className="flex flex-wrap gap-3">
           <Input
             className="max-w-xs"
-            placeholder="Search library…"
+            placeholder={t("filters.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -379,20 +382,20 @@ function LibraryPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All kinds</SelectItem>
+              <SelectItem value="all">{t("filters.allKinds")}</SelectItem>
               {KINDS.map((k) => (
                 <SelectItem key={k} value={k}>
-                  {k}
+                  {t(`kinds.${k}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={packFilter} onValueChange={setPackFilter}>
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="All packs" />
+              <SelectValue placeholder={t("filters.allPacks")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All packs</SelectItem>
+              <SelectItem value="all">{t("filters.allPacks")}</SelectItem>
               {packs.map((p) => (
                 <SelectItem key={p} value={p}>
                   {p}
@@ -414,9 +417,7 @@ function LibraryPage() {
         </div>
       ) : rows.length === 0 ? (
         <div className="panel p-10 text-center text-sm text-muted-foreground">
-          {(data ?? []).length === 0
-            ? "Your library is empty. Create an entry, or import a library export."
-            : "No library entries match these filters."}
+          {(data ?? []).length === 0 ? t("empty.noEntries") : t("empty.noMatches")}
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -433,7 +434,7 @@ function LibraryPage() {
                   <div className="min-w-0">
                     <p className="truncate font-medium">{e.name}</p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {e.kind}
+                      {t(`kinds.${e.kind}`, { defaultValue: e.kind })}
                       {e.category ? ` · ${e.category}` : ""}
                     </p>
                   </div>
@@ -453,11 +454,11 @@ function LibraryPage() {
                 <p className="mt-3 text-[11px] text-muted-foreground">
                   {e.source_label}
                   {e.source_edition ? ` · ${e.source_edition}` : ""}
-                  {e.source_page ? ` · p.${e.source_page}` : ""} · {e.visibility}
+                  {e.source_page ? ` · ${t("card.sourcePage", { page: e.source_page })}` : ""} · {t(`visibility.${e.visibility}`, { defaultValue: e.visibility })}
                 </p>
                 <div className="mt-auto flex items-center gap-1 pt-3">
                   <Button size="sm" variant="outline" onClick={() => setAddTarget(e)}>
-                    <UserPlus className="mr-1 h-3.5 w-3.5" /> Add to character
+                    <UserPlus className="mr-1 h-3.5 w-3.5" /> {t("actions.addToCharacter")}
                   </Button>
                   {mine ? (
                     <>
@@ -469,7 +470,7 @@ function LibraryPage() {
                           setForm(toForm(e));
                           setOpen(true);
                         }}
-                        aria-label={`Edit ${e.name}`}
+                        aria-label={t("actions.editAria", { name: e.name })}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
@@ -477,7 +478,7 @@ function LibraryPage() {
                         size="icon"
                         variant="ghost"
                         onClick={() => setPendingDelete(e)}
-                        aria-label={`Delete ${e.name}`}
+                        aria-label={t("actions.deleteAria", { name: e.name })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -494,20 +495,20 @@ function LibraryPage() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{form.id ? "Edit library entry" : "New library entry"}</DialogTitle>
+            <DialogTitle>{form.id ? t("dialog.editTitle") : t("dialog.newTitle")}</DialogTitle>
             <DialogDescription>
-              Enter your own content only. Do not paste text you are not licensed to reproduce.
+              {t("dialog.description")}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Name">
+              <Field label={t("dialog.fields.name")}>
                 <Input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                 />
               </Field>
-              <Field label="Kind">
+              <Field label={t("dialog.fields.kind")}>
                 <Select value={form.kind} onValueChange={(v) => setForm({ ...form, kind: v })}>
                   <SelectTrigger>
                     <SelectValue />
@@ -515,33 +516,33 @@ function LibraryPage() {
                   <SelectContent>
                     {KINDS.map((k) => (
                       <SelectItem key={k} value={k}>
-                        {k}
+                        {t(`kinds.${k}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </Field>
-              <Field label="Category">
+              <Field label={t("dialog.fields.category")}>
                 <Input
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
                 />
               </Field>
-              <Field label="Base points">
+              <Field label={t("dialog.fields.basePoints")}>
                 <Input
                   type="number"
                   value={form.points}
                   onChange={(e) => setForm({ ...form, points: e.target.value })}
                 />
               </Field>
-              <Field label="Cost per level">
+              <Field label={t("dialog.fields.costPerLevel")}>
                 <Input
                   type="number"
                   value={form.costPerLevel}
                   onChange={(e) => setForm({ ...form, costPerLevel: e.target.value })}
                 />
               </Field>
-              <Field label="Content pack">
+              <Field label={t("dialog.fields.contentPack")}>
                 <Input
                   value={form.pack}
                   placeholder={DEFAULT_PACK_NAME}
@@ -549,33 +550,33 @@ function LibraryPage() {
                 />
               </Field>
             </div>
-            <Field label="Notes">
+            <Field label={t("dialog.fields.notes")}>
               <Textarea
                 rows={3}
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
               />
             </Field>
-            <Field label="Tags (comma separated)">
+            <Field label={t("dialog.fields.tags")}>
               <Input
                 value={form.tags}
                 onChange={(e) => setForm({ ...form, tags: e.target.value })}
               />
             </Field>
             <div className="grid gap-4 sm:grid-cols-3">
-              <Field label="Source label">
+              <Field label={t("dialog.fields.sourceLabel")}>
                 <Input
                   value={form.sourceLabel}
                   onChange={(e) => setForm({ ...form, sourceLabel: e.target.value })}
                 />
               </Field>
-              <Field label="Edition">
+              <Field label={t("dialog.fields.edition")}>
                 <Input
                   value={form.sourceEdition}
                   onChange={(e) => setForm({ ...form, sourceEdition: e.target.value })}
                 />
               </Field>
-              <Field label="Page ref">
+              <Field label={t("dialog.fields.pageRef")}>
                 <Input
                   value={form.sourcePage}
                   onChange={(e) => setForm({ ...form, sourcePage: e.target.value })}
@@ -584,9 +585,9 @@ function LibraryPage() {
             </div>
             <div className="flex items-center justify-between rounded-md border border-border p-3">
               <div>
-                <Label>Share publicly</Label>
+                <Label>{t("dialog.sharePublicly")}</Label>
                 <p className="text-xs text-muted-foreground">
-                  Public entries are readable by every signed-in user.
+                  {t("dialog.sharePubliclyHint")}
                 </p>
               </div>
               <Switch
@@ -597,7 +598,7 @@ function LibraryPage() {
           </div>
           <DialogFooter>
             <Button onClick={() => save.mutate()} disabled={!form.name || save.isPending}>
-              {form.id ? "Save changes" : "Create entry"}
+              {form.id ? t("dialog.saveChanges") : t("dialog.createEntry")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -607,14 +608,14 @@ function LibraryPage() {
       <Dialog open={!!addTarget} onOpenChange={(v) => !v && setAddTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add “{addTarget?.name}” to a character</DialogTitle>
+            <DialogTitle>{t("addDialog.title", { name: addTarget?.name })}</DialogTitle>
             <DialogDescription>
-              The entry is copied onto the sheet, including its source provenance. Edit it there.
+              {t("addDialog.description")}
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[50vh] space-y-2 overflow-y-auto">
             {(characters.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">You have no characters yet.</p>
+              <p className="text-sm text-muted-foreground">{t("addDialog.noCharacters")}</p>
             ) : (
               characters.data?.map((c) => (
                 <Button
@@ -628,7 +629,7 @@ function LibraryPage() {
                 >
                   <span>{c.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {gateFor(c.id, addTarget?.pack ?? null) ?? (c.is_npc ? "NPC" : "PC")}
+                    {gateFor(c.id, addTarget?.pack ?? null) ?? (c.is_npc ? t("addDialog.npc") : t("addDialog.pc"))}
                   </span>
                 </Button>
               ))
@@ -640,15 +641,15 @@ function LibraryPage() {
       <AlertDialog open={!!pendingDelete} onOpenChange={(v) => !v && setPendingDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete “{pendingDelete?.name}”?</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteDialog.title", { name: pendingDelete?.name })}</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the library entry. Characters that already use it keep their copy.
+              {t("deleteDialog.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => pendingDelete && remove.mutate(pendingDelete.id)}>
-              Delete
+              {tc("actions.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -657,10 +658,10 @@ function LibraryPage() {
       <ImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}
-        title="Import library"
-        description="Drop a Universal Character Forge library JSON file."
+        title={t("import.title")}
+        description={t("import.description")}
         accept="application/json,.json"
-        label="Drop the library JSON here, or click to browse"
+        label={t("import.dropLabel")}
         run={importLibraryFile}
       />
       {exportTask.node}

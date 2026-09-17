@@ -9,25 +9,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/hooks/use-session";
+import { useT } from "@/i18n/hooks";
+import { metaLocale, metaText } from "@/i18n/meta";
+import { Trans } from "react-i18next";
 
 export const Route = createFileRoute("/auth")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Sign in — Universal Character Forge" },
-      {
-        name: "description",
-        content:
-          "Sign in or create an account to build characters and run campaigns in Universal Character Forge.",
-      },
-      { property: "og:title", content: "Sign in — Universal Character Forge" },
-      { property: "og:description", content: "Access your characters and campaigns." },
+      { title: metaText("auth", "meta.title") },
+      { name: "description", content: metaText("auth", "meta.description") },
+      { property: "og:title", content: metaText("auth", "meta.title") },
+      { property: "og:description", content: metaText("auth", "meta.ogDescription") },
+      { property: "og:locale", content: metaLocale() },
     ],
   }),
   component: AuthPage,
 });
 
 function AuthPage() {
+  const { t } = useT("auth");
   const navigate = useNavigate();
   const { user, loading } = useSession();
   const [email, setEmail] = useState("");
@@ -80,7 +81,7 @@ function AuthPage() {
       redirect_uri: window.location.origin,
     });
     if (result.error) {
-      toast.error("Google sign-in failed. Try email instead.");
+      toast.error(t("errors.googleSignInFailed"));
       return;
     }
     if (result.redirected) return;
@@ -94,50 +95,40 @@ function AuthPage() {
           <div className="grid h-8 w-8 place-content-center rounded-md bg-primary text-primary-foreground">
             <Dices className="h-4 w-4" />
           </div>
-          <span className="font-display text-sm font-semibold">Universal Character Forge</span>
+          <span className="font-display text-sm font-semibold">{t("brand.name")}</span>
         </Link>
         <div>
-          <h2 className="font-display text-3xl font-semibold leading-tight">
-            Point totals that always add up.
-          </h2>
-          <p className="mt-3 max-w-sm text-sm text-muted-foreground">
-            A data-driven character and campaign workspace with a tested rules engine, rollable
-            combat sheet and GM roster tools.
-          </p>
+          <h2 className="font-display text-3xl font-semibold leading-tight">{t("hero.title")}</h2>
+          <p className="mt-3 max-w-sm text-sm text-muted-foreground">{t("hero.body")}</p>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Unofficial companion. GURPS is a trademark of Steve Jackson Games Incorporated.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("hero.disclaimer")}</p>
       </div>
 
       <div className="flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
           {sent ? (
             <div className="panel p-6 text-center">
-              <h1 className="font-display text-xl font-semibold">Check your email</h1>
+              <h1 className="font-display text-xl font-semibold">{t("confirmEmail.title")}</h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                We sent a confirmation link to {email}. Click it to activate your account, then
-                come back and sign in.
+                {t("confirmEmail.body", { email })}
               </p>
               <Button className="mt-6 w-full" variant="outline" onClick={() => setSent(false)}>
-                Back to sign in
+                {t("confirmEmail.back")}
               </Button>
             </div>
           ) : (
             <Tabs defaultValue="signin">
-              <h1 className="mb-6 font-display text-2xl font-semibold">
-                Sign in to Universal Character Forge
-              </h1>
+              <h1 className="mb-6 font-display text-2xl font-semibold">{t("form.title")}</h1>
               <TabsList className="grid w-full grid-cols-2">
 
-                <TabsTrigger value="signin">Sign in</TabsTrigger>
-                <TabsTrigger value="signup">Create account</TabsTrigger>
+                <TabsTrigger value="signin">{t("form.tabs.signin")}</TabsTrigger>
+                <TabsTrigger value="signup">{t("form.tabs.signup")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin" className="mt-6">
                 <form onSubmit={signIn} className="space-y-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t("form.fields.email")}</Label>
                     <Input
                       id="email"
                       type="email"
@@ -147,7 +138,7 @@ function AuthPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{t("form.fields.password")}</Label>
                     <Input
                       id="password"
                       type="password"
@@ -156,8 +147,13 @@ function AuthPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={busy} aria-label="Sign in">
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={busy}
+                    aria-label={t("form.actions.signIn")}
+                  >
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("form.actions.signIn")}
                   </Button>
                 </form>
               </TabsContent>
@@ -165,16 +161,16 @@ function AuthPage() {
               <TabsContent value="signup" className="mt-6">
                 <form onSubmit={signUp} className="space-y-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor="name">Display name</Label>
+                    <Label htmlFor="name">{t("form.fields.displayName")}</Label>
                     <Input
                       id="name"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      placeholder="How your table sees you"
+                      placeholder={t("form.fields.displayNamePlaceholder")}
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="email-up">Email</Label>
+                    <Label htmlFor="email-up">{t("form.fields.email")}</Label>
                     <Input
                       id="email-up"
                       type="email"
@@ -184,7 +180,7 @@ function AuthPage() {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="password-up">Password</Label>
+                    <Label htmlFor="password-up">{t("form.fields.password")}</Label>
                     <Input
                       id="password-up"
                       type="password"
@@ -194,25 +190,37 @@ function AuthPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={busy} aria-label="Create account">
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create account"}
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={busy}
+                    aria-label={t("form.actions.createAccount")}
+                  >
+                    {busy ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      t("form.actions.createAccount")
+                    )}
                   </Button>
                 </form>
               </TabsContent>
 
               <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-widest text-muted-foreground">
-                <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+                <span className="h-px flex-1 bg-border" /> {t("form.or")}{" "}
+                <span className="h-px flex-1 bg-border" />
               </div>
               <Button variant="outline" className="w-full" onClick={google}>
-                Continue with Google
+                {t("form.actions.continueWithGoogle")}
               </Button>
 
               <p className="mt-6 text-center text-xs text-muted-foreground">
-                By continuing you accept the{" "}
-                <Link to="/legal" className="underline hover:text-foreground">
-                  content policy
-                </Link>
-                .
+                <Trans
+                  t={t}
+                  i18nKey="form.policy.text"
+                  components={{
+                    1: <Link to="/legal" className="underline hover:text-foreground" />,
+                  }}
+                />
               </p>
             </Tabs>
           )}

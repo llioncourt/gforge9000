@@ -1,0 +1,172 @@
+{
+  "videos": {
+    "durationUnavailable": "Duration unavailable",
+    "playAria": "Play {{title}}",
+    "playDialog": {
+      "description": "{{type}} · {{duration}}"
+    },
+    "thumbnailEditAria": "Edit thumbnail of {{title}}",
+    "thumbnailDialog": {
+      "title": "Thumbnail frame",
+      "description": "Scrub to the frame you want and save it as the thumbnail."
+    },
+    "saveThumbnail": "Save thumbnail",
+    "thumbnailUpdated": "Thumbnail updated.",
+    "removeAria": "Remove {{title}}",
+    "removeConfirmTitle": "Remove this video?",
+    "removeConfirmBodyIntro": "Members will no longer see this video when entering the campaign.",
+    "removeConfirmBodyOther": "{{title}} will be permanently removed.",
+    "sizeMb": "{{size}} MB",
+    "upload": {
+      "title": "Upload video",
+      "description": "Intro videos welcome players on first entry. Other types are optional campaign media.",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Video title",
+      "typeLabel": "Type",
+      "pickFrameHint": "Pick the frame to use as the thumbnail (optional), then upload.",
+      "frameSelected": "Frame selected — pick another",
+      "useThisFrame": "Use this frame",
+      "frameSelectedToast": "Thumbnail frame selected.",
+      "uploadButton": "Upload video",
+      "uploading": "Uploading…",
+      "chooseAnother": "Choose another file",
+      "dropLabel": "Drop an MP4 here, or click to browse",
+      "dropHintIntro": "MP4 · up to 250 MB · replaces the current Intro",
+      "dropHintOther": "MP4 · up to 250 MB",
+      "enterTitleFirst": "Enter a video title first.",
+      "success": "Video uploaded."
+    },
+    "removeSuccess": "Video removed.",
+    "empty": "No campaign videos yet."
+  },
+  "introExperience": {
+    "ariaLabel": "Campaign introduction",
+    "preparing": "Preparing campaign intro…",
+    "dontShowAgain": "Don't show this intro again",
+    "continueButton": "Continue to campaign",
+    "watchFullButton": "Watch the full intro to continue"
+  },
+  "panel": {
+    "tabs": {
+      "videos": "Videos",
+      "soundtrack": "Soundtrack",
+      "soundFx": "Sound FX"
+    }
+  },
+  "soundFx": {
+    "upload": {
+      "title": "Upload Sound FX",
+      "description": "Effects play once for everyone currently in this campaign.",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Door slam, thunder, sword clash…",
+      "dropLabel": "Drop an audio file here, or click to browse",
+      "dropHint": "MP3, OGG, Opus, M4A, WAV, or WebM · up to 40 MB",
+      "enterTitleFirst": "Enter a sound effect title first.",
+      "success": "Sound effect uploaded.",
+      "uploading": "Uploading effect…"
+    },
+    "downloadPack": "Sound FX template (ZIP)",
+    "importZip": "Import ZIP",
+    "importDialog": {
+      "title": "Import Sound FX",
+      "description": "Drop the ZIP with sound-fx.json and the audio files. Download the template to see the structure.",
+      "label": "Drop the Sound FX ZIP here, or click to browse",
+      "hint": "ZIP with sound-fx.json and the sounds/ folder"
+    },
+    "readingZip": "Reading the ZIP…",
+    "uploadingEffects": "Uploading effects ({{done}}/{{total}})…",
+    "importedSummary_one": "{{count}} sound effect imported.",
+    "importedSummary_other": "{{count}} sound effects imported.",
+    "generatingPackage": "Generating package…",
+    "downloading": "Downloading…",
+    "templateDownloaded": "Template downloaded.",
+    "selectedCount_one": "{{count}} selected",
+    "selectedCount_other": "{{count}} selected",
+    "clearSelection": "Clear selection",
+    "removeSelected": "Remove selected",
+    "removeSelectedConfirmTitle_one": "Remove {{count}} sound effect?",
+    "removeSelectedConfirmTitle_other": "Remove {{count}} sound effects?",
+    "removeSelectedConfirmBody": "The selected files will be permanently removed.",
+    "removedSummary_one": "{{count}} sound effect removed.",
+    "removedSummary_other": "{{count}} sound effects removed.",
+    "removeSuccess": "Sound effect removed.",
+    "dragAria": "Drag to reorder",
+    "selectAria": "Select {{title}}",
+    "playAria": "Play {{title}} for everyone",
+    "removeAria": "Remove {{title}}",
+    "removeConfirmTitle": "Remove this sound effect?",
+    "removeConfirmBody": "{{title}} will be permanently removed.",
+    "empty": "No sound effects yet.",
+    "gmControlled": "Sound effects are triggered by the GM.",
+    "fileSize": "{{name}} · {{size}} KB"
+  },
+  "soundtrack": {
+    "import": {
+      "title": "Import soundtrack",
+      "description": "Upload a soundtrack ZIP with album.json, a cover image, and audio tracks.",
+      "copyPrompt": "Copy AI prompt",
+      "promptCopied": "AI prompt copied to your clipboard.",
+      "promptCopyFailed": "Could not copy the prompt.",
+      "downloadReadme": "Download read me",
+      "importZip": "Import soundtrack ZIP",
+      "dialogTitle": "Import soundtrack",
+      "dialogDescription": "album.json at root · any image as cover · MP3, OGG, Opus, or M4A",
+      "dropLabel": "Drop the soundtrack ZIP here, or click to browse",
+      "readingZip": "Reading the ZIP…",
+      "uploadingAssets": "Uploading cover and tracks…",
+      "updatingSoundtrack": "Updating soundtrack…",
+      "imported": "Soundtrack imported.",
+      "readmeTaskLabel": "Download read me (ZIP)",
+      "generatingPackage": "Generating package…",
+      "downloading": "Downloading…",
+      "readmeDownloaded": "Read me downloaded."
+    },
+    "removeSuccess": "Album removed.",
+    "empty": "No soundtrack albums yet.",
+    "cover": {
+      "enlargeAria": "Enlarge {{title}} cover",
+      "altText": "{{title}} cover",
+      "enlargedAlt": "{{title}} cover enlarged",
+      "zoomOut": "Zoom out",
+      "zoomIn": "Zoom in",
+      "zoomSlider": "Cover zoom"
+    },
+    "previousAlbum": "Previous album",
+    "nextAlbum": "Next album",
+    "albumCount": "Album {{current}} of {{total}}",
+    "removeAlbumAria": "Remove {{title}}",
+    "removeAlbumConfirmTitle": "Remove this album?",
+    "removeAlbumConfirmBody": "{{title}} and all its audio files will be permanently removed.",
+    "gmControlled": "Playback is synchronized by the GM.",
+    "errors": {
+      "missingAlbumJson": "The package must contain album.json at its root.",
+      "trackPositions": "Track positions must start at 1 without gaps.",
+      "missingCover": "Missing cover: {{path}}",
+      "coverTooLarge": "The cover is larger than 3 MB.",
+      "missingTrack": "Missing track: {{file}}",
+      "unsupportedFormat": "Unsupported audio format: {{file}}",
+      "trackTooLarge": "{{file}} is larger than 40 MB.",
+      "coverMustBeImage": "The cover must be an image file: {{path}}"
+    }
+  },
+  "player": {
+    "previousTrack": "Previous track",
+    "nextTrack": "Next track",
+    "pause": "Pause",
+    "play": "Play",
+    "expandPlayer": "Expand player",
+    "collapsePlayer": "Collapse player",
+    "stopSoundtrack": "Stop soundtrack",
+    "loopOne": "Loop 1",
+    "loopCurrentTrackAria": "Loop current track",
+    "gmControlled": "Controlled by GM"
+  },
+  "framePicker": {
+    "videoStillLoading": "The video is still loading.",
+    "couldNotReadFrame": "Could not read the frame.",
+    "framesUnreadable": "This video's frames can't be read from here.",
+    "sliderAria": "Thumbnail frame",
+    "saving": "Saving…",
+    "useThisFrame": "Use this frame"
+  }
+}

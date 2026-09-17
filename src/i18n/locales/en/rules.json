@@ -1,0 +1,106 @@
+{
+  "status": {
+    "EXACT": "Exact",
+    "CONFIGURABLE": "Configurable",
+    "APPROXIMATION": "Approximation",
+    "MISSING": "Missing"
+  },
+  "audit": {
+    "attr.primary-cost": {
+      "title": "ST / DX / IQ / HT point costs",
+      "notes": "Linear cost per point above/below 10. Defaults 10/20/20/10; campaigns may override."
+    },
+    "sec.hp-fp-will-per": {
+      "title": "HP, FP, Will, Per derivation and cost",
+      "notes": "HP = ST + delta, FP = HT + delta, Will/Per = IQ + delta. Costs 2/3/5/5 per point."
+    },
+    "sec.basic-speed-move": {
+      "title": "Basic Speed and Basic Move",
+      "notes": "Speed = (DX + HT)/4 + delta; Move = floor(Speed) + delta, floored at 0. Speed costs 20/point, Move 5/level."
+    },
+    "sec.basic-lift": {
+      "title": "Basic Lift",
+      "notes": "BL = ST^2 / divisor (default 5) in pounds, fractional precision preserved (ST 11 => 24.2). Divisor configurable."
+    },
+    "points.total": {
+      "title": "Point totals and remaining budget",
+      "notes": "Deterministic bucket sum; equipment never contributes points."
+    },
+    "traits.levels": {
+      "title": "Levelled traits",
+      "notes": "Cost = base x levels (minimum 1 level) before modifiers."
+    },
+    "traits.modifiers": {
+      "title": "Enhancements and limitations",
+      "notes": "Percentages sum, floored at ruleset.modifierFloorPercent (-80%), then rounded per ruleset.modifierRounding."
+    },
+    "skills.relative-level": {
+      "title": "Skill levels by difficulty and points",
+      "notes": "1/2/4 points then +1 level per 4; difficulty offsets from ruleset."
+    },
+    "skills.defaults": {
+      "title": "Skill defaults",
+      "notes": "Defaults parsed from user text ('DX-5, Brawling-2'); best default wins and a purchased skill is never worse than its default. No default tables bundled."
+    },
+    "skills.techniques": {
+      "title": "Techniques",
+      "notes": "Level = base skill + default penalty + levels bought; bought levels capped by the penalty. Costs from ruleset.technique."
+    },
+    "equip.encumbrance": {
+      "title": "Encumbrance thresholds, Move and Dodge effects",
+      "notes": "Tiers at 1/2/3/6/10 x BL with Move factors 1/0.8/0.6/0.4/0.2 and Dodge 0/-1/-2/-3/-4."
+    },
+    "equip.dr": {
+      "title": "DR by hit location",
+      "notes": "Aggregates DR of carried armour per declared location (Torso when unspecified). Layering is a policy, not a universal rule: additive by default, 'highest' available. Flexible-armour, ablative and partial-coverage nuances are not modelled."
+    },
+    "combat.active-defenses": {
+      "title": "Dodge, Parry and Block",
+      "notes": "Dodge = floor(Basic Speed) + 3. Parry/Block = floor(skill/2) + 3, retreat +3. All from ruleset.activeDefense."
+    },
+    "combat.basic-damage": {
+      "title": "Basic damage (thrust / swing) by ST",
+      "notes": "Table-driven lookup. No progression is bundled; without one the engine reports 'not-configured' and the sheet shows damage as unavailable. The previous invented formula was removed."
+    },
+    "combat.health": {
+      "title": "Current HP/FP thresholds and conditions",
+      "notes": "Fraction thresholds with labels and Move factors from ruleset.health. Free-text conditions are stored but have no mechanical effect."
+    },
+    "combat.weapon-parsing": {
+      "title": "Weapon field parsing (reach, parry, Acc, bulk, range, RoF, shots, recoil)",
+      "notes": "Unambiguous numeric forms are parsed into typed values; anything else is reported as unresolved and the raw text is preserved. No weapon tables are bundled."
+    },
+    "combat.damage-expression": {
+      "title": "Weapon damage expression resolution",
+      "notes": "thr/sw expressions resolve through the configured damage progression; with none installed the result is 'unavailable' and no roll is offered. Damage type labels are parsed out, not interpreted."
+    },
+    "combat.ammo": {
+      "title": "Shots and ammunition state",
+      "notes": "Pure state derived from the Shots field; consumption rejects non-positive and over-capacity amounts and never mutates the weapon definition. Current shots are persisted separately (see combat.ammo-persistence)."
+    },
+    "combat.ammo-persistence": {
+      "title": "Persisted current ammunition between sessions",
+      "notes": "Current shots are stored in a dedicated table keyed by character, equipment entry and attack-mode key; the static WeaponMode definition is never mutated. Limitation: WeaponMode has no stable id, so the key is derived from the mode index within its entry and reordering modes remaps stored state."
+    },
+    "combat.rapid-fire": {
+      "title": "Rapid fire: RoF, recoil and additional hits",
+      "notes": "One extra hit per full multiple of Recoil in the margin of success, capped by shots fired, ammunition on hand and the optional ruleset cap. Without both Recoil and RoF the result is explicitly unavailable."
+    },
+    "combat.accuracy-bulk": {
+      "title": "Accuracy / Aim and Bulk modifiers",
+      "notes": "Typed hooks that surface only the values the weapon declares; aiming time, bracing and other maneuvers are not modelled and are not implied by the UI."
+    },
+    "dice.expressions": {
+      "title": "Generic dice expressions",
+      "notes": "Supports NdS, implicit d6, multipliers and modifiers; multiplier applies after the modifier."
+    },
+    "dice.success": {
+      "title": "3d6 success rolls, criticals and margins",
+      "notes": "<=4 crit success; 5 at target 15+; 6 at target 16+; 18 always crit failure; 17 crit failure at target <=15; margin of failure >= 10 is a crit failure."
+    },
+    "campaign.overrides": {
+      "title": "Campaign house rules and limits",
+      "notes": "Section-wise merge over the default ruleset; point budget, disadvantage and quirk caps and TL reported as violations."
+    }
+  }
+}

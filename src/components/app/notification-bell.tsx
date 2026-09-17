@@ -24,21 +24,23 @@ import {
   markNotificationRead,
   type NotificationRow,
 } from "@/lib/notifications";
-
-function timeAgo(iso: string) {
-  const seconds = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
-  if (seconds < 60) return `${seconds}s ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
+import { useT } from "@/i18n/hooks";
 
 /** Header bell: live feed of what the GM revealed to this player. */
 export function NotificationBell() {
   const { user } = useSession();
   const queryClient = useQueryClient();
+  const { t } = useT("navigation");
+
+  function timeAgo(iso: string) {
+    const seconds = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+    if (seconds < 60) return t("notifications.timeAgoSeconds", { count: seconds });
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return t("notifications.timeAgoMinutes", { count: minutes });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return t("notifications.timeAgoHours", { count: hours });
+    return t("notifications.timeAgoDays", { count: Math.floor(hours / 24) });
+  }
 
   const notifications = useQuery({
     queryKey: ["notifications", user?.id],
@@ -94,12 +96,12 @@ export function NotificationBell() {
     if (next === "granted") {
       void enableBackgroundPush().catch(() => undefined);
       showSystemNotification({
-        title: "Alerts enabled",
-        body: "You will be notified when the GM reveals something.",
+        title: t("notifications.alertsEnabledTitle"),
+        body: t("notifications.alertsEnabledBody"),
         tag: "alerts-enabled",
       });
     } else if (next === "denied") {
-      toast.error("Alerts blocked. Allow notifications for this site in your browser settings.");
+      toast.error(t("notifications.alertsBlocked"));
     }
   };
 
@@ -119,7 +121,7 @@ export function NotificationBell() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button size="icon" variant="ghost" className="relative shrink-0" aria-label="Notifications">
+        <Button size="icon" variant="ghost" className="relative shrink-0" aria-label={t("header.notifications")}>
           <Bell className="h-4 w-4" />
           {unread > 0 ? (
             <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-content-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-4 text-primary-foreground">
@@ -132,21 +134,21 @@ export function NotificationBell() {
         {permission === "default" ? (
           <div className="flex items-center justify-between gap-2 border-b border-border bg-accent/20 px-3 py-2">
             <p className="text-xs text-muted-foreground">
-              Get an alert on your device when the GM reveals something.
+              {t("notifications.enablePrompt")}
             </p>
             <Button size="sm" className="h-7 shrink-0 px-2 text-xs" onClick={() => void enableAlerts()}>
-              <BellRing className="mr-1 size-3" /> Enable
+              <BellRing className="mr-1 size-3" /> {t("notifications.enable")}
             </Button>
           </div>
         ) : permission === "open-in-new-tab" ? (
           <div className="border-b border-border bg-accent/20 px-3 py-2">
             <p className="text-xs text-muted-foreground">
-              Open the app in its own tab to turn on device alerts.
+              {t("notifications.openInNewTab")}
             </p>
           </div>
         ) : null}
         <div className="flex items-center justify-between border-b border-border px-3 py-2">
-          <p className="text-sm font-medium">Notifications</p>
+          <p className="text-sm font-medium">{t("notifications.title")}</p>
           {unread > 0 ? (
             <Button
               size="sm"
@@ -155,7 +157,7 @@ export function NotificationBell() {
               onClick={() => readAll.mutate()}
               disabled={readAll.isPending}
             >
-              Mark all read
+              {t("notifications.markAllRead")}
             </Button>
           ) : null}
         </div>
@@ -166,7 +168,7 @@ export function NotificationBell() {
               <Skeleton className="h-12 w-full rounded-md" />
             </div>
           ) : rows.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">Nothing new yet.</p>
+            <p className="p-6 text-center text-sm text-muted-foreground">{t("notifications.empty")}</p>
           ) : (
             <ul className="divide-y divide-border">
               {rows.map((row) => (
@@ -197,8 +199,8 @@ export function NotificationBell() {
                     <button
                       type="button"
                       className="text-muted-foreground hover:text-foreground"
-                      aria-label={row.read_at ? "Mark as unread" : "Mark as read"}
-                      title={row.read_at ? "Mark as unread" : "Mark as read"}
+                      aria-label={row.read_at ? t("notifications.markAsUnread") : t("notifications.markAsRead")}
+                      title={row.read_at ? t("notifications.markAsUnread") : t("notifications.markAsRead")}
                       onClick={() => toggleRead.mutate({ id: row.id, read: !row.read_at })}
                     >
                       <Check className="size-4" />
@@ -206,8 +208,8 @@ export function NotificationBell() {
                     <button
                       type="button"
                       className="text-muted-foreground hover:text-destructive"
-                      aria-label="Delete notification"
-                      title="Delete"
+                      aria-label={t("notifications.delete")}
+                      title={t("notifications.delete")}
                       onClick={() => remove.mutate(row.id)}
                     >
                       <Trash2 className="size-4" />

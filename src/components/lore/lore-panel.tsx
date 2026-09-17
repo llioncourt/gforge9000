@@ -41,15 +41,13 @@ import { EntityDeleteButton } from "@/components/lore/entity-delete-button";
 import { EntityThumb } from "@/components/lore/entity-thumb";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import { useLoreRealtime } from "@/hooks/use-lore-realtime";
+import { useT } from "@/i18n/hooks";
 
-const GROUPS: { group: string; label: string }[] = [
-  { group: "world", label: "World" },
-  { group: "story", label: "Story" },
-  { group: "play", label: "Play" },
-  { group: "assets", label: "Assets" },
-];
+const GROUP_KEYS = ["world", "story", "play", "assets"] as const;
 
 export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const { t } = useT("lore");
+  const { t: tc } = useT("common");
   const queryClient = useQueryClient();
   useLoreRealtime(campaignId);
   const [search, setSearch] = useState("");
@@ -65,32 +63,35 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
   const exportTask = useTransferTask();
 
   const runExportLore = () =>
-    void exportTask.run("Exporting world & lore", async (report) => {
-      report("Reading campaign…", 15);
+    void exportTask.run(t("panel.toasts.exporting"), async (report) => {
+      report(t("panel.toasts.readingCampaign"), 15);
       const [campaign, rows, rels] = await Promise.all([
         getCampaign(campaignId),
         listEntities(campaignId),
         listRelationships(campaignId),
       ]);
-      report("Building file…", 60);
+      report(t("panel.toasts.buildingFile"), 60);
       const file = toPortableLore(campaign.name, rows, rels);
       const slug = campaign.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
-      report("Downloading…", 90);
+      report(t("panel.toasts.downloading"), 90);
       download(`${slug || "campaign"}-lore.json`, JSON.stringify(file, null, 2));
-      return `Exported ${file.entities.length} entries.`;
+      return t("panel.toasts.exportedCount", { count: file.entities.length });
     });
 
   const runImportLore = async (file: File, report: (label: string, percent?: number) => void) => {
-    report("Reading file…", 10);
+    report(t("panel.toasts.readingFile"), 10);
     const parsed = parsePortableLore(await file.text());
-    report("Importing entries and links…", 45);
+    report(t("panel.toasts.importingEntries"), 45);
     const result = await importLore(campaignId, parsed);
-    report("Refreshing world & lore…", 90);
+    report(t("panel.toasts.refreshing"), 90);
     await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
-    return `Imported ${result.entities} entries and ${result.relationships} links.`;
+    return t("panel.toasts.importedCount", {
+      entities: result.entities,
+      relationships: result.relationships,
+    });
   };
 
   const entities = useQuery({
@@ -143,13 +144,13 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
       createEntity({
         campaign_id: campaignId,
         kind: newKind,
-        name: newName.trim() || "Untitled",
+        name: newName.trim() || t("panel.newEntryDialog.defaultName"),
         status: kindDef(newKind).defaultStatus,
       }),
     onSuccess: async () => {
       setCreating(false);
       setNewName("");
-      toast.success("Entry created");
+      toast.success(t("panel.toasts.entryCreated"));
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -159,17 +160,17 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
     <div className="space-y-6">
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-wrap gap-2">
-          {GROUPS.map((item) => (
+          {GROUP_KEYS.map((key) => (
             <Button
-              key={item.group}
-              variant={group === item.group ? "default" : "outline"}
+              key={key}
+              variant={group === key ? "default" : "outline"}
               size="sm"
               onClick={() => {
-                setGroup(item.group);
+                setGroup(key);
                 setKindFilter("ALL");
               }}
             >
-              {item.label}
+              {t(`panel.groups.${key}`)}
             </Button>
           ))}
         </div>
@@ -179,7 +180,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search lore"
+              placeholder={t("panel.searchPlaceholder")}
               className="w-56 pl-8"
             />
           </div>
@@ -188,7 +189,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">All types</SelectItem>
+              <SelectItem value="ALL">{t("panel.allTypes")}</SelectItem>
               {kindsInGroup.map((k) => (
                 <SelectItem key={k.kind} value={k.kind}>
                   {k.plural}
@@ -199,10 +200,10 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
           {isGm ? (
             <>
               <Button variant="outline" onClick={runExportLore} disabled={exportTask.busy}>
-                <Download className="mr-2 size-4" /> Export
+                <Download className="mr-2 size-4" /> {tc("actions.export")}
               </Button>
               <Button variant="outline" onClick={() => setImporting(true)}>
-                <Upload className="mr-2 size-4" /> Import
+                <Upload className="mr-2 size-4" /> {tc("actions.import")}
               </Button>
               <Button
                 variant="outline"
@@ -213,7 +214,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                   setDrafting(true);
                 }}
               >
-                <Sparkles className="mr-2 size-4" /> AI draft
+                <Sparkles className="mr-2 size-4" /> {t("panel.aiDraft")}
               </Button>
               <Button
                 onClick={() => {
@@ -221,7 +222,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                   setCreating(true);
                 }}
               >
-                <Plus className="mr-2 size-4" /> New entry
+                <Plus className="mr-2 size-4" /> {t("panel.newEntry")}
               </Button>
             </>
           ) : null}
@@ -236,7 +237,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
         </div>
       ) : byKind.length === 0 ? (
         <p className="text-muted-foreground text-sm">
-          Nothing here yet. {isGm ? "Create the first entry for this part of the campaign." : null}
+          {t("panel.emptyState")} {isGm ? t("panel.emptyStateGmHint") : null}
         </p>
       ) : (
         byKind.map(([kind, list]) => (
@@ -266,7 +267,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
                           <VisibilityBadge visibility={row.visibility} isGm={isGm} />
                         </div>
                         <p className="text-muted-foreground mt-1 line-clamp-2 min-h-10 flex-1 text-sm">
-                          {row.summary ?? row.player_description ?? "No summary yet."}
+                          {row.summary ?? row.player_description ?? t("panel.noSummary")}
                         </p>
                         <p className="text-muted-foreground mt-2 text-xs">{row.status}</p>
                       </div>
@@ -291,11 +292,11 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
       <Dialog open={creating} onOpenChange={setCreating}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New lore entry</DialogTitle>
+            <DialogTitle>{t("panel.newEntryDialog.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="lore-kind">Type</Label>
+              <Label htmlFor="lore-kind">{t("panel.newEntryDialog.typeLabel")}</Label>
               <Select value={newKind} onValueChange={setNewKind}>
                 <SelectTrigger id="lore-kind">
                   <SelectValue />
@@ -310,21 +311,21 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lore-name">Name</Label>
+              <Label htmlFor="lore-name">{t("panel.newEntryDialog.nameLabel")}</Label>
               <Input
                 id="lore-name"
                 value={newName}
                 onChange={(event) => setNewName(event.target.value)}
-                placeholder="Name"
+                placeholder={t("panel.newEntryDialog.namePlaceholder")}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreating(false)}>
-              Cancel
+              {tc("actions.cancel")}
             </Button>
             <Button onClick={() => create.mutate()} disabled={create.isPending}>
-              Create
+              {tc("actions.create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -333,11 +334,11 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
       <ImportDialog
         open={importing}
         onOpenChange={setImporting}
-        title="Import lore"
-        description="Adds the entries and their links from an exported file to this campaign. Existing entries are kept; nothing is overwritten."
+        title={t("panel.importDialog.title")}
+        description={t("panel.importDialog.description")}
         accept="application/json,.json"
-        label="Drop a lore export here, or click to browse"
-        hint="JSON file exported from a campaign"
+        label={t("panel.importDialog.label")}
+        hint={t("panel.importDialog.hint")}
         run={runImportLore}
       />
       {exportTask.node}

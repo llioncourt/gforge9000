@@ -60,6 +60,7 @@ import {
   type TimelineEventInput,
 } from "@/lib/timeline-pack";
 import { ImportDialog, useTransferTask } from "@/components/ui/transfer-dialog";
+import { useT } from "@/i18n/hooks";
 
 export type { WorldCalendar } from "@/lib/world-calendar";
 
@@ -79,6 +80,7 @@ function eventLabel(row: EntityRow, calendar: WorldCalendar): string {
 }
 
 export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const { t } = useT("lore");
   const queryClient = useQueryClient();
   const { user } = useSession();
   const [form, setForm] = useState({
@@ -165,7 +167,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
     onSuccess: () => {
       setForm({ name: "", year: "", month: "", day: "", hour: "", minute: "", summary: "" });
       queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
-      toast.success("Event added.");
+      toast.success(t("timelinePanel.eventAdded"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -174,9 +176,9 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
     file: File,
     report: (label: string, percent?: number) => void,
   ) => {
-    report("Lendo arquivo…", 8);
+    report(t("panel.toasts.readingFile"), 8);
     const rows = await readTimelineFile(file);
-    report("Validando datas…", 18);
+    report(t("timelinePanel.validatingDates"), 18);
     rows.forEach((row, i) => {
       const monthIdx = calendar.months.findIndex(
         (m) => m.name.toLowerCase() === (row.month ?? "").toLowerCase(),
@@ -190,7 +192,8 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
         if (row.hour) check.hour = Number(row.hour);
         if (row.minute) check.minute = Number(row.minute);
         const err = validateWorldDate(calendar, check);
-        if (err) throw new Error(`Evento ${i + 1} ("${row.name}"): ${err}`);
+        if (err)
+          throw new Error(t("timelinePanel.eventError", { index: i + 1, name: row.name, error: err }));
       }
     });
 
@@ -218,17 +221,17 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
       } as never);
       done += 1;
       report(
-        `Importando eventos (${done}/${rows.length})…`,
+        t("timelinePanel.importingEvents", { done, total: rows.length }),
         20 + Math.round((done / Math.max(1, rows.length)) * 75),
       );
     }
     await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
-    return `${rows.length} evento(s) importado(s).`;
+    return t("timelinePanel.eventsImported", { count: rows.length });
   };
 
   const downloadEventsPack = () =>
-    void exportTask.run("Modelo de eventos (ZIP)", async (report) => {
-      report("Gerando pacote…", 45);
+    void exportTask.run(t("timelinePanel.exportEventsTemplate"), async (report) => {
+      report(t("timelinePanel.generatingPackage"), 45);
       const url = URL.createObjectURL(buildTimelinePackZip());
       const link = document.createElement("a");
       link.href = url;
@@ -237,8 +240,8 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      report("Baixando…", 90);
-      return "Modelo baixado.";
+      report(t("timelinePanel.downloading"), 90);
+      return t("timelinePanel.templateDownloaded");
     });
 
   return (
@@ -247,29 +250,40 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
         <CalendarClock className="h-4 w-4 text-muted-foreground" />
         <p className="flex-1 text-sm text-muted-foreground">
           {todayLabel
-            ? `${calendar.units.year.singular} atual: ${todayLabel}${calendar.era ? ` (${calendar.era})` : ""}`
-            : `Defina um ${calendar.units.year.singular.toLowerCase()} atual para ordenar eventos pelo seu calendário.`}
+            ? calendar.era
+              ? t("timelinePanel.todayBanner.withDateEra", {
+                  unit: calendar.units.year.singular,
+                  date: todayLabel,
+                  era: calendar.era,
+                })
+              : t("timelinePanel.todayBanner.withDate", {
+                  unit: calendar.units.year.singular,
+                  date: todayLabel,
+                })
+            : t("timelinePanel.todayBanner.noDate", {
+                unit: calendar.units.year.singular.toLowerCase(),
+              })}
         </p>
         {isGm ? (
           <Button variant="outline" size="sm" onClick={downloadEventsPack}>
-            <Download className="mr-1 h-4 w-4" /> Modelo de eventos (ZIP)
+            <Download className="mr-1 h-4 w-4" /> {t("timelinePanel.exportEventsTemplate")}
           </Button>
         ) : null}
         {isGm ? (
           <Button variant="outline" size="sm" onClick={() => setEventsImportOpen(true)}>
-            <Upload className="mr-1 h-4 w-4" /> Importar eventos
+            <Upload className="mr-1 h-4 w-4" /> {t("timelinePanel.importEvents")}
           </Button>
         ) : null}
         {isGm ? (
           <Dialog open={calendarOpen} onOpenChange={setCalendarOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm">
-                <Settings2 className="mr-1 h-4 w-4" /> Calendário
+                <Settings2 className="mr-1 h-4 w-4" /> {t("timelinePanel.calendarButton")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Calendário do mundo</DialogTitle>
+                <DialogTitle>{t("timelinePanel.worldCalendarTitle")}</DialogTitle>
               </DialogHeader>
               <CalendarForm
                 calendar={calendar}
@@ -280,7 +294,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
                   });
                   await queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] });
                   setCalendarOpen(false);
-                  toast.success("Calendário salvo.");
+                  toast.success(t("timelinePanel.calendarSaved"));
                 }}
               />
             </DialogContent>
@@ -331,14 +345,14 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
               ))}
             </ol>
           ) : (
-            <p className="text-sm text-muted-foreground">Nenhum evento na timeline ainda.</p>
+            <p className="text-sm text-muted-foreground">{t("timelinePanel.noEventsYet")}</p>
           )}
         </div>
 
         <div className="panel h-fit space-y-3 p-4">
-          <h3 className="font-display text-sm font-semibold">Adicionar evento</h3>
+          <h3 className="font-display text-sm font-semibold">{t("timelinePanel.addEvent")}</h3>
           <Input
-            placeholder="Nome do evento"
+            placeholder={t("timelinePanel.eventNamePlaceholder")}
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
           />
@@ -378,13 +392,13 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
           )}
           <div className="grid grid-cols-2 gap-2">
             <Input
-              placeholder={`${calendar.units.hour.singular} (opc.)`}
+              placeholder={`${calendar.units.hour.singular} ${t("timelinePanel.optionalSuffix")}`}
               value={form.hour}
               onChange={(e) => setForm({ ...form, hour: e.target.value })}
               inputMode="numeric"
             />
             <Input
-              placeholder={`${calendar.units.minute.singular} (opc.)`}
+              placeholder={`${calendar.units.minute.singular} ${t("timelinePanel.optionalSuffix")}`}
               value={form.minute}
               onChange={(e) => setForm({ ...form, minute: e.target.value })}
               inputMode="numeric"
@@ -392,7 +406,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
           </div>
           <Textarea
             rows={3}
-            placeholder="Resumo"
+            placeholder={t("timelinePanel.summaryPlaceholder")}
             value={form.summary}
             onChange={(e) => setForm({ ...form, summary: e.target.value })}
           />
@@ -401,7 +415,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
             onClick={() => create.mutate()}
             disabled={!form.name.trim() || create.isPending}
           >
-            <Plus className="mr-1 h-4 w-4" /> Adicionar evento
+            <Plus className="mr-1 h-4 w-4" /> {t("timelinePanel.addEvent")}
           </Button>
         </div>
       </div>
@@ -409,11 +423,11 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
       <ImportDialog
         open={eventsImportOpen}
         onOpenChange={setEventsImportOpen}
-        title="Importar eventos da timeline"
-        description="Solte o events.json ou o ZIP do modelo de eventos."
+        title={t("timelinePanel.importEventsTitle")}
+        description={t("timelinePanel.importEventsDescription")}
         accept=".json,.zip,application/json,application/zip"
-        label="Solte o events.json ou o ZIP aqui"
-        hint="Baixe o modelo de eventos para ver a estrutura."
+        label={t("timelinePanel.importEventsLabel")}
+        hint={t("timelinePanel.importEventsHint")}
         run={importEventsFile}
       />
       {exportTask.node}
@@ -423,16 +437,7 @@ export function TimelinePanel({ campaignId, isGm }: { campaignId: string; isGm: 
 
 // ── Calendar editor ───────────────────────────────────────────────
 
-const UNIT_KEYS = [
-  ["era", "Era"],
-  ["year", "Ano / Ciclo"],
-  ["season", "Estação / Quarto"],
-  ["month", "Mês"],
-  ["week", "Semana"],
-  ["day", "Dia / Rota"],
-  ["hour", "Hora / Quarto"],
-  ["minute", "Minuto / Parte"],
-] as const;
+const UNIT_KEYS = ["era", "year", "season", "month", "week", "day", "hour", "minute"] as const;
 
 function blockLeapRule(rule: LeapRule): {
   block: number;
@@ -450,6 +455,7 @@ function CalendarForm({
   calendar: WorldCalendar;
   onSave: (next: WorldCalendar) => Promise<void>;
 }) {
+  const { t } = useT("lore");
   const [draft, setDraft] = useState<WorldCalendar>(() => ({
     ...calendar,
     units: { ...calendar.units },
@@ -483,8 +489,8 @@ function CalendarForm({
   };
 
   const downloadPack = () =>
-    void calendarTask.run("Baixar modelo de calendário (ZIP)", async (report) => {
-      report("Gerando pacote…", 45);
+    void calendarTask.run(t("timelinePanel.calendar.downloadTemplateTask"), async (report) => {
+      report(t("timelinePanel.generatingPackage"), 45);
       const url = URL.createObjectURL(buildCalendarPackZip());
       const link = document.createElement("a");
       link.href = url;
@@ -493,38 +499,38 @@ function CalendarForm({
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      report("Baixando…", 90);
-      return "Modelo baixado.";
+      report(t("timelinePanel.downloading"), 90);
+      return t("timelinePanel.templateDownloaded");
     });
 
   const importFile = async (file: File, report: (label: string, percent?: number) => void) => {
-    report("Lendo arquivo…", 20);
+    report(t("panel.toasts.readingFile"), 20);
     const next = await readCalendarFile(file);
-    report("Aplicando calendário…", 80);
+    report(t("timelinePanel.calendar.applyingCalendar"), 80);
     setDraft({ ...next, today: draft.today, era: next.era || draft.era });
-    return "Calendário importado — revise e salve.";
+    return t("timelinePanel.calendar.calendarImported");
   };
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" size="sm" onClick={useGregorian}>
-          Usar calendário gregoriano
+          {t("timelinePanel.calendar.useGregorian")}
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={downloadPack}>
-          <Download className="mr-1 h-4 w-4" /> Baixar modelo (ZIP)
+          <Download className="mr-1 h-4 w-4" /> {t("timelinePanel.calendar.downloadTemplateZip")}
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-          <Upload className="mr-1 h-4 w-4" /> Importar calendário
+          <Upload className="mr-1 h-4 w-4" /> {t("timelinePanel.calendar.importCalendar")}
         </Button>
         <ImportDialog
           open={importOpen}
           onOpenChange={setImportOpen}
-          title="Importar calendário"
-          description="Solte o calendar.json ou o ZIP do modelo."
+          title={t("timelinePanel.calendar.importCalendarTitle")}
+          description={t("timelinePanel.calendar.importCalendarDescription")}
           accept=".json,.zip,application/json,application/zip"
-          label="Solte o calendar.json ou o ZIP aqui"
-          hint="Use o pacote modelo como referência da estrutura."
+          label={t("timelinePanel.calendar.importCalendarLabel")}
+          hint={t("timelinePanel.calendar.importCalendarHint")}
           run={importFile}
         />
         {calendarTask.node}
@@ -532,21 +538,21 @@ function CalendarForm({
 
       <Tabs defaultValue="units" className="w-full">
         <TabsList className="flex gap-1 overflow-x-auto pb-1">
-          <TabsTrigger value="units">Unidades</TabsTrigger>
-          <TabsTrigger value="months">Meses</TabsTrigger>
-          <TabsTrigger value="seasons">Estações</TabsTrigger>
-          <TabsTrigger value="cycle">Ciclo</TabsTrigger>
-          <TabsTrigger value="today">Hoje</TabsTrigger>
+          <TabsTrigger value="units">{t("timelinePanel.calendar.tabs.units")}</TabsTrigger>
+          <TabsTrigger value="months">{t("timelinePanel.calendar.tabs.months")}</TabsTrigger>
+          <TabsTrigger value="seasons">{t("timelinePanel.calendar.tabs.seasons")}</TabsTrigger>
+          <TabsTrigger value="cycle">{t("timelinePanel.calendar.tabs.cycle")}</TabsTrigger>
+          <TabsTrigger value="today">{t("timelinePanel.calendar.tabs.today")}</TabsTrigger>
         </TabsList>
 
-        {/* ── Unidades ── */}
+        {/* ── Units ── */}
         <TabsContent value="units" className="space-y-2">
-          <p className="text-xs text-muted-foreground">
-            Nomes canônicos das unidades de tempo (singular / plural).
-          </p>
-          {UNIT_KEYS.map(([key, label]) => (
+          <p className="text-xs text-muted-foreground">{t("timelinePanel.calendar.unitsIntro")}</p>
+          {UNIT_KEYS.map((key) => (
             <div key={key} className="grid grid-cols-[100px_1fr_1fr] items-center gap-2">
-              <Label className="text-xs text-muted-foreground">{label}</Label>
+              <Label className="text-xs text-muted-foreground">
+                {t(`timelinePanel.calendar.unitLabels.${key}`)}
+              </Label>
               <Input
                 className="h-8"
                 value={draft.units[key].singular}
@@ -560,21 +566,23 @@ function CalendarForm({
             </div>
           ))}
           <div className="space-y-1 pt-1">
-            <Label htmlFor="cal-era">Nome da era</Label>
+            <Label htmlFor="cal-era">{t("timelinePanel.calendar.eraNameLabel")}</Label>
             <Input
               id="cal-era"
               value={draft.era}
               onChange={(e) => update({ era: e.target.value })}
-              placeholder="Terceira Era"
+              placeholder={t("timelinePanel.calendar.eraNamePlaceholder")}
             />
           </div>
         </TabsContent>
 
-        {/* ── Meses ── */}
+        {/* ── Months ── */}
         <TabsContent value="months" className="space-y-2">
           <p className="text-xs text-muted-foreground">
-            Cada {draft.units.month.singular.toLowerCase()} com a sua duração em{" "}
-            {draft.units.day.plural.toLowerCase()}.
+            {t("timelinePanel.calendar.monthsIntro", {
+              month: draft.units.month.singular.toLowerCase(),
+              days: draft.units.day.plural.toLowerCase(),
+            })}
           </p>
           {draft.months.map((m, i) => (
             <div key={i} className="flex items-center gap-1">
@@ -660,26 +668,37 @@ function CalendarForm({
             onClick={() =>
               setDraft((d) => ({
                 ...d,
-                months: [...d.months, { name: `Mês ${d.months.length + 1}`, days: 30 }],
+                months: [
+                  ...d.months,
+                  {
+                    name: t("timelinePanel.calendar.monthFallbackName", {
+                      index: d.months.length + 1,
+                    }),
+                    days: 30,
+                  },
+                ],
               }))
             }
           >
-            <Plus className="mr-1 h-4 w-4" /> Adicionar {draft.units.month.singular.toLowerCase()}
+            <Plus className="mr-1 h-4 w-4" />{" "}
+            {t("timelinePanel.calendar.addMonth", { unit: draft.units.month.singular.toLowerCase() })}
           </Button>
         </TabsContent>
 
-        {/* ── Estações ── */}
+        {/* ── Seasons ── */}
         <TabsContent value="seasons" className="space-y-2">
           <p className="text-xs text-muted-foreground">
-            Agrupe {draft.units.month.plural.toLowerCase()} em{" "}
-            {draft.units.season.plural.toLowerCase()} / quartos.
+            {t("timelinePanel.calendar.seasonsIntro", {
+              months: draft.units.month.plural.toLowerCase(),
+              seasons: draft.units.season.plural.toLowerCase(),
+            })}
           </p>
           {draft.seasons.map((s, i) => (
             <div key={i} className="panel space-y-2 p-2">
               <div className="flex items-center gap-2">
                 <Input
                   className="h-8 flex-1"
-                  placeholder="Nome"
+                  placeholder={t("timelinePanel.calendar.namePlaceholder")}
                   value={s.name}
                   onChange={(e) =>
                     setDraft((d) => {
@@ -691,7 +710,7 @@ function CalendarForm({
                 />
                 <Input
                   className="h-8 flex-1"
-                  placeholder="Lema (opc.)"
+                  placeholder={t("timelinePanel.calendar.subtitlePlaceholder")}
                   value={s.subtitle}
                   onChange={(e) =>
                     setDraft((d) => {
@@ -736,7 +755,7 @@ function CalendarForm({
                         })
                       }
                     >
-                      {m.name || `Mês ${mi + 1}`}
+                      {m.name || t("timelinePanel.calendar.monthFallbackName", { index: mi + 1 })}
                     </Button>
                   );
                 })}
@@ -751,21 +770,31 @@ function CalendarForm({
                 ...d,
                 seasons: [
                   ...d.seasons,
-                  { name: `Estação ${d.seasons.length + 1}`, subtitle: "", months: [] },
+                  {
+                    name: t("timelinePanel.calendar.newSeasonName", { index: d.seasons.length + 1 }),
+                    subtitle: "",
+                    months: [],
+                  },
                 ],
               }))
             }
           >
-            <Plus className="mr-1 h-4 w-4" /> Adicionar {draft.units.season.singular.toLowerCase()}
+            <Plus className="mr-1 h-4 w-4" />{" "}
+            {t("timelinePanel.calendar.addSeason", {
+              unit: draft.units.season.singular.toLowerCase(),
+            })}
           </Button>
         </TabsContent>
 
-        {/* ── Ciclo ── */}
+        {/* ── Cycle ── */}
         <TabsContent value="cycle" className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">
-                {draft.units.day.plural} por {draft.units.week.singular.toLowerCase()}
+                {t("timelinePanel.calendar.daysPerWeekLabel", {
+                  days: draft.units.day.plural,
+                  week: draft.units.week.singular.toLowerCase(),
+                })}
               </Label>
               <Input
                 className="h-8"
@@ -778,7 +807,10 @@ function CalendarForm({
             </div>
             <div className="space-y-1">
               <Label className="text-xs">
-                {draft.units.hour.plural} por {draft.units.day.singular.toLowerCase()}
+                {t("timelinePanel.calendar.hoursPerDayLabel", {
+                  hours: draft.units.hour.plural,
+                  day: draft.units.day.singular.toLowerCase(),
+                })}
               </Label>
               <Input
                 className="h-8"
@@ -797,7 +829,10 @@ function CalendarForm({
           </div>
           <div className="space-y-1">
             <Label className="text-xs">
-              {draft.units.minute.plural} por {draft.units.hour.singular.toLowerCase()}
+              {t("timelinePanel.calendar.minutesPerHourLabel", {
+                minutes: draft.units.minute.plural,
+                hour: draft.units.hour.singular.toLowerCase(),
+              })}
             </Label>
             <Input
               className="h-8"
@@ -816,7 +851,9 @@ function CalendarForm({
           {draft.week.daysPerWeek > 0 ? (
             <div className="space-y-1">
               <Label className="text-xs">
-                Nomes dos {draft.units.day.plural.toLowerCase()} da semana
+                {t("timelinePanel.calendar.weekdayNamesLabel", {
+                  days: draft.units.day.plural.toLowerCase(),
+                })}
               </Label>
               <Textarea
                 rows={Math.max(2, draft.week.dayNames.length)}
@@ -832,14 +869,16 @@ function CalendarForm({
                     },
                   })
                 }
-                placeholder={"Domingo\nSegunda\nTerça"}
+                placeholder={t("timelinePanel.calendar.weekdayNamesPlaceholder")}
               />
             </div>
           ) : null}
 
           {/* Leap rule */}
           <div className="space-y-2">
-            <Label className="text-xs">{draft.units.year.singular} bissexto</Label>
+            <Label className="text-xs">
+              {t("timelinePanel.calendar.leapYearLabel", { year: draft.units.year.singular })}
+            </Label>
             <Select
               value={draft.leapRule.kind}
               onValueChange={(v) => {
@@ -861,15 +900,15 @@ function CalendarForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Nenhum</SelectItem>
-                <SelectItem value="gregorian">Gregoriano (a cada 4, exceto 100)</SelectItem>
-                <SelectItem value="block">Por bloco (ex.: 4, 7, 10 de cada 10)</SelectItem>
+                <SelectItem value="none">{t("timelinePanel.calendar.leapNone")}</SelectItem>
+                <SelectItem value="gregorian">{t("timelinePanel.calendar.leapGregorian")}</SelectItem>
+                <SelectItem value="block">{t("timelinePanel.calendar.leapBlock")}</SelectItem>
               </SelectContent>
             </Select>
             {draft.leapRule.kind === "block" ? (
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-xs">Tamanho do bloco</Label>
+                  <Label className="text-xs">{t("timelinePanel.calendar.blockSizeLabel")}</Label>
                   <Input
                     className="h-8"
                     type="number"
@@ -886,7 +925,9 @@ function CalendarForm({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Anos bissextos no bloco</Label>
+                  <Label className="text-xs">
+                    {t("timelinePanel.calendar.leapYearsInBlockLabel")}
+                  </Label>
                   <Input
                     className="h-8"
                     value={
@@ -904,12 +945,14 @@ function CalendarForm({
                         },
                       })
                     }
-                    placeholder="4, 7, 10"
+                    placeholder={t("timelinePanel.calendar.leapYearsPlaceholder")}
                   />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">
-                    {draft.units.month.singular} que recebe dia extra
+                    {t("timelinePanel.calendar.extraDayMonthLabel", {
+                      month: draft.units.month.singular,
+                    })}
                   </Label>
                   <Select
                     value={draft.leapRule.kind === "block" ? String(draft.leapRule.month) : "0"}
@@ -929,14 +972,16 @@ function CalendarForm({
                     <SelectContent>
                       {draft.months.map((m, i) => (
                         <SelectItem key={i} value={String(i)}>
-                          {m.name || `Mês ${i + 1}`}
+                          {m.name || t("timelinePanel.calendar.monthFallbackName", { index: i + 1 })}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">{draft.units.day.plural} extras</Label>
+                  <Label className="text-xs">
+                    {t("timelinePanel.calendar.extraDaysLabel", { days: draft.units.day.plural })}
+                  </Label>
                   <Input
                     className="h-8"
                     type="number"
@@ -957,11 +1002,9 @@ function CalendarForm({
           </div>
         </TabsContent>
 
-        {/* ── Hoje ── */}
+        {/* ── Today ── */}
         <TabsContent value="today" className="space-y-3">
-          <p className="text-xs text-muted-foreground">
-            Data atual do mundo. Usada para mostrar "hoje" e ordenar eventos próximos.
-          </p>
+          <p className="text-xs text-muted-foreground">{t("timelinePanel.calendar.todayIntro")}</p>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
               <Label className="text-xs">{draft.units.year.singular}</Label>
@@ -1000,7 +1043,7 @@ function CalendarForm({
                 <SelectContent>
                   {draft.months.map((m, i) => (
                     <SelectItem key={i} value={String(i + 1)}>
-                      {m.name || `Mês ${i + 1}`}
+                      {m.name || t("timelinePanel.calendar.monthFallbackName", { index: i + 1 })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1024,7 +1067,9 @@ function CalendarForm({
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">{draft.units.hour.singular} (opc.)</Label>
+              <Label className="text-xs">
+                {draft.units.hour.singular} {t("timelinePanel.optionalSuffix")}
+              </Label>
               <Input
                 className="h-8"
                 type="number"
@@ -1041,7 +1086,9 @@ function CalendarForm({
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">{draft.units.minute.singular} (opc.)</Label>
+              <Label className="text-xs">
+                {draft.units.minute.singular} {t("timelinePanel.optionalSuffix")}
+              </Label>
               <Input
                 className="h-8"
                 type="number"
@@ -1060,7 +1107,7 @@ function CalendarForm({
           </div>
           {draft.today ? (
             <Button variant="ghost" size="sm" onClick={() => update({ today: null })}>
-              Limpar data atual
+              {t("timelinePanel.calendar.clearCurrentDate")}
             </Button>
           ) : null}
         </TabsContent>
@@ -1083,7 +1130,7 @@ function CalendarForm({
           }
         }}
       >
-        Salvar calendário
+        {t("timelinePanel.calendar.saveCalendar")}
       </Button>
     </div>
   );

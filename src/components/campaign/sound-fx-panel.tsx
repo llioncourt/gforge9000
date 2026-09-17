@@ -37,8 +37,11 @@ import {
   type CampaignSoundFx,
 } from "@/lib/campaign-sound-fx";
 import { buildSoundFxPackZip, readSoundFxPack } from "@/lib/sound-fx-pack";
+import { useT } from "@/i18n/hooks";
 
 export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const { t } = useT("media");
+  const { t: tc } = useT("common");
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const effects = useQuery({
@@ -50,7 +53,7 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     onSuccess: async () => {
       setTitle("");
       await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] });
-      toast.success("Sound effect uploaded.");
+      toast.success(t("soundFx.upload.success"));
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -58,7 +61,7 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     mutationFn: deleteCampaignSoundFx,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] });
-      toast.success("Sound effect removed.");
+      toast.success(t("soundFx.removeSuccess"));
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -80,30 +83,30 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     onSuccess: async (count) => {
       setSelected([]);
       await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] });
-      toast.success(`${count} sound effect${count === 1 ? "" : "s"} removed.`);
+      toast.success(t("soundFx.removedSummary", { count }));
     },
     onError: (error: Error) => toast.error(error.message),
   });
   const [importOpen, setImportOpen] = useState(false);
   const exportTask = useTransferTask();
   const importPackFile = async (file: File, report: (label: string, percent?: number) => void) => {
-    report("Lendo o ZIP…", 8);
+    report(t("soundFx.readingZip"), 8);
     const items = await readSoundFxPack(file);
     let done = 0;
     for (const item of items) {
       await uploadCampaignSoundFx(campaignId, item.title, item.file);
       done += 1;
       report(
-        `Enviando efeitos (${done}/${items.length})…`,
+        t("soundFx.uploadingEffects", { done, total: items.length }),
         10 + Math.round((done / Math.max(1, items.length)) * 85),
       );
     }
     await queryClient.invalidateQueries({ queryKey: ["campaign-sound-fx", campaignId] });
-    return `${items.length} sound effect${items.length === 1 ? "" : "s"} imported.`;
+    return t("soundFx.importedSummary", { count: items.length });
   };
   const downloadPack = () =>
-    void exportTask.run("Modelo de Sound FX (ZIP)", async (report) => {
-      report("Gerando pacote…", 45);
+    void exportTask.run(t("soundFx.downloadPack"), async (report) => {
+      report(t("soundFx.generatingPackage"), 45);
       const url = URL.createObjectURL(buildSoundFxPackZip());
       const link = document.createElement("a");
       link.href = url;
@@ -112,8 +115,8 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      report("Baixando…", 90);
-      return "Modelo baixado.";
+      report(t("soundFx.downloading"), 90);
+      return t("soundFx.templateDownloaded");
     });
 
   // --- Drag-and-drop reordering (GM only) ---
@@ -139,31 +142,31 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     <div className="space-y-6">
       {isGm ? (
         <section className="panel p-5">
-          <h2 className="font-display text-lg font-semibold">Upload Sound FX</h2>
+          <h2 className="font-display text-lg font-semibold">{t("soundFx.upload.title")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Effects play once for everyone currently in this campaign.
+            {t("soundFx.upload.description")}
           </p>
           <div className="mt-4 space-y-1.5">
-            <Label htmlFor="sound-fx-title">Title</Label>
+            <Label htmlFor="sound-fx-title">{t("soundFx.upload.titleLabel")}</Label>
             <Input
               id="sound-fx-title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="Door slam, thunder, sword clash…"
+              placeholder={t("soundFx.upload.titlePlaceholder")}
             />
           </div>
           <FileDropzone
             className="mt-4"
             accept="audio/mpeg,audio/ogg,audio/opus,audio/mp4,audio/x-m4a,audio/wav,audio/x-wav,audio/webm,.mp3,.ogg,.opus,.m4a,.wav,.webm"
             loading={upload.isPending}
-            loadingLabel="Uploading effect…"
-            label="Drop an audio file here, or click to browse"
-            hint="MP3, OGG, Opus, M4A, WAV, or WebM · up to 40 MB"
+            loadingLabel={t("soundFx.upload.uploading")}
+            label={t("soundFx.upload.dropLabel")}
+            hint={t("soundFx.upload.dropHint")}
             onFiles={(files) => {
               const file = files[0];
               if (!file) return;
               if (!title.trim()) {
-                toast.error("Enter a sound effect title first.");
+                toast.error(t("soundFx.upload.enterTitleFirst"));
                 return;
               }
               upload.mutate(file);
@@ -171,19 +174,19 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
           />
           <div className="mt-4 flex flex-wrap gap-2">
             <Button type="button" variant="outline" size="sm" onClick={downloadPack}>
-              <Download className="mr-1 h-4 w-4" /> Modelo de Sound FX (ZIP)
+              <Download className="mr-1 h-4 w-4" /> {t("soundFx.downloadPack")}
             </Button>
             <Button type="button" variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-              <Upload className="mr-1 h-4 w-4" /> Importar ZIP
+              <Upload className="mr-1 h-4 w-4" /> {t("soundFx.importZip")}
             </Button>
             <ImportDialog
               open={importOpen}
               onOpenChange={setImportOpen}
-              title="Importar Sound FX"
-              description="Solte o ZIP com o sound-fx.json e os arquivos de áudio. Baixe o modelo para ver a estrutura."
+              title={t("soundFx.importDialog.title")}
+              description={t("soundFx.importDialog.description")}
               accept=".zip,application/zip"
-              label="Drop the Sound FX ZIP here, or click to browse"
-              hint="ZIP com sound-fx.json e a pasta sounds/"
+              label={t("soundFx.importDialog.label")}
+              hint={t("soundFx.importDialog.hint")}
               run={importPackFile}
             />
             {exportTask.node}
@@ -192,10 +195,10 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
       ) : null}
       {isGm && selected.length ? (
         <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-          <p className="text-sm text-muted-foreground">{selected.length} selected</p>
+          <p className="text-sm text-muted-foreground">{t("soundFx.selectedCount", { count: selected.length })}</p>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => setSelected([])}>
-              Clear selection
+              {t("soundFx.clearSelection")}
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -205,22 +208,22 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                   size="sm"
                   disabled={removeSelected.isPending}
                 >
-                  <Trash2 className="mr-1 h-4 w-4" /> Remove selected
+                  <Trash2 className="mr-1 h-4 w-4" /> {t("soundFx.removeSelected")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>
-                    Remove {selected.length} sound effect{selected.length === 1 ? "" : "s"}?
+                    {t("soundFx.removeSelectedConfirmTitle", { count: selected.length })}
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    The selected files will be permanently removed.
+                    {t("soundFx.removeSelectedConfirmBody")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
                   <AlertDialogAction onClick={() => removeSelected.mutate()}>
-                    Remove
+                    {tc("actions.remove")}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -293,7 +296,7 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                 className={`flex items-center gap-3 p-3 transition-colors ${isDragging ? "opacity-40" : ""} ${isOver ? "bg-accent/60" : ""}`}
               >
                 {isGm ? (
-                  <span className="cursor-grab text-muted-foreground" aria-label="Drag to reorder">
+                  <span className="cursor-grab text-muted-foreground" aria-label={t("soundFx.dragAria")}>
                     <GripVertical className="h-4 w-4" />
                   </span>
                 ) : null}
@@ -301,7 +304,7 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                   <Checkbox
                     checked={selected.includes(effect.id)}
                     onCheckedChange={(checked) => toggleSelected(effect.id, checked === true)}
-                    aria-label={`Select ${effect.title}`}
+                    aria-label={t("soundFx.selectAria", { title: effect.title })}
                   />
                 ) : null}
                 <Button
@@ -309,14 +312,14 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                   size="icon"
                   disabled={!isGm || trigger.isPending}
                   onClick={() => trigger.mutate(effect)}
-                  aria-label={`Play ${effect.title} for everyone`}
+                  aria-label={t("soundFx.playAria", { title: effect.title })}
                 >
                   <Play className="h-4 w-4 fill-current" />
                 </Button>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{effect.title}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {effect.file_name} · {Math.max(1, Math.ceil(effect.byte_size / 1024))} KB
+                    {t("soundFx.fileSize", { name: effect.file_name, size: Math.max(1, Math.ceil(effect.byte_size / 1024)) })}
                   </p>
                 </div>
                 {isGm ? (
@@ -327,22 +330,22 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                         variant="ghost"
                         size="icon"
                         className="text-destructive hover:text-destructive"
-                        aria-label={`Remove ${effect.title}`}
+                        aria-label={t("soundFx.removeAria", { title: effect.title })}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Remove this sound effect?</AlertDialogTitle>
+                        <AlertDialogTitle>{t("soundFx.removeConfirmTitle")}</AlertDialogTitle>
                         <AlertDialogDescription>
-                          {effect.title} will be permanently removed.
+                          {t("soundFx.removeConfirmBody", { title: effect.title })}
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
                         <AlertDialogAction onClick={() => remove.mutate(effect)}>
-                          Remove
+                          {tc("actions.remove")}
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -356,12 +359,12 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
         <div className="panel grid min-h-64 place-items-center p-8 text-center">
           <div>
             <AudioWaveform className="mx-auto h-8 w-8 text-muted-foreground" />
-            <p className="mt-3 text-sm text-muted-foreground">No sound effects yet.</p>
+            <p className="mt-3 text-sm text-muted-foreground">{t("soundFx.empty")}</p>
           </div>
         </div>
       )}
       {!isGm && orderedEffects.length ? (
-        <p className="text-xs text-muted-foreground">Sound effects are triggered by the GM.</p>
+        <p className="text-xs text-muted-foreground">{t("soundFx.gmControlled")}</p>
       ) : null}
     </div>
   );

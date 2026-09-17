@@ -1,0 +1,50 @@
+{
+  "grid": {
+    "zoom": "Zoom {{value}}%",
+    "resetView": "Redefinir visualização",
+    "distance": "Distância: {{distance}}",
+    "measureHint": "Clique em uma célula inicial e depois mova.",
+    "fogHint": "Clique nas células para ocultá-las ou revelá-las para os jogadores.",
+    "defaultTokenLabel": "Token"
+  },
+  "token": {
+    "hidden": "oculto"
+  },
+  "panel": {
+    "noMapGm": "Ainda não há mapa de batalha. Crie um e adicione uma imagem de fundo.",
+    "noMapPlayer": "O mestre ainda não compartilhou um mapa de batalha.",
+    "newMap": "Novo mapa",
+    "map": "Mapa",
+    "move": "Mover",
+    "measure": "Medir",
+    "fog": "Névoa",
+    "tokens3d": "Tokens 3D",
+    "playersCanSee": "Jogadores podem ver",
+    "deleteMap": "Excluir mapa",
+    "name": "Nome",
+    "grid": "Grade",
+    "gridSquare": "Quadrada",
+    "gridHex": "Hexagonal",
+    "gridNone": "Nenhuma",
+    "cellSize": "Tamanho da célula (px)",
+    "offset": "Deslocamento X / Y",
+    "distancePerCell": "Distância por célula",
+    "unit": "Unidade",
+    "uploadingImage": "Enviando…",
+    "dropMapImage": "Solte uma imagem de mapa aqui (PNG, JPEG, WebP, AVIF)",
+    "addToken": "Adicionar token",
+    "pickToken": "Escolha um personagem, NPC ou marcador",
+    "npcSuffix": "{{name}} (NPC)",
+    "blankMarker": "Marcador em branco",
+    "allPlaced": "Todos os personagens e NPCs já estão na grade.",
+    "label": "Rótulo",
+    "size": "Tamanho (células)",
+    "hiddenFromPlayers": "Oculto dos jogadores",
+    "removeToken": "Remover token",
+    "mapImageUpdated": "Imagem do mapa atualizada",
+    "deleteMapTitle": "Excluir este mapa?",
+    "deleteMapDescription": "O mapa e todos os tokens nele serão removidos para toda a mesa.",
+    "marker": "Marcador",
+    "newMapName": "Mapa {{number}}"
+  }
+}

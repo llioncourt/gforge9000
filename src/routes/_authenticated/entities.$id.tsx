@@ -31,7 +31,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { kindDef, RELATIONSHIP_TYPES, VISIBILITIES } from "@/lib/entity-kinds";
+import {
+  fieldLabelKey,
+  kindDef,
+  kindLabelKey,
+  optionLabelKey,
+  relationshipLabelKey,
+  RELATIONSHIP_TYPES,
+  statusLabelKey,
+  VISIBILITIES,
+} from "@/lib/entity-kinds";
 import {
   createRelationship,
   dataValue,
@@ -57,6 +66,7 @@ import { FileDropzone } from "@/components/ui/FileDropzone";
 import { LibraryImagePicker } from "@/components/lore/library-image-picker";
 import { entityImageUrl } from "@/lib/entity-image";
 import { portraitInitials, removePortrait, uploadPortrait } from "@/lib/portrait";
+import { useT, useFormatters } from "@/i18n/hooks";
 
 export const Route = createFileRoute("/_authenticated/entities/$id")({
   staticData: { sitemap: false },
@@ -86,6 +96,9 @@ function EntityPage() {
   const { user } = useSession();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useT("lore");
+  const { t: tc } = useT("common");
+  const f = useFormatters();
 
   const entity = useQuery({ queryKey: ["entity", id], queryFn: () => getEntity(id) });
   const campaignId = entity.data?.campaign_id;
@@ -154,7 +167,7 @@ function EntityPage() {
       await queryClient.invalidateQueries({ queryKey: ["entity", id] });
       await queryClient.invalidateQueries({ queryKey: ["entity-photo"] });
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
-      toast.success("Photo updated.");
+      toast.success(t("entityPage.toasts.photoUpdated"));
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -169,7 +182,7 @@ function EntityPage() {
       await queryClient.invalidateQueries({ queryKey: ["entity", id] });
       await queryClient.invalidateQueries({ queryKey: ["entity-photo"] });
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
-      toast.success("Image linked from the campaign library.");
+      toast.success(t("entityPage.toasts.imageLinked"));
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -237,7 +250,7 @@ function EntityPage() {
       }),
     onSuccess: async (row) => {
       setForm(row);
-      toast.success("Version restored");
+      toast.success(t("entityPage.toasts.versionRestored"));
       await queryClient.invalidateQueries({ queryKey: ["entity", id] });
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", row.campaign_id] });
     },
@@ -247,7 +260,7 @@ function EntityPage() {
   const remove = useMutation({
     mutationFn: () => deleteEntity(id),
     onSuccess: async () => {
-      toast.success("Entry deleted");
+      toast.success(t("entityPage.toasts.entryDeleted"));
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
       if (campaignId) navigate({ to: "/campaigns/$id", params: { id: campaignId } });
     },
@@ -279,7 +292,7 @@ function EntityPage() {
   const toggleGrant = useMutation({
     mutationFn: async (userId: string) => {
       const row = entity.data;
-      if (!row) throw new Error("Record not loaded");
+      if (!row) throw new Error(t("entityPage.errors.recordNotLoaded"));
       const existing = (grants.data ?? []).find((g) => g.user_id === userId);
       if (existing) {
         const remaining = (grants.data ?? []).filter((g) => g.id !== existing.id).length;
@@ -289,13 +302,13 @@ function EntityPage() {
           remainingGrants: remaining,
         });
         return result.demoted
-          ? "Reveal removed — record is GM only again"
-          : "Reveal removed";
+          ? t("entityPage.toasts.revealRemovedDemoted")
+          : t("entityPage.toasts.revealRemoved");
       }
       const result = await revealEntityToPlayer({ entity: row, userId, gmId: user!.id });
-      if (result.alreadyPublic) return "Revealed — this record was already visible to every player";
-      if (result.promotedTo) return "Revealed (visibility set to “Selected players”)";
-      return "Revealed to the player";
+      if (result.alreadyPublic) return t("entityPage.toasts.revealedAlreadyPublic");
+      if (result.promotedTo) return t("entityPage.toasts.revealedPromoted");
+      return t("entityPage.toasts.revealedToPlayer");
     },
     onSuccess: async (message) => {
       toast.success(message);
@@ -307,7 +320,7 @@ function EntityPage() {
   });
 
   const nameOf = (entityId: string) =>
-    (siblings.data ?? []).find((row) => row.id === entityId)?.name ?? "Unknown";
+    (siblings.data ?? []).find((row) => row.id === entityId)?.name ?? t("entityPage.unknownEntity");
 
   const links = (relationships.data ?? []).filter(
     (row) => row.source_id === id || row.target_id === id,
@@ -348,7 +361,10 @@ function EntityPage() {
     <div className="space-y-6">
       <PageHeader
         title={form.name}
-        description={`${def.label} · ${campaign.data?.name ?? "Campaign"}`}
+        description={t("entityPage.headerDescription", {
+          kind: t(kindLabelKey(entity.data?.kind ?? "CUSTOM")),
+          campaign: campaign.data?.name ?? t("entityPage.defaultCampaignName"),
+        })}
         actions={
           <div className="flex items-center gap-2">
             {campaignId ? (
@@ -358,7 +374,7 @@ function EntityPage() {
                   params={{ id: campaignId }}
                   search={{ tab: (from ?? backTab) as never }}
                 >
-                  <ArrowLeft className="mr-2 size-4" /> Campaign
+                  <ArrowLeft className="mr-2 size-4" /> {t("entityPage.backToCampaign")}
                 </Link>
               </Button>
             ) : null}
@@ -366,20 +382,21 @@ function EntityPage() {
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive">
-                    <Trash2 className="mr-2 size-4" /> Delete
+                    <Trash2 className="mr-2 size-4" /> {t("entityPage.deleteDialog.trigger")}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
+                    <AlertDialogTitle>{t("entityPage.deleteDialog.title")}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      The entry, its relationships and its revision history are removed for
-                      everyone in this campaign. This cannot be undone.
+                      {t("entityPage.deleteDialog.description")}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => remove.mutate()}>Delete</AlertDialogAction>
+                    <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => remove.mutate()}>
+                      {t("entityPage.deleteDialog.confirm")}
+                    </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -390,17 +407,17 @@ function EntityPage() {
 
       <Tabs defaultValue="overview">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="links">Relationships</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-          {isGm ? <TabsTrigger value="reveals">Reveals</TabsTrigger> : null}
+          <TabsTrigger value="overview">{t("entityPage.tabs.overview")}</TabsTrigger>
+          <TabsTrigger value="details">{t("entityPage.tabs.details")}</TabsTrigger>
+          <TabsTrigger value="links">{t("entityPage.tabs.links")}</TabsTrigger>
+          <TabsTrigger value="history">{t("entityPage.tabs.history")}</TabsTrigger>
+          {isGm ? <TabsTrigger value="reveals">{t("entityPage.tabs.reveals")}</TabsTrigger> : null}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 pt-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="entity-name">Name</Label>
+              <Label htmlFor="entity-name">{t("entityPage.fields.name")}</Label>
               <Input
                 id="entity-name"
                 value={form.name}
@@ -410,7 +427,7 @@ function EntityPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="entity-status">Status</Label>
+              <Label htmlFor="entity-status">{t("entityPage.fields.status")}</Label>
               <Select
                 value={form.status}
                 disabled={!canEdit}
@@ -425,7 +442,7 @@ function EntityPage() {
                 <SelectContent>
                   {def.statuses.map((status) => (
                     <SelectItem key={status} value={status}>
-                      {status}
+                      {t(statusLabelKey(form.kind, status))}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -433,7 +450,7 @@ function EntityPage() {
             </div>
             {isGm ? (
               <div className="space-y-2">
-                <Label htmlFor="entity-visibility">Visibility</Label>
+                <Label htmlFor="entity-visibility">{t("entityPage.fields.visibility")}</Label>
                 <Select
                   value={form.visibility}
                   onValueChange={(value) => {
@@ -455,7 +472,7 @@ function EntityPage() {
               </div>
             ) : null}
             <div className="space-y-2">
-              <Label htmlFor="entity-tags">Tags</Label>
+              <Label htmlFor="entity-tags">{t("entityPage.fields.tags")}</Label>
               <Input
                 id="entity-tags"
                 value={form.tags.join(", ")}
@@ -475,14 +492,14 @@ function EntityPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Image</Label>
+              <Label>{t("entityPage.fields.image")}</Label>
               {entityImagePath ? (
                 <div className="flex items-start gap-3">
                   {photoUrl.data ? (
                     <div className="relative h-32 w-32">
                       <ImageZoom
                         src={photoUrl.data}
-                        alt={`${form.name} image`}
+                        alt={t("entityPage.image.alt", { name: form.name })}
                         onError={() => setOwnImageBroken(true)}
                         className="h-32 w-32 rounded-lg border"
                       />
@@ -491,14 +508,14 @@ function EntityPage() {
                           variant="secondary"
                           className="pointer-events-none absolute top-1 left-1 shadow"
                         >
-                          From Library
+                          {t("entityPage.image.fromLibrary")}
                         </Badge>
                       ) : !ownImagePath && inheritedPortrait ? (
                         <Badge
                           variant="secondary"
                           className="pointer-events-none absolute top-1 left-1 shadow"
                         >
-                          From Char
+                          {t("entityPage.image.fromChar")}
                         </Badge>
                       ) : null}
                     </div>
@@ -510,9 +527,9 @@ function EntityPage() {
                       <FileDropzone
                         compact
                         accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
-                        label="Drop a new image, or click to browse"
+                        label={t("entityPage.image.dropNew")}
                         loading={uploadPhoto.isPending}
-                        loadingLabel="Uploading image…"
+                        loadingLabel={t("entityPage.image.uploading")}
                         onFiles={(files) => {
                           const file = files[0];
                           if (file) uploadPhoto.mutate(file);
@@ -532,7 +549,7 @@ function EntityPage() {
                           onClick={() => removePhoto.mutate(form.image_url!)}
                           disabled={removePhoto.isPending}
                         >
-                          <Trash2 className="mr-2 size-4" /> Remove image
+                          <Trash2 className="mr-2 size-4" /> {t("entityPage.image.removeImage")}
                         </Button>
                       ) : null}
                     </div>
@@ -542,10 +559,12 @@ function EntityPage() {
                 <div className="space-y-2">
                   <FileDropzone
                     accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
-                    label={`Drop an image of ${form.name || "this entry"}, or click to browse`}
-                    hint="PNG, JPEG, WebP, GIF or AVIF up to 5 MB"
+                    label={t("entityPage.image.dropNewOf", {
+                      name: form.name || t("entityPage.image.thisEntry"),
+                    })}
+                    hint={t("entityPage.image.hint")}
                     loading={uploadPhoto.isPending}
-                    loadingLabel="Uploading image…"
+                    loadingLabel={t("entityPage.image.uploading")}
                     onFiles={(files) => {
                       const file = files[0];
                       if (file) uploadPhoto.mutate(file);
@@ -566,13 +585,13 @@ function EntityPage() {
               )}
               {!ownImagePath && inheritedPortrait ? (
                 <p className="text-muted-foreground text-xs">
-                  Showing the linked character sheet portrait. Drop an image to override it.
+                  {t("entityPage.image.inheritedNote")}
                 </p>
               ) : null}
             </div>
             {form.kind === "NPC" ? (
               <div className="space-y-2">
-                <Label htmlFor="entity-sheet">Character sheet (optional)</Label>
+                <Label htmlFor="entity-sheet">{t("entityPage.fields.characterSheet")}</Label>
                 <Select
                   value={dataValue(form, "character_sheet_id") || "none"}
                   disabled={!canEdit}
@@ -588,10 +607,10 @@ function EntityPage() {
                   }}
                 >
                   <SelectTrigger id="entity-sheet">
-                    <SelectValue placeholder="No linked sheet" />
+                    <SelectValue placeholder={t("entityPage.fields.noLinkedSheet")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No linked sheet</SelectItem>
+                    <SelectItem value="none">{t("entityPage.fields.noLinkedSheet")}</SelectItem>
                     {(campaignCharacters.data ?? []).map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.name}
@@ -606,7 +625,7 @@ function EntityPage() {
                       params={{ id: dataValue(form, "character_sheet_id") }}
                       search={{ from: `entity:${id}` }}
                     >
-                      <ExternalLink className="mr-2 size-4" /> Open character sheet
+                      <ExternalLink className="mr-2 size-4" /> {t("entityPage.image.openCharacterSheet")}
                     </Link>
                   </Button>
                 ) : null}
@@ -615,7 +634,7 @@ function EntityPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="entity-summary">Summary</Label>
+            <Label htmlFor="entity-summary">{t("entityPage.fields.summary")}</Label>
             <Textarea
               id="entity-summary"
               rows={2}
@@ -626,7 +645,7 @@ function EntityPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="entity-player">Player-facing description</Label>
+            <Label htmlFor="entity-player">{t("entityPage.fields.playerDescription")}</Label>
             <Textarea
               id="entity-player"
               rows={4}
@@ -638,7 +657,7 @@ function EntityPage() {
           </div>
           {isGm ? (
             <div className="space-y-2">
-              <Label htmlFor="entity-gm">GM notes</Label>
+              <Label htmlFor="entity-gm">{t("entityPage.fields.gmNotes")}</Label>
               <Textarea
                 id="entity-gm"
                 rows={4}
@@ -662,10 +681,10 @@ function EntityPage() {
               return (
                 <div key={field.key} className="space-y-2">
                   <Label htmlFor={`field-${field.key}`}>
-                    {field.label}
+                    {t(fieldLabelKey(form.kind, field.key))}
                     {field.gm ? (
                       <Badge variant="outline" className="ml-2">
-                        GM
+                        {t("entityPage.details.gmBadge")}
                       </Badge>
                     ) : null}
                   </Label>
@@ -680,12 +699,12 @@ function EntityPage() {
                       }}
                     >
                       <SelectTrigger id={`field-${field.key}`}>
-                        <SelectValue placeholder="Select" />
+                        <SelectValue placeholder={t("entityPage.details.selectPlaceholder")} />
                       </SelectTrigger>
                       <SelectContent>
                         {(field.options ?? []).map((option) => (
                           <SelectItem key={option} value={option}>
-                            {option}
+                            {t(optionLabelKey(form.kind, field.key, option))}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -702,7 +721,7 @@ function EntityPage() {
                     <Textarea
                       id={`field-${field.key}`}
                       rows={field.type === "list" ? 3 : 4}
-                      placeholder={field.type === "list" ? "One per line" : undefined}
+                      placeholder={field.type === "list" ? t("entityPage.details.onePerLine") : undefined}
                       value={value}
                       disabled={!canEdit}
                       onChange={(event) => setValue(event.target.value)}
@@ -718,7 +737,7 @@ function EntityPage() {
           {isGm ? (
             <div className="flex flex-wrap items-end gap-3">
               <div className="space-y-2">
-                <Label htmlFor="rel-type">Relationship</Label>
+                <Label htmlFor="rel-type">{t("entityPage.links.relationshipLabel")}</Label>
                 <Select value={relType} onValueChange={setRelType}>
                   <SelectTrigger id="rel-type" className="w-56">
                     <SelectValue />
@@ -726,17 +745,17 @@ function EntityPage() {
                   <SelectContent>
                     {RELATIONSHIP_TYPES.map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type.replaceAll("_", " ").toLowerCase()}
+                        {t(relationshipLabelKey(type))}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="rel-target">Target</Label>
+                <Label htmlFor="rel-target">{t("entityPage.links.targetLabel")}</Label>
                 <Select value={relTarget} onValueChange={setRelTarget}>
                   <SelectTrigger id="rel-target" className="w-64">
-                    <SelectValue placeholder="Pick an entry" />
+                    <SelectValue placeholder={t("entityPage.links.targetPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
                     {(siblings.data ?? [])
@@ -753,13 +772,13 @@ function EntityPage() {
                 onClick={() => addRelationship.mutate()}
                 disabled={!relTarget || addRelationship.isPending}
               >
-                <Plus className="mr-2 size-4" /> Link
+                <Plus className="mr-2 size-4" /> {t("entityPage.links.linkButton")}
               </Button>
             </div>
           ) : null}
 
           {links.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No relationships yet.</p>
+            <p className="text-muted-foreground text-sm">{t("entityPage.links.empty")}</p>
           ) : (
             <ul className="divide-y rounded-lg border">
               {links.map((row) => {
@@ -768,7 +787,7 @@ function EntityPage() {
                 return (
                   <li key={row.id} className="flex items-center gap-3 p-3">
                     <span className="text-muted-foreground text-xs uppercase">
-                      {outgoing ? "→" : "←"} {row.rel_type.replaceAll("_", " ").toLowerCase()}
+                      {outgoing ? "→" : "←"} {t(relationshipLabelKey(row.rel_type))}
                     </span>
                     <Link
                       to="/entities/$id"
@@ -782,7 +801,7 @@ function EntityPage() {
                         variant="ghost"
                         size="icon"
                         className="ml-auto"
-                        aria-label="Remove relationship"
+                        aria-label={t("entityPage.links.removeAria")}
                         onClick={() => dropRelationship.mutate(row.id)}
                       >
                         <Trash2 className="size-4" />
@@ -795,17 +814,17 @@ function EntityPage() {
           )}
 
           <div className="space-y-2">
-            <h2 className="text-sm font-semibold">Mentions</h2>
+            <h2 className="text-sm font-semibold">{t("entityPage.links.mentionsTitle")}</h2>
             {mentions.length === 0 ? (
               <p className="text-muted-foreground text-sm">
-                No other entry mentions “{form.name}” in its text.
+                {t("entityPage.links.mentionsEmpty", { name: form.name })}
               </p>
             ) : (
               <ul className="divide-y rounded-lg border">
                 {mentions.map((row) => (
                   <li key={row.id} className="flex items-center gap-3 p-3">
                     <span className="text-muted-foreground text-xs uppercase">
-                      {kindDef(row.kind).label}
+                      {t(kindLabelKey(row.kind))}
                     </span>
                     <Link
                       to="/entities/$id"
@@ -822,9 +841,7 @@ function EntityPage() {
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4 pt-4">
-          <p className="text-muted-foreground text-sm">
-            Each save stores the previous version. The 30 most recent are kept.
-          </p>
+          <p className="text-muted-foreground text-sm">{t("entityPage.history.intro")}</p>
           {revisions.isLoading ? (
             <div className="space-y-2">
               <Skeleton className="h-12 w-full" />
@@ -832,7 +849,7 @@ function EntityPage() {
               <Skeleton className="h-12 w-full" />
             </div>
           ) : (revisions.data ?? []).length === 0 ? (
-            <p className="text-muted-foreground text-sm">No earlier versions yet.</p>
+            <p className="text-muted-foreground text-sm">{t("entityPage.history.empty")}</p>
           ) : (
             <ul className="divide-y rounded-lg border">
               {(revisions.data ?? []).map((row) => {
@@ -844,29 +861,32 @@ function EntityPage() {
                         {String(snapshot["name"] ?? form.name)}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        {new Date(row.created_at).toLocaleString()}
-                        {row.label ? ` · ${row.label}` : ""}
+                        {row.label
+                          ? t("entityPage.history.entryDateLabel", {
+                              date: f.dateTime(row.created_at),
+                              label: row.label,
+                            })
+                          : f.dateTime(row.created_at)}
                       </p>
                     </div>
                     {canEdit ? (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="outline" size="sm" className="ml-auto">
-                            Restore
+                            {t("entityPage.history.restore")}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Restore this version?</AlertDialogTitle>
+                            <AlertDialogTitle>{t("entityPage.history.restoreDialogTitle")}</AlertDialogTitle>
                             <AlertDialogDescription>
-                              The current text is replaced by this saved version. The current
-                              version is kept in history.
+                              {t("entityPage.history.restoreDialogDescription")}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
                             <AlertDialogAction onClick={() => restore.mutate(snapshot)}>
-                              Restore
+                              {t("entityPage.history.restore")}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -882,13 +902,13 @@ function EntityPage() {
         {isGm ? (
           <TabsContent value="reveals" className="space-y-4 pt-4">
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Current visibility:</span>
+              <span className="text-muted-foreground">{t("entityPage.reveals.currentVisibility")}</span>
               <VisibilityBadge visibility={form.visibility} isGm={isGm} />
             </div>
             <p className="text-muted-foreground text-sm">
               {isPlayerVisible(form.visibility)
-                ? "This entry is already visible to every player in the campaign."
-                : "Revealing to a player switches this entry to “Selected players”, so only the players you pick below can see it."}
+                ? t("entityPage.reveals.alreadyVisible")
+                : t("entityPage.reveals.revealSwitchesNote")}
             </p>
             <ul className="divide-y rounded-lg border">
               {(members.data ?? [])
@@ -906,7 +926,7 @@ function EntityPage() {
                       className="ml-auto"
                       onClick={() => toggleGrant.mutate(member.user_id)}
                     >
-                      {granted ? "Revealed" : "Reveal"}
+                      {granted ? t("entityPage.reveals.revealed") : t("entityPage.reveals.reveal")}
                     </Button>
                   </li>
                 );

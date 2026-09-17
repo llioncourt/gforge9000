@@ -1,0 +1,115 @@
+{
+  "brand": {
+    "name": "Character Forge",
+    "tagline": "GURPS 4e compatible"
+  },
+  "links": {
+    "dashboard": "Dashboard",
+    "characters": "Characters",
+    "campaigns": "Campaigns",
+    "library": "Library",
+    "packs": "Packs",
+    "settings": "Settings",
+    "legal": "Unofficial companion · Legal & content policy",
+    "home": "Home"
+  },
+  "sidebar": {
+    "open": "Open navigation",
+    "close": "Close navigation",
+    "closeOverlay": "Close navigation overlay",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "toggle": "Toggle sidebar",
+    "title": "Sidebar",
+    "description": "Displays the mobile sidebar."
+  },
+  "header": {
+    "search": "Search ANYTHING!",
+    "roll": "Roll",
+    "rollDice": "Roll dice",
+    "diceTray": "Dice tray",
+    "signOut": "Sign out",
+    "accountMenu": "Account menu",
+    "notifications": "Notifications"
+  },
+  "account": {
+    "yourAccount": "Your account",
+    "profile": "Profile",
+    "fallbackName": "Account"
+  },
+  "footer": {
+    "disclaimer": "Universal Character Forge is an unofficial, independent companion tool. GURPS is a trademark of Steve Jackson Games Incorporated; this project is not affiliated with, endorsed or sponsored by Steve Jackson Games. No rulebook text, tables or artwork are reproduced here.",
+    "policyLink": "Read the full policy"
+  },
+  "update": {
+    "message": "A new version of the app is available.",
+    "action": "Refresh now"
+  },
+  "commandPalette": {
+    "typeToSearch": "Type at least two letters to search.",
+    "searching": "Searching…",
+    "noResults": "Nothing matched.",
+    "actions": "Actions",
+    "newCharacter": "New character",
+    "rollQuickDice": "Roll 3d6 vs 10",
+    "campaigns": "Campaigns"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "empty": "Nothing new yet.",
+    "enablePrompt": "Get an alert on your device when the GM reveals something.",
+    "enable": "Enable",
+    "openInNewTab": "Open the app in its own tab to turn on device alerts.",
+    "markAsRead": "Mark as read",
+    "markAsUnread": "Mark as unread",
+    "delete": "Delete notification",
+    "alertsEnabledTitle": "Alerts enabled",
+    "alertsEnabledBody": "You will be notified when the GM reveals something.",
+    "alertsBlocked": "Alerts blocked. Allow notifications for this site in your browser settings.",
+    "timeAgoSeconds": "{{count}}s ago",
+    "timeAgoMinutes": "{{count}}m ago",
+    "timeAgoHours": "{{count}}h ago",
+    "timeAgoDays": "{{count}}d ago"
+  },
+  "profile": {
+    "title": "Profile",
+    "displayName": "Display name",
+    "aboutYou": "About you",
+    "email": "Email",
+    "photo": "Profile photo",
+    "photoAlt": "Your profile photo",
+    "dropPhotoHint": "Drop an image here — it is converted to AVIF automatically",
+    "uploadingPhoto": "Uploading photo…",
+    "removePhoto": "Remove photo",
+    "save": "Save profile",
+    "photoUpdated": "Photo updated.",
+    "photoRemoved": "Photo removed.",
+    "saved": "Profile saved.",
+    "lightTheme": "Light theme"
+  },
+  "search": {
+    "groups": {
+      "campaigns": "Campaigns",
+      "characters": "Characters",
+      "worldLore": "World & lore",
+      "soundFx": "Sound FX",
+      "soundtrack": "Soundtrack",
+      "videos": "Videos",
+      "notesHandouts": "Notes & handouts",
+      "campaignLibrary": "Campaign library",
+      "battleMaps": "Battle maps",
+      "rulesLibrary": "Rules library",
+      "contentPacks": "Content packs",
+      "diceRolls": "Dice rolls"
+    },
+    "sublabels": {
+      "album": "Album",
+      "track": "Track",
+      "total": "Total {{total}}"
+    },
+    "labels": {
+      "untitled": "Untitled"
+    }
+  }
+}

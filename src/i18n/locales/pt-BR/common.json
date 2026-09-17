@@ -1,0 +1,161 @@
+{
+  "app": {
+    "name": "Universal Character Forge",
+    "shortName": "Char Forge"
+  },
+  "actions": {
+    "add": "Adicionar",
+    "apply": "Aplicar",
+    "back": "Voltar",
+    "cancel": "Cancelar",
+    "clear": "Limpar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "copy": "Copiar",
+    "create": "Criar",
+    "delete": "Excluir",
+    "disable": "Desativar",
+    "done": "Concluir",
+    "download": "Baixar",
+    "duplicate": "Duplicar",
+    "edit": "Editar",
+    "enable": "Ativar",
+    "export": "Exportar",
+    "filter": "Filtrar",
+    "import": "Importar",
+    "next": "Avançar",
+    "open": "Abrir",
+    "pause": "Pausar",
+    "play": "Reproduzir",
+    "preview": "Pré-visualizar",
+    "previous": "Voltar",
+    "print": "Imprimir",
+    "refresh": "Atualizar",
+    "remove": "Remover",
+    "rename": "Renomear",
+    "reset": "Redefinir",
+    "retry": "Tentar novamente",
+    "save": "Salvar",
+    "search": "Buscar",
+    "select": "Selecionar",
+    "selectAll": "Selecionar tudo",
+    "send": "Enviar",
+    "share": "Compartilhar",
+    "sort": "Ordenar",
+    "submit": "Enviar",
+    "upload": "Enviar arquivo",
+    "view": "Ver",
+    "zoom": "Ampliar"
+  },
+  "labels": {
+    "actions": "Ações",
+    "all": "Todos",
+    "created": "Criado em",
+    "date": "Data",
+    "description": "Descrição",
+    "details": "Detalhes",
+    "kind": "Tipo",
+    "language": "Idioma",
+    "name": "Nome",
+    "none": "Nenhum",
+    "notes": "Notas",
+    "optional": "Opcional",
+    "required": "Obrigatório",
+    "status": "Status",
+    "tags": "Etiquetas",
+    "theme": "Tema",
+    "title": "Título",
+    "type": "Tipo",
+    "untitled": "Sem título",
+    "updated": "Atualizado em",
+    "visibility": "Visibilidade"
+  },
+  "states": {
+    "empty": "Nada por aqui ainda",
+    "error": "Algo deu errado",
+    "loading": "Carregando…",
+    "noResults": "Nenhum resultado encontrado",
+    "saving": "Salvando…",
+    "saved": "Salvo",
+    "uploading": "Enviando…"
+  },
+  "messages": {
+    "confirmDeleteTitle": "Excluir {{name}}?",
+    "confirmDeleteBody": "Esta ação não pode ser desfeita.",
+    "copied": "Copiado para a área de transferência",
+    "deleted": "{{name}} foi excluído",
+    "saveFailed": "Não foi possível salvar: {{error}}",
+    "saved": "Alterações salvas",
+    "unsavedChanges": "Há alterações não salvas"
+  },
+  "counts": {
+    "items_one": "{{count}} item",
+    "items_other": "{{count}} itens",
+    "selected_one": "{{count}} selecionado",
+    "selected_other": "{{count}} selecionados",
+    "results_one": "{{count}} resultado",
+    "results_other": "{{count}} resultados"
+  },
+  "pagination": {
+    "page": "Página {{page}} de {{total}}",
+    "next": "Próxima página",
+    "previous": "Página anterior",
+    "perPage": "Por página",
+    "nav": "Paginação",
+    "goToPrevious": "Ir para a página anterior",
+    "goToNext": "Ir para a próxima página",
+    "morePages": "Mais páginas"
+  },
+  "forms": {
+    "validation": {
+      "required": "Campo obrigatório",
+      "email": "Informe um e-mail válido",
+      "min": "Use pelo menos {{count}} caracteres",
+      "max": "Use no máximo {{count}} caracteres",
+      "number": "Informe um número válido",
+      "positive": "Informe um valor maior que zero"
+    }
+  },
+  "upload": {
+    "dropzone": "Arraste um arquivo aqui ou clique para escolher",
+    "dropzoneActive": "Solte o arquivo para enviar",
+    "tooLarge": "Arquivo muito grande (máx. {{size}})",
+    "invalidType": "Tipo de arquivo não suportado",
+    "failed": "Falha no envio: {{error}}",
+    "success": "Envio concluído",
+    "importing": "Importando…"
+  },
+  "language": {
+    "label": "Idioma",
+    "change": "Mudar idioma",
+    "current": "Idioma atual: {{language}}"
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Escuro"
+  },
+  "a11y": {
+    "zoomImage": "Ampliar {{name}}",
+    "previousSlide": "Slide anterior",
+    "nextSlide": "Próximo slide"
+  },
+  "transfer": {
+    "starting": "Iniciando…",
+    "readingFile": "Lendo arquivo…",
+    "importAnother": "Importar outro",
+    "progress": "Progresso",
+    "genericError": "Algo deu errado.",
+    "importFailed": "Falha na importação."
+  },
+  "pageHeader": {
+    "more": "mais…",
+    "less": "menos…"
+  },
+  "aiGuide": {
+    "help": "Forneça este arquivo Markdown e o PDF de origem a uma IA. Ele explica exatamente como gerar um arquivo de importação válido para este importador.",
+    "download": "Baixar guia de conversão por IA (.md)"
+  },
+  "dropzone": {
+    "default": "Solte um arquivo aqui ou clique para escolher"
+  }
+}

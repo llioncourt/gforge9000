@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { deleteEntity } from "@/lib/lore";
+import { useT } from "@/i18n/hooks";
 
 export function EntityDeleteButton({
   campaignId,
@@ -24,6 +25,8 @@ export function EntityDeleteButton({
   entityId: string;
   name: string;
 }) {
+  const { t } = useT("lore");
+  const { t: tc } = useT("common");
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
@@ -31,7 +34,7 @@ export function EntityDeleteButton({
     mutationFn: () => deleteEntity(entityId),
     onSuccess: async () => {
       setOpen(false);
-      toast.success("Entry deleted.");
+      toast.success(t("entityDelete.toastDeleted"));
       await queryClient.invalidateQueries({ queryKey: ["lore-entities", campaignId] });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -43,7 +46,7 @@ export function EntityDeleteButton({
         type="button"
         size="icon"
         variant="ghost"
-        aria-label={`Delete ${name}`}
+        aria-label={t("entityDelete.deleteAria", { name })}
         className="text-muted-foreground hover:text-destructive size-7 shrink-0"
         onClick={(event) => {
           event.preventDefault();
@@ -56,16 +59,15 @@ export function EntityDeleteButton({
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
+            <AlertDialogTitle>{t("entityDelete.confirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {name} and its links will be permanently removed from the campaign. This cannot be
-              undone.
+              {t("entityDelete.confirmDescription", { name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={() => remove.mutate()} disabled={remove.isPending}>
-              Delete
+              {tc("actions.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

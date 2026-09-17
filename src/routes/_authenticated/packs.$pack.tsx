@@ -59,6 +59,7 @@ import {
 import { packFromSlug, packSlug } from "@/lib/pack-slug";
 import { slugify } from "@/lib/portable";
 import { useSession } from "@/hooks/use-session";
+import { useT } from "@/i18n/hooks";
 
 export const Route = createFileRoute("/_authenticated/packs/$pack")({
   staticData: { sitemap: false },
@@ -85,6 +86,8 @@ function PackDetailPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { user } = useSession();
+  const { t } = useT("packs");
+  const { t: tc } = useT("common");
 
   const library = useQuery({ queryKey: ["library"], queryFn: listLibrary });
   const packsQuery = useQuery({ queryKey: ["content-packs"], queryFn: listContentPacks });
@@ -114,7 +117,7 @@ function PackDetailPage() {
   const rename = useMutation({
     mutationFn: async () => {
       const target = nextName.trim();
-      if (!target) throw new Error("Give the pack a name.");
+      if (!target) throw new Error(t("renameDialog.errorNameRequired"));
       if (meta) await renameContentPack(meta.id, packName, target);
       else {
         const created = await createContentPack({ name: target });
@@ -125,7 +128,7 @@ function PackDetailPage() {
     onSuccess: (target) => {
       queryClient.invalidateQueries();
       setRenameOpen(false);
-      toast.success("Pack renamed.");
+      toast.success(t("toasts.renamed"));
       navigate({ to: "/packs/$pack", params: { pack: packSlug(target) }, replace: true });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -138,7 +141,7 @@ function PackDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
-      toast.success("Pack deleted. Anything already on a sheet is now custom.");
+      toast.success(t("toasts.deletedKeepsCustom"));
       navigate({ to: "/packs" });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -199,19 +202,19 @@ function PackDetailPage() {
         to="/packs"
         className="no-print mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> All packs
+        <ArrowLeft className="h-4 w-4" /> {t("allPacksLink")}
       </Link>
       <PageHeader
         title={group.label}
-        description={meta?.description ?? "Content pack"}
+        description={meta?.description ?? t("detail.defaultContentPack")}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               disabled={exportTask.busy}
               onClick={() =>
-                void exportTask.run("Exporting pack", async (report) => {
-                  report("Building file…", 40);
+                void exportTask.run(t("export.task"), async (report) => {
+                  report(t("export.building"), 40);
                   const contents = JSON.stringify(
                     toPortablePack(
                       {
@@ -227,13 +230,13 @@ function PackDetailPage() {
                     null,
                     2,
                   );
-                  report("Downloading…", 85);
+                  report(t("export.downloading"), 85);
                   download(`${slugify(group.label)}-pack.json`, contents);
-                  return `Exported ${rows.length} entries from “${packName}”.`;
+                  return t("export.done", { count: rows.length, name: packName });
                 })
               }
             >
-              <Download className="mr-2 h-4 w-4" /> Export pack
+              <Download className="mr-2 h-4 w-4" /> {t("actions.exportPack")}
             </Button>
             {mine ? (
               <>
@@ -244,10 +247,10 @@ function PackDetailPage() {
                     setRenameOpen(true);
                   }}
                 >
-                  <Pencil className="mr-2 h-4 w-4" /> Rename
+                  <Pencil className="mr-2 h-4 w-4" /> {t("actions.rename")}
                 </Button>
                 <Button variant="outline" onClick={() => setConfirmDelete(true)}>
-                  <Trash2 className="mr-2 h-4 w-4" /> Delete pack
+                  <Trash2 className="mr-2 h-4 w-4" /> {t("actions.deletePack")}
                 </Button>
               </>
             ) : null}
@@ -257,27 +260,27 @@ function PackDetailPage() {
 
       <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="panel p-4">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Provenance</p>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground">{t("detail.provenance")}</p>
           <p className="mt-2 text-sm">
             {group.sources.length
               ? group.sources.join(" · ")
-              : (meta?.source_label ?? "User content")}
+              : (meta?.source_label ?? t("detail.userContent"))}
             {meta?.source_edition ? ` · ${meta.source_edition}` : ""} ·{" "}
             {meta?.source_type ?? "user"} content
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {group.total} entr{group.total === 1 ? "y" : "ies"} ·{" "}
-            {group.kinds.map((k) => `${k.count} ${k.kind}`).join(", ") || "no entries yet"} ·
+            {t("detail.entries", { count: group.total })} ·{" "}
+            {group.kinds.map((k) => `${k.count} ${k.kind}`).join(", ") || t("detail.noEntriesYet")} ·
             visibility {group.visibilities.join(", ") || (meta?.visibility ?? "private")}
           </p>
         </div>
 
         <div className="panel p-4">
           <p className="text-xs uppercase tracking-widest text-muted-foreground">
-            Enabled in campaigns you run
+            {t("detail.enabledInCampaigns")}
           </p>
           {gmCampaigns.length === 0 ? (
-            <p className="mt-2 text-sm text-muted-foreground">You do not run any campaign yet.</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("detail.noCampaigns")}</p>
           ) : (
             <ul className="mt-2 space-y-2">
               {gmCampaigns.map((c) => {
@@ -291,13 +294,13 @@ function PackDetailPage() {
                       {c.name}
                       {allowed.length === 0 ? (
                         <span className="block text-[11px] text-muted-foreground">
-                          All packs allowed
+                          {t("detail.allPacksAllowed")}
                         </span>
                       ) : null}
                     </span>
                     <Switch
                       checked={on}
-                      aria-label={`Enable ${packName} in ${c.name}`}
+                      aria-label={t("detail.enableAria", { pack: packName, campaign: c.name })}
                       onCheckedChange={(v) => toggleCampaign.mutate({ id: c.id, enabled: v })}
                     />
                   </li>
@@ -311,15 +314,15 @@ function PackDetailPage() {
       {mine ? (
         <div className="panel mb-6 flex flex-wrap items-end gap-3 p-4">
           <div className="space-y-1.5">
-            <Label htmlFor="add-entry">Add a library entry to this pack</Label>
+            <Label htmlFor="add-entry">{t("detail.addEntryLabel")}</Label>
             <Select value={addId} onValueChange={setAddId}>
               <SelectTrigger id="add-entry" className="w-72">
-                <SelectValue placeholder="Choose an entry…" />
+                <SelectValue placeholder={t("detail.choosePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
                 {unpacked.length === 0 ? (
                   <SelectItem value="none" disabled>
-                    No other entries available
+                    {t("empty.noOtherEntries")}
                   </SelectItem>
                 ) : (
                   unpacked.map((e) => (
@@ -336,14 +339,14 @@ function PackDetailPage() {
             disabled={!addId || addId === "none" || moveEntry.isPending}
             onClick={() => moveEntry.mutate({ id: addId, to: packName })}
           >
-            Add to pack
+            {t("actions.addToPack")}
           </Button>
         </div>
       ) : null}
 
       {rows.length === 0 ? (
         <div className="panel p-10 text-center text-sm text-muted-foreground">
-          This pack has no entries yet. Add existing library entries above, or import a pack file.
+          {t("empty.noEntries")}
         </div>
       ) : (
         <div className="space-y-6">
@@ -382,7 +385,7 @@ function PackDetailPage() {
                         variant="ghost"
                         onClick={() => moveEntry.mutate({ id: e.id, to: DEFAULT_PACK_NAME })}
                       >
-                        Move to {DEFAULT_PACK_NAME}
+                        {t("actions.movePack", { pack: DEFAULT_PACK_NAME })}
                       </Button>
                     ) : null}
                   </li>
@@ -396,10 +399,10 @@ function PackDetailPage() {
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename pack</DialogTitle>
+            <DialogTitle>{t("renameDialog.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-1.5">
-            <Label htmlFor="rename-pack">Name</Label>
+            <Label htmlFor="rename-pack">{t("renameDialog.name")}</Label>
             <Input
               id="rename-pack"
               value={nextName}
@@ -408,10 +411,10 @@ function PackDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenameOpen(false)}>
-              Cancel
+              {tc("actions.cancel")}
             </Button>
             <Button onClick={() => rename.mutate()} disabled={rename.isPending}>
-              Rename
+              {t("renameDialog.rename")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -420,15 +423,14 @@ function PackDetailPage() {
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this pack?</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteDialog.confirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Every entry inside this pack is deleted with it. Anything already added to a character
-              stays on the sheet and becomes a custom entry.
+              {t("deleteDialog.confirmDescriptionDetail")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => remove.mutate()}>Delete pack</AlertDialogAction>
+            <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => remove.mutate()}>{t("actions.deletePack")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,0 +1,37 @@
+{
+  "page": {
+    "title": "Painel",
+    "description": "Tudo o que está na sua mesa agora.",
+    "newCharacter": "Novo personagem"
+  },
+  "stats": {
+    "characters": "Personagens",
+    "campaigns": "Campanhas",
+    "libraryEntries": "Itens da biblioteca",
+    "rollsLogged": "Rolagens registradas"
+  },
+  "empty": {
+    "title": "Nada forjado ainda",
+    "description": "Crie um personagem em branco para ver o motor de regras funcionando de ponta a ponta."
+  },
+  "sections": {
+    "recentCharacters": "Personagens recentes",
+    "recentRolls": "Rolagens recentes"
+  },
+  "character": {
+    "noConcept": "Nenhum conceito definido",
+    "techLevel": "NT {{level}}",
+    "npc": "NPC",
+    "points": "{{count}} pts"
+  },
+  "rolls": {
+    "vsTarget": "vs {{target}}",
+    "none": "Nenhuma rolagem registrada ainda.",
+    "outcome": {
+      "success": "Sucesso",
+      "failure": "Falha",
+      "critical success": "Sucesso crítico",
+      "critical failure": "Falha crítica"
+    }
+  }
+}

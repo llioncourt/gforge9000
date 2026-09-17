@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "i18n:check": "node scripts/i18n-check.mjs",
+    "i18n:scan": "node scripts/i18n-scan.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -61,6 +63,7 @@
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "fflate": "^0.8.3",
+    "i18next": "^26.4.2",
     "input-otp": "^1.4.2",
     "js-yaml": "^5.4.2",
     "lucide-react": "^0.575.0",
@@ -68,6 +71,7 @@
     "react-day-picker": "^9.14.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.71.2",
+    "react-i18next": "^17.0.14",
     "react-resizable-panels": "^4.6.5",
     "recharts": "^2.15.4",
     "sonner": "^2.0.7",

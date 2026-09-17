@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { entityImageUrl } from "@/lib/entity-image";
 import { portraitInitials } from "@/lib/portrait";
 import { ImageZoom } from "@/components/ui/image-zoom";
+import { useT } from "@/i18n/hooks";
 
 /** Small square preview of a lore entry's photo, used on cards. */
 export function EntityThumb({
@@ -18,6 +19,7 @@ export function EntityThumb({
   name: string;
   className?: string;
 }) {
+  const { t } = useT("lore");
   const [broken, setBroken] = useState(false);
   useEffect(() => setBroken(false), [path]);
   const effective = broken ? (fallbackPath ?? null) : (path ?? fallbackPath ?? null);
@@ -34,7 +36,7 @@ export function EntityThumb({
     return (
       <ImageZoom
         src={url.data}
-        alt={`${name} photo`}
+        alt={t("entityThumb.photoAlt", { name })}
         onError={() => setBroken(true)}
         className={base}
       />

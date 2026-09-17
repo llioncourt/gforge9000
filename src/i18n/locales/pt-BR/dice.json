@@ -1,0 +1,41 @@
+{
+  "tray": {
+    "title": "Bandeja de dados",
+    "expression": "Expressão",
+    "target": "Alvo (opcional)",
+    "label": "Rótulo",
+    "defaultLabel": "Rolagem manual",
+    "roll": "Rolar",
+    "reaction": "Reação",
+    "damage": "Dano",
+    "recordedNotice": "As rolagens feitas aqui são registradas nesta campanha para o mestre ver.",
+    "history": "Histórico da sessão",
+    "clear": "Limpar",
+    "noRolls": "Nenhuma rolagem ainda nesta sessão.",
+    "vsTarget": "vs {{target}}"
+  },
+  "overlay": {
+    "closeTray": "Fechar bandeja de dados",
+    "reducedMotion": "Modo de movimento reduzido: os dados são simulados sem animação.",
+    "loading": "Carregando dados…",
+    "rolling": "Rolando…",
+    "reroll": "Rolar de novo",
+    "close": "Fechar",
+    "vsTarget": "vs {{target}}",
+    "marginBy": "por {{margin}}"
+  },
+  "outcome": {
+    "critical success": "sucesso crítico",
+    "success": "sucesso",
+    "failure": "falha",
+    "critical failure": "falha crítica"
+  },
+  "toast": {
+    "plain": "{{total}} ({{dice}})",
+    "withTarget": "{{total}} vs {{target}} — {{outcome}} por {{margin}}",
+    "result": "{{label}}: {{detail}}"
+  },
+  "errors": {
+    "invalidExpression": "Não foi possível ler a expressão de dados \"{{expression}}\"."
+  }
+}

@@ -19,6 +19,8 @@ import { wipeAllMyData } from "@/lib/api";
 import { lovable } from "@/integrations/lovable/index";
 import { useSession } from "@/hooks/use-session";
 import { AUDIT_SUMMARY, RULES_AUDIT } from "@/rules/audit";
+import { useT } from "@/i18n/hooks";
+import { LanguageSelector } from "@/components/app/language-selector";
 
 const WIPE_INTENT_KEY = "ucf:wipe-intent";
 const WIPE_INTENT_TTL = 5 * 60 * 1000;
@@ -37,6 +39,8 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 function SettingsPage() {
+  const { t } = useT("settings");
+  const { t: tRules } = useT("rules");
   const { user } = useSession();
   const queryClient = useQueryClient();
 
@@ -65,10 +69,10 @@ function SettingsPage() {
       if (result.error) throw result.error;
       sessionStorage.removeItem(WIPE_INTENT_KEY);
       setVerified(true);
-      toast.success("Identity confirmed.");
+      toast.success(t("toasts.identityConfirmed"));
     } catch (e) {
       sessionStorage.removeItem(WIPE_INTENT_KEY);
-      toast.error(e instanceof Error ? e.message : "Could not confirm your identity.");
+      toast.error(e instanceof Error ? e.message : t("toasts.identityFailed"));
     } finally {
       setVerifying(false);
     }
@@ -80,30 +84,43 @@ function SettingsPage() {
       queryClient.clear();
       setWipeOpen(false);
       setVerified(false);
-      toast.success("Everything was deleted. Your account is still here.");
+      toast.success(t("toasts.wiped"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
     <div className="max-w-2xl">
-      <PageHeader title="Settings" description="Rules status and account data controls." />
+      <PageHeader title={t("page.title")} description={t("page.description")} />
 
       <div className="space-y-6">
         <section className="panel space-y-4 p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="font-display text-lg font-semibold">{t("language.title")}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t("language.description")}</p>
+            </div>
+            <LanguageSelector />
+          </div>
+        </section>
+
+        <section className="panel space-y-4 p-6">
           <div>
-            <h2 className="font-display text-lg font-semibold">Rules status</h2>
+            <h2 className="font-display text-lg font-semibold">{t("rulesStatus.title")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Every mechanic in the calculation engine, and how faithfully it is implemented.
-              Exact {AUDIT_SUMMARY.EXACT} · Configurable {AUDIT_SUMMARY.CONFIGURABLE} ·
-              Approximation {AUDIT_SUMMARY.APPROXIMATION} · Missing {AUDIT_SUMMARY.MISSING}
+              {t("rulesStatus.summary", {
+                exact: AUDIT_SUMMARY.EXACT,
+                configurable: AUDIT_SUMMARY.CONFIGURABLE,
+                approximation: AUDIT_SUMMARY.APPROXIMATION,
+                missing: AUDIT_SUMMARY.MISSING,
+              })}
             </p>
           </div>
           <ul className="divide-y divide-border text-sm">
             {RULES_AUDIT.map((rule) => (
               <li key={rule.id} className="flex flex-col gap-1 py-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-foreground">{rule.title}</span>
+                  <span className="font-medium text-foreground">{tRules(`audit.${rule.id}.title`)}</span>
                   <span
                     className={`rounded px-1.5 py-0.5 text-[11px] uppercase tracking-wide ${
                       rule.status === "EXACT"
@@ -113,10 +130,10 @@ function SettingsPage() {
                           : "bg-destructive/15 text-destructive"
                     }`}
                   >
-                    {rule.status}
+                    {tRules(`status.${rule.status}`)}
                   </span>
                 </div>
-                <p className="text-muted-foreground">{rule.notes}</p>
+                <p className="text-muted-foreground">{tRules(`audit.${rule.id}.notes`)}</p>
               </li>
             ))}
           </ul>
@@ -126,14 +143,8 @@ function SettingsPage() {
           <div className="flex items-start gap-3">
             <ShieldAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
             <div>
-              <h2 className="font-display text-lg font-semibold text-destructive">
-                Erase everything
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Deletes all your characters, campaigns, notes, library entries, packs and roll
-                history. Your account and sign-in stay. This cannot be undone, so you have to
-                confirm with your Google sign-in first.
-              </p>
+              <h2 className="font-display text-lg font-semibold text-destructive">{t("danger.title")}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t("danger.description")}</p>
             </div>
           </div>
           <Button
@@ -143,7 +154,7 @@ function SettingsPage() {
               setWipeOpen(true);
             }}
           >
-            Erase all my data
+            {t("danger.eraseButton")}
           </Button>
         </section>
       </div>
@@ -157,14 +168,13 @@ function SettingsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Erase everything in your account?</AlertDialogTitle>
+            <AlertDialogTitle>{t("wipeDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Characters, campaigns, notes, library entries, packs and roll history are deleted
-              permanently. Confirm with your Google sign-in ({user?.email}) to continue.
+              {t("wipeDialog.description", { email: user?.email })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={wipe.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={wipe.isPending}>{t("common:actions.cancel")}</AlertDialogCancel>
             {verified ? (
               <AlertDialogAction
                 onClick={(e) => {
@@ -175,12 +185,12 @@ function SettingsPage() {
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 {wipe.isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                Delete everything
+                {t("wipeDialog.deleteEverything")}
               </AlertDialogAction>
             ) : (
               <Button onClick={confirmWithGoogle} disabled={verifying}>
                 {verifying ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                Confirm with Google
+                {t("wipeDialog.confirmWithGoogle")}
               </Button>
             )}
           </AlertDialogFooter>

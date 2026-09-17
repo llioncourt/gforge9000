@@ -65,6 +65,7 @@ import { allowedPacksOf } from "@/lib/packs";
 import { buildSheet } from "@/rules";
 import { useSession } from "@/hooks/use-session";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
+import { useT } from "@/i18n/hooks";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
 
@@ -174,6 +175,8 @@ export const Route = createFileRoute("/_authenticated/campaigns/$id")({
 });
 
 function CampaignPage() {
+  const { t } = useT("campaigns");
+  const { t: tc } = useT("common");
   const { id } = Route.useParams();
   const { tab: tabParam, item: itemParam, sub: subParam } = Route.useSearch();
   const { user } = useSession();
@@ -254,7 +257,7 @@ function CampaignPage() {
       } as never),
     onSuccess: (row) => {
       queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
-      toast.success("NPC created.");
+      toast.success(t("page.npcCreated"));
       navigate({
         to: "/characters/$id",
         params: { id: row.id },
@@ -268,7 +271,7 @@ function CampaignPage() {
     mutationFn: (cid: string) => duplicateCharacter(cid),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
-      toast.success("Copy created.");
+      toast.success(t("page.copyCreated"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -278,7 +281,7 @@ function CampaignPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaign", id] });
       queryClient.invalidateQueries({ queryKey: ["members", id] });
-      toast.success("GM role transferred.");
+      toast.success(t("page.gmTransferred"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -288,7 +291,7 @@ function CampaignPage() {
     mutationFn: (userId: string) => removeMember(id, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["members", id] });
-      toast.success("Member removed from the campaign.");
+      toast.success(t("page.memberRemoved"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -313,7 +316,7 @@ function CampaignPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaign-characters", id] });
       queryClient.invalidateQueries({ queryKey: ["characters"] });
-      toast.success("Character ownership transferred.");
+      toast.success(t("page.ownershipTransferred"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -322,7 +325,7 @@ function CampaignPage() {
     mutationFn: (cid: string) => setCharacterCampaign(cid, id),
     onSuccess: () => {
       queryClient.invalidateQueries();
-      toast.success("Character submitted to the campaign.");
+      toast.success(t("page.characterSubmitted"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -331,7 +334,7 @@ function CampaignPage() {
     mutationFn: (cid: string) => setCharacterCampaign(cid, null),
     onSuccess: () => {
       queryClient.invalidateQueries();
-      toast.success("Character removed from the campaign.");
+      toast.success(t("page.characterRemoved"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -341,7 +344,7 @@ function CampaignPage() {
       updateCampaign(id, { settings: { ...settings, ...patch } as never }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["campaign", id] });
-      toast.success("Campaign settings saved.");
+      toast.success(t("page.settingsSaved"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -357,7 +360,7 @@ function CampaignPage() {
       queryClient.invalidateQueries({ queryKey: ["campaign", id] });
       queryClient.invalidateQueries({ queryKey: ["campaigns"] });
       setRenameOpen(false);
-      toast.success("Campaign updated.");
+      toast.success(t("page.campaignUpdated"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -386,7 +389,7 @@ function CampaignPage() {
       queryClient.invalidateQueries({ queryKey: ["notes", id] });
       setNoteTitle("");
       setNoteBody("");
-      toast.success("Entry added.");
+      toast.success(t("notes.addEntry.added"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -410,11 +413,11 @@ function CampaignPage() {
       <PageHeader
         title={
           <span className="inline-flex items-center gap-2">
-            {campaign.data?.name ?? "Campaign"}
+            {campaign.data?.name ?? t("page.fallbackTitle")}
             {isGm ? (
               <button
                 type="button"
-                aria-label="Rename campaign"
+                aria-label={t("page.renameAria")}
                 className="text-muted-foreground transition-colors hover:text-foreground"
                 onClick={() => {
                   setRenameValue(campaign.data?.name ?? "");
@@ -432,14 +435,14 @@ function CampaignPage() {
           <>
           {isGm ? (
             <Button onClick={() => createNpc.mutate()} disabled={createNpc.isPending}>
-              <Plus className="mr-2 h-4 w-4" /> New NPC
+              <Plus className="mr-2 h-4 w-4" /> {t("page.newNpc")}
             </Button>
           ) : null}
           <Button
             variant="outline"
             onClick={() => {
               void navigator.clipboard.writeText(campaign.data?.invite_code ?? "");
-              toast.success("Invite code copied.");
+              toast.success(t("page.inviteCopied"));
             }}
           >
             <Copy className="mr-2 h-4 w-4" />
@@ -453,7 +456,7 @@ function CampaignPage() {
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit campaign</DialogTitle>
+            <DialogTitle>{t("editDialog.title")}</DialogTitle>
           </DialogHeader>
           <form
             className="space-y-4"
@@ -468,7 +471,7 @@ function CampaignPage() {
             }}
           >
             <div className="space-y-2">
-              <Label htmlFor="campaign-name">Campaign name</Label>
+              <Label htmlFor="campaign-name">{t("editDialog.nameLabel")}</Label>
               <Input
                 id="campaign-name"
                 value={renameValue}
@@ -477,18 +480,18 @@ function CampaignPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="campaign-premise">Premise</Label>
+              <Label htmlFor="campaign-premise">{t("editDialog.premiseLabel")}</Label>
               <Textarea
                 id="campaign-premise"
                 rows={4}
-                placeholder="What is this campaign about?"
+                placeholder={t("editDialog.premisePlaceholder")}
                 value={premiseValue}
                 onChange={(e) => setPremiseValue(e.target.value)}
               />
             </div>
             <DialogFooter>
               <Button type="submit" disabled={renameCampaign.isPending || !renameValue.trim()}>
-                Save
+                {tc("actions.save")}
               </Button>
             </DialogFooter>
           </form>
@@ -509,21 +512,21 @@ function CampaignPage() {
         }
       >
         <ScrollableTabsList>
-          <TabsTrigger value="media">Media</TabsTrigger>
-          <TabsTrigger value="roster">Roster</TabsTrigger>
-          <TabsTrigger value="lore">World &amp; lore</TabsTrigger>
-          <TabsTrigger value="story">Story</TabsTrigger>
-          <TabsTrigger value="graph">Graph</TabsTrigger>
-          <TabsTrigger value="reveals">Reveals</TabsTrigger>
-          <TabsTrigger value="sessions">Sessions</TabsTrigger>
-          <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          <TabsTrigger value="battle">Battle grid</TabsTrigger>
-          <TabsTrigger value="library">Library</TabsTrigger>
-          <TabsTrigger value="rolls">Rolls</TabsTrigger>
+          <TabsTrigger value="media">{t("tabs.media")}</TabsTrigger>
+          <TabsTrigger value="roster">{t("tabs.roster")}</TabsTrigger>
+          <TabsTrigger value="lore">{t("tabs.lore")}</TabsTrigger>
+          <TabsTrigger value="story">{t("tabs.story")}</TabsTrigger>
+          <TabsTrigger value="graph">{t("tabs.graph")}</TabsTrigger>
+          <TabsTrigger value="reveals">{t("tabs.reveals")}</TabsTrigger>
+          <TabsTrigger value="sessions">{t("tabs.sessions")}</TabsTrigger>
+          <TabsTrigger value="timeline">{t("tabs.timeline")}</TabsTrigger>
+          <TabsTrigger value="battle">{t("tabs.battle")}</TabsTrigger>
+          <TabsTrigger value="library">{t("tabs.library")}</TabsTrigger>
+          <TabsTrigger value="rolls">{t("tabs.rolls")}</TabsTrigger>
 
-          <TabsTrigger value="notes">Notes &amp; handouts</TabsTrigger>
-          <TabsTrigger value="members">Members</TabsTrigger>
-          <TabsTrigger value="rules">House rules</TabsTrigger>
+          <TabsTrigger value="notes">{t("tabs.notes")}</TabsTrigger>
+          <TabsTrigger value="members">{t("tabs.members")}</TabsTrigger>
+          <TabsTrigger value="rules">{t("tabs.rules")}</TabsTrigger>
         </ScrollableTabsList>
 
         <TabsContent value="media" className="mt-6">
@@ -541,7 +544,7 @@ function CampaignPage() {
             </div>
           ) : (roster.data?.length ?? 0) === 0 ? (
             <div className="panel p-8 text-center text-sm text-muted-foreground">
-              No characters submitted yet. Players attach a character below.
+              {t("roster.empty")}
             </div>
           ) : (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -590,8 +593,8 @@ function CampaignPage() {
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="__unassigned__">Unassigned</SelectItem>
-                                  {c.is_npc && <SelectItem value="__npc__">NPC</SelectItem>}
+                                  <SelectItem value="__unassigned__">{t("roster.unassigned")}</SelectItem>
+                                  {c.is_npc && <SelectItem value="__npc__">{t("roster.npc")}</SelectItem>}
                                   {members.data?.map((m) => (
                                     <SelectItem key={m.user_id} value={m.display_name}>
                                       {m.display_name}
@@ -613,34 +616,38 @@ function CampaignPage() {
                                 avatarPath={playerMember?.avatar_url}
                               />
                             ) : null}
-                            {c.player_name || (c.is_npc ? "NPC" : "Player character")}
+                            {c.player_name || (c.is_npc ? t("roster.npc") : t("roster.playerCharacter"))}
                           </p>
                         )}
                       </div>
                       <Badge variant={c.approved ? "default" : "outline"}>
-                        {c.approved ? "Approved" : "Pending"}
+                        {c.approved ? t("roster.approved") : t("roster.pending")}
                       </Badge>
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-                      <Mini label="HP" value={`${c.current_hp ?? sheet?.stats.hp ?? 0}/${sheet?.stats.hp ?? 0}`} />
-                      <Mini label="FP" value={`${c.current_fp ?? sheet?.stats.fp ?? 0}/${sheet?.stats.fp ?? 0}`} />
-                      <Mini label="Move" value={sheet?.encumbrance.effectiveMove ?? 0} />
-                      <Mini label="Dodge" value={sheet?.encumbrance.effectiveDodge ?? 0} />
+                      <Mini label={t("roster.stats.hp")} value={`${c.current_hp ?? sheet?.stats.hp ?? 0}/${sheet?.stats.hp ?? 0}`} />
+                      <Mini label={t("roster.stats.fp")} value={`${c.current_fp ?? sheet?.stats.fp ?? 0}/${sheet?.stats.fp ?? 0}`} />
+                      <Mini label={t("roster.stats.move")} value={sheet?.encumbrance.effectiveMove ?? 0} />
+                      <Mini label={t("roster.stats.dodge")} value={sheet?.encumbrance.effectiveDodge ?? 0} />
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-                      <Mini label="ST" value={sheet?.stats.st ?? 0} />
-                      <Mini label="DX" value={sheet?.stats.dx ?? 0} />
-                      <Mini label="IQ" value={sheet?.stats.iq ?? 0} />
-                      <Mini label="HT" value={sheet?.stats.ht ?? 0} />
+                      <Mini label={t("roster.stats.st")} value={sheet?.stats.st ?? 0} />
+                      <Mini label={t("roster.stats.dx")} value={sheet?.stats.dx ?? 0} />
+                      <Mini label={t("roster.stats.iq")} value={sheet?.stats.iq ?? 0} />
+                      <Mini label={t("roster.stats.ht")} value={sheet?.stats.ht ?? 0} />
                     </div>
 
                     <p className="mt-3 text-xs text-muted-foreground">
-                      Points {sheet?.points.total ?? 0} / {c.point_budget} · Load{" "}
-                      {sheet?.encumbrance.label ?? "—"} · DR{" "}
-                      {Object.entries(sheet?.dr ?? {})
-                        .map(([k, v]) => `${k} ${v}`)
-                        .join(", ") || "none"}
+                      {t("roster.pointsSummary", {
+                        total: sheet?.points.total ?? 0,
+                        budget: c.point_budget,
+                        load: sheet?.encumbrance.label ?? "—",
+                        dr:
+                          Object.entries(sheet?.dr ?? {})
+                            .map(([k, v]) => `${k} ${v}`)
+                            .join(", ") || t("roster.drNone"),
+                      })}
                     </p>
                     {c.conditions.length ? (
                       <div className="mt-2 flex flex-wrap gap-1">
@@ -654,7 +661,7 @@ function CampaignPage() {
 
                     {isGm || c.owner_id === user?.id ? (
                       <div className="mt-3 flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">Owner</span>
+                        <span className="text-xs text-muted-foreground">{t("roster.owner")}</span>
                         <Select
                           value={c.owner_id}
                           onValueChange={(v) => {
@@ -667,7 +674,7 @@ function CampaignPage() {
                           </SelectTrigger>
                           <SelectContent>
                             {(members.data ?? []).some((m) => m.user_id === c.owner_id) ? null : (
-                              <SelectItem value={c.owner_id}>Current owner</SelectItem>
+                              <SelectItem value={c.owner_id}>{t("roster.currentOwner")}</SelectItem>
                             )}
                             {members.data?.map((m) => (
                               <SelectItem key={m.user_id} value={m.user_id}>
@@ -689,7 +696,7 @@ function CampaignPage() {
                           onClick={() => approve.mutate({ cid: c.id, value: !c.approved })}
                         >
                           <Check className="mr-1 h-3.5 w-3.5" />
-                          {c.approved ? "Revoke" : "Approve"}
+                          {c.approved ? t("roster.revoke") : t("roster.approve")}
                         </Button>
                         <Button
                           size="sm"
@@ -697,7 +704,7 @@ function CampaignPage() {
                           onClick={() => cloneCharacter.mutate(c.id)}
                           disabled={cloneCharacter.isPending}
                         >
-                          Duplicate
+                          {t("roster.duplicate")}
                         </Button>
                         <Button asChild size="sm" variant="ghost">
                           <Link
@@ -705,7 +712,7 @@ function CampaignPage() {
                             params={{ id: c.id }}
                             search={{ from: `campaign:${id}:${tabParam ?? "roster"}` }}
                           >
-                            Open sheet
+                            {t("roster.openSheet")}
                           </Link>
                         </Button>
                         <AlertDialog>
@@ -721,18 +728,20 @@ function CampaignPage() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Remove from campaign?</AlertDialogTitle>
+                              <AlertDialogTitle>{t("roster.removeConfirmTitle")}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                {c.name} will be detached from this campaign but kept on the owner's account.
-                                {c.is_npc ? " This NPC will no longer appear in the roster." : ""}
+                                {t("roster.removeConfirmBody", {
+                                  name: c.name,
+                                  npcNote: c.is_npc ? t("roster.removeConfirmNpcNote") : "",
+                                })}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => removeFromCampaign.mutate(c.id)}
                               >
-                                Remove
+                                {t("roster.remove")}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -747,7 +756,7 @@ function CampaignPage() {
           )}
 
           <div className="panel p-4">
-            <h3 className="font-display text-sm font-semibold">Submit one of your characters</h3>
+            <h3 className="font-display text-sm font-semibold">{t("roster.submitSection.title")}</h3>
             <div className="mt-3 flex flex-wrap gap-2">
               {(mine.data ?? [])
                 .filter((c) => c.campaign_id !== id)
@@ -757,7 +766,7 @@ function CampaignPage() {
                   </Button>
                 ))}
               {(mine.data ?? []).filter((c) => c.campaign_id !== id).length === 0 ? (
-                <p className="text-sm text-muted-foreground">All your characters are submitted.</p>
+                <p className="text-sm text-muted-foreground">{t("roster.submitSection.allSubmitted")}</p>
               ) : null}
             </div>
           </div>
@@ -821,16 +830,16 @@ function CampaignPage() {
           <div className="space-y-3">
             <div className="w-full sm:w-60">
               <Select value={noteFilter} onValueChange={setNoteFilter}>
-                <SelectTrigger aria-label="Filter entries">
+                <SelectTrigger aria-label={t("notes.filterAria")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All entries</SelectItem>
-                  <SelectItem value="note">Notes</SelectItem>
-                  <SelectItem value="handout">Handouts</SelectItem>
-                  <SelectItem value="session">Session log</SelectItem>
-                  <SelectItem value="npc">NPCs</SelectItem>
-                  <SelectItem value="party-inventory">Party inventory</SelectItem>
+                  <SelectItem value="all">{t("notes.filters.all")}</SelectItem>
+                  <SelectItem value="note">{t("notes.filters.note")}</SelectItem>
+                  <SelectItem value="handout">{t("notes.filters.handout")}</SelectItem>
+                  <SelectItem value="session">{t("notes.filters.session")}</SelectItem>
+                  <SelectItem value="npc">{t("notes.filters.npc")}</SelectItem>
+                  <SelectItem value="party-inventory">{t("notes.filters.partyInventory")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -852,7 +861,7 @@ function CampaignPage() {
                         size="icon"
                         variant="ghost"
                         onClick={() => removeNote.mutate(n.id)}
-                        aria-label="Delete note"
+                        aria-label={t("notes.deleteAria")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -862,20 +871,20 @@ function CampaignPage() {
                 </article>
               ))
             ) : (
-              <p className="text-sm text-muted-foreground">No entries here yet.</p>
+              <p className="text-sm text-muted-foreground">{t("notes.empty")}</p>
             )}
           </div>
 
           <div className="panel h-fit space-y-3 p-4">
-            <h3 className="font-display text-sm font-semibold">Add an entry</h3>
+            <h3 className="font-display text-sm font-semibold">{t("notes.addEntry.title")}</h3>
             <Input
-              placeholder="Title"
+              placeholder={t("notes.addEntry.titlePlaceholder")}
               value={noteTitle}
               onChange={(e) => setNoteTitle(e.target.value)}
             />
             <Textarea
               rows={5}
-              placeholder="Body"
+              placeholder={t("notes.addEntry.bodyPlaceholder")}
               value={noteBody}
               onChange={(e) => setNoteBody(e.target.value)}
             />
@@ -884,16 +893,16 @@ function CampaignPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="note">Note</SelectItem>
-                <SelectItem value="handout">Handout</SelectItem>
-                <SelectItem value="session">Session log</SelectItem>
-                <SelectItem value="npc">NPC</SelectItem>
-                <SelectItem value="party-inventory">Party inventory</SelectItem>
+                <SelectItem value="note">{t("notes.kinds.note")}</SelectItem>
+                <SelectItem value="handout">{t("notes.kinds.handout")}</SelectItem>
+                <SelectItem value="session">{t("notes.kinds.session")}</SelectItem>
+                <SelectItem value="npc">{t("notes.kinds.npc")}</SelectItem>
+                <SelectItem value="party-inventory">{t("notes.kinds.partyInventory")}</SelectItem>
               </SelectContent>
             </Select>
             {isGm ? (
               <div className="flex items-center justify-between">
-                <Label htmlFor="gm-only">GM only</Label>
+                <Label htmlFor="gm-only">{t("notes.addEntry.gmOnlyLabel")}</Label>
                 <Switch id="gm-only" checked={gmOnly} onCheckedChange={setGmOnly} />
               </div>
             ) : null}
@@ -902,7 +911,7 @@ function CampaignPage() {
               onClick={() => createNote.mutate()}
               disabled={!noteTitle || createNote.isPending}
             >
-              Add entry
+              {t("notes.addEntry.submit")}
             </Button>
           </div>
         </TabsContent>
@@ -917,21 +926,20 @@ function CampaignPage() {
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button size="sm" variant="outline" disabled={transferGm.isPending}>
-                          Make GM
+                          {t("members.makeGm")}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Transfer the GM role?</AlertDialogTitle>
+                          <AlertDialogTitle>{t("members.transferConfirmTitle")}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            {m.display_name} becomes the game master of this campaign and you
-                            become a regular player. Only the new GM can transfer it back.
+                            {t("members.transferConfirmBody", { name: m.display_name })}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
                           <AlertDialogAction onClick={() => transferGm.mutate(m.user_id)}>
-                            Transfer
+                            {t("members.transfer")}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -943,7 +951,7 @@ function CampaignPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          aria-label={`Remove ${m.display_name} from the campaign`}
+                          aria-label={t("members.removeAria", { name: m.display_name })}
                           disabled={removeMemberMut.isPending}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -951,22 +959,21 @@ function CampaignPage() {
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Remove this member?</AlertDialogTitle>
+                          <AlertDialogTitle>{t("members.removeConfirmTitle")}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            {m.display_name} loses access to this campaign. Their characters stay in
-                            their account and can be re-attached later.
+                            {t("members.removeConfirmBody", { name: m.display_name })}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
                           <AlertDialogAction onClick={() => removeMemberMut.mutate(m.user_id)}>
-                            Remove
+                            {t("roster.remove")}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
-                  <Badge variant={m.role === "gm" ? "default" : "outline"}>{m.role}</Badge>
+                  <Badge variant={m.role === "gm" ? "default" : "outline"}>{m.role === "gm" ? t("list.badge.gm") : t("list.badge.player")}</Badge>
                 </div>
               </div>
             ))}
@@ -1009,6 +1016,8 @@ function HouseRules({
   knownPacks: string[];
   onSave: (patch: Record<string, unknown>) => void;
 }) {
+  const { t } = useT("campaigns");
+  const { t: tc } = useT("common");
   const [pointLimit, setPointLimit] = useState(String(settings["point_limit"] ?? 150));
   const [disadvLimit, setDisadvLimit] = useState(String(settings["disadvantage_limit"] ?? -50));
   const [tl, setTl] = useState(String(settings["tech_level"] ?? 8));
@@ -1048,7 +1057,7 @@ function HouseRules({
         queryClient.invalidateQueries({ queryKey: ["campaigns"] }),
       ]);
       setCoverPreview(null);
-      toast.success("Campaign cover updated.");
+      toast.success(t("houseRules.cover.updated"));
     },
     onError: (error: Error) => {
       setCoverPreview(null);
@@ -1067,7 +1076,7 @@ function HouseRules({
         queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] }),
         queryClient.invalidateQueries({ queryKey: ["campaigns"] }),
       ]);
-      toast.success("Campaign cover removed.");
+      toast.success(t("houseRules.cover.removed"));
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -1082,9 +1091,9 @@ function HouseRules({
     <div className="panel max-w-2xl space-y-4 p-6">
       <section className="space-y-3">
         <div>
-          <Label>Campaign card cover</Label>
+          <Label>{t("houseRules.cover.label")}</Label>
           <p className="mt-1 text-xs text-muted-foreground">
-            This image appears behind the campaign card. Images are converted to AVIF.
+            {t("houseRules.cover.hint")}
           </p>
         </div>
         {coverPath || coverPreview ? (
@@ -1098,10 +1107,10 @@ function HouseRules({
               compact
               accept="image/*,.heic,.heif,.tif,.tiff,.bmp"
               loading={cover.isPending}
-              loadingLabel="Uploading cover…"
+              loadingLabel={t("houseRules.cover.uploadingLabel")}
               className="min-h-20 flex-1"
-              label={coverPath ? "Drop a replacement cover here, or click to browse" : "Drop a cover here, or click to browse"}
-              hint="Any common image format, up to 25 MB."
+              label={coverPath ? t("houseRules.cover.dropReplace") : t("houseRules.cover.dropNew")}
+              hint={t("houseRules.cover.sizeHint")}
               onFiles={(files) => {
                 const file = files[0];
                 if (!file) return;
@@ -1119,7 +1128,7 @@ function HouseRules({
                 variant="outline"
                 size="icon"
                 className="h-10 w-10 self-end sm:h-auto sm:w-10 sm:self-stretch"
-                aria-label="Remove campaign cover"
+                aria-label={t("houseRules.cover.removeAria")}
                 disabled={cover.isPending || removeCover.isPending}
                 onClick={() => removeCover.mutate()}
               >
@@ -1132,23 +1141,23 @@ function HouseRules({
       <div className="border-t border-border" />
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label>Point limit</Label>
+          <Label>{t("houseRules.pointLimit")}</Label>
           <Input value={pointLimit} onChange={(e) => setPointLimit(e.target.value)} disabled={disabled} />
         </div>
         <div className="space-y-1.5">
-          <Label>Disadvantage limit</Label>
+          <Label>{t("houseRules.disadvantageLimit")}</Label>
           <Input value={disadvLimit} onChange={(e) => setDisadvLimit(e.target.value)} disabled={disabled} />
         </div>
         <div className="space-y-1.5">
-          <Label>Tech level</Label>
+          <Label>{t("houseRules.techLevel")}</Label>
           <Input value={tl} onChange={(e) => setTl(e.target.value)} disabled={disabled} />
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Enabled content packs</Label>
+        <Label>{t("houseRules.packs.label")}</Label>
         {packOptions.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            No content packs found yet. Tag library entries with a pack name to manage them here.
+            {t("houseRules.packs.empty")}
           </p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
@@ -1158,7 +1167,7 @@ function HouseRules({
                   checked={packs.includes(p)}
                   disabled={disabled}
                   onCheckedChange={(v) => togglePack(p, v === true)}
-                  aria-label={`Enable pack ${p}`}
+                  aria-label={t("houseRules.packs.enableAria", { name: p })}
                 />
                 <span>{p}</span>
               </label>
@@ -1170,8 +1179,8 @@ function HouseRules({
             value={newPack}
             onChange={(e) => setNewPack(e.target.value)}
             disabled={disabled}
-            placeholder="Add another pack name"
-            aria-label="Add another pack name"
+            placeholder={t("houseRules.packs.addPlaceholder")}
+            aria-label={t("houseRules.packs.addPlaceholder")}
           />
           <Button
             type="button"
@@ -1182,23 +1191,21 @@ function HouseRules({
               setNewPack("");
             }}
           >
-            Add
+            {tc("actions.add")}
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          With nothing enabled every pack is allowed. When at least one pack is enabled, library
-          entries from other packs cannot be added to characters in this campaign. Entries with no
-          pack are personal content and stay available.
+          {t("houseRules.packs.hint")}
         </p>
       </div>
       <div className="space-y-1.5">
-        <Label>House rules</Label>
+        <Label>{t("houseRules.houseRulesLabel")}</Label>
         <Textarea
           rows={8}
           value={houseRules}
           onChange={(e) => setHouseRules(e.target.value)}
           disabled={disabled}
-          placeholder="Table agreements, allowed content packs, campaign tone…"
+          placeholder={t("houseRules.houseRulesPlaceholder")}
         />
       </div>
       <Button
@@ -1213,7 +1220,7 @@ function HouseRules({
           })
         }
       >
-        Save house rules
+        {t("houseRules.save")}
       </Button>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
+import { useT } from "@/i18n/hooks";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileDropzone } from "@/components/ui/FileDropzone";
@@ -51,6 +52,7 @@ function TransferBody({ state }: { state: TransferState }) {
  * Render `node` once in the component and call `run(...)` from a button.
  */
 export function useTransferTask() {
+  const { t } = useT();
   const [state, setState] = useState<TransferState | null>(null);
   const creep = useRef<number | null>(null);
 
@@ -63,7 +65,7 @@ export function useTransferTask() {
 
   const run = useCallback(
     async (title: string, task: (report: TransferReport) => Promise<string>) => {
-      setState({ title, label: "Starting…", percent: 0, phase: "running", message: null });
+      setState({ title, label: t("transfer.starting"), percent: 0, phase: "running", message: null });
       stopCreep();
       // When a task reports steps without a percentage, creep towards 90%.
       creep.current = window.setInterval(() => {
@@ -92,13 +94,13 @@ export function useTransferTask() {
             ? {
                 ...current,
                 phase: "error",
-                message: error instanceof Error ? error.message : "Something went wrong.",
+                message: error instanceof Error ? error.message : t("transfer.genericError"),
               }
             : current,
         );
       }
     },
-    [],
+    [t],
   );
 
   const close = () => {
@@ -124,12 +126,12 @@ export function useTransferTask() {
       >
         <DialogHeader>
           <DialogTitle>{state?.title ?? ""}</DialogTitle>
-          <DialogDescription className="sr-only">Progress</DialogDescription>
+          <DialogDescription className="sr-only">{t("transfer.progress")}</DialogDescription>
         </DialogHeader>
         {state ? <TransferBody state={state} /> : null}
         <DialogFooter>
           <Button variant="outline" onClick={close} disabled={state?.phase === "running"}>
-            Close
+            {t("actions.close")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -164,6 +166,7 @@ export function ImportDialog({
   extra?: ReactNode;
   run: (file: File, report: TransferReport) => Promise<string>;
 }) {
+  const { t } = useT();
   const [state, setState] = useState<TransferState | null>(null);
   const creep = useRef<number | null>(null);
 
@@ -175,7 +178,7 @@ export function ImportDialog({
   };
 
   const start = async (file: File) => {
-    setState({ title, label: "Reading file…", percent: 0, phase: "running", message: null });
+    setState({ title, label: t("transfer.readingFile"), percent: 0, phase: "running", message: null });
     stopCreep();
     creep.current = window.setInterval(() => {
       setState((current) =>
@@ -207,7 +210,7 @@ export function ImportDialog({
           ? {
               ...current,
               phase: "error",
-              message: error instanceof Error ? error.message : "Import failed.",
+              message: error instanceof Error ? error.message : t("transfer.importFailed"),
             }
           : current,
       );
@@ -261,11 +264,11 @@ export function ImportDialog({
         <DialogFooter>
           {state && state.phase !== "running" ? (
             <Button variant="outline" onClick={() => setState(null)}>
-              Import another
+              {t("transfer.importAnother")}
             </Button>
           ) : null}
           <Button variant="outline" onClick={close} disabled={state?.phase === "running"}>
-            Close
+            {t("actions.close")}
           </Button>
         </DialogFooter>
       </DialogContent>

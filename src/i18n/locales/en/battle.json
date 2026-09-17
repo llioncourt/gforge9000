@@ -1,0 +1,50 @@
+{
+  "grid": {
+    "zoom": "Zoom {{value}}%",
+    "resetView": "Reset view",
+    "distance": "Distance: {{distance}}",
+    "measureHint": "Click a starting cell, then move.",
+    "fogHint": "Click cells to hide or reveal them for players.",
+    "defaultTokenLabel": "Token"
+  },
+  "token": {
+    "hidden": "hidden"
+  },
+  "panel": {
+    "noMapGm": "No battle map yet. Create one and drop in a background image.",
+    "noMapPlayer": "The GM has not shared a battle map yet.",
+    "newMap": "New map",
+    "map": "Map",
+    "move": "Move",
+    "measure": "Measure",
+    "fog": "Fog",
+    "tokens3d": "3D tokens",
+    "playersCanSee": "Players can see",
+    "deleteMap": "Delete map",
+    "name": "Name",
+    "grid": "Grid",
+    "gridSquare": "Square",
+    "gridHex": "Hex",
+    "gridNone": "None",
+    "cellSize": "Cell size (px)",
+    "offset": "Offset X / Y",
+    "distancePerCell": "Distance per cell",
+    "unit": "Unit",
+    "uploadingImage": "Uploading…",
+    "dropMapImage": "Drop a map image here (PNG, JPEG, WebP, AVIF)",
+    "addToken": "Add token",
+    "pickToken": "Pick a character, NPC or marker",
+    "npcSuffix": "{{name}} (NPC)",
+    "blankMarker": "Blank marker",
+    "allPlaced": "Every character and NPC is already on the grid.",
+    "label": "Label",
+    "size": "Size (cells)",
+    "hiddenFromPlayers": "Hidden from players",
+    "removeToken": "Remove token",
+    "mapImageUpdated": "Map image updated",
+    "deleteMapTitle": "Delete this map?",
+    "deleteMapDescription": "The map and every token on it will be removed for the whole table.",
+    "marker": "Marker",
+    "newMapName": "Map {{number}}"
+  }
+}

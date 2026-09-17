@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useT } from "@/i18n/hooks";
 
 export function PageHeader({
   title,
@@ -9,6 +10,7 @@ export function PageHeader({
   description?: string | undefined;
   actions?: ReactNode | undefined;
 }) {
+  const { t } = useT("common");
   const [expanded, setExpanded] = useState(false);
   const [canClamp, setCanClamp] = useState(false);
   const descRef = useRef<HTMLParagraphElement>(null);
@@ -40,7 +42,7 @@ export function PageHeader({
                 onClick={() => setExpanded((v) => !v)}
                 className="mt-0.5 font-medium text-foreground/70 hover:text-foreground"
               >
-                {expanded ? "less…" : "more…"}
+                {expanded ? t("pageHeader.less") : t("pageHeader.more")}
               </button>
             ) : null}
           </div>

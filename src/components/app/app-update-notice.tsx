@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/i18n/hooks";
 import {
   APP_BUILD_ID,
   fetchDeployedAppAssetId,
@@ -14,6 +15,7 @@ import {
 const CHECK_INTERVAL_MS = 60_000;
 
 export function AppUpdateNotice() {
+  const { t } = useT("navigation");
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
   const checkForUpdate = useCallback(async (signal?: AbortSignal) => {
@@ -63,7 +65,7 @@ export function AppUpdateNotice() {
       aria-live="polite"
     >
       <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
-      <p className="text-center text-sm font-medium">A new version is ready.</p>
+      <p className="text-center text-sm font-medium">{t("update.message")}</p>
       <Button
         type="button"
         size="sm"
@@ -72,7 +74,7 @@ export function AppUpdateNotice() {
         onClick={() => refreshToLatestVersion()}
       >
         <RefreshCw className="h-3.5 w-3.5" />
-        Refresh now
+        {t("update.action")}
       </Button>
     </div>
   );

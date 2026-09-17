@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { listContentPacks, listLibrary, type LibraryRow } from "@/lib/api";
 import { rankSearch } from "@/lib/search";
+import { useT } from "@/i18n/hooks";
 
 
 /** Pack names that exist for this user: declared packs plus packs seen on entries. */
@@ -39,6 +40,7 @@ export function CharacterPacksPanel({
   lockedPacks?: string[];
   onChange: (next: string[]) => void;
 }) {
+  const { t } = useT("characters");
   const available = useAvailablePacks();
   const lockedSet = new Set(lockedPacks.map((p) => p.toLowerCase()));
   const names = useMemo(() => {
@@ -60,19 +62,14 @@ export function CharacterPacksPanel({
     <div className="space-y-2 rounded-md border border-border p-3">
       <div className="flex items-center gap-2">
         <Package className="h-4 w-4 text-muted-foreground" />
-        <Label>Content packs</Label>
+        <Label>{t("sheet.pack.title")}</Label>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Traits, skills and gear are picked from the packs linked here. Anything typed by hand is
-        marked as custom.
-      </p>
+      <p className="text-xs text-muted-foreground">{t("sheet.pack.description")}</p>
       {lockedPacks.length > 0 && (
-        <p className="text-xs text-muted-foreground">
-          Packs enabled by the campaign are always available and cannot be removed here.
-        </p>
+        <p className="text-xs text-muted-foreground">{t("sheet.pack.campaignLockedHint")}</p>
       )}
       {names.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No packs available yet.</p>
+        <p className="text-xs text-muted-foreground">{t("sheet.pack.noneAvailable")}</p>
       ) : (
         <div className="flex flex-wrap gap-2 pt-1">
           {names.map((name) => {
@@ -85,15 +82,14 @@ export function CharacterPacksPanel({
                 onClick={() => !locked && toggle(name)}
                 disabled={locked}
                 aria-pressed={active}
-                title={locked ? "Enabled by the campaign" : undefined}
+                title={locked ? t("sheet.pack.campaignLockedTitle") : undefined}
                 className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${
                   active
                     ? "border-primary bg-primary/15 text-foreground"
                     : "border-border text-muted-foreground hover:text-foreground"
                 } ${locked ? "cursor-not-allowed opacity-90" : ""}`}
               >
-                {name}
-                {locked ? " (campaign)" : ""}
+                {locked ? t("sheet.pack.campaignSuffix", { name }) : name}
               </button>
             );
           })}
@@ -119,6 +115,8 @@ export function PackPickerDialog({
   onAdd: (entry: LibraryRow) => void;
   pending?: boolean;
 }) {
+  const { t } = useT("characters");
+  const { t: tc } = useT("common");
   const library = useQuery({ queryKey: ["library"], queryFn: listLibrary, enabled: open });
   const [search, setSearch] = useState("");
   const [descFor, setDescFor] = useState<LibraryRow | null>(null);
@@ -146,11 +144,11 @@ export function PackPickerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Add from packs</DialogTitle>
+          <DialogTitle>{t("sheet.pack.pickerTitle")}</DialogTitle>
           <DialogDescription>
             {packs.length === 0
-              ? "This character is not linked to any pack yet. Link one on the Attributes tab."
-              : `Showing ${kinds.join(", ")} from: ${packs.join(", ")}.`}
+              ? t("sheet.pack.noPacksLinked")
+              : t("sheet.pack.showingKinds", { kinds: kinds.join(", "), packs: packs.join(", ") })}
           </DialogDescription>
         </DialogHeader>
 
@@ -158,7 +156,7 @@ export function PackPickerDialog({
           <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             className="pl-8"
-            placeholder="Search…"
+            placeholder={t("sheet.pack.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -167,7 +165,7 @@ export function PackPickerDialog({
         <div className="max-h-[50vh] space-y-1 overflow-y-auto pr-1">
           {rows.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              Nothing available here.
+              {t("sheet.pack.nothingAvailable")}
             </p>
           ) : (
             rows.map((e) => (
@@ -183,14 +181,14 @@ export function PackPickerDialog({
                     type="button"
                     className="text-muted-foreground hover:text-foreground"
                     onClick={() => setDescFor(e)}
-                    aria-label={`Description for ${e.name}`}
+                    aria-label={t("sheet.pack.descriptionAria", { name: e.name })}
                   >
                     <Info className="h-4 w-4" />
                   </button>
                 )}
                 <Badge variant="outline">{e.pack}</Badge>
                 <Button size="sm" disabled={pending} onClick={() => onAdd(e)}>
-                  Add
+                  {tc("actions.add")}
                 </Button>
               </div>
             ))
@@ -212,7 +210,7 @@ export function PackPickerDialog({
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{descFor.summary}</p>
               )}
               {!descFor.summary && (
-                <p className="text-sm text-muted-foreground">No further details.</p>
+                <p className="text-sm text-muted-foreground">{t("sheet.pack.noDetails")}</p>
               )}
             </>
           )}

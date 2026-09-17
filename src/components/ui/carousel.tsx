@@ -3,6 +3,7 @@ import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-reac
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/hooks";
 import { Button } from "@/components/ui/button";
 
 type CarouselApi = UseEmblaCarouselType[1];
@@ -177,6 +178,7 @@ CarouselItem.displayName = "CarouselItem";
 const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(
   ({ className, variant = "outline", size = "icon", ...props }, ref) => {
     const { orientation, scrollPrev, canScrollPrev } = useCarousel();
+    const { t } = useT("common");
 
     return (
       <Button
@@ -195,7 +197,7 @@ const CarouselPrevious = React.forwardRef<HTMLButtonElement, React.ComponentProp
         {...props}
       >
         <ArrowLeft className="h-4 w-4" />
-        <span className="sr-only">Previous slide</span>
+        <span className="sr-only">{t("a11y.previousSlide")}</span>
       </Button>
     );
   },
@@ -205,6 +207,7 @@ CarouselPrevious.displayName = "CarouselPrevious";
 const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<typeof Button>>(
   ({ className, variant = "outline", size = "icon", ...props }, ref) => {
     const { orientation, scrollNext, canScrollNext } = useCarousel();
+    const { t } = useT("common");
 
     return (
       <Button
@@ -223,7 +226,7 @@ const CarouselNext = React.forwardRef<HTMLButtonElement, React.ComponentProps<ty
         {...props}
       >
         <ArrowRight className="h-4 w-4" />
-        <span className="sr-only">Next slide</span>
+        <span className="sr-only">{t("a11y.nextSlide")}</span>
       </Button>
     );
   },

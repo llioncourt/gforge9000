@@ -1,0 +1,28 @@
+{
+  "notFound": {
+    "code": "404",
+    "title": "Page not found",
+    "description": "This page doesn't exist or has been moved.",
+    "goHome": "Go home"
+  },
+  "boundary": {
+    "title": "This page didn't load",
+    "retry": "Try again",
+    "goHome": "Go home"
+  },
+  "generic": {
+    "title": "Something went wrong",
+    "description": "Please try again in a moment."
+  },
+  "permission": {
+    "title": "You don't have access to this",
+    "description": "Ask the campaign GM for access."
+  },
+  "offline": {
+    "title": "You are offline",
+    "description": "Check your connection and try again."
+  },
+  "network": {
+    "failed": "Network request failed"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "meta": {
+    "home": {
+      "title": "Universal Character Forge — Criador de Personagens GURPS 4e",
+      "description": "Crie personagens de GURPS 4e, conduza campanhas e role dados com um motor de regras orientado a dados. Companheiro não oficial da Quarta Edição de GURPS."
+    },
+    "legal": {
+      "title": "Legal e política de conteúdo — Universal Character Forge",
+      "description": "Status não oficial, aviso de marca registrada e a política de conteúdo que rege material inserido pelo usuário e importado no Universal Character Forge.",
+      "ogDescription": "Status não oficial, aviso de marca registrada e política de conteúdo."
+    }
+  },
+  "brand": {
+    "short": "Character Forge",
+    "full": "Universal Character Forge"
+  },
+  "nav": {
+    "legal": "Legal",
+    "signIn": "Entrar"
+  },
+  "hero": {
+    "eyebrow": "Compatível com GURPS 4e · não oficial",
+    "title": "Uma forja moderna para personagens universais",
+    "body": "Orçamentos de pontos que fecham, uma ficha pronta para combate da qual você pode rolar dados, e campanhas que sua mesa realmente consegue conduzir — construído sobre um motor de regras aberto e orientado a dados.",
+    "startBuilding": "Comece a criar",
+    "contentPolicy": "Política de conteúdo"
+  },
+  "features": {
+    "pointEngine": {
+      "title": "Motor de pontos em tempo real",
+      "body": "Atributos, vantagens, perícias e carga são recalculados deterministicamente por uma camada de regras testada — não por contas de UI espalhadas."
+    },
+    "dataDriven": {
+      "title": "Tudo é dado",
+      "body": "Vantagens carregam custo, níveis, modificadores, pré-requisitos, tags, visibilidade e metadados de origem. Adicione as suas ou importe pacotes depois."
+    },
+    "rollableSheet": {
+      "title": "Ficha rolável",
+      "body": "Clique em qualquer perícia ou ataque para rolar 3d6 contra o número-alvo e ver a margem de sucesso rapidamente."
+    },
+    "campaigns": {
+      "title": "Campanhas e ferramentas de mestre",
+      "body": "Códigos de convite, aprovação de personagens, elenco com cartões de status prontos para combate, notas compartilhadas, handouts e notas privadas do mestre."
+    },
+    "portable": {
+      "title": "Portátil por padrão",
+      "body": "Exportação/importação em JSON é o formato canônico, com extratos em CSV e uma ficha imprimível."
+    },
+    "yourContent": {
+      "title": "Seu conteúdo, suas regras",
+      "body": "Nenhum texto de livro de regras é incluído. O conteúdo inicial é original e genérico; as regras de casa da campanha sobrescrevem as fórmulas do motor."
+    }
+  },
+  "footer": {
+    "disclaimer": "GURPS é uma marca registrada da Steve Jackson Games Incorporated. Universal Character Forge é uma ferramenta independente e não oficial, sem afiliação, endosso ou patrocínio da Steve Jackson Games. Nenhum texto, tabela ou arte de livro de regras é reproduzido.",
+    "fullPolicy": "Política completa"
+  },
+  "legal": {
+    "back": "← Voltar",
+    "title": "Legal e política de conteúdo",
+    "unofficial": {
+      "title": "Não oficial e independente",
+      "body": "Universal Character Forge é um aplicativo companheiro independente e não oficial. Não é publicado, licenciado, endossado ou patrocinado pela Steve Jackson Games Incorporated. Nada neste aplicativo deve ser interpretado como um produto oficial ou como uma declaração feita em nome da Steve Jackson Games."
+    },
+    "trademarks": {
+      "title": "Marcas registradas",
+      "body": "GURPS é uma marca registrada da Steve Jackson Games Incorporated. Qualquer referência à Quarta Edição de GURPS neste aplicativo é meramente descritiva e informativa — indica que o motor de regras genérico da ferramenta é destinado a ser usado junto com esse sistema. Todas as marcas permanecem propriedade de seus respectivos donos."
+    },
+    "contentPolicy": {
+      "title": "Política de conteúdo",
+      "items": {
+        "noRulebook": "Nenhum texto, descrição de vantagem, tabela, arte ou logotipo de qualquer editora é incluído neste aplicativo.",
+        "statLabels": "Rótulos de atributos padrão como ST, DX, IQ, HT, HP, Vontade, Percepção e FP são usados como identificadores curtos de interoperabilidade, não como texto reproduzido.",
+        "formulas": "As fórmulas de cálculo desta ferramenta são implementações genéricas próprias e configuráveis por campanha. São aproximações, não transcrições de nenhuma tabela publicada.",
+        "userResponsibility": "Você é responsável pelo conteúdo que insere. Não cole texto protegido por direitos autorais que você não tem licença para reproduzir, e não o compartilhe publicamente pela biblioteca."
+      }
+    },
+    "licensedPacks": {
+      "title": "Pacotes de conteúdo licenciados",
+      "body": "A biblioteca é arquitetada para que pacotes de origem oficiais ou licenciados possam ser instalados separadamente no futuro, com suas próprias permissões e metadados de procedência, sem alterar o motor de regras. Nenhum pacote assim está incluído hoje."
+    },
+    "importExport": {
+      "title": "Importação e exportação",
+      "body": "JSON é o formato portátil canônico para seus dados. Adaptadores para outras ferramentas de personagens estão planejados mas ainda não implementados; este aplicativo não afirma compatibilidade com nenhum formato de arquivo de terceiros até que tal adaptador seja lançado."
+    },
+    "yourData": {
+      "title": "Seus dados",
+      "body": "Personagens, campanhas e entradas da biblioteca são isolados por conta e por função na campanha. Mestres podem ver personagens enviados para sua campanha; outros jogadores não podem ler seu conteúdo privado."
+    }
+  }
+}

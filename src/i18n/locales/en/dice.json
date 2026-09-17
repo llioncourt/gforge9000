@@ -1,0 +1,41 @@
+{
+  "tray": {
+    "title": "Dice tray",
+    "expression": "Expression",
+    "target": "Target (optional)",
+    "label": "Label",
+    "defaultLabel": "Manual roll",
+    "roll": "Roll",
+    "reaction": "Reaction",
+    "damage": "Damage",
+    "recordedNotice": "Rolls made here are recorded in this campaign for the GM to see.",
+    "history": "Session history",
+    "clear": "Clear",
+    "noRolls": "No rolls yet this session.",
+    "vsTarget": "vs {{target}}"
+  },
+  "overlay": {
+    "closeTray": "Close dice tray",
+    "reducedMotion": "Reduced-motion mode: dice are simulated without animation.",
+    "loading": "Loading dice…",
+    "rolling": "Rolling…",
+    "reroll": "Re-roll",
+    "close": "Close",
+    "vsTarget": "vs {{target}}",
+    "marginBy": "by {{margin}}"
+  },
+  "outcome": {
+    "critical success": "critical success",
+    "success": "success",
+    "failure": "failure",
+    "critical failure": "critical failure"
+  },
+  "toast": {
+    "plain": "{{total}} ({{dice}})",
+    "withTarget": "{{total}} vs {{target}} — {{outcome}} by {{margin}}",
+    "result": "{{label}}: {{detail}}"
+  },
+  "errors": {
+    "invalidExpression": "Could not read the dice expression \"{{expression}}\"."
+  }
+}

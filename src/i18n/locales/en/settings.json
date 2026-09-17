@@ -1,0 +1,30 @@
+{
+  "page": {
+    "title": "Settings",
+    "description": "Rules status and account data controls."
+  },
+  "rulesStatus": {
+    "title": "Rules status",
+    "summary": "Every mechanic in the calculation engine, and how faithfully it is implemented. Exact {{exact}} · Configurable {{configurable}} · Approximation {{approximation}} · Missing {{missing}}"
+  },
+  "danger": {
+    "title": "Erase everything",
+    "description": "Deletes all your characters, campaigns, notes, library entries, packs and roll history. Your account and sign-in stay. This cannot be undone, so you have to confirm with your Google sign-in first.",
+    "eraseButton": "Erase all my data"
+  },
+  "wipeDialog": {
+    "title": "Erase everything in your account?",
+    "description": "Characters, campaigns, notes, library entries, packs and roll history are deleted permanently. Confirm with your Google sign-in ({{email}}) to continue.",
+    "confirmWithGoogle": "Confirm with Google",
+    "deleteEverything": "Delete everything"
+  },
+  "toasts": {
+    "identityConfirmed": "Identity confirmed.",
+    "identityFailed": "Could not confirm your identity.",
+    "wiped": "Everything was deleted. Your account is still here."
+  },
+  "language": {
+    "title": "Language",
+    "description": "Choose the interface language."
+  }
+}

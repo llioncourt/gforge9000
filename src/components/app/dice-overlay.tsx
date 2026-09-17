@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { prefersReducedMotion, useDice } from "@/components/app/dice-context";
 import { outcomeTone } from "@/components/app/dice-tray";
 import { simulateToRest } from "@/lib/dice3d";
+import { useT } from "@/i18n/hooks";
 
 const DiceBoard = lazy(() => import("@/components/app/dice3d/dice-board"));
 
@@ -14,6 +15,7 @@ const DiceBoard = lazy(() => import("@/components/app/dice3d/dice-board"));
  * faces the dice actually show; nothing here invents a result.
  */
 export function DiceOverlay() {
+  const { t } = useT("dice");
   const { pending, settled, reportFaces, rerollPending, closeTray } = useDice();
   const [board, setBoard] = useState<{ seed: number; count: number } | null>(null);
   const [reduced, setReduced] = useState(false);
@@ -49,7 +51,7 @@ export function DiceOverlay() {
           <p className="min-w-0 flex-1 truncate text-sm font-medium">
             {pending?.request.label ?? settled?.label}
           </p>
-          <Button size="icon" variant="ghost" aria-label="Close dice tray" onClick={closeTray}>
+          <Button size="icon" variant="ghost" aria-label={t("overlay.closeTray")} onClick={closeTray}>
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -67,15 +69,13 @@ export function DiceOverlay() {
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Reduced-motion mode: dice are simulated without animation.
-              </p>
+              <p className="text-xs text-muted-foreground">{t("overlay.reducedMotion")}</p>
             </div>
           ) : (
             <Suspense
               fallback={
                 <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                  Loading dice…
+                  {t("overlay.loading")}
                 </div>
               }
             >
@@ -95,17 +95,19 @@ export function DiceOverlay() {
               <span className="stat-value text-2xl">{settled.total}</span>
               <span className="text-xs text-muted-foreground">
                 {settled.expression} · {settled.dice.join(" + ")}
-                {settled.target !== null ? ` · vs ${settled.target}` : ""}
+                {settled.target !== null ? ` · ${t("overlay.vsTarget", { target: settled.target })}` : ""}
               </span>
               {settled.outcome ? (
                 <Badge variant="outline" className={cn(outcomeTone(settled.outcome))}>
-                  {settled.outcome}
-                  {settled.margin !== null ? ` by ${Math.abs(settled.margin)}` : ""}
+                  {t(`outcome.${settled.outcome}`)}
+                  {settled.margin !== null
+                    ? ` ${t("overlay.marginBy", { margin: Math.abs(settled.margin) })}`
+                    : ""}
                 </Badge>
               ) : null}
             </>
           ) : (
-            <span className="text-sm text-muted-foreground">Rolling…</span>
+            <span className="text-sm text-muted-foreground">{t("overlay.rolling")}</span>
           )}
           <div className="ml-auto flex gap-2">
             <Button
@@ -114,10 +116,10 @@ export function DiceOverlay() {
               onClick={rerollPending}
               disabled={!settled}
             >
-              <RotateCcw className="mr-1 h-3.5 w-3.5" /> Re-roll
+              <RotateCcw className="mr-1 h-3.5 w-3.5" /> {t("overlay.reroll")}
             </Button>
             <Button size="sm" onClick={closeTray}>
-              Close
+              {t("overlay.close")}
             </Button>
           </div>
         </div>

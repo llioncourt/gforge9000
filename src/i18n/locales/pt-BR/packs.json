@@ -1,0 +1,91 @@
+{
+  "page": {
+    "title": "Pacotes",
+    "description": "Pacotes de conteúdo agrupam sua biblioteca em conjuntos reutilizáveis que você pode curar, compartilhar e ativar por campanha.",
+    "newPack": "Novo pacote"
+  },
+  "filters": {
+    "searchPlaceholder": "Buscar pacotes…"
+  },
+  "actions": {
+    "importPack": "Importar um pacote",
+    "addToPack": "Adicionar ao pacote",
+    "movePack": "Mover para {{pack}}",
+    "rename": "Renomear",
+    "deletePack": "Excluir pacote",
+    "exportPack": "Exportar pacote"
+  },
+  "empty": {
+    "noPacks": "Ainda não há pacotes. Crie um ou importe um arquivo JSON de pacote.",
+    "noEntries": "Este pacote ainda não tem itens. Adicione itens existentes da biblioteca acima ou importe um arquivo de pacote.",
+    "noOtherEntries": "Nenhum outro item disponível"
+  },
+  "card": {
+    "entries_one": "{{count}} item",
+    "entries_other": "{{count}} itens",
+    "shared": "Compartilhado",
+    "userContent": "Conteúdo do usuário",
+    "enabledIn": "Ativado em {{campaigns}}",
+    "notEnabled": "Não ativado em nenhuma campanha que você conduz"
+  },
+  "detail": {
+    "provenance": "Proveniência",
+    "provenanceLine": "{{sources}}{{edition}} · conteúdo {{type}}",
+    "userContent": "Conteúdo do usuário",
+    "summaryLine": "{{count}} itens · {{kinds}} · visibilidade {{visibility}}",
+    "entries_one": "{{count}} item",
+    "entries_other": "{{count}} itens",
+    "noEntriesYet": "ainda sem itens",
+    "enabledInCampaigns": "Ativado nas campanhas que você conduz",
+    "noCampaigns": "Você ainda não conduz nenhuma campanha.",
+    "allPacksAllowed": "Todos os pacotes permitidos",
+    "enableAria": "Ativar {{pack}} em {{campaign}}",
+    "addEntryLabel": "Adicionar um item da biblioteca a este pacote",
+    "choosePlaceholder": "Escolha um item…",
+    "defaultContentPack": "Pacote de conteúdo"
+  },
+  "toasts": {
+    "created": "Pacote criado.",
+    "deleted": "Pacote excluído.",
+    "deletedKeepsCustom": "Pacote excluído. Tudo que já estava em uma ficha agora é personalizado.",
+    "renamed": "Pacote renomeado."
+  },
+  "import": {
+    "reading": "Lendo arquivo…",
+    "creating": "Criando pacote “{{name}}”…",
+    "importing": "Importando {{count}} itens…",
+    "refreshing": "Atualizando pacotes…",
+    "done": "{{count}} itens importados em “{{name}}”."
+  },
+  "export": {
+    "task": "Exportando pacote",
+    "building": "Gerando arquivo…",
+    "downloading": "Baixando…",
+    "done": "{{count}} itens exportados de “{{name}}”."
+  },
+  "newDialog": {
+    "title": "Novo pacote de conteúdo",
+    "description": "Um pacote agrupa seus próprios itens de biblioteca. Todo item pertence a um pacote.",
+    "name": "Nome",
+    "description2": "Descrição",
+    "create": "Criar pacote"
+  },
+  "importDialog": {
+    "title": "Importar pacote",
+    "description": "Solte um arquivo JSON de pacote do Universal Character Forge.",
+    "dropLabel": "Solte o JSON do pacote aqui, ou clique para escolher"
+  },
+  "renameDialog": {
+    "title": "Renomear pacote",
+    "name": "Nome",
+    "rename": "Renomear",
+    "errorNameRequired": "Dê um nome ao pacote."
+  },
+  "deleteDialog": {
+    "confirmTitle": "Excluir este pacote?",
+    "confirmDescriptionList": "Isso remove permanentemente “{{name}}” e todos os itens dentro dele. Campanhas que tinham este pacote ativado perderão acesso ao seu conteúdo. Isso não pode ser desfeito.",
+    "confirmDescriptionDetail": "Todos os itens dentro deste pacote são excluídos junto com ele. Tudo que já foi adicionado a um personagem permanece na ficha e se torna um item personalizado.",
+    "deletePackAria": "Excluir pacote"
+  },
+  "allPacksLink": "Todos os pacotes"
+}

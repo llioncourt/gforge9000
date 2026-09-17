@@ -1,0 +1,208 @@
+{
+  "page": {
+    "fallbackTitle": "Campaign",
+    "renameAria": "Rename campaign",
+    "inviteCopied": "Invite code copied.",
+    "newNpc": "New NPC",
+    "npcCreated": "NPC created.",
+    "copyCreated": "Copy created.",
+    "gmTransferred": "GM role transferred.",
+    "memberRemoved": "Member removed from the campaign.",
+    "characterSubmitted": "Character submitted to the campaign.",
+    "characterRemoved": "Character removed from the campaign.",
+    "ownershipTransferred": "Character ownership transferred.",
+    "settingsSaved": "Campaign settings saved.",
+    "campaignUpdated": "Campaign updated."
+  },
+  "editDialog": {
+    "title": "Edit campaign",
+    "nameLabel": "Campaign name",
+    "premiseLabel": "Premise",
+    "premisePlaceholder": "What is this campaign about?"
+  },
+  "tabs": {
+    "media": "Media",
+    "roster": "Roster",
+    "lore": "World & lore",
+    "story": "Story",
+    "graph": "Graph",
+    "reveals": "Reveals",
+    "sessions": "Sessions",
+    "timeline": "Timeline",
+    "battle": "Battle grid",
+    "library": "Library",
+    "rolls": "Rolls",
+    "notes": "Notes & handouts",
+    "members": "Members",
+    "rules": "House rules"
+  },
+  "roster": {
+    "empty": "No characters submitted yet. Players attach a character below.",
+    "unassigned": "Unassigned",
+    "npc": "NPC",
+    "playerCharacter": "Player character",
+    "approved": "Approved",
+    "pending": "Pending",
+    "stats": {
+      "hp": "HP",
+      "fp": "FP",
+      "move": "Move",
+      "dodge": "Dodge",
+      "st": "ST",
+      "dx": "DX",
+      "iq": "IQ",
+      "ht": "HT"
+    },
+    "pointsSummary": "Points {{total}} / {{budget}} · Load {{load}} · DR {{dr}}",
+    "drNone": "none",
+    "owner": "Owner",
+    "currentOwner": "Current owner",
+    "revoke": "Revoke",
+    "approve": "Approve",
+    "duplicate": "Duplicate",
+    "openSheet": "Open sheet",
+    "removeAria": "Remove from campaign",
+    "removeConfirmTitle": "Remove from campaign?",
+    "removeConfirmBody": "{{name}} will be detached from this campaign but kept on the owner's account.{{npcNote}}",
+    "removeConfirmNpcNote": " This NPC will no longer appear in the roster.",
+    "remove": "Remove",
+    "submitSection": {
+      "title": "Submit one of your characters",
+      "allSubmitted": "All your characters are submitted."
+    }
+  },
+  "notes": {
+    "filterAria": "Filter entries",
+    "filters": {
+      "all": "All entries",
+      "note": "Notes",
+      "handout": "Handouts",
+      "session": "Session log",
+      "npc": "NPCs",
+      "partyInventory": "Party inventory"
+    },
+    "kinds": {
+      "note": "Note",
+      "handout": "Handout",
+      "session": "Session log",
+      "npc": "NPC",
+      "partyInventory": "Party inventory"
+    },
+    "empty": "No entries here yet.",
+    "deleteAria": "Delete note",
+    "addEntry": {
+      "title": "Add an entry",
+      "titlePlaceholder": "Title",
+      "bodyPlaceholder": "Body",
+      "gmOnlyLabel": "GM only",
+      "submit": "Add entry",
+      "added": "Entry added."
+    }
+  },
+  "members": {
+    "makeGm": "Make GM",
+    "transferConfirmTitle": "Transfer the GM role?",
+    "transferConfirmBody": "{{name}} becomes the game master of this campaign and you become a regular player. Only the new GM can transfer it back.",
+    "transfer": "Transfer",
+    "removeAria": "Remove {{name}} from the campaign",
+    "removeConfirmTitle": "Remove this member?",
+    "removeConfirmBody": "{{name}} loses access to this campaign. Their characters stay in their account and can be re-attached later."
+  },
+  "houseRules": {
+    "cover": {
+      "label": "Campaign card cover",
+      "hint": "This image appears behind the campaign card. Images are converted to AVIF.",
+      "uploadingLabel": "Uploading cover…",
+      "dropReplace": "Drop a replacement cover here, or click to browse",
+      "dropNew": "Drop a cover here, or click to browse",
+      "sizeHint": "Any common image format, up to 25 MB.",
+      "removeAria": "Remove campaign cover",
+      "updated": "Campaign cover updated.",
+      "removed": "Campaign cover removed."
+    },
+    "pointLimit": "Point limit",
+    "disadvantageLimit": "Disadvantage limit",
+    "techLevel": "Tech level",
+    "packs": {
+      "label": "Enabled content packs",
+      "empty": "No content packs found yet. Tag library entries with a pack name to manage them here.",
+      "enableAria": "Enable pack {{name}}",
+      "addPlaceholder": "Add another pack name",
+      "hint": "With nothing enabled every pack is allowed. When at least one pack is enabled, library entries from other packs cannot be added to characters in this campaign. Entries with no pack are personal content and stay available."
+    },
+    "houseRulesLabel": "House rules",
+    "houseRulesPlaceholder": "Table agreements, allowed content packs, campaign tone…",
+    "save": "Save house rules"
+  },
+  "list": {
+    "title": "Campaigns",
+    "description": "Tables you run and tables you play at.",
+    "newCampaign": "New campaign",
+    "dialog": {
+      "title": "New campaign",
+      "nameLabel": "Name",
+      "premiseLabel": "Premise",
+      "pointLimit": "Point limit",
+      "disadvantageLimit": "Disadv. limit",
+      "techLevel": "Tech level",
+      "create": "Create campaign"
+    },
+    "join": {
+      "label": "Join with an invite code",
+      "placeholder": "e.g. 7KQ2F4",
+      "button": "Join",
+      "success": "Joined campaign.",
+      "error": "That invite code didn't match an open campaign."
+    },
+    "deleted": "Campaign deleted.",
+    "empty": "No campaigns yet. Create one as GM, or join with a code from your Game Master.",
+    "badge": {
+      "gm": "GM",
+      "player": "Player"
+    },
+    "noPremise": "No premise written yet.",
+    "points": "{{count}} pts",
+    "techLevelShort": "TL {{level}}",
+    "downloadAria": "Download campaign package",
+    "downloadTitle": "Download campaign package (ZIP)",
+    "deleteAria": "Delete campaign",
+    "deleteConfirmTitle": "Delete this campaign?",
+    "deleteConfirmBody": "This permanently removes {{name}} and everything inside it: lore, maps, notes, soundtrack, intro video, reveals and roll history. Characters are kept, but they are detached from the campaign. This cannot be undone.",
+    "deleteConfirmButton": "Delete campaign",
+    "export": {
+      "reading": "Reading campaign…",
+      "done": "Done",
+      "downloaded": "Package downloaded.",
+      "failed": "Export failed.",
+      "title": "Exporting {{name}}",
+      "fallbackName": "campaign",
+      "itemsPacked": "{{done}} of {{total}} items packed",
+      "close": "Close"
+    }
+  },
+  "packageImport": {
+    "importButton": "Import package",
+    "formatButton": "Package format",
+    "dialog": {
+      "title": "Campaign package format",
+      "description": "Everything a ZIP can carry into a new campaign, and where each file goes."
+    },
+    "downloadGuide": "Download the guide",
+    "downloadExample": "Example campaign.json",
+    "hint": "A ZIP can carry the premise, house rules, lore, notes, handouts, battle maps, soundtracks, the intro video and character sheets.",
+    "importDialog": {
+      "title": "Import campaign package",
+      "description": "campaign.json at the root, plus the files it references.",
+      "label": "Drop the campaign ZIP here, or click to browse"
+    },
+    "readingZip": "Reading the ZIP…",
+    "refreshing": "Refreshing campaigns…",
+    "importedSummary": "Campaign imported — {{entities}} lore entries, {{characters}} characters, {{maps}} maps, {{albums}} albums."
+  },
+  "rolls": {
+    "descriptionGm": "Every roll made by the table in this campaign, newest first.",
+    "descriptionPlayer": "Your rolls in this campaign, newest first.",
+    "empty": "No rolls yet.",
+    "vsTarget": "vs {{target}}"
+  }
+}

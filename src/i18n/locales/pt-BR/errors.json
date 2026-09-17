@@ -1,0 +1,28 @@
+{
+  "notFound": {
+    "code": "404",
+    "title": "Página não encontrada",
+    "description": "Esta página não existe ou foi movida.",
+    "goHome": "Ir para o início"
+  },
+  "boundary": {
+    "title": "Esta página não carregou",
+    "retry": "Tentar novamente",
+    "goHome": "Ir para o início"
+  },
+  "generic": {
+    "title": "Algo deu errado",
+    "description": "Tente novamente em instantes."
+  },
+  "permission": {
+    "title": "Você não tem acesso a isto",
+    "description": "Peça acesso ao mestre da campanha."
+  },
+  "offline": {
+    "title": "Você está offline",
+    "description": "Verifique sua conexão e tente novamente."
+  },
+  "network": {
+    "failed": "A requisição de rede falhou"
+  }
+}

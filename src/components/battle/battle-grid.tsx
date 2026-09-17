@@ -12,6 +12,7 @@ import {
 } from "@/lib/battlemap";
 import { MapToken } from "./map-token";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/hooks";
 
 type CharacterRow = Tables<"characters">;
 type Cell = { x: number; y: number };
@@ -66,6 +67,7 @@ export function BattleGrid({
   selectedId: string | null;
   onToggleFog: (cell: Cell) => void;
 }) {
+  const { t } = useT("battle");
   const containerRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -156,7 +158,7 @@ export function BattleGrid({
   return (
     <div className="space-y-2">
       <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
-        <span>Zoom {(zoom * 100).toFixed(0)}%</span>
+        <span>{t("grid.zoom", { value: (zoom * 100).toFixed(0) })}</span>
         <button
           type="button"
           className="hover:text-foreground underline"
@@ -165,12 +167,12 @@ export function BattleGrid({
             setPan({ x: 0, y: 0 });
           }}
         >
-          Reset view
+          {t("grid.resetView")}
         </button>
         {tool === "measure" ? (
-          <span>{measured ? `Distance: ${measured}` : "Click a starting cell, then move."}</span>
+          <span>{measured ? t("grid.distance", { distance: measured }) : t("grid.measureHint")}</span>
         ) : null}
-        {tool === "fog" ? <span>Click cells to hide or reveal them for players.</span> : null}
+        {tool === "fog" ? <span>{t("grid.fogHint")}</span> : null}
       </div>
 
       <div
@@ -363,7 +365,7 @@ export function BattleGrid({
                   use3d={show3d}
                 />
                 <div className="pointer-events-none absolute -bottom-5 left-1/2 -translate-x-1/2 rounded bg-background/80 px-1 text-[10px] whitespace-nowrap">
-                  {object.label || character?.name || "Token"}
+                  {object.label || character?.name || t("grid.defaultTokenLabel")}
                 </div>
               </div>
             );

@@ -45,6 +45,7 @@ import {
   uploadModel,
   validateModelFile,
 } from "@/lib/model3d";
+import { useT } from "@/i18n/hooks";
 
 const ModelViewer = lazy(() => import("@/components/character/model-viewer"));
 
@@ -112,14 +113,7 @@ function SliderRow({
   );
 }
 
-const VIEWS: { id: CameraView; label: string }[] = [
-  { id: "front", label: "Front" },
-  { id: "back", label: "Back" },
-  { id: "left", label: "Left" },
-  { id: "right", label: "Right" },
-  { id: "top", label: "Top" },
-  { id: "iso", label: "Iso" },
-];
+const VIEW_IDS: CameraView[] = ["front", "back", "left", "right", "top", "iso"];
 
 /** Large, interactive viewer: orbit, pan, zoom, shading, lighting, animation and capture. */
 export function ModelStageDialog({
@@ -137,6 +131,7 @@ export function ModelStageDialog({
   transform?: ModelTransform;
   onTransformChange?: ((t: ModelTransform) => void) | undefined;
 }) {
+  const { t } = useT("characters");
   const [settings, setSettings] = useState<ViewerSettings>(DEFAULT_VIEWER_SETTINGS);
   const [info, setInfo] = useState<ModelInfo | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
@@ -164,20 +159,20 @@ export function ModelStageDialog({
     const el = stageRef.current;
     if (!el) return;
     if (document.fullscreenElement) void document.exitFullscreen();
-    else void el.requestFullscreen?.().catch(() => toast.error("Fullscreen is not available."));
+    else void el.requestFullscreen?.().catch(() => toast.error(t("sheet.model.fullscreenUnavailable")));
   };
 
   const capture = () => {
     const data = apiRef.current?.screenshot();
     if (!data) {
-      toast.error("Could not capture this view.");
+      toast.error(t("sheet.model.captureUnavailable"));
       return;
     }
     const a = document.createElement("a");
     a.href = data;
     a.download = `${(name ?? "model").replace(/[^\w-]+/g, "_")}.png`;
     a.click();
-    toast.success("Snapshot saved.");
+    toast.success(t("sheet.model.snapshotSaved"));
   };
 
   const wrap = (deg: number) => ((deg % 360) + 360) % 360;
@@ -195,7 +190,7 @@ export function ModelStageDialog({
       <DialogContent className="max-w-6xl p-0">
         <DialogHeader className="px-5 pb-2 pt-4">
           <DialogTitle className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-            {name ? `${name} · 3D model` : "3D model"}
+            {name ? t("sheet.model.stageTitleNamed", { name }) : t("sheet.model.stageTitle")}
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-0 border-t border-border md:grid-cols-[1fr_17rem]">
@@ -217,15 +212,15 @@ export function ModelStageDialog({
             ) : null}
 
             <div className="pointer-events-auto absolute left-3 top-3 flex flex-wrap gap-1 rounded-lg border border-border bg-background/85 p-1 backdrop-blur">
-              {VIEWS.map((v) => (
+              {VIEW_IDS.map((id) => (
                 <Button
-                  key={v.id}
+                  key={id}
                   size="sm"
                   variant="ghost"
                   className="h-7 px-2 text-[11px]"
-                  onClick={() => apiRef.current?.setView(v.id)}
+                  onClick={() => apiRef.current?.setView(id)}
                 >
-                  {v.label}
+                  {t(`sheet.model.views.${id}`)}
                 </Button>
               ))}
             </div>
@@ -236,10 +231,10 @@ export function ModelStageDialog({
                 variant={settings.autoRotate ? "secondary" : "ghost"}
                 onClick={() => set("autoRotate", !settings.autoRotate)}
               >
-                <RotateCw className="mr-1 h-3.5 w-3.5" /> Turntable
+                <RotateCw className="mr-1 h-3.5 w-3.5" /> {t("sheet.model.turntable")}
               </Button>
               <Button size="sm" variant="ghost" onClick={capture}>
-                <Camera className="mr-1 h-3.5 w-3.5" /> Snapshot
+                <Camera className="mr-1 h-3.5 w-3.5" /> {t("sheet.model.snapshot")}
               </Button>
               <Button size="sm" variant="ghost" onClick={toggleFullscreen}>
                 {fullscreen ? (
@@ -247,10 +242,10 @@ export function ModelStageDialog({
                 ) : (
                   <Maximize2 className="mr-1 h-3.5 w-3.5" />
                 )}
-                {fullscreen ? "Exit" : "Fullscreen"}
+                {fullscreen ? t("sheet.model.exit") : t("sheet.model.fullscreen")}
               </Button>
               <span className="hidden px-2 text-[11px] text-muted-foreground sm:inline">
-                Drag to orbit · scroll to zoom · right-drag to pan
+                {t("sheet.model.controlsHint")}
               </span>
             </div>
           </div>
@@ -259,19 +254,19 @@ export function ModelStageDialog({
             <Tabs defaultValue="display">
               <TabsList className="m-2 grid w-[calc(100%-1rem)] grid-cols-3">
                 <TabsTrigger value="display" className="text-[11px]">
-                  Look
+                  {t("sheet.model.tabs.look")}
                 </TabsTrigger>
                 <TabsTrigger value="scene" className="text-[11px]">
-                  Scene
+                  {t("sheet.model.tabs.scene")}
                 </TabsTrigger>
                 <TabsTrigger value="model" className="text-[11px]">
-                  Model
+                  {t("sheet.model.tabs.model")}
                 </TabsTrigger>
               </TabsList>
 
               <ScrollArea className="h-[52vh] md:h-[64vh]">
                 <TabsContent value="display" className="space-y-4 px-4 pb-6 pt-1">
-                  <Row label="Shading">
+                  <Row label={t("sheet.model.shading")}>
                     <Select
                       value={settings.materialMode}
                       onValueChange={(v) => set("materialMode", v as MaterialMode)}
@@ -280,21 +275,21 @@ export function ModelStageDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="original">Original</SelectItem>
-                        <SelectItem value="clay">Clay</SelectItem>
-                        <SelectItem value="normal">Normals</SelectItem>
-                        <SelectItem value="xray">X-ray</SelectItem>
+                        <SelectItem value="original">{t("sheet.model.shadingOptions.original")}</SelectItem>
+                        <SelectItem value="clay">{t("sheet.model.shadingOptions.clay")}</SelectItem>
+                        <SelectItem value="normal">{t("sheet.model.shadingOptions.normal")}</SelectItem>
+                        <SelectItem value="xray">{t("sheet.model.shadingOptions.xray")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </Row>
-                  <Row label="Wireframe">
+                  <Row label={t("sheet.model.wireframe")}>
                     <Switch
                       checked={settings.wireframe}
                       onCheckedChange={(v) => set("wireframe", v)}
-                      aria-label="Wireframe"
+                      aria-label={t("sheet.model.wireframe")}
                     />
                   </Row>
-                  <Row label="Lighting">
+                  <Row label={t("sheet.model.lighting")}>
                     <Select
                       value={settings.lighting}
                       onValueChange={(v) => set("lighting", v as LightingPreset)}
@@ -303,15 +298,15 @@ export function ModelStageDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="studio">Studio</SelectItem>
-                        <SelectItem value="dramatic">Dramatic</SelectItem>
-                        <SelectItem value="noir">Noir</SelectItem>
-                        <SelectItem value="sunset">Sunset</SelectItem>
-                        <SelectItem value="flat">Flat</SelectItem>
+                        <SelectItem value="studio">{t("sheet.model.lightingOptions.studio")}</SelectItem>
+                        <SelectItem value="dramatic">{t("sheet.model.lightingOptions.dramatic")}</SelectItem>
+                        <SelectItem value="noir">{t("sheet.model.lightingOptions.noir")}</SelectItem>
+                        <SelectItem value="sunset">{t("sheet.model.lightingOptions.sunset")}</SelectItem>
+                        <SelectItem value="flat">{t("sheet.model.lightingOptions.flat")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </Row>
-                  <Row label="Backdrop">
+                  <Row label={t("sheet.model.backdrop")}>
                     <Select
                       value={settings.backdrop}
                       onValueChange={(v) => set("backdrop", v as BackdropMode)}
@@ -320,15 +315,15 @@ export function ModelStageDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="graphite">Graphite</SelectItem>
-                        <SelectItem value="ink">Ink</SelectItem>
-                        <SelectItem value="paper">Paper</SelectItem>
-                        <SelectItem value="void">Transparent</SelectItem>
+                        <SelectItem value="graphite">{t("sheet.model.backdropOptions.graphite")}</SelectItem>
+                        <SelectItem value="ink">{t("sheet.model.backdropOptions.ink")}</SelectItem>
+                        <SelectItem value="paper">{t("sheet.model.backdropOptions.paper")}</SelectItem>
+                        <SelectItem value="void">{t("sheet.model.backdropOptions.void")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </Row>
                   <SliderRow
-                    label="Exposure"
+                    label={t("sheet.model.exposure")}
                     value={settings.exposure}
                     min={0.2}
                     max={2.5}
@@ -337,7 +332,7 @@ export function ModelStageDialog({
                     onChange={(v) => set("exposure", v)}
                   />
                   <SliderRow
-                    label="Light power"
+                    label={t("sheet.model.lightPower")}
                     value={settings.lightIntensity}
                     min={0.1}
                     max={3}
@@ -348,37 +343,37 @@ export function ModelStageDialog({
                 </TabsContent>
 
                 <TabsContent value="scene" className="space-y-4 px-4 pb-6 pt-1">
-                  <Row label="Grid">
+                  <Row label={t("sheet.model.grid")}>
                     <Switch
                       checked={settings.grid}
                       onCheckedChange={(v) => set("grid", v)}
-                      aria-label="Grid"
+                      aria-label={t("sheet.model.grid")}
                     />
                   </Row>
-                  <Row label="Ground shadow">
+                  <Row label={t("sheet.model.groundShadow")}>
                     <Switch
                       checked={settings.shadows}
                       onCheckedChange={(v) => set("shadows", v)}
-                      aria-label="Ground shadow"
+                      aria-label={t("sheet.model.groundShadow")}
                     />
                   </Row>
-                  <Row label="Axes">
+                  <Row label={t("sheet.model.axes")}>
                     <Switch
                       checked={settings.axes}
                       onCheckedChange={(v) => set("axes", v)}
-                      aria-label="Axes"
+                      aria-label={t("sheet.model.axes")}
                     />
                   </Row>
-                  <Row label="Bounding box">
+                  <Row label={t("sheet.model.boundingBox")}>
                     <Switch
                       checked={settings.boundingBox}
                       onCheckedChange={(v) => set("boundingBox", v)}
-                      aria-label="Bounding box"
+                      aria-label={t("sheet.model.boundingBox")}
                     />
                   </Row>
                   <Separator />
                   <SliderRow
-                    label="Turntable speed"
+                    label={t("sheet.model.turntableSpeed")}
                     value={settings.autoRotateSpeed}
                     min={0.2}
                     max={6}
@@ -387,7 +382,7 @@ export function ModelStageDialog({
                     onChange={(v) => set("autoRotateSpeed", v)}
                   />
                   <SliderRow
-                    label="Field of view"
+                    label={t("sheet.model.fov")}
                     value={settings.fov}
                     min={20}
                     max={80}
@@ -401,7 +396,7 @@ export function ModelStageDialog({
                     className="w-full"
                     onClick={() => setSettings(DEFAULT_VIEWER_SETTINGS)}
                   >
-                    Reset view settings
+                    {t("sheet.model.resetViewSettings")}
                   </Button>
                 </TabsContent>
 
@@ -409,21 +404,23 @@ export function ModelStageDialog({
                   {onTransformChange ? (
                     <div className="space-y-2">
                       <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                        Fix orientation
+                        {t("sheet.model.fixOrientation")}
                       </p>
                       {(
                         [
-                          ["rx", "Tilt"],
-                          ["ry", "Turn"],
-                          ["rz", "Roll"],
+                          ["rx", "tilt"],
+                          ["ry", "turn"],
+                          ["rz", "roll"],
                         ] as const
-                      ).map(([axis, label]) => (
+                      ).map(([axis, labelKey]) => (
                         <div key={axis} className="flex items-center gap-1">
-                          <span className="w-10 text-[11px] text-muted-foreground">{label}</span>
+                          <span className="w-10 text-[11px] text-muted-foreground">
+                            {t(`sheet.model.axisLabels.${labelKey}`)}
+                          </span>
                           <Button
                             size="sm"
                             variant="ghost"
-                            aria-label={`${label} -90 degrees`}
+                            aria-label={t("sheet.model.rotateMinus90Aria", { axis: t(`sheet.model.axisLabels.${labelKey}`) })}
                             onClick={() => nudge(axis, -90)}
                           >
                             <RotateCcw className="h-3.5 w-3.5" />
@@ -431,7 +428,7 @@ export function ModelStageDialog({
                           <Button
                             size="sm"
                             variant="ghost"
-                            aria-label={`${label} +90 degrees`}
+                            aria-label={t("sheet.model.rotatePlus90Aria", { axis: t(`sheet.model.axisLabels.${labelKey}`) })}
                             onClick={() => nudge(axis, 90)}
                           >
                             <RotateCw className="h-3.5 w-3.5" />
@@ -442,7 +439,7 @@ export function ModelStageDialog({
                         </div>
                       ))}
                       <SliderRow
-                        label="Model scale"
+                        label={t("sheet.model.modelScale")}
                         value={transform.scale}
                         min={0.25}
                         max={4}
@@ -458,7 +455,7 @@ export function ModelStageDialog({
                         className="w-full"
                         onClick={() => onTransformChange(DEFAULT_MODEL_TRANSFORM)}
                       >
-                        Reset orientation
+                        {t("sheet.model.resetOrientation")}
                       </Button>
                       <Separator />
                     </div>
@@ -467,7 +464,7 @@ export function ModelStageDialog({
                   {info && info.animations.length ? (
                     <div className="space-y-2">
                       <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                        Animation
+                        {t("sheet.model.animation")}
                       </p>
                       <Select
                         value={settings.animation ?? "none"}
@@ -477,7 +474,7 @@ export function ModelStageDialog({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="none">{t("sheet.model.none")}</SelectItem>
                           {info.animations.map((a) => (
                             <SelectItem key={a} value={a}>
                               {a}
@@ -497,11 +494,11 @@ export function ModelStageDialog({
                           ) : (
                             <Play className="mr-1 h-3.5 w-3.5" />
                           )}
-                          {settings.animationPlaying ? "Pause" : "Play"}
+                          {settings.animationPlaying ? t("sheet.model.pause") : t("sheet.model.play")}
                         </Button>
                       </div>
                       <SliderRow
-                        label="Speed"
+                        label={t("sheet.model.speed")}
                         value={settings.animationSpeed}
                         min={0.1}
                         max={3}
@@ -515,31 +512,31 @@ export function ModelStageDialog({
 
                   <div className="space-y-1">
                     <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-                      Stats
+                      {t("sheet.model.stats")}
                     </p>
                     {info ? (
                       <dl className="space-y-1 text-[11px] text-muted-foreground">
-                        <Row label="Meshes">
+                        <Row label={t("sheet.model.meshes")}>
                           <span className="tabular-nums">{info.meshes}</span>
                         </Row>
-                        <Row label="Triangles">
+                        <Row label={t("sheet.model.triangles")}>
                           <span className="tabular-nums">{info.triangles.toLocaleString()}</span>
                         </Row>
-                        <Row label="Vertices">
+                        <Row label={t("sheet.model.vertices")}>
                           <span className="tabular-nums">{info.vertices.toLocaleString()}</span>
                         </Row>
-                        <Row label="Materials">
+                        <Row label={t("sheet.model.materials")}>
                           <span className="tabular-nums">{info.materials}</span>
                         </Row>
-                        <Row label="Clips">
+                        <Row label={t("sheet.model.clips")}>
                           <span className="tabular-nums">{info.animations.length}</span>
                         </Row>
-                        <Row label="Bounds">
+                        <Row label={t("sheet.model.bounds")}>
                           <span className="tabular-nums">{dims}</span>
                         </Row>
                       </dl>
                     ) : (
-                      <p className="text-[11px] text-muted-foreground">Loading model…</p>
+                      <p className="text-[11px] text-muted-foreground">{t("sheet.model.loadingModel")}</p>
                     )}
                   </div>
                 </TabsContent>
@@ -569,6 +566,8 @@ export function ModelPanel({
   transform?: ModelTransform;
   onTransformChange?: ((t: ModelTransform) => void) | undefined;
 }) {
+  const { t } = useT("characters");
+  const { t: tc } = useT("common");
   const signed = useModelUrl(path);
   const [mounted, setMounted] = useState(false);
   const [stageOpen, setStageOpen] = useState(false);
@@ -584,7 +583,7 @@ export function ModelPanel({
     },
     onSuccess: (next) => {
       onChange(next);
-      toast.success("3D model updated.");
+      toast.success(t("sheet.model.updated"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -595,7 +594,7 @@ export function ModelPanel({
     },
     onSuccess: () => {
       onChange(null);
-      toast.success("3D model removed.");
+      toast.success(t("sheet.model.removed"));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -610,19 +609,19 @@ export function ModelPanel({
             </Suspense>
             <button
               type="button"
-              aria-label="Open 3D model viewer"
+              aria-label={t("sheet.model.openViewerAria")}
               onClick={() => setStageOpen(true)}
               className="absolute inset-0 flex items-end justify-end p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span className="no-print flex items-center gap-1 rounded-full border border-border bg-background/80 px-2 py-1 text-[11px] text-muted-foreground opacity-0 backdrop-blur transition group-hover:opacity-100">
-                <Expand className="h-3 w-3" /> Expand
+                <Expand className="h-3 w-3" /> {t("sheet.model.expand")}
               </span>
             </button>
           </>
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
             <Box className="h-8 w-8 opacity-50" aria-hidden="true" />
-            <span className="text-xs">No 3D model</span>
+            <span className="text-xs">{t("sheet.model.noModel")}</span>
           </div>
         )}
       </div>
@@ -643,8 +642,8 @@ export function ModelPanel({
           <FileDropzone
             accept=".glb,model/gltf-binary"
             compact
-            label="Upload 3D model"
-            hint="GLB file · up to 50 MB"
+            label={t("sheet.model.uploadLabel")}
+            hint={t("sheet.model.uploadHint")}
             onFiles={(files) => {
               const file = files[0];
               if (file) upload.mutate(file);
@@ -653,11 +652,11 @@ export function ModelPanel({
           <div className="flex gap-2">
             {upload.isPending ? (
               <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading…
+                <Loader2 className="h-3.5 w-3.5 animate-spin" /> {tc("states.uploading")}
               </span>
             ) : (
               <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Box className="h-3.5 w-3.5" /> Visible to your campaign
+                <Box className="h-3.5 w-3.5" /> {t("sheet.model.visibleToCampaign")}
               </span>
             )}
             {path ? (
@@ -668,7 +667,7 @@ export function ModelPanel({
                 onClick={() => clear.mutate()}
                 disabled={clear.isPending}
               >
-                <Trash2 className="mr-1 h-3.5 w-3.5" /> Remove
+                <Trash2 className="mr-1 h-3.5 w-3.5" /> {tc("actions.remove")}
               </Button>
             ) : null}
           </div>

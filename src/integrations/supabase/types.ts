@@ -785,9 +785,11 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          game_slug: string | null
           id: string
           release_year: number | null
           slug: string
+          status: string
           subtitle: string | null
           title: string
           updated_at: string
@@ -799,9 +801,11 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          game_slug?: string | null
           id?: string
           release_year?: number | null
           slug: string
+          status?: string
           subtitle?: string | null
           title: string
           updated_at?: string
@@ -813,9 +817,11 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          game_slug?: string | null
           id?: string
           release_year?: number | null
           slug?: string
+          status?: string
           subtitle?: string | null
           title?: string
           updated_at?: string
@@ -898,6 +904,7 @@ export type Database = {
           duration_seconds: number | null
           file_name: string
           id: string
+          lyrics: string | null
           mime_type: string
           position: number
           storage_path: string
@@ -913,6 +920,7 @@ export type Database = {
           duration_seconds?: number | null
           file_name: string
           id?: string
+          lyrics?: string | null
           mime_type: string
           position: number
           storage_path: string
@@ -928,6 +936,7 @@ export type Database = {
           duration_seconds?: number | null
           file_name?: string
           id?: string
+          lyrics?: string | null
           mime_type?: string
           position?: number
           storage_path?: string
@@ -1016,6 +1025,7 @@ export type Database = {
           description: string | null
           gm_id: string
           id: string
+          import_key: string | null
           invite_code: string
           name: string
           settings: Json
@@ -1026,6 +1036,7 @@ export type Database = {
           description?: string | null
           gm_id?: string
           id?: string
+          import_key?: string | null
           invite_code?: string
           name: string
           settings?: Json
@@ -1036,6 +1047,7 @@ export type Database = {
           description?: string | null
           gm_id?: string
           id?: string
+          import_key?: string | null
           invite_code?: string
           name?: string
           settings?: Json
@@ -1195,6 +1207,7 @@ export type Database = {
           hp_delta: number
           ht: number
           id: string
+          import_key: string | null
           iq: number
           is_npc: boolean
           is_template: boolean
@@ -1232,6 +1245,7 @@ export type Database = {
           hp_delta?: number
           ht?: number
           id?: string
+          import_key?: string | null
           iq?: number
           is_npc?: boolean
           is_template?: boolean
@@ -1269,6 +1283,7 @@ export type Database = {
           hp_delta?: number
           ht?: number
           id?: string
+          import_key?: string | null
           iq?: number
           is_npc?: boolean
           is_template?: boolean
@@ -1354,6 +1369,7 @@ export type Database = {
           gm_notes: string | null
           id: string
           image_url: string | null
+          import_key: string | null
           kind: string
           name: string
           owner_user_id: string | null
@@ -1379,6 +1395,7 @@ export type Database = {
           gm_notes?: string | null
           id?: string
           image_url?: string | null
+          import_key?: string | null
           kind: string
           name: string
           owner_user_id?: string | null
@@ -1404,6 +1421,7 @@ export type Database = {
           gm_notes?: string | null
           id?: string
           image_url?: string | null
+          import_key?: string | null
           kind?: string
           name?: string
           owner_user_id?: string | null
@@ -1783,6 +1801,7 @@ export type Database = {
           image_height: number | null
           image_path: string | null
           image_width: number | null
+          import_key: string | null
           is_active: boolean
           name: string
           unit_name: string
@@ -1804,6 +1823,7 @@ export type Database = {
           image_height?: number | null
           image_path?: string | null
           image_width?: number | null
+          import_key?: string | null
           is_active?: boolean
           name?: string
           unit_name?: string
@@ -1825,6 +1845,7 @@ export type Database = {
           image_height?: number | null
           image_path?: string | null
           image_width?: number | null
+          import_key?: string | null
           is_active?: boolean
           name?: string
           unit_name?: string
@@ -2253,6 +2274,7 @@ export type Database = {
         Args: { _character: string; _new_owner: string }
         Returns: undefined
       }
+      wipe_all_my_data: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

@@ -36,6 +36,63 @@ export async function createEntity(input: TablesInsert<"entities">): Promise<Ent
   return unwrap(await supabase.from("entities").insert(input).select("*").single());
 }
 
+/** Inserts many entities in one statement: all of them land, or none do. */
+export async function createEntities(rows: TablesInsert<"entities">[]): Promise<EntityRow[]> {
+  if (rows.length === 0) return [];
+  return unwrap(await supabase.from("entities").insert(rows).select("*"));
+}
+
+/**
+ * Writes entities that carry an import key, updating the rows a previous
+ * import of the same file created instead of adding a second copy.
+ * Returns the row id for every import key handled.
+ */
+export async function upsertEntitiesByImportKey(
+  campaignId: string,
+  rows: (TablesInsert<"entities"> & { import_key: string })[],
+): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  if (rows.length === 0) return out;
+
+  const keys = rows.map((row) => row.import_key);
+  const existing = unwrap(
+    await supabase
+      .from("entities")
+      .select("id, import_key")
+      .eq("campaign_id", campaignId)
+      .in("import_key", keys),
+  );
+  const idByKey = new Map<string, string>();
+  for (const row of existing) if (row.import_key) idByKey.set(row.import_key, row.id);
+
+  const toInsert = rows.filter((row) => !idByKey.has(row.import_key));
+  const inserted = await createEntities(toInsert);
+  for (const row of inserted) if (row.import_key) out.set(row.import_key, row.id);
+
+  for (const row of rows) {
+    const id = idByKey.get(row.import_key);
+    if (!id) continue;
+    const { import_key: _key, campaign_id: _campaign, ...patch } = row;
+    await updateEntity(id, patch as TablesUpdate<"entities">);
+    out.set(row.import_key, id);
+  }
+  return out;
+}
+
+/** Inserts relationships, ignoring ones that already exist in the campaign. */
+export async function createRelationships(
+  rows: TablesInsert<"entity_relationships">[],
+): Promise<number> {
+  if (rows.length === 0) return 0;
+  const data = unwrap(
+    await supabase
+      .from("entity_relationships")
+      .upsert(rows, { onConflict: "campaign_id,source_id,target_id,rel_type", ignoreDuplicates: true })
+      .select("id"),
+  );
+  return data.length;
+}
+
 export async function updateEntity(
   id: string,
   patch: TablesUpdate<"entities">,

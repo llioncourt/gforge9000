@@ -143,8 +143,8 @@ function EntityPage() {
     setOwnImageBroken(false);
   }, [entity.data?.image_url]);
   const photoUrl = useQuery({
-    queryKey: ["entity-photo", entityImagePath],
-    queryFn: () => entityImageUrl(entityImagePath),
+    queryKey: ["entity-photo", entityImagePath, id],
+    queryFn: () => entityImageUrl(entityImagePath, id),
     enabled: !!entityImagePath,
   });
   // An entry image "from library" points at a campaign_assets file instead of

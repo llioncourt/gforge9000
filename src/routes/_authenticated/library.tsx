@@ -158,6 +158,7 @@ function LibraryPage() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<LibraryForm>(blankForm);
   const [pendingDelete, setPendingDelete] = useState<LibraryRow | null>(null);
+  const [foundLabel, setFoundLabel] = useState("");
   const [addTarget, setAddTarget] = useState<LibraryRow | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const exportTask = useTransferTask();
@@ -178,13 +179,12 @@ function LibraryPage() {
     let clearTimer = 0;
     const highlight = (el: HTMLElement) => {
       el.scrollIntoView({ behavior: "auto", block: "center" });
-      el.style.outline = "4px solid var(--primary)";
-      el.style.outlineOffset = "4px";
-      el.style.backgroundColor = "color-mix(in oklab, var(--primary) 20%, transparent)";
-      el.style.transform = "scale(1.02)";
-      el.style.boxShadow = "0 0 28px color-mix(in oklab, var(--primary) 55%, transparent)";
+      el.classList.add("search-flash");
+      if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
+      el.focus({ preventScroll: true });
+      setFoundLabel(el.getAttribute("data-search-label") ?? el.textContent?.trim().slice(0, 80) ?? "");
       clearTimer = window.setTimeout(() => {
-        el.removeAttribute("style");
+        el.classList.remove("search-flash");
         window.history.replaceState(window.history.state, "", "/library");
       }, 2500);
     };

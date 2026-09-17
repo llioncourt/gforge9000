@@ -10,12 +10,15 @@ import { useT } from "@/i18n/hooks";
 export function EntityThumb({
   path,
   fallbackPath,
+  entityId,
   name,
   className = "",
 }: {
   path: string | null | undefined;
   /** Used when the main image is missing or fails to load (e.g. linked sheet portrait). */
   fallbackPath?: string | null;
+  /** Lets an older image reference be resolved without a trial request. */
+  entityId?: string | undefined;
   name: string;
   className?: string;
 }) {
@@ -24,8 +27,8 @@ export function EntityThumb({
   useEffect(() => setBroken(false), [path]);
   const effective = broken ? (fallbackPath ?? null) : (path ?? fallbackPath ?? null);
   const url = useQuery({
-    queryKey: ["entity-photo", effective],
-    queryFn: () => entityImageUrl(effective),
+    queryKey: ["entity-photo", effective, entityId ?? null],
+    queryFn: () => entityImageUrl(effective, entityId),
     enabled: !!effective,
     staleTime: 1000 * 60 * 30,
   });

@@ -28,12 +28,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  addEntry,
+  addEntries,
   createCharacter,
   deleteCharacter,
+  deleteEntriesOf,
+  findCharacterByImportKey,
   getProfilePreferences,
   listCharacters,
   setProfilePreferences,
+  updateCharacter,
   type CharactersViewMode,
 } from "@/lib/api";
 import { portraitUrl } from "@/lib/portrait";
@@ -41,8 +44,8 @@ import { useSession } from "@/hooks/use-session";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
 import { cn } from "@/lib/utils";
 import { parsePortable } from "@/lib/portable";
+import { runCharacterImport } from "@/lib/character-import";
 import { reconcileImportedEntries } from "@/lib/import-reconcile";
-import type { ImportedEntry } from "@/lib/trait-match";
 import { ImportDialog } from "@/components/ui/transfer-dialog";
 import { metaText } from "@/i18n/meta";
 
@@ -116,31 +119,40 @@ function CharactersPage() {
   ) => {
     report(t("list.import.readingFile"), 5);
     const parsed = parsePortable(await file.text());
-    const { id: _ignored, ...character } = parsed.character;
     report(t("list.import.creatingCharacter"), 15);
-    const row = await createCharacter(character as never);
     try {
-      report(t("list.import.matchingTraits"), 25);
-      // Reconcile trait names against enabled content before saving them.
-      const { entries } = await reconcileImportedEntries(
-        parsed.entries as unknown as ImportedEntry[],
+      const result = await runCharacterImport(
+        parsed,
+        {
+          findByImportKey: findCharacterByImportKey,
+          createCharacter: (input) => createCharacter(input as never),
+          updateCharacter: (id, patch) => updateCharacter(id, patch as never),
+          deleteCharacter,
+          deleteEntriesOf,
+          addEntries: async (characterId, entries) => {
+            await addEntries(
+              entries.map(
+                (entry) => ({ ...entry, character_id: characterId, data: entry.data ?? {} }) as never,
+              ),
+            );
+          },
+          // Reconcile trait names against enabled content before saving them.
+          reconcile: (entries) => reconcileImportedEntries(entries),
+        },
+        (stage, done, total) => {
+          if (stage === "matching") report(t("list.import.matchingTraits"), 25);
+          else
+            report(
+              t("list.import.importingEntries", { done: done ?? 0, total: total ?? 0 }),
+              30 + Math.round(((done ?? 0) / Math.max(1, total ?? 1)) * 65),
+            );
+        },
       );
-      let done = 0;
-      for (const entry of entries) {
-        await addEntry({ ...entry, character_id: row.id, data: entry.data ?? {} } as never);
-        done += 1;
-        report(
-          t("list.import.importingEntries", { done, total: entries.length }),
-          30 + Math.round((done / Math.max(1, entries.length)) * 65),
-        );
-      }
       await queryClient.invalidateQueries({ queryKey: ["characters"] });
       setImportOpen(false);
-      navigate({ to: "/characters/$id", params: { id: row.id } });
-      return t("list.import.success", { name: row.name, count: entries.length });
+      navigate({ to: "/characters/$id", params: { id: result.id } });
+      return t("list.import.success", { name: result.name, count: result.entries });
     } catch (error) {
-      // Never leave a half-imported character behind.
-      await deleteCharacter(row.id).catch(() => undefined);
       await queryClient.invalidateQueries({ queryKey: ["characters"] });
       throw error;
     }

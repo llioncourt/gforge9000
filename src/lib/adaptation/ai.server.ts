@@ -43,8 +43,6 @@ const STAGE_PROMPTS: Record<AiStage, string> = {
     "Turn the material into adapted scenes for a visual retelling: title, synopsis, dramatic goal, beats, dialogue and narration. Return at most 8 scenes. Keep the cast, location and props limited to names present in the material. Cite source_keys for every scene.",
   enrichment:
     "Suggest purely presentational additions (wardrobe, set dressing, transitions, motifs) that make the scenes filmable, plus a story bible. These are inventions for the adaptation, not campaign facts.",
-  impact:
-    "Given the adapted scenes, recommend a comic page count with key splash moments, and a film runtime with act breaks and style notes.",
 };
 
 function gatewayMessage(status: number, body: string): string {

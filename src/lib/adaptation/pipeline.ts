@@ -1,3 +1,4 @@
+import { normalizeText } from "@/lib/text-normalize";
 import { runAdaptationStage } from "@/lib/adaptation/ai.functions";
 import type { AiStage, StageResult } from "@/lib/adaptation/ai-schemas";
 import { hashValue, stableKey } from "@/lib/adaptation/hash";
@@ -58,13 +59,30 @@ export function renderRecord(sourceKey: string, record: ScanRecord): string {
   return `[${sourceKey}] ${record.source_type} — ${record.label}${record.gm_only ? " (GM ONLY)" : ""}\n${body}`;
 }
 
+/**
+ * Records that already say when they happened are ordered here, not guessed
+ * at: a session number beats a play date, a play date beats an in-world year,
+ * and anything undated keeps its scan order behind the dated material.
+ */
+export function chronologyRank(record: ScanRecord): number | null {
+  const payload = record.payload as Record<string, unknown>;
+  const session = Number(payload["session_no"]);
+  if (Number.isFinite(session)) return session;
+  const played = typeof payload["played_on"] === "string" ? Date.parse(payload["played_on"]) : NaN;
+  if (Number.isFinite(played)) return played / 1e9;
+  const data = (payload["data"] ?? {}) as Record<string, unknown>;
+  const year = Number(payload["year"] ?? data["year"]);
+  if (Number.isFinite(year)) return year;
+  return null;
+}
+
 /** Splits a snapshot into chunks that fit comfortably in one request. */
 export function buildContextChunks(
   snapshot: ScanSnapshot,
   spoilerPolicy: SpoilerPolicy,
   maxChars = DEFAULT_CHUNK_CHARS,
 ): ContextChunk[] {
-  const blocks: { key: string; text: string }[] = [];
+  const blocks: { key: string; text: string; rank: number | null; order: number }[] = [];
   for (const source of snapshot.sources) {
     const record = snapshot.records[source.source_key];
     if (!record) continue;
@@ -74,8 +92,20 @@ export function buildContextChunks(
       record.gm_only,
     );
     if (!allowed) continue;
-    blocks.push({ key: source.source_key, text: renderRecord(source.source_key, record) });
+    blocks.push({
+      key: source.source_key,
+      text: renderRecord(source.source_key, record),
+      rank: chronologyRank(record),
+      order: blocks.length,
+    });
   }
+  blocks.sort((a, b) => {
+    if (a.rank !== null && b.rank !== null && a.rank !== b.rank) return a.rank - b.rank;
+    if (a.rank !== null && b.rank === null) return -1;
+    if (a.rank === null && b.rank !== null) return 1;
+    return a.order - b.order;
+  });
+
 
   const chunks: ContextChunk[] = [];
   let current: { key: string; text: string }[] = [];
@@ -223,23 +253,23 @@ export function toDraftScenes(
           order: beat.order,
           description: beat.description,
           emotion: beat.emotion,
-          entity_ids: beat.actors.map((actor) => byName.get(normalizeName(actor)) ?? "").filter(Boolean),
+          entity_ids: beat.actors.map((actor) => byName.get(normalizeText(actor)) ?? "").filter(Boolean),
         })),
         dialogue: scene.dialogue.map((line) => ({
           order: line.order,
           speaker: line.speaker,
-          speaker_entity_id: byName.get(normalizeName(line.speaker)) ?? null,
+          speaker_entity_id: byName.get(normalizeText(line.speaker)) ?? null,
           line: line.line,
           delivery: line.delivery,
           balloon_type: line.balloon_type || "balloon",
         })),
         narration: scene.narration,
         cast_entity_ids: scene.cast
-          .map((name) => byName.get(normalizeName(name)))
+          .map((name) => byName.get(normalizeText(name)))
           .filter((id): id is string => !!id),
-        location_entity_id: scene.location ? byName.get(normalizeName(scene.location)) ?? null : null,
+        location_entity_id: scene.location ? byName.get(normalizeText(scene.location)) ?? null : null,
         prop_entity_ids: scene.props
-          .map((name) => byName.get(normalizeName(name)))
+          .map((name) => byName.get(normalizeText(name)))
           .filter((id): id is string => !!id),
         wardrobe_refs: [],
         continuity_state: Object.fromEntries(scene.continuity.map((c) => [c.key, c.value])),
@@ -256,21 +286,13 @@ export function toDraftScenes(
     });
 }
 
-function normalizeName(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
 function entityIndex(snapshot: ScanSnapshot): Map<string, string> {
   const index = new Map<string, string>();
   for (const [, record] of Object.entries(snapshot.records)) {
     if (record.source_type !== "entity" || !record.source_id) continue;
-    index.set(normalizeName(record.label), record.source_id);
+    index.set(normalizeText(record.label), record.source_id);
     for (const alias of (record.payload["aliases"] as string[] | undefined) ?? []) {
-      index.set(normalizeName(alias), record.source_id);
+      index.set(normalizeText(alias), record.source_id);
     }
   }
   return index;
@@ -312,7 +334,6 @@ export interface ReconstructionResult {
   facts: DraftFact[];
   scenes: DraftScene[];
   enrichment: StageResult<"enrichment"> | null;
-  impact: StageResult<"impact"> | null;
   failures: { stage: AiStage; chunk: number; message: string }[];
 }
 
@@ -332,12 +353,11 @@ export async function runReconstruction(
     facts: [],
     scenes: [],
     enrichment: null,
-    impact: null,
     failures: [],
   };
 
-  // digest + facts, conflicts, chronology + scenes, enrichment + impact.
-  const total = chunks.length * 4 + 3;
+  // digest + facts, conflicts, chronology + scenes, enrichment.
+  const total = chunks.length * 4 + 2;
   let done = 0;
 
   const call = async <S extends AiStage>(
@@ -389,8 +409,17 @@ export async function runReconstruction(
   }
 
   // D. chronology + E. scene reconstruction, several batches at a time.
+  // Records that state when they happened are already in order; the ordering
+  // step only runs for material that genuinely has no dates to go on.
   const staged = await mapWithLimit(chunks, CHUNK_CONCURRENCY, async (chunk) => {
-    const chronology = await call("chronology", chunk.text, chunk.index, chunk.total);
+    const dated = chunk.source_keys.every((key) => {
+      const record = snapshot.records[key];
+      return record ? chronologyRank(record) !== null : false;
+    });
+    const chronology = dated
+      ? null
+      : await call("chronology", chunk.text, chunk.index, chunk.total);
+    if (dated) done += 1;
     const context = chronology
       ? `${chunk.text}\n\n--- SUGGESTED ORDER ---\n${JSON.stringify(chronology.ordered)}`
       : chunk.text;
@@ -404,21 +433,16 @@ export async function runReconstruction(
     out.scenes.push(...drafts);
   }
 
-  // F. enrichment + G. impact map.
+  // F. enrichment.
   if (out.scenes.length) {
     const outline = out.scenes
       .map((scene) => `${scene.sequence_no}. ${scene.title} — ${scene.synopsis}`)
       .join("\n");
-    const [enrichment, impact] = await Promise.all([
-      call("enrichment", outline, 0, 1),
-      call("impact", outline, 0, 1),
-    ]);
-    out.enrichment = enrichment;
-    out.impact = impact;
+    out.enrichment = await call("enrichment", outline, 0, 1);
   } else {
-    done += 2;
+    done += 1;
   }
 
-  onProgress?.({ stage: "impact", chunk: 1, chunks: 1, label: "impact", done: total, total });
+  onProgress?.({ stage: "enrichment", chunk: 1, chunks: 1, label: "enrichment", done: total, total });
   return out;
 }

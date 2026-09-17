@@ -53,6 +53,7 @@ export async function importCampaignSoundtrack(
       id: albumId, campaign_id: campaignId, slug: manifest.album.slug, title: manifest.album.title,
       subtitle: manifest.album.subtitle ?? null, description: manifest.album.description ?? null,
       composer: manifest.album.composer ?? null, release_year: manifest.album.release_year ?? null,
+      game_slug: manifest.album.game_slug ?? null, status: manifest.album.status ?? "published",
       cover_path: coverPath,
     });
     fail(albumResult.error);
@@ -61,7 +62,7 @@ export async function importCampaignSoundtrack(
       return {
         campaign_id: campaignId, album_id: albumId, position: track.position,
         title: meta?.title ?? track.name, composer: meta?.composer ?? manifest.album.composer ?? null,
-        duration_seconds: meta?.duration_seconds ?? null,
+        duration_seconds: meta?.duration_seconds ?? null, lyrics: meta?.lyrics ?? null,
         storage_path: uploaded.find((path) => path.includes(`/tracks/${String(track.position).padStart(2, "0")}-`)) ?? "",
         file_name: track.name, byte_size: track.bytes.length, mime_type: track.mime,
       };

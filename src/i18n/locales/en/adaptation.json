@@ -292,7 +292,13 @@
       "confirmedAll": "Facts confirmed.",
       "confirmAllTitle": "Confirm {{count}} unreviewed points?",
       "confirmAllDescription": "These were written by the assistant and nobody has read them yet. Confirming marks them all as accepted. Use Fix to read them one by one first.",
-      "confirmAllConfirm": "Confirm them all"
+      "confirmAllConfirm": "Confirm them all",
+      "review": "Review",
+      "reviewTitle": "Review these points",
+      "reviewDescription": "Tick the points you accept. Anything left unticked stays pending.",
+      "reviewBlocked": "{{count}} point(s) report a contradiction and must be settled one by one.",
+      "reviewCancel": "Cancel",
+      "reviewConfirm": "Accept {{count}} point(s)"
     }
   },
   "generate": {

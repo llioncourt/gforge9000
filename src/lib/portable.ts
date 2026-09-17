@@ -10,6 +10,8 @@ export interface PortableCharacter {
   format: "universal-character-forge";
   version: 1;
   exported_at: string;
+  /** Stable identity of the exported sheet, when the exporter knew one. */
+  import_key?: string;
   character: CharacterRecord;
   entries: Omit<CharacterEntry, "id" | "character_id">[];
 }
@@ -56,13 +58,23 @@ const entrySchema = z
   })
   .passthrough();
 
-export const portableCharacterSchema = z.object({
-  format: z.literal("universal-character-forge"),
-  version: z.literal(PORTABLE_CHARACTER_VERSION),
-  exported_at: z.string().default(""),
-  character: characterSchema,
-  entries: z.array(entrySchema).default([]),
-});
+/**
+ * Top level is strict: an unknown key there means the file is not what it
+ * claims to be. `character` and `entries` stay permissive on purpose, so a
+ * sheet exported by a newer build (extra columns, extra entry data) still
+ * imports instead of being refused.
+ */
+export const portableCharacterSchema = z
+  .object({
+    format: z.literal("universal-character-forge"),
+    version: z.literal(PORTABLE_CHARACTER_VERSION),
+    exported_at: z.string().default(""),
+    /** Stable identity of the exported sheet; used to make re-imports idempotent. */
+    import_key: z.string().trim().max(200).optional(),
+    character: characterSchema,
+    entries: z.array(entrySchema).default([]),
+  })
+  .strict();
 
 export function toPortable(
   character: CharacterRecord,
@@ -72,6 +84,7 @@ export function toPortable(
     format: "universal-character-forge",
     version: 1,
     exported_at: new Date().toISOString(),
+    import_key: `ucf-character:${character.id}`,
     character,
     entries: entries.map(({ id: _id, character_id: _c, ...rest }) => rest),
   };

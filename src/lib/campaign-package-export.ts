@@ -347,6 +347,7 @@ export async function buildCampaignPackageZip(
         composer: track.composer,
         duration_seconds: track.duration_seconds,
         file,
+        lyrics: (track as { lyrics?: string | null }).lyrics ?? null,
       });
     }
     if (!tracks.length) continue;
@@ -357,6 +358,9 @@ export async function buildCampaignPackageZip(
       description: album.description,
       composer: album.composer,
       release_year: album.release_year,
+      game_slug: (album as { game_slug?: string | null }).game_slug ?? null,
+      status:
+        (album as { status?: string | null }).status === "draft" ? ("draft" as const) : ("published" as const),
       cover,
       tracks,
     });

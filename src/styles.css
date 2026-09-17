@@ -502,3 +502,19 @@
     transform: translateY(0);
   }
 }
+
+/* A deep-linked entry flashes once so it can be found on a long page. */
+.search-flash {
+  outline: 4px solid var(--primary);
+  outline-offset: 4px;
+  background-color: color-mix(in oklab, var(--primary) 20%, transparent);
+  box-shadow: 0 0 28px color-mix(in oklab, var(--primary) 55%, transparent);
+  transform: scale(1.02);
+  transition: transform 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-flash {
+    transform: none;
+  }
+}

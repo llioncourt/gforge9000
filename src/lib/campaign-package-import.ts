@@ -16,10 +16,11 @@ import {
   type CampaignPackageManifest,
 } from "@/lib/campaign-package";
 import { convertToAvif, isImageFile } from "@/lib/image-avif";
-import { createEntity, createRelationship, updateEntity } from "@/lib/lore";
+import { createEntity, createRelationships, updateEntity } from "@/lib/lore";
 import { uploadPortrait } from "@/lib/portrait";
 import { parsePortable } from "@/lib/portable";
 import { reconcileImportedEntries } from "@/lib/import-reconcile";
+import { campaignPackageImportKey, packageChildImportKey } from "@/lib/import-identity";
 import type { ImportedEntry } from "@/lib/trait-match";
 
 import type { TablesInsert } from "@/integrations/supabase/types";
@@ -49,9 +50,16 @@ async function bytesAsAvif(archive: Archive, path: string): Promise<Uint8Array> 
 }
 
 /**
- * Imports a campaign package ZIP as a brand new campaign owned by the signed-in
- * user. The manifest is fully validated before any row is written; if a later
- * step fails the campaign is removed so nothing half-imported is left behind.
+ * Imports a campaign package ZIP for the signed-in user. The manifest is fully
+ * validated before any row is written; if a later step fails on a campaign this
+ * import created, that campaign is removed so nothing half-imported is left.
+ *
+ * Importing the same package twice reuses the campaign it produced the first
+ * time (matched on the package's own content, never on its name, so two
+ * unrelated campaigns sharing a title stay separate) and refreshes its lore
+ * and characters instead of duplicating them. Media that has no identity of
+ * its own — notes, images, videos, albums, sound effects — is written on the
+ * first import only, so a repeat cannot pile up copies.
  */
 export async function importCampaignPackage(
   file: File,
@@ -78,25 +86,51 @@ export async function importCampaignPackage(
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
 
-  step("Creating campaign…");
-  const campaign = await createCampaign({
-    name: manifest.campaign.name,
-    description: manifest.campaign.description ?? null,
-    settings: {
-      point_limit: manifest.campaign.settings?.point_limit ?? 150,
-      disadvantage_limit: manifest.campaign.settings?.disadvantage_limit ?? -50,
-      tech_level: manifest.campaign.settings?.tech_level ?? 8,
-      house_rules: manifest.campaign.settings?.house_rules ?? "",
-      allowed_sources: manifest.campaign.settings?.allowed_sources ?? ["user"],
-      ...(manifest.campaign.settings?.allowed_packs
-        ? { allowed_packs: manifest.campaign.settings.allowed_packs }
-        : {}),
+  const packageKey = campaignPackageImportKey(manifest);
+  const { data: previous } = await supabase
+    .from("campaigns")
+    .select("id")
+    .eq("gm_id", user.id)
+    .eq("import_key", packageKey)
+    .maybeSingle();
 
-    },
-  });
+  const settings = {
+    point_limit: manifest.campaign.settings?.point_limit ?? 150,
+    disadvantage_limit: manifest.campaign.settings?.disadvantage_limit ?? -50,
+    tech_level: manifest.campaign.settings?.tech_level ?? 8,
+    house_rules: manifest.campaign.settings?.house_rules ?? "",
+    allowed_sources: manifest.campaign.settings?.allowed_sources ?? ["user"],
+    ...(manifest.campaign.settings?.allowed_packs
+      ? { allowed_packs: manifest.campaign.settings.allowed_packs }
+      : {}),
+  };
+
+  let campaignId: string;
+  if (previous) {
+    step("Updating campaign…");
+    const { error } = await supabase
+      .from("campaigns")
+      .update({
+        name: manifest.campaign.name,
+        description: manifest.campaign.description ?? null,
+        settings,
+      })
+      .eq("id", previous.id);
+    if (error) throw new Error(error.message);
+    campaignId = previous.id;
+  } else {
+    step("Creating campaign…");
+    const campaign = await createCampaign({
+      name: manifest.campaign.name,
+      description: manifest.campaign.description ?? null,
+      import_key: packageKey,
+      settings,
+    } as never);
+    campaignId = campaign.id;
+  }
 
   const summary: CampaignImportSummary = {
-    campaignId: campaign.id,
+    campaignId,
     notes: 0,
     entities: 0,
     relationships: 0,
@@ -111,37 +145,41 @@ export async function importCampaignPackage(
     intro: false,
   };
 
+  const firstImport = !previous;
+
   try {
     const ids: ImportIds = { characters: new Map(), entities: new Map() };
-    await importCharacters(manifest, archive, campaign.id, user.id, summary, step, ids);
-    await importLoreSection(manifest, archive, campaign.id, user.id, summary, step, ids);
-    await importNotes(manifest, campaign.id, user.id, summary, step);
-    await importAssets(manifest, archive, campaign.id, user.id, summary, step);
-    await importMaps(manifest, archive, campaign.id, user.id, summary, step, ids);
-    if (manifest.videos.length) {
-      step("Importing videos…");
-      for (const video of manifest.videos) {
-        await uploadCampaignVideo(campaign.id, fileFromZip(archive, video.file), { title: video.title, videoType: video.type });
+    await importCharacters(manifest, archive, campaignId, user.id, summary, step, ids, packageKey);
+    await importLoreSection(manifest, archive, campaignId, user.id, summary, step, ids, packageKey, firstImport);
+    if (firstImport) {
+      await importNotes(manifest, campaignId, user.id, summary, step);
+      await importAssets(manifest, archive, campaignId, user.id, summary, step);
+      await importMaps(manifest, archive, campaignId, user.id, summary, step, ids);
+      if (manifest.videos.length) {
+        step("Importing videos…");
+        for (const video of manifest.videos) {
+          await uploadCampaignVideo(campaignId, fileFromZip(archive, video.file), { title: video.title, videoType: video.type });
+          summary.videos += 1;
+          if (video.type === "intro") summary.intro = true;
+        }
+      }
+      await importSoundtracks(manifest, archive, campaignId, summary, step);
+      if (manifest.sound_fx.length) {
+        step("Importing sound effects…");
+        for (const effect of manifest.sound_fx) {
+          await uploadCampaignSoundFx(campaignId, effect.title, fileFromZip(archive, effect.file));
+          summary.soundFx += 1;
+        }
+      }
+      if (manifest.intro) {
+        step("Uploading intro video…");
+        await uploadCampaignIntro(campaignId, fileFromZip(archive, manifest.intro.file));
+        summary.intro = true;
         summary.videos += 1;
-        if (video.type === "intro") summary.intro = true;
       }
-    }
-    await importSoundtracks(manifest, archive, campaign.id, summary, step);
-    if (manifest.sound_fx.length) {
-      step("Importing sound effects…");
-      for (const effect of manifest.sound_fx) {
-        await uploadCampaignSoundFx(campaign.id, effect.title, fileFromZip(archive, effect.file));
-        summary.soundFx += 1;
-      }
-    }
-    if (manifest.intro) {
-      step("Uploading intro video…");
-      await uploadCampaignIntro(campaign.id, fileFromZip(archive, manifest.intro.file));
-      summary.intro = true;
-      summary.videos += 1;
     }
   } catch (error) {
-    await supabase.from("campaigns").delete().eq("id", campaign.id);
+    if (firstImport) await supabase.from("campaigns").delete().eq("id", campaignId);
     throw error;
   }
 
@@ -163,15 +201,18 @@ async function importCharacters(
   summary: CampaignImportSummary,
   step: (label: string) => void,
   ids: ImportIds,
+  packageKey: string,
 ) {
   if (!manifest.characters.length) return;
   step("Importing characters…");
   for (const entry of manifest.characters) {
     const portable = parsePortable(new TextDecoder().decode(bytesFromZip(archive, entry.file)));
     const record = portable.character;
+    const importKey = packageChildImportKey(packageKey, "character", entry.key);
     const insert: TablesInsert<"characters"> = {
       owner_id: userId,
       campaign_id: campaignId,
+      import_key: importKey,
       name: record.name,
       player_name: record.player_name ?? null,
       concept: record.concept ?? null,
@@ -196,13 +237,32 @@ async function importCharacters(
       is_npc: entry.is_npc ?? record.is_npc ?? false,
       approved: record.approved ?? false,
     };
-    const { data: created, error } = await supabase
+
+    const { data: existing } = await supabase
       .from("characters")
-      .insert(insert)
       .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    ids.characters.set(entry.key, created.id);
+      .eq("owner_id", userId)
+      .eq("import_key", importKey)
+      .maybeSingle();
+
+    let characterId: string;
+    if (existing) {
+      const { id: _drop, ...updates } = insert as TablesInsert<"characters"> & { id?: string };
+      const { error } = await supabase.from("characters").update(updates).eq("id", existing.id);
+      if (error) throw new Error(error.message);
+      characterId = existing.id;
+      const cleared = await supabase.from("character_entries").delete().eq("character_id", characterId);
+      if (cleared.error) throw new Error(cleared.error.message);
+    } else {
+      const { data: created, error } = await supabase
+        .from("characters")
+        .insert(insert)
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      characterId = created.id;
+    }
+    ids.characters.set(entry.key, characterId);
 
     if (portable.entries.length) {
       // Same reconciliation as the standalone character import, so identical
@@ -211,7 +271,7 @@ async function importCharacters(
         portable.entries as unknown as ImportedEntry[],
       );
       const rows = reconciled.map((item, index) => ({
-        character_id: created.id,
+        character_id: characterId,
         kind: item.kind,
         name: item.name,
         category: item.category ?? null,
@@ -226,10 +286,9 @@ async function importCharacters(
       if (entriesResult.error) throw new Error(entriesResult.error.message);
     }
 
-
-    if (entry.portrait_file) {
-      const path = await uploadPortrait(created.id, fileFromZip(archive, entry.portrait_file));
-      const update = await supabase.from("characters").update({ portrait_path: path }).eq("id", created.id);
+    if (entry.portrait_file && !existing) {
+      const path = await uploadPortrait(characterId, fileFromZip(archive, entry.portrait_file));
+      const update = await supabase.from("characters").update({ portrait_path: path }).eq("id", characterId);
       if (update.error) throw new Error(update.error.message);
     }
     summary.characters += 1;
@@ -244,20 +303,39 @@ async function importLoreSection(
   summary: CampaignImportSummary,
   step: (label: string) => void,
   ids: ImportIds,
+  packageKey: string,
+  firstImport: boolean,
 ) {
   const { entities, relationships } = manifest.lore;
   if (!entities.length) return;
   step("Importing lore…");
 
+  const existingByKey = new Map<string, { id: string; image_url: string | null }>();
+  if (!firstImport) {
+    const keys = entities.map((entity) => packageChildImportKey(packageKey, "entity", entity.key));
+    const { data: rows } = await supabase
+      .from("entities")
+      .select("id, import_key, image_url")
+      .eq("campaign_id", campaignId)
+      .in("import_key", keys);
+    for (const row of rows ?? []) {
+      if (row.import_key) existingByKey.set(row.import_key, { id: row.id, image_url: row.image_url });
+    }
+  }
+
   for (const entity of entities) {
-    let imagePath: string | null = null;
-    if (entity.image_file) {
+    const importKey = packageChildImportKey(packageKey, "entity", entity.key);
+    const previous = existingByKey.get(importKey);
+    // Image bytes are only uploaded once; a repeat import keeps the stored file.
+    let imagePath: string | null = previous?.image_url ?? null;
+    if (entity.image_file && !imagePath) {
       imagePath = await uploadLoreImage(archive, entity.image_file, campaignId, userId);
     }
     const data: Record<string, unknown> = { ...entity.data };
     if (entity.character_key) data["character_sheet_id"] = ids.characters.get(entity.character_key) ?? null;
-    const created = await createEntity({
+    const payload = {
       campaign_id: campaignId,
+      import_key: importKey,
       kind: entity.kind,
       name: entity.name,
       status: entity.status,
@@ -272,8 +350,14 @@ async function importLoreSection(
       image_url: imagePath,
       character_id: entity.character_key ? (ids.characters.get(entity.character_key) ?? null) : null,
       data: data as NonNullable<TablesInsert<"entities">["data"]>,
-    });
-    ids.entities.set(entity.key, created.id);
+    };
+    if (previous) {
+      await updateEntity(previous.id, payload as never);
+      ids.entities.set(entity.key, previous.id);
+    } else {
+      const created = await createEntity(payload as never);
+      ids.entities.set(entity.key, created.id);
+    }
     summary.entities += 1;
   }
 
@@ -288,19 +372,23 @@ async function importLoreSection(
     const sourceId = ids.entities.get(rel.source_key);
     const targetId = ids.entities.get(rel.target_key);
     if (!sourceId || !targetId) continue;
-    await createRelationship({
-      campaign_id: campaignId,
-      source_id: sourceId,
-      target_id: targetId,
-      rel_type: rel.rel_type,
-      description: rel.description ?? null,
-      gm_description: rel.gm_description ?? null,
-      start_label: rel.start_label ?? null,
-      end_label: rel.end_label ?? null,
-      strength: rel.strength ?? null,
-      is_current: rel.is_current,
-      visibility: normalizeVisibility(rel.visibility),
-    });
+    // A unique index on (campaign, source, target, type) keeps a repeat import
+    // from stacking the same link twice.
+    await createRelationships([
+      {
+        campaign_id: campaignId,
+        source_id: sourceId,
+        target_id: targetId,
+        rel_type: rel.rel_type,
+        description: rel.description ?? null,
+        gm_description: rel.gm_description ?? null,
+        start_label: rel.start_label ?? null,
+        end_label: rel.end_label ?? null,
+        strength: rel.strength ?? null,
+        is_current: rel.is_current,
+        visibility: normalizeVisibility(rel.visibility),
+      },
+    ]);
     summary.relationships += 1;
   }
 }
@@ -457,6 +545,8 @@ async function importSoundtracks(
           description: album.description ?? null,
           composer: album.composer ?? null,
           release_year: album.release_year ?? null,
+          game_slug: album.game_slug ?? null,
+          ...(album.status ? { status: album.status } : {}),
           cover: album.cover,
         },
         tracks: album.tracks.map((track) => ({
@@ -465,6 +555,7 @@ async function importSoundtracks(
           composer: track.composer ?? null,
           duration_seconds: track.duration_seconds ?? null,
           file: track.file,
+          lyrics: track.lyrics ?? null,
         })),
       },
       { name: album.cover, bytes: cover },

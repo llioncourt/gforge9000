@@ -147,6 +147,7 @@ export function PlayersPanel({ campaignId, isGm }: { campaignId: string; isGm: b
                   <div className="flex items-start gap-3">
                     <EntityThumb
                       path={entity?.image_url}
+                      entityId={entity?.id}
                       fallbackPath={portraitFor(entity)}
                       name={entity?.name ?? tc("labels.untitled")}
                       className="size-14"

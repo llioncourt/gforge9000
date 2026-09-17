@@ -18,6 +18,33 @@ export const NOTE_KINDS = ["note", "handout", "session", "session-prep", "rule"]
 export const VISIBILITIES = ["gm", "players", "public"] as const;
 export const GRID_TYPES = ["square", "hex", "none"] as const;
 
+/**
+ * Visibility is a closed set. Older files (and files written by hand) use other
+ * spellings, so anything recognisable is mapped onto the canonical word first
+ * and only then validated; anything unrecognised is refused rather than stored.
+ */
+const PACKAGE_VISIBILITY_ALIASES: Record<string, (typeof VISIBILITIES)[number]> = {
+  gm: "gm",
+  gm_only: "gm",
+  gmonly: "gm",
+  private: "gm",
+  secret: "gm",
+  hidden: "gm",
+  unrevealed: "gm",
+  selected_players: "gm",
+  players: "players",
+  all_players: "players",
+  shared: "players",
+  campaign: "players",
+  public: "public",
+};
+
+const visibilityField = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  const key = value.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  return PACKAGE_VISIBILITY_ALIASES[key] ?? value;
+}, z.enum(VISIBILITIES).default("gm"));
+
 const settingsSchema = z
   .object({
     point_limit: z.number().int().min(0).max(100000).optional(),
@@ -45,7 +72,7 @@ const entitySchema = z
     kind: text(60).min(1),
     name: text(200).min(1),
     status: text(60).default("active"),
-    visibility: z.string().default("gm"),
+    visibility: visibilityField,
     summary: nullableText(2000),
     description: nullableText(50000),
     player_description: nullableText(50000),
@@ -73,7 +100,7 @@ const relationshipSchema = z
     end_label: nullableText(120),
     strength: z.number().int().min(-5).max(5).nullish(),
     is_current: z.boolean().default(true),
-    visibility: z.string().default("gm"),
+    visibility: visibilityField,
   })
   .strict();
 
@@ -121,6 +148,8 @@ const mapSchema = z
   })
   .strict();
 
+// Mirrors the standalone soundtrack pack format, so an album keeps its
+// grouping, publish state and lyrics when it travels inside a campaign ZIP.
 const soundtrackTrackSchema = z
   .object({
     position: z.number().int().min(1).max(60),
@@ -128,6 +157,7 @@ const soundtrackTrackSchema = z
     composer: nullableText(160),
     duration_seconds: z.number().int().min(1).max(3600).nullish(),
     file: filePath,
+    lyrics: nullableText(20000),
   })
   .strict();
 
@@ -139,6 +169,8 @@ const soundtrackSchema = z
     description: nullableText(4000),
     composer: nullableText(160),
     release_year: z.number().int().min(1970).max(2100).nullish(),
+    game_slug: z.string().trim().min(2).max(80).regex(/^[a-z0-9-]+$/).nullish(),
+    status: z.enum(["draft", "published"]).optional(),
     cover: filePath,
     tracks: z.array(soundtrackTrackSchema).min(1).max(60),
   })

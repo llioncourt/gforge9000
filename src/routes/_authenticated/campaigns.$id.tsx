@@ -13,7 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileDropzone } from "@/components/ui/FileDropzone";
-import { Tabs, TabsContent, ScrollableTabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { CampaignNav } from "@/components/campaign/campaign-nav";
 import {
   AlertDialog,
   AlertDialogAction,

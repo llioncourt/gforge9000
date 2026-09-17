@@ -192,12 +192,13 @@ export function SessionChroniclePanel({ campaignId, isGm }: { campaignId: string
           chunk_index: 0,
           chunk_total: 1,
         },
-      })) as { result: StageResult<"facts"> };
+      })) as { result: string };
+      const parsed = JSON.parse(response.result) as StageResult<"facts">;
       const existing = items.data ?? [];
       const nextSequence = existing.length
         ? Math.max(...existing.map((i) => i.sequence_no)) + 1
         : 0;
-      const rows = response.result.facts.map((fact, index: number) => ({
+      const rows = parsed.facts.map((fact, index: number) => ({
         chronicle_id: selected.id,
         campaign_id: campaignId,
         item_type: "ai_reconstruction" as ChronicleItemType,

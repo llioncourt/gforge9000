@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { acceptableSelection, splitForReview } from "@/lib/adaptation/review";
+import { acceptableSelection, splitForReview, type ReviewableFact } from "@/lib/adaptation/review";
 
-const fact = (id: string, over: Partial<Record<string, unknown>> = {}) => ({
+const fact = (id: string, over: Partial<ReviewableFact> = {}): ReviewableFact => ({
   id,
   statement: `statement ${id}`,
   provenance_type: "ai_inference",
   canon_status: "needs_review",
   ...over,
-}) as never;
+});
 
 describe("adaptation review selection", () => {
   it("only offers pending statements", () => {

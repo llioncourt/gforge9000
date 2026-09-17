@@ -16,6 +16,9 @@ import {
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/responses";
 const MODEL = "openai/gpt-6-astra";
 const MAX_ATTEMPTS = 3;
+/** A stage that has not finished streaming by now is treated as failed. */
+const STAGE_TIMEOUT_MS = 120_000;
+
 
 const SYSTEM_PROMPT = `You adapt tabletop campaign records into comics and films.
 

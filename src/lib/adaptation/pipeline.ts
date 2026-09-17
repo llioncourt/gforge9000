@@ -422,6 +422,3 @@ export async function runReconstruction(
   onProgress?.({ stage: "impact", chunk: 1, chunks: 1, label: "impact", done: total, total });
   return out;
 }
-
-  return out;
-}

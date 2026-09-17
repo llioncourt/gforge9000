@@ -47,6 +47,8 @@ export function CampaignRules({
   const [rules, setRules] = useState<Ruleset>(() => rulesetFromSettings(settings));
   const changed = useMemo(() => new Set(changedPaths(rules)), [rules]);
   const unlimited = t("rulesTuning.unlimited");
+  // Keys are derived from ruleset paths, so they are resolved dynamically.
+  const tk = (key: string): string => (t as unknown as (k: string) => string)(key);
 
   const setField = (field: RulesetField, raw: string | boolean) => {
     const value = coerceFieldValue(field, raw);
@@ -83,7 +85,7 @@ export function CampaignRules({
           <SelectContent>
             {(field.options ?? []).map((option) => (
               <SelectItem key={option} value={option}>
-                {t(`rulesTuning.enums.${field.path}.${option}`)}
+                {tk(`rulesTuning.enums.${field.path}.${option}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -105,7 +107,7 @@ export function CampaignRules({
   };
 
   function fieldLabel(field: RulesetField): string {
-    return t(`rulesTuning.fields.${field.path}`);
+    return tk(`rulesTuning.fields.${field.path}`);
   }
 
   const renderFieldRow = (field: RulesetField) => (

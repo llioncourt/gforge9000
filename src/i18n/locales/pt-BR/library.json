@@ -1,4 +1,9 @@
 {
+  "meta": {
+    "title": "Biblioteca — Universal Character Forge",
+    "description": "Características, perícias e equipamentos personalizados que você pode reutilizar em personagens e campanhas.",
+    "ogDescription": "Conteúdo personalizado reutilizável com procedência da fonte."
+  },
   "page": {
     "title": "Biblioteca",
     "description": "Suas próprias características, perícias e equipamentos, agrupados em pacotes de conteúdo com proveniência completa."

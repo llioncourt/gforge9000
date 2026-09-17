@@ -1,4 +1,12 @@
 {
+  "meta": {
+    "indexTitle": "Pacotes de conteúdo — Universal Character Forge",
+    "indexDescription": "Organize, importe e compartilhe pacotes de conteúdo de características, perícias e equipamentos, e ative-os por campanha.",
+    "indexOgDescription": "Agrupe sua biblioteca em pacotes e ative-os para as campanhas que você conduz.",
+    "detailTitle": "Detalhes do pacote — Universal Character Forge",
+    "detailDescription": "Todos os itens deste pacote de conteúdo, agrupados por tipo, com procedência e uso em campanhas.",
+    "detailOgDescription": "Organize um pacote de conteúdo e ative-o por campanha."
+  },
   "page": {
     "title": "Pacotes",
     "description": "Pacotes de conteúdo agrupam sua biblioteca em conjuntos reutilizáveis que você pode curar, compartilhar e ativar por campanha.",

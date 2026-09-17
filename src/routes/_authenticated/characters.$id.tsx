@@ -113,6 +113,7 @@ import { ModelPanel } from "@/components/character/model-panel";
 import { parseModelTransform } from "@/lib/model3d";
 import { allowedPacksOf } from "@/lib/packs";
 import { buildImagePrompt } from "@/lib/image-prompt";
+import { metaText } from "@/i18n/meta";
 
 import { PrintSheet } from "@/components/character/print-sheet";
 
@@ -123,9 +124,8 @@ export const Route = createFileRoute("/_authenticated/characters/$id")({
     return typeof from === "string" && from ? { from } : {};
   },
   head: ({ params }) => {
-    const title = `Character sheet ${params.id.slice(0, 8)} — Universal Character Forge`;
-    const description =
-      "Live point totals, traits, skills, equipment, encumbrance and a rollable combat sheet for this character.";
+    const title = metaText("characters", "meta.sheetTitle", { id: params.id.slice(0, 8) });
+    const description = metaText("characters", "meta.sheetDescription");
     return {
       meta: [
         { title },

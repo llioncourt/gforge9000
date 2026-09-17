@@ -1,4 +1,11 @@
 {
+  "meta": {
+    "listTitle": "Campaigns — Universal Character Forge",
+    "listDescription": "Run or join campaigns with invite codes, rosters, house rules and shared notes.",
+    "listOgDescription": "Rosters, invite codes and shared notes.",
+    "detailTitle": "Campaign {{id}} — Universal Character Forge",
+    "detailDescription": "Roster, GM tools, shared notes and house rules for this campaign."
+  },
   "page": {
     "fallbackTitle": "Campaign",
     "renameAria": "Rename campaign",

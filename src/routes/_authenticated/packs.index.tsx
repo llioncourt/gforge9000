@@ -44,21 +44,21 @@ import { campaignsEnablingPack, groupEntriesByPack, makeGroup, type PackGroup } 
 import { useSession } from "@/hooks/use-session";
 import { packSlug } from "@/lib/pack-slug";
 import { useT } from "@/i18n/hooks";
+import { metaText } from "@/i18n/meta";
 
 export const Route = createFileRoute("/_authenticated/packs/")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Content packs — Universal Character Forge" },
+      { title: metaText("packs", "meta.indexTitle") },
       {
         name: "description",
-        content:
-          "Curate, import and share content packs of traits, skills and gear, and enable them per campaign.",
+        content: metaText("packs", "meta.indexDescription"),
       },
-      { property: "og:title", content: "Content packs — Universal Character Forge" },
+      { property: "og:title", content: metaText("packs", "meta.indexTitle") },
       {
         property: "og:description",
-        content: "Group your library into packs and enable them for the campaigns you run.",
+        content: metaText("packs", "meta.indexOgDescription"),
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -60,19 +60,19 @@ import { packFromSlug, packSlug } from "@/lib/pack-slug";
 import { slugify } from "@/lib/portable";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
+import { metaText } from "@/i18n/meta";
 
 export const Route = createFileRoute("/_authenticated/packs/$pack")({
   staticData: { sitemap: false },
   head: () => ({
     meta: [
-      { title: "Pack detail — Universal Character Forge" },
+      { title: metaText("packs", "meta.detailTitle") },
       {
         name: "description",
-        content:
-          "Every entry in this content pack, grouped by kind, with provenance and campaign use.",
+        content: metaText("packs", "meta.detailDescription"),
       },
-      { property: "og:title", content: "Pack detail — Universal Character Forge" },
-      { property: "og:description", content: "Curate a content pack and enable it per campaign." },
+      { property: "og:title", content: metaText("packs", "meta.detailTitle") },
+      { property: "og:description", content: metaText("packs", "meta.detailOgDescription") },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

@@ -234,6 +234,7 @@ const APPEARANCE_FIELDS: [string, string][] = [
 
 function CharacterPage() {
   const { id } = Route.useParams();
+  const { from } = Route.useSearch();
   const queryClient = useQueryClient();
   const { roll, history } = useDice();
 
@@ -439,6 +440,7 @@ function CharacterPage() {
   return (
     <div>
       <div className="screen-only">
+        <BackLink from={from} />
         <PageHeader
           title={form.name || "Untitled character"}
 
@@ -782,24 +784,27 @@ function CharacterPage() {
           {/* Skills */}
           <TabsContent value="skills" className="mt-6 space-y-6">
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => setPickerKinds(["skill"])}>
-                <Plus className="mr-1 h-4 w-4" /> Skills from packs
-              </Button>
-              <Button size="sm" onClick={() => setPickerKinds(["technique"])}>
-                <Plus className="mr-1 h-4 w-4" /> Techniques from packs
-              </Button>
-              <Button size="sm" onClick={() => setPickerKinds(["spell"])}>
-                <Plus className="mr-1 h-4 w-4" /> Spells from packs
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => openNew("skill")}>
-                <Plus className="mr-1 h-4 w-4" /> Custom skill
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => openNew("technique")}>
-                <Plus className="mr-1 h-4 w-4" /> Custom technique
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => openNew("spell")}>
-                <Plus className="mr-1 h-4 w-4" /> Custom spell / ability
-              </Button>
+              <PlusButton label="Add skills from packs" onClick={() => setPickerKinds(["skill"])} />
+              <PlusButton
+                label="Add techniques from packs"
+                onClick={() => setPickerKinds(["technique"])}
+              />
+              <PlusButton label="Add spells from packs" onClick={() => setPickerKinds(["spell"])} />
+              <PlusButton
+                label="Create a custom skill"
+                variant="outline"
+                onClick={() => openNew("skill")}
+              />
+              <PlusButton
+                label="Create a custom technique"
+                variant="outline"
+                onClick={() => openNew("technique")}
+              />
+              <PlusButton
+                label="Create a custom spell or ability"
+                variant="outline"
+                onClick={() => openNew("spell")}
+              />
             </div>
             <div className="panel overflow-hidden">
               <Table>
@@ -906,12 +911,15 @@ function CharacterPage() {
           {/* Equipment */}
           <TabsContent value="equipment" className="mt-6 space-y-4">
             <div className="flex flex-wrap items-center gap-3">
-              <Button size="sm" onClick={() => setPickerKinds(["equipment"])}>
-                <Plus className="mr-1 h-4 w-4" /> Add from packs
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => openNew("equipment")}>
-                <Plus className="mr-1 h-4 w-4" /> Custom item
-              </Button>
+              <PlusButton
+                label="Add equipment from packs"
+                onClick={() => setPickerKinds(["equipment"])}
+              />
+              <PlusButton
+                label="Create a custom item"
+                variant="outline"
+                onClick={() => openNew("equipment")}
+              />
               <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                 <span>
                   Carried{" "}
@@ -1323,13 +1331,9 @@ function EntryGroup({
         </h2>
         <div className="flex flex-wrap gap-2">
           {onAddFromPack ? (
-            <Button size="sm" onClick={onAddFromPack}>
-              <Plus className="mr-1 h-4 w-4" /> From packs
-            </Button>
+            <PlusButton label={`Add ${kind}s from packs`} onClick={onAddFromPack} />
           ) : null}
-          <Button size="sm" variant="ghost" onClick={onAdd}>
-            <Plus className="mr-1 h-4 w-4" /> Custom {kind}
-          </Button>
+          <PlusButton label={`Create a custom ${kind}`} variant="ghost" onClick={onAdd} />
         </div>
       </div>
       {entries.length === 0 ? (

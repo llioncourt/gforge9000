@@ -99,18 +99,16 @@ export async function uploadCampaignSoundFx(campaignId: string, title: string, f
     .order("sort_order", { ascending: false })
     .limit(1);
   const nextSort = (last?.[0]?.sort_order ?? -1) + 1;
-  const { error } = await supabase
-    .from("campaign_sound_fx")
-    .insert({
-      campaign_id: campaignId,
-      title: cleanTitle,
-      storage_path: path,
-      file_name: file.name,
-      byte_size: file.size,
-      mime_type: mime,
-      created_by: user.id,
-      sort_order: nextSort,
-    });
+  const { error } = await supabase.from("campaign_sound_fx").insert({
+    campaign_id: campaignId,
+    title: cleanTitle,
+    storage_path: path,
+    file_name: file.name,
+    byte_size: file.size,
+    mime_type: mime,
+    created_by: user.id,
+    sort_order: nextSort,
+  });
   if (error) {
     await supabase.storage.from(CAMPAIGN_SOUND_FX_BUCKET).remove([path]);
     throw new Error(error.message);
@@ -126,14 +124,12 @@ export async function deleteCampaignSoundFx(effect: CampaignSoundFx) {
 export async function triggerCampaignSoundFx(campaignId: string, effectId: string) {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("You need to be signed in.");
-  const result = await supabase
-    .from("campaign_sound_fx_state")
-    .upsert({
-      campaign_id: campaignId,
-      effect_id: effectId,
-      event_id: crypto.randomUUID(),
-      changed_by: auth.user.id,
-      changed_at: new Date().toISOString(),
-    });
+  const result = await supabase.from("campaign_sound_fx_state").upsert({
+    campaign_id: campaignId,
+    effect_id: effectId,
+    event_id: crypto.randomUUID(),
+    changed_by: auth.user.id,
+    changed_at: new Date().toISOString(),
+  });
   fail(result.error);
 }

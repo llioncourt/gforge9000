@@ -74,12 +74,10 @@ export async function uploadAssetFile(
   if (!user) throw new Error("You need to be signed in.");
   const stored = await toAvifIfImage(file);
   const path = assetPathFor(user.id, campaignId, stored.name);
-  const { error } = await supabase.storage
-    .from(ASSET_BUCKET)
-    .upload(path, stored, {
-      contentType: stored.type || "application/octet-stream",
-      upsert: false,
-    });
+  const { error } = await supabase.storage.from(ASSET_BUCKET).upload(path, stored, {
+    contentType: stored.type || "application/octet-stream",
+    upsert: false,
+  });
   if (error) throw new Error(error.message);
   return { path, mimeType: stored.type || "application/octet-stream", byteSize: stored.size };
 }

@@ -387,6 +387,17 @@ function EntityPage() {
 
   return (
     <div className="space-y-6">
+      {staleWarning ? (
+        <div
+          role="status"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
+        >
+          <span>{t("entityPage.staleNotice")}</span>
+          <Button size="sm" variant="outline" onClick={takeServerVersion}>
+            {t("entityPage.staleDiscard")}
+          </Button>
+        </div>
+      ) : null}
       <PageHeader
         title={form.name}
         description={t("entityPage.headerDescription", {

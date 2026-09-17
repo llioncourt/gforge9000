@@ -1,9 +1,10 @@
 import * as React from "react";
 import { useTransferTask } from "@/components/ui/transfer-dialog";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  ArrowLeft,
   Download,
   Dices,
   History,
@@ -43,6 +44,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Table,
   TableBody,
@@ -114,6 +116,10 @@ import { PrintSheet } from "@/components/character/print-sheet";
 
 export const Route = createFileRoute("/_authenticated/characters/$id")({
   staticData: { sitemap: false },
+  validateSearch: (search: Record<string, unknown>): { from?: string } => {
+    const from = search["from"];
+    return typeof from === "string" && from ? { from } : {};
+  },
   head: ({ params }) => {
     const title = `Character sheet ${params.id.slice(0, 8)} — Universal Character Forge`;
     const description =
@@ -131,6 +137,87 @@ export const Route = createFileRoute("/_authenticated/characters/$id")({
 
   component: CharacterPage,
 });
+
+/**
+ * Where the "back" control returns to. Callers pass `from`:
+ *   `campaign:<id>[:<tab>]` — opened from a campaign page
+ *   `entity:<id>`           — opened from a lore entry's linked character sheet
+ * Anything else returns to the characters list.
+ */
+type BackTo =
+  | { kind: "characters" }
+  | { kind: "campaign"; id: string; tab?: string | undefined }
+  | { kind: "entity"; id: string };
+
+function parseBack(from?: string): BackTo {
+  if (from?.startsWith("campaign:")) {
+    const [, id, tab] = from.split(":");
+    if (id) return { kind: "campaign", id, tab };
+  }
+  if (from?.startsWith("entity:")) {
+    const id = from.slice("entity:".length);
+    if (id) return { kind: "entity", id };
+  }
+  return { kind: "characters" };
+}
+
+function BackLink({ from }: { from?: string | undefined }) {
+  const back = parseBack(from);
+  const cls =
+    "no-print mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground";
+
+  if (back.kind === "campaign") {
+    const search = back.tab ? { tab: back.tab as never } : {};
+    return (
+      <Link to="/campaigns/$id" params={{ id: back.id }} search={search} className={cls}>
+        <ArrowLeft className="h-4 w-4" /> Campaign
+      </Link>
+    );
+  }
+  if (back.kind === "entity") {
+    return (
+      <Link to="/entities/$id" params={{ id: back.id }} className={cls}>
+        <ArrowLeft className="h-4 w-4" /> Lore entry
+      </Link>
+    );
+  }
+  return (
+    <Link to="/characters" className={cls}>
+      <ArrowLeft className="h-4 w-4" /> All characters
+    </Link>
+  );
+}
+
+/** Icon-only "+" control; its meaning lives in the tooltip and accessible name. */
+function PlusButton({
+  label,
+  onClick,
+  variant = "default",
+  disabled,
+}: {
+  label: string;
+  onClick: () => void;
+  variant?: "default" | "outline" | "ghost" | undefined;
+  disabled?: boolean | undefined;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          size="icon"
+          variant={variant}
+          className="h-8 w-8"
+          aria-label={label}
+          onClick={onClick}
+          disabled={disabled}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+}
 
 const TRAIT_KINDS: EntryKind[] = ["advantage", "disadvantage", "perk", "quirk", "custom"];
 const LORE_KINDS: EntryKind[] = ["language", "culture"];

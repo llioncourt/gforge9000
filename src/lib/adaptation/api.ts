@@ -33,7 +33,8 @@ async function ensureSession(): Promise<void> {
   const { data } = await supabase.auth.getSession();
   if (!data.session) throw new Error("Your session expired. Sign in again to save this work.");
   const expiresAt = (data.session.expires_at ?? 0) * 1000;
-  if (expiresAt && expiresAt - Date.now() < 120_000) {
+  // Saving a long run can take minutes, so refresh well ahead of expiry.
+  if (expiresAt && expiresAt - Date.now() < 300_000) {
     const { data: refreshed, error } = await supabase.auth.refreshSession();
     if (error || !refreshed.session) {
       throw new Error("Your session expired. Sign in again to save this work.");

@@ -33,12 +33,23 @@ async function ensureSession(): Promise<void> {
   const { data } = await supabase.auth.getSession();
   if (!data.session) throw new Error("Your session expired. Sign in again to save this work.");
   const expiresAt = (data.session.expires_at ?? 0) * 1000;
-  if (expiresAt && expiresAt - Date.now() < 120_000) {
+  // Saving a long run can take minutes, so refresh well ahead of expiry.
+  if (expiresAt && expiresAt - Date.now() < 300_000) {
     const { data: refreshed, error } = await supabase.auth.refreshSession();
     if (error || !refreshed.session) {
       throw new Error("Your session expired. Sign in again to save this work.");
     }
   }
+}
+
+/** Turns a rejected write into something the person reading it can act on. */
+function writeError(message: string): Error {
+  if (/row-level security|permission denied/i.test(message)) {
+    return new Error(
+      "This adaptation can only be saved by the campaign's Game Master. Sign in again or ask the GM to run this step.",
+    );
+  }
+  return new Error(message);
 }
 
 /** Keeps the last row for each key so one batch never upserts the same key twice. */
@@ -217,7 +228,7 @@ export async function updateAdaptation(
 
 export async function deleteAdaptation(id: string): Promise<void> {
   const { error } = await db.from("adaptation_projects").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throw writeError(error.message);
 }
 
 // ----------------------------------------------------------------- sources
@@ -263,7 +274,7 @@ export async function saveScan(
   for (let index = 0; index < rows.length; index += 500) {
     const chunk = rows.slice(index, index + 500);
     const { error } = await db.from("adaptation_sources").insert(chunk);
-    if (error) throw new Error(error.message);
+    if (error) throw writeError(error.message);
   }
   return unwrap(
     await db
@@ -318,7 +329,7 @@ export async function upsertFacts(
     const { error } = await db
       .from("adaptation_facts")
       .upsert(rows.slice(index, index + 400), { onConflict: "adaptation_id,stable_key" });
-    if (error) throw new Error(error.message);
+    if (error) throw writeError(error.message);
   }
 }
 
@@ -376,7 +387,7 @@ export async function upsertScenes(
     const { error } = await db
       .from("adaptation_scenes")
       .upsert(rows.slice(index, index + 200), { onConflict: "adaptation_id,stable_key" });
-    if (error) throw new Error(error.message);
+    if (error) throw writeError(error.message);
   }
 }
 
@@ -417,7 +428,7 @@ export async function replaceAdaptationAssets(
     const { error } = await db
       .from("adaptation_asset_links")
       .insert(payload.slice(index, index + 400));
-    if (error) throw new Error(error.message);
+    if (error) throw writeError(error.message);
   }
 }
 
@@ -470,7 +481,7 @@ export async function setChangeSetStatus(
   status: "open" | "applied" | "dismissed",
 ): Promise<void> {
   const { error } = await db.from("adaptation_change_sets").update({ status }).eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throw writeError(error.message);
 }
 
 // ---------------------------------------------------------------- targets
@@ -506,5 +517,5 @@ export async function upsertTarget(
     },
     { onConflict: "adaptation_id,target_system" },
   );
-  if (error) throw new Error(error.message);
+  if (error) throw writeError(error.message);
 }

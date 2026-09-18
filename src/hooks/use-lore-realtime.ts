@@ -59,13 +59,10 @@ export function useLoreRealtime(campaignId: string | undefined, entityId?: strin
 
     const handle = (payload: { eventType?: string } & ChangePayload) => {
       const id = changedEntityId(payload);
-      const rowAddedOrRemoved = payload.eventType !== "UPDATE";
-      if (!id || rowAddedOrRemoved) pending.current.lists = true;
-      if (id) {
-        pending.current.ids.add(id);
-        // The open record's own list rows carry its name and visibility.
-        if (id === entityId) pending.current.lists = true;
-      }
+      // List rows carry name, summary and visibility, so any change to a record
+      // (not just a record appearing or disappearing) can change the lists.
+      pending.current.lists = true;
+      if (id) pending.current.ids.add(id);
       schedule();
     };
 

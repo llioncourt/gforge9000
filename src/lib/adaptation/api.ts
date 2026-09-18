@@ -42,6 +42,16 @@ async function ensureSession(): Promise<void> {
   }
 }
 
+/** Turns a rejected write into something the person reading it can act on. */
+function writeError(message: string): Error {
+  if (/row-level security|permission denied/i.test(message)) {
+    return new Error(
+      "This adaptation can only be saved by the campaign's Game Master. Sign in again or ask the GM to run this step.",
+    );
+  }
+  return new Error(message);
+}
+
 /** Keeps the last row for each key so one batch never upserts the same key twice. */
 function dedupeByKey<T extends { stable_key?: string }>(rows: T[]): T[] {
   const byKey = new Map<string, T>();

@@ -228,7 +228,7 @@ export async function updateAdaptation(
 
 export async function deleteAdaptation(id: string): Promise<void> {
   const { error } = await db.from("adaptation_projects").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throw writeError(error.message);
 }
 
 // ----------------------------------------------------------------- sources
@@ -274,7 +274,7 @@ export async function saveScan(
   for (let index = 0; index < rows.length; index += 500) {
     const chunk = rows.slice(index, index + 500);
     const { error } = await db.from("adaptation_sources").insert(chunk);
-    if (error) throw new Error(error.message);
+    if (error) throw writeError(error.message);
   }
   return unwrap(
     await db
@@ -329,7 +329,7 @@ export async function upsertFacts(
     const { error } = await db
       .from("adaptation_facts")
       .upsert(rows.slice(index, index + 400), { onConflict: "adaptation_id,stable_key" });
-    if (error) throw new Error(error.message);
+    if (error) throw writeError(error.message);
   }
 }
 
@@ -387,7 +387,7 @@ export async function upsertScenes(
     const { error } = await db
       .from("adaptation_scenes")
       .upsert(rows.slice(index, index + 200), { onConflict: "adaptation_id,stable_key" });
-    if (error) throw new Error(error.message);
+    if (error) throw writeError(error.message);
   }
 }
 
@@ -428,7 +428,7 @@ export async function replaceAdaptationAssets(
     const { error } = await db
       .from("adaptation_asset_links")
       .insert(payload.slice(index, index + 400));
-    if (error) throw new Error(error.message);
+    if (error) throw writeError(error.message);
   }
 }
 
@@ -481,7 +481,7 @@ export async function setChangeSetStatus(
   status: "open" | "applied" | "dismissed",
 ): Promise<void> {
   const { error } = await db.from("adaptation_change_sets").update({ status }).eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throw writeError(error.message);
 }
 
 // ---------------------------------------------------------------- targets
@@ -517,5 +517,5 @@ export async function upsertTarget(
     },
     { onConflict: "adaptation_id,target_system" },
   );
-  if (error) throw new Error(error.message);
+  if (error) throw writeError(error.message);
 }

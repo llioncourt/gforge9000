@@ -63,6 +63,8 @@ export function useLoreRealtime(campaignId: string | undefined, entityId?: strin
       // (not just a record appearing or disappearing) can change the lists.
       pending.current.lists = true;
       if (id) pending.current.ids.add(id);
+      // A grant change without a record id still affects the open record.
+      if (!id && entityId) pending.current.ids.add(entityId);
       schedule();
     };
 

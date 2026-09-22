@@ -701,6 +701,7 @@ export type Database = {
           storage_path: string
           title: string
           updated_at: string
+          visible_to_players: boolean
         }
         Insert: {
           byte_size: number
@@ -714,6 +715,7 @@ export type Database = {
           storage_path: string
           title: string
           updated_at?: string
+          visible_to_players?: boolean
         }
         Update: {
           byte_size?: number
@@ -727,6 +729,7 @@ export type Database = {
           storage_path?: string
           title?: string
           updated_at?: string
+          visible_to_players?: boolean
         }
         Relationships: [
           {
@@ -793,6 +796,7 @@ export type Database = {
           subtitle: string | null
           title: string
           updated_at: string
+          visible_to_players: boolean
         }
         Insert: {
           campaign_id: string
@@ -809,6 +813,7 @@ export type Database = {
           subtitle?: string | null
           title: string
           updated_at?: string
+          visible_to_players?: boolean
         }
         Update: {
           campaign_id?: string
@@ -825,6 +830,7 @@ export type Database = {
           subtitle?: string | null
           title?: string
           updated_at?: string
+          visible_to_players?: boolean
         }
         Relationships: [
           {
@@ -976,6 +982,7 @@ export type Database = {
           updated_at: string
           version: string
           video_type: string
+          visible_to_players: boolean
         }
         Insert: {
           byte_size: number
@@ -992,6 +999,7 @@ export type Database = {
           updated_at?: string
           version?: string
           video_type?: string
+          visible_to_players?: boolean
         }
         Update: {
           byte_size?: number
@@ -1008,6 +1016,7 @@ export type Database = {
           updated_at?: string
           version?: string
           video_type?: string
+          visible_to_players?: boolean
         }
         Relationships: [
           {
@@ -2352,6 +2361,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_weapon_ammo: {
+        Args: { _delta: number; _entry: string; _mode: string }
+        Returns: {
+          character_entry_id: string
+          character_id: string
+          created_at: string
+          current_shots: number
+          id: string
+          mode_key: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "character_weapon_state"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      grant_entity_knowledge: {
+        Args: { _entity: string; _note?: string; _user: string }
+        Returns: Json
+      }
       join_campaign: { Args: { _code: string }; Returns: string }
       list_entities_safe: {
         Args: { _campaign?: string }
@@ -2452,6 +2483,108 @@ export type Database = {
       remove_character_from_campaign: {
         Args: { _character: string }
         Returns: undefined
+      }
+      restore_character_version: {
+        Args: { _version: string }
+        Returns: {
+          appearance: Json
+          approved: boolean
+          campaign_id: string | null
+          concept: string | null
+          conditions: string[]
+          created_at: string
+          current_fp: number | null
+          current_hp: number | null
+          dx: number
+          fp_delta: number
+          gm_notes: string | null
+          hp_delta: number
+          ht: number
+          id: string
+          import_key: string | null
+          iq: number
+          is_npc: boolean
+          is_template: boolean
+          model_path: string | null
+          model_transform: Json
+          move_delta: number
+          name: string
+          notes: string | null
+          owner_id: string
+          packs: string[]
+          per_delta: number
+          player_name: string | null
+          point_budget: number
+          portrait_path: string | null
+          speed_delta: number
+          st: number
+          status: number
+          tech_level: number
+          updated_at: string
+          wealth: string
+          will_delta: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "characters"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      restore_entity_revision: {
+        Args: { _revision: string }
+        Returns: {
+          aliases: string[]
+          archived_at: string | null
+          campaign_id: string
+          canon_locked: boolean
+          character_id: string | null
+          created_at: string
+          created_by: string
+          data: Json
+          description: string | null
+          gm_notes: string | null
+          id: string
+          image_url: string | null
+          import_key: string | null
+          kind: string
+          name: string
+          owner_user_id: string | null
+          parent_id: string | null
+          player_description: string | null
+          sort_order: number
+          status: string
+          summary: string | null
+          tags: string[]
+          updated_at: string
+          visibility: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "entities"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      revoke_entity_knowledge: { Args: { _grant: string }; Returns: Json }
+      rotate_campaign_invite: { Args: { _campaign: string }; Returns: string }
+      set_weapon_ammo: {
+        Args: { _entry: string; _mode: string; _shots: number }
+        Returns: {
+          character_entry_id: string
+          character_id: string
+          created_at: string
+          current_shots: number
+          id: string
+          mode_key: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "character_weapon_state"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       transfer_campaign_gm: {
         Args: { _campaign: string; _new_gm: string }

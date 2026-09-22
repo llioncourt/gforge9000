@@ -22,7 +22,7 @@ describe("assistant tool surface", () => {
       (server as unknown as { _registeredTools: Record<string, unknown> })._registeredTools,
     );
     expect(registered.sort()).toEqual([...MCP_TOOL_NAMES].sort());
-    expect(registered).toHaveLength(21);
+    expect(registered).toHaveLength(23);
   });
 
   it("marks read tools read-only and delete tools destructive", () => {
@@ -173,8 +173,15 @@ function serverWith(
     }
     return query(raw, {}, spy);
   };
+  const RPC_TABLES: Record<string, string> = {
+    list_entities_safe: "entities",
+    list_relationships_safe: "entity_relationships",
+    mcp_create_campaign: "rpc_create_campaign",
+    mcp_update_campaign: "rpc_update_campaign",
+    mcp_delete_campaign: "rpc_delete_campaign",
+  };
   const supabase = {
-    rpc: () => resolve("entities"),
+    rpc: (fn: string) => resolve(RPC_TABLES[fn] ?? "entities"),
     from: (table: string) => resolve(table),
   };
   const server = buildMcpServer({ supabase: supabase as never, userId });
@@ -399,7 +406,8 @@ describe("update_campaign", () => {
     const spy: Spy = {};
     const tools = serverWith(
       {
-        campaigns: [{ __result: campaignRow }, { __result: { ...campaignRow, name: "Nadrel II" } }],
+        campaigns: campaignRow,
+        rpc_update_campaign: { ...campaignRow, name: "Nadrel II" },
       },
       GM,
       spy,
@@ -408,7 +416,6 @@ describe("update_campaign", () => {
       campaign_id: CAMPAIGN,
       name: "Nadrel II",
     });
-    expect(spy.updated).toEqual({ name: "Nadrel II" });
     expect(result.content[0]!.text).toContain(`Updated campaign "Nadrel II" (${CAMPAIGN}).`);
     expect(result.content[0]!.text).toContain('"name": "Nadrel II"');
     expect((result.structuredContent["item"] as Record<string, unknown>)["id"]).toBe(CAMPAIGN);
@@ -662,7 +669,7 @@ describe("update_entry expansion", () => {
     await expectFailure(
       tools([{ __result: locationRow }])["update_entry"]!.handler({
         entry_id: ENTITY_ID,
-        status: "intact",
+        status: "Vaporised",
       }),
       /Valid statuses/,
     );

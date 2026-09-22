@@ -135,7 +135,6 @@ export function PackPickerDialog({
     }));
   }, [library.data, kinds, packs, search]);
 
-
   const descParts = (e: LibraryListRow) =>
     [
       e.category,
@@ -162,7 +161,6 @@ export function PackPickerDialog({
                     packs: packs.join(", "),
                   })}
           </DialogDescription>
-
         </DialogHeader>
 
         <div className="relative">

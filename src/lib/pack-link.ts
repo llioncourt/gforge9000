@@ -159,7 +159,6 @@ export interface PackDefinition {
   name: string;
 }
 
-
 /** Kinds whose controlling attribute / difficulty are part of the definition. */
 export const SKILL_LIKE_KINDS = ["skill", "technique", "spell"];
 
@@ -266,7 +265,6 @@ export function packDefinition(item: PackItemLike): PackDefinition {
     name: normaliseName(item.name),
   };
 }
-
 
 function toHex(buffer: ArrayBuffer): string {
   return [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -466,7 +464,6 @@ export function compareDefinition(entry: CharacterEntryLike, item: PackItemLike)
     }
     return out;
   }
-
 
   const maxLevels =
     item.max_levels === null || item.max_levels === undefined ? null : Number(item.max_levels);
@@ -674,7 +671,6 @@ export function restoreDefinitionPatch(
     data["points"] = Number(entryData["points"] ?? entry.points ?? 0);
   }
   if (specialization) data["specialization"] = specialization;
-
 
   const maxLevels =
     item.max_levels === null || item.max_levels === undefined ? null : Number(item.max_levels);

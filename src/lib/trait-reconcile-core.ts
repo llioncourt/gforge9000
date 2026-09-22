@@ -32,9 +32,7 @@ const PAGE_SIZE = 1000;
 const MAX_ROWS = 5000;
 
 /** Library rows the caller may read, paged so a big library still loads. */
-async function loadCatalogue(
-  client: SupabaseClient<Database>,
-): Promise<CatalogueEntry[]> {
+async function loadCatalogue(client: SupabaseClient<Database>): Promise<CatalogueEntry[]> {
   const rows: CatalogueEntry[] = [];
   for (let from = 0; from < MAX_ROWS; from += PAGE_SIZE) {
     const { data, error } = await client

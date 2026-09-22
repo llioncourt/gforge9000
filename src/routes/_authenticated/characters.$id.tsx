@@ -457,7 +457,6 @@ function CharacterPage() {
     [linkedPacks, campaignQuery.data, form?.campaign_id],
   );
 
-
   const addFromPack = useMutation({
     mutationFn: async (entry: LibraryListRow) => {
       // The picker list omits the detail blob; fetch it for this entry only.

@@ -327,7 +327,6 @@ export async function importCampaignPackageCore(
           if (entriesResult.error) throw new Error(entriesResult.error.message);
         }
 
-
         if (entry.portrait_file && !existing) {
           const path = `${userId}/${characterId}/${crypto.randomUUID()}.${extOf(entry.portrait_file, "png")}`;
           await uploadFromZip(

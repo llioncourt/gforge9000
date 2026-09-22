@@ -272,7 +272,6 @@ export function applyCatalogue(entry: ImportedEntry, target: CatalogueEntry): Im
   };
 }
 
-
 export interface ReconcileResult {
   entries: ImportedEntry[];
   matched: number;

@@ -117,7 +117,6 @@ export function usePackLinkStatuses(
   });
 }
 
-
 /** Whether the "restore"/"update" action should be offered (PL-007). */
 export function shouldShowRestoreAction(status: PackLinkStatus | undefined): boolean {
   if (!status) return false;
@@ -557,7 +556,6 @@ export function CampaignPackSummary({ campaignId }: { campaignId: string }) {
   const summary = useQuery({
     queryKey: ["pack-link-summary", campaignId, userId],
     queryFn: () => summarizeCampaign(supabase, campaignId, userId),
-
   });
   const rows = summary.data ?? [];
   if (rows.length === 0) return null;

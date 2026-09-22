@@ -390,7 +390,6 @@ export async function summarizeCampaign(
   const rows = (entries ?? []) as unknown as EntryRowLike[];
   const statuses = await deriveStatuses(client, rows, settings, callerUserId);
 
-
   return (characters ?? []).map((character) => {
     const summary: CharacterPackSummary = {
       character_id: character.id,

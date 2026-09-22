@@ -15,7 +15,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DiceProvider } from "@/components/app/dice-context";
 import { PwaRegister } from "@/components/app/pwa-register";
-import { supabase } from "@/integrations/supabase/client";
+import { AuthProvider } from "@/lib/auth/auth-provider";
 import { I18nProvider } from "@/i18n/provider";
 import { detectLocale } from "@/i18n/detect";
 import { localeDirection } from "@/i18n/config";

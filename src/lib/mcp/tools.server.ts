@@ -499,7 +499,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       requirePatch(update);
       const { data, error } = await ctx.supabase
         .from("campaigns")
-        .update(update)
+        .update(update as Database["public"]["Tables"]["campaigns"]["Update"])
         .eq("id", campaign_id)
         .select("*")
         .single();
@@ -825,7 +825,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       requirePatch(update);
       const { data, error } = await ctx.supabase
         .from("entity_relationships")
-        .update(update)
+        .update(update as Database["public"]["Tables"]["entity_relationships"]["Update"])
         .eq("id", relationship_id)
         .select("*")
         .single();
@@ -982,7 +982,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       if (patch.campaign_id) await loadCampaign(ctx, patch.campaign_id);
       const { data, error } = await ctx.supabase
         .from("characters")
-        .update(update)
+        .update(update as Database["public"]["Tables"]["characters"]["Update"])
         .eq("id", character_id)
         .select("*")
         .single();
@@ -1110,7 +1110,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       requirePatch(update);
       const { data, error } = await ctx.supabase
         .from("character_entries")
-        .update(update)
+        .update(update as Database["public"]["Tables"]["character_entries"]["Update"])
         .eq("id", entry_id)
         .select("*")
         .single();

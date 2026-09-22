@@ -1,22 +1,15 @@
 /**
- * Campaign package (UCF-CAMPAIGN-PACKAGE v1) staging + validation.
+ * Campaign package (UCF-CAMPAIGN-PACKAGE v1) export/import + staging.
  *
- * The real exporter/importer (`src/lib/campaign-package-export.ts`,
- * `src/lib/campaign-package-import.ts`) are browser-coupled: they import the
- * browser Supabase singleton at module scope and, transitively, a dozen other
- * `src/lib/*` modules that do the same (assets, battlemap, campaign-intro,
- * campaign-sound-fx, campaign-soundtrack, lore, portrait). Per the domain
- * contract those modules must not be imported here. Only the pure format
- * module `src/lib/campaign-package.ts` (schema + validators, no IO) is
- * reused, so this file cannot invent a second format.
- *
- * What this leaves possible server-side: staging a package file in the
- * caller's own private storage prefix, and fully validating it with the exact
- * same schema and cross-reference checks the app's importer uses, before any
- * row is written. Actually building the ZIP (export) and actually writing the
- * campaign's rows and media (import) require the browser-coupled code path
- * and are not reimplemented here — the app's own Export button / New
- * Campaign → Import dialog must be used for those two steps.
+ * `export` and `import` run the same shared, format-owning cores the app's
+ * own Export button and Import dialog use
+ * (`src/lib/campaign-package-export-core.ts`,
+ * `src/lib/campaign-package-import-core.ts`), just against the caller's own
+ * RLS-scoped Supabase client instead of the browser singleton — never a
+ * service role. The only real behavioural difference from the app's browser
+ * import is documented in the import core's module comment: images are
+ * stored with their original bytes/content-type instead of being converted
+ * to AVIF, because AVIF encoding needs a browser canvas.
  */
 
 import { unzipSync } from "fflate";
@@ -25,7 +18,6 @@ import {
   actionRouter,
   boundedText,
   domainOutput,
-  fail,
   loadCampaign,
   requireGmFor,
   uuid,
@@ -37,11 +29,14 @@ import {
   validateCampaignPackage,
   MAX_CAMPAIGN_PACKAGE_BYTES,
 } from "@/lib/campaign-package";
+import { buildCampaignPackageZipCore } from "@/lib/campaign-package-export-core";
+import { importCampaignPackageCore } from "@/lib/campaign-package-import-core";
 import {
   decodeBase64File,
   fetchRemoteFile,
   prepareSignedUpload,
   removeStoredObject,
+  signedReadUrl,
   storagePathFor,
   uploadBytes,
   verifyStoredObject,
@@ -49,11 +44,6 @@ import {
 
 const BUCKET = "campaign-packages";
 const PACKAGE_MIME = ["application/zip", "application/x-zip-compressed"] as const;
-
-const NOT_SERVER_SIDE =
-  "This step needs the app's own browser code (it reads/writes many storage buckets through the " +
-  "signed-in browser client) and cannot run through the assistant. Use the app's Export button, " +
-  'or the "New Campaign → Import" dialog, to do this step.';
 
 function ownStoragePath(ctx: McpToolContext, path: string): void {
   if (!path.startsWith(`${ctx.userId}/`)) {
@@ -65,7 +55,8 @@ const input = z.discriminatedUnion("action", [
   z
     .object({ action: z.literal("export"), campaign_id: uuid })
     .describe(
-      `Export a campaign as a package ZIP. GM only. Not available through the assistant: ${NOT_SERVER_SIDE}`,
+      "Export a campaign as a package ZIP. GM only. Builds the ZIP, stores it under the " +
+        "caller's own storage prefix, and returns a short-lived signed link to download it.",
     ),
   z
     .object({
@@ -83,7 +74,9 @@ const input = z.discriminatedUnion("action", [
       url: z.string().max(2000),
     })
     .describe(
-      "Download a campaign package ZIP from a public https URL into the caller's own storage prefix.",
+      "Download a campaign package ZIP from a public https URL into the caller's own storage " +
+        "prefix. Currently disabled everywhere for security reasons (see prepare_import_upload " +
+        "or upload_import_base64 instead).",
     ),
   z
     .object({
@@ -101,7 +94,9 @@ const input = z.discriminatedUnion("action", [
   z
     .object({ action: z.literal("import"), storage_path: boundedText(400) })
     .describe(
-      `Validate then actually import a staged campaign package. GM only. Not available through the assistant: ${NOT_SERVER_SIDE}`,
+      "Validate then actually import a staged campaign package under the caller's own storage " +
+        "prefix. Creates a new campaign the caller is GM of, or refreshes the campaign the same " +
+        "package was previously imported into. Changes data.",
     ),
   z
     .object({ action: z.literal("delete_staged"), storage_path: boundedText(400) })
@@ -131,10 +126,11 @@ interface ManifestReport {
   valid: boolean;
 }
 
+/** Downloads and fully validates a staged package without writing anything. */
 async function validateStagedPackage(
   ctx: McpToolContext,
   storagePath: string,
-): Promise<ManifestReport> {
+): Promise<{ report: ManifestReport; zipBytes: Uint8Array }> {
   ownStoragePath(ctx, storagePath);
   const stored = await verifyStoredObject(ctx.supabase, BUCKET, storagePath, {
     maxBytes: MAX_CAMPAIGN_PACKAGE_BYTES,
@@ -143,7 +139,8 @@ async function validateStagedPackage(
   const { data, error } = await ctx.supabase.storage.from(BUCKET).download(stored.path);
   if (error || !data)
     throw new Error(`Could not read the staged package: ${error?.message ?? "unknown"}`);
-  const archive = unzipSync(new Uint8Array(await data.arrayBuffer())) as Record<string, Uint8Array>;
+  const zipBytes = new Uint8Array(await data.arrayBuffer());
+  const archive = unzipSync(zipBytes) as Record<string, Uint8Array>;
   const manifestBytes = archive["campaign.json"];
   if (!manifestBytes) throw new Error("The package must contain campaign.json at its root.");
   const manifest = parseCampaignPackageManifest(new TextDecoder().decode(manifestBytes));
@@ -153,7 +150,7 @@ async function validateStagedPackage(
     (path) => !archive[path] && !archive[path.replace(/^\.\//, "")],
   );
 
-  return {
+  const report: ManifestReport = {
     format: manifest.format,
     version: manifest.version,
     campaign_name: manifest.campaign.name,
@@ -172,6 +169,7 @@ async function validateStagedPackage(
     missing_files: missing,
     valid: problems.length === 0 && missing.length === 0,
   };
+  return { report, zipBytes };
 }
 
 export function registerCampaignPackage(tool: ToolRegistrar, ctx: McpToolContext): void {
@@ -180,16 +178,17 @@ export function registerCampaignPackage(tool: ToolRegistrar, ctx: McpToolContext
     {
       title: "Campaign package import/export",
       description:
-        "Stage and validate campaign package ZIPs (the app's UCF-CAMPAIGN-PACKAGE v1 format). " +
-        "Actions: export (build and store a package ZIP, GM only — not available through the " +
-        "assistant, use the app), prepare_import_upload (get a signed upload target under the " +
-        "caller's own storage prefix), upload_import_from_url (fetch a ZIP from a public https " +
-        "URL into the caller's prefix, changes data), upload_import_base64 (stage a small ZIP " +
-        "from inline base64, changes data), finalize_import (validate a staged package with no " +
-        "writes and report what would be created/updated), import (validate then actually import " +
-        "a staged package, GM only — not available through the assistant, use the app), " +
-        "delete_staged (remove a staged/exported file under the caller's own prefix — staged " +
-        "files are never auto-expired, so this is the cleanup step, deletes data).",
+        "Export and import campaign package ZIPs (the app's UCF-CAMPAIGN-PACKAGE v1 format). " +
+        "Actions: export (build a package ZIP for a campaign and return a signed download link, " +
+        "GM only, changes data by storing the file), prepare_import_upload (get a signed upload " +
+        "target under the caller's own storage prefix), upload_import_from_url (currently " +
+        "disabled — use prepare_import_upload or upload_import_base64 instead), " +
+        "upload_import_base64 (stage a small ZIP from inline base64, changes data), " +
+        "finalize_import (validate a staged package with no writes and report what would be " +
+        "created/updated), import (validate then actually import a staged package, creating or " +
+        "refreshing a campaign the caller is GM of, changes data), delete_staged (remove a " +
+        "staged/exported file under the caller's own prefix — staged files are never " +
+        "auto-expired, so this is the cleanup step, deletes data).",
       inputSchema: input,
       outputSchema: domainOutput,
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
@@ -198,7 +197,29 @@ export function registerCampaignPackage(tool: ToolRegistrar, ctx: McpToolContext
       export: async (i) => {
         const campaign = await loadCampaign(ctx, i.campaign_id);
         requireGmFor(campaign, "export this campaign");
-        throw new Error(NOT_SERVER_SIDE);
+        const { bytes, fileName } = await buildCampaignPackageZipCore(ctx.supabase, campaign.id);
+        const path = storagePathFor(ctx.userId, fileName);
+        await uploadBytes(ctx.supabase, BUCKET, path, {
+          bytes,
+          mime: "application/zip",
+          size: bytes.byteLength,
+        });
+        const signedUrl = await signedReadUrl(ctx.supabase, BUCKET, path);
+        const item = {
+          storage_path: path,
+          byte_size: bytes.byteLength,
+          file_name: fileName,
+          signed_url: signedUrl,
+        };
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Exported "${campaign.name}" (${bytes.byteLength} bytes).\n\n${JSON.stringify(item, null, 2)}`,
+            },
+          ],
+          structuredContent: { item },
+        };
       },
 
       prepare_import_upload: async (i) => {
@@ -253,7 +274,7 @@ export function registerCampaignPackage(tool: ToolRegistrar, ctx: McpToolContext
       },
 
       finalize_import: async (i) => {
-        const report = await validateStagedPackage(ctx, i.storage_path);
+        const { report } = await validateStagedPackage(ctx, i.storage_path);
         const summary = report.valid
           ? `Package "${report.campaign_name}" is valid.`
           : `Package "${report.campaign_name}" has problems: ${[...report.problems, ...report.missing_files.map((f) => `missing file "${f}"`)].join("; ")}`;
@@ -267,13 +288,22 @@ export function registerCampaignPackage(tool: ToolRegistrar, ctx: McpToolContext
 
       import: async (i) => {
         ownStoragePath(ctx, i.storage_path);
-        const report = await validateStagedPackage(ctx, i.storage_path);
+        const { report, zipBytes } = await validateStagedPackage(ctx, i.storage_path);
         if (!report.valid) {
           throw new Error(
             `Package is not valid, refusing to import: ${[...report.problems, ...report.missing_files.map((f) => `missing file "${f}"`)].join("; ")}`,
           );
         }
-        throw new Error(NOT_SERVER_SIDE);
+        const summary = await importCampaignPackageCore(ctx.supabase, ctx.userId, zipBytes);
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Imported "${report.campaign_name}".\n\n${JSON.stringify(summary, null, 2)}`,
+            },
+          ],
+          structuredContent: { item: summary as unknown as Record<string, unknown> },
+        };
       },
 
       delete_staged: async (i) => {

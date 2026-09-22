@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
-import { isValidAuthorizationId, rememberPendingAuthorization } from "@/lib/mcp/pending-authorization";
+import {
+  isValidAuthorizationId,
+  rememberPendingAuthorization,
+} from "@/lib/mcp/pending-authorization";
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";
 
@@ -18,7 +21,8 @@ export const Route = createFileRoute("/oauth/consent")({
   staticData: { sitemap: false },
   ssr: false,
   validateSearch: (search: Record<string, unknown>): ConsentSearch => ({
-    authorization_id: typeof search["authorization_id"] === "string" ? (search["authorization_id"] as string) : "",
+    authorization_id:
+      typeof search["authorization_id"] === "string" ? (search["authorization_id"] as string) : "",
   }),
   head: () => ({
     meta: [
@@ -210,16 +214,10 @@ function ConsentPage() {
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Button onClick={() => void decide("approve")} disabled={decision !== null}>
-          {decision === "approve" ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : null}
+          {decision === "approve" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           {t("consent.approve")}
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => void decide("deny")}
-          disabled={decision !== null}
-        >
+        <Button variant="outline" onClick={() => void decide("deny")} disabled={decision !== null}>
           {t("consent.deny")}
         </Button>
       </div>

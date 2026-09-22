@@ -102,9 +102,7 @@ describe("assistant endpoint configuration", () => {
   });
 
   it("derives the path-aware discovery location", () => {
-    expect(MCP_RESOURCE_METADATA_PATH).toBe(
-      "/.well-known/oauth-protected-resource/api/public/mcp",
-    );
+    expect(MCP_RESOURCE_METADATA_PATH).toBe("/.well-known/oauth-protected-resource/api/public/mcp");
   });
 
   it("builds an absolute endpoint url without doubling slashes", () => {

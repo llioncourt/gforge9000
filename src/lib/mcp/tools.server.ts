@@ -196,7 +196,6 @@ function requireCharacterWrite(access: CharacterAccess): void {
   }
 }
 
-
 /* ------------------------------------------------------------------ */
 /* Registration helper                                                 */
 /* ------------------------------------------------------------------ */
@@ -239,13 +238,11 @@ function registrar(server: McpServer) {
       inputSchema: withJson(definition.inputSchema),
       outputSchema: withJson(definition.outputSchema),
     };
-    (
-      server.registerTool as unknown as (
-        toolName: string,
-        config: unknown,
-        cb: unknown,
-      ) => void
-    )(name, prepared, handler);
+    (server.registerTool as unknown as (toolName: string, config: unknown, cb: unknown) => void)(
+      name,
+      prepared,
+      handler,
+    );
   };
 }
 
@@ -345,10 +342,11 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         default_status: kind.defaultStatus,
         nestable: kind.nestable === true,
       }));
-      return reply(
-        `${items.length} entry types: ${items.map((k) => k.kind).join(", ")}.`,
-        { count: items.length, truncated: false, items },
-      );
+      return reply(`${items.length} entry types: ${items.map((k) => k.kind).join(", ")}.`, {
+        count: items.length,
+        truncated: false,
+        items,
+      });
     },
   );
 

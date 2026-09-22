@@ -34,11 +34,11 @@ describe("assistant tool surface", () => {
     )._registeredTools;
 
     for (const name of ["list_campaigns", "list_entries", "get_entry", "get_character"]) {
-      expect(tools[name]?.annotations?.['readOnlyHint']).toBe(true);
+      expect(tools[name]?.annotations?.["readOnlyHint"]).toBe(true);
     }
     for (const name of ["delete_entry", "delete_character_entry"]) {
-      expect(tools[name]?.annotations?.['destructiveHint']).toBe(true);
-      expect(tools[name]?.annotations?.['readOnlyHint']).toBe(false);
+      expect(tools[name]?.annotations?.["destructiveHint"]).toBe(true);
+      expect(tools[name]?.annotations?.["readOnlyHint"]).toBe(false);
     }
   });
 

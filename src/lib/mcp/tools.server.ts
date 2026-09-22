@@ -580,10 +580,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           parent_id: input.parent_id ?? null,
           ...(input.data ? { data: input.data as Json } : {}),
         })
-        .select("id, campaign_id, kind, name, status, visibility, summary")
+        .select("*")
         .single();
       if (error) fail("Creating the entry", error);
-      return reply(`Created ${data.kind} "${data.name}" (${data.id}).`, { item: data });
+      return detailReply(`Created ${data.kind} "${data.name}" (${data.id}).`, data);
     },
   );
 
@@ -592,35 +592,49 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "Update a campaign entry",
       description:
-        "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. Fields left out are untouched.",
+        "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. Fields left out are untouched; `data` and `aliases` fully replace the stored value when supplied.",
       inputSchema: z.object({
         entry_id: uuid,
+        kind: boundedText(40).optional(),
         name: boundedText(200).optional(),
-        summary: z.string().max(2000).optional(),
-        description: z.string().max(20000).optional(),
-        gm_notes: z.string().max(20000).optional(),
+        summary: z.string().max(2000).nullable().optional(),
+        player_description: z.string().max(20000).nullable().optional(),
+        description: z.string().max(20000).nullable().optional(),
+        gm_notes: z.string().max(20000).nullable().optional(),
         status: z.string().max(60).optional(),
         visibility: z.enum(VISIBILITY_VALUES).optional(),
         tags: z.array(z.string().max(60)).max(30).optional(),
+        aliases: z.array(z.string().max(120)).max(50).optional(),
+        parent_id: uuid.nullable().optional(),
+        data: z.record(z.string(), z.unknown()).optional(),
       }),
       outputSchema: itemOutput,
       annotations: modify,
     },
     async ({ entry_id, ...patch }) => {
-      const { campaign } = await loadEntity(ctx, entry_id);
+      const { row, campaign } = await loadEntity(ctx, entry_id);
       requireGm(campaign);
-      const update = Object.fromEntries(
-        Object.entries(patch).filter(([, value]) => value !== undefined),
-      ) as Database["public"]["Tables"]["entities"]["Update"];
-      if (Object.keys(update).length === 0) throw new Error("Nothing to update — no fields given.");
+
+      const effectiveKind = patch.kind ?? row.kind;
+      if (patch.kind !== undefined) kindDef(patch.kind);
+      if (patch.status !== undefined || patch.kind !== undefined) {
+        const effectiveStatus = patch.status ?? row.status;
+        if (effectiveStatus) assertStatusForKind(effectiveKind, effectiveStatus);
+      }
+      if (patch.parent_id) {
+        await assertParentIsSafe(ctx, entry_id, patch.parent_id, row.campaign_id);
+      }
+
+      const update = buildPatch(patch) as Database["public"]["Tables"]["entities"]["Update"];
+      requirePatch(update);
       const { data, error } = await ctx.supabase
         .from("entities")
         .update(update)
         .eq("id", entry_id)
-        .select("id, campaign_id, kind, name, status, visibility, summary")
+        .select("*")
         .single();
       if (error) fail("Updating the entry", error);
-      return reply(`Updated ${data.kind} "${data.name}".`, { item: data });
+      return detailReply(`Updated ${data.kind} "${data.name}" (${data.id}).`, data);
     },
   );
 
@@ -644,9 +658,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         .select("id");
       if (error) fail("Deleting the entry", error);
       if (!data || data.length === 0) throw new Error("The entry was not deleted.");
-      return reply(`Deleted ${row.kind} "${row.name}".`, { deleted: true, id: entry_id });
+      return deleteReply(`Deleted ${row.kind} "${row.name}".`, entry_id);
     },
   );
+
 
   /* ---------------- relationships ---------------- */
 

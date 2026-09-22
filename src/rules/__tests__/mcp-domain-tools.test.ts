@@ -743,6 +743,106 @@ describe("library", () => {
       /Only the owner of the "My Pack" pack can delete it\./,
     );
   });
+
+  // PL-012: entry_count must be owner-aware, not just keyed off the pack name.
+  it("does not bleed entry counts between two owners' same-named packs", async () => {
+    const OTHER_OWNER = OUTSIDER;
+    const packs = [
+      { id: "p1", owner_id: OWNER, name: "Adventurers' Guide" },
+      { id: "p2", owner_id: OTHER_OWNER, name: "Adventurers' Guide" },
+    ];
+    const entries = [
+      { owner_id: OWNER, pack: "Adventurers' Guide" },
+      { owner_id: OWNER, pack: "Adventurers' Guide" },
+      { owner_id: OTHER_OWNER, pack: "Adventurers' Guide" },
+    ];
+    const tools = serverWith(
+      {
+        content_packs: [{ __result: packs }, { __result: packs, extra: { count: packs.length } }],
+        library_entries: entries,
+      },
+      OWNER,
+    );
+    const result = await tools["library"]!.handler({ action: "list_packs" });
+    const items = result.structuredContent["items"] as Array<Record<string, unknown>>;
+    const mine = items.find((row) => row["owner_id"] === OWNER)!;
+    const theirs = items.find((row) => row["owner_id"] === OTHER_OWNER)!;
+    expect(mine["entry_count"]).toBe(2);
+    expect(theirs["entry_count"]).toBe(1);
+  });
+
+  // PL-013: search_pack_entries canonical/deprecated input and full output contract.
+  describe("search_pack_entries", () => {
+    const candidateEntry = {
+      id: "ce1",
+      owner_id: OWNER,
+      kind: "skill",
+      name: "Stealth",
+      category: "Physical",
+      base_points: 4,
+      cost_per_level: 1,
+      max_levels: 4,
+      pack: "My Pack",
+      data: { defaults: "DX-5", prerequisites: "None", attribute: "DX", difficulty: "A" },
+    };
+
+    it("accepts the canonical query field and returns the full candidate view", async () => {
+      const tools = serverWith(
+        { library_entries: [candidateEntry], content_packs: packRow },
+        OWNER,
+      );
+      const result = await tools["library"]!.handler({
+        action: "search_pack_entries",
+        query: "Stealth",
+      });
+      const items = result.structuredContent["items"] as Array<Record<string, unknown>>;
+      expect(items).toHaveLength(1);
+      const item = items[0]!;
+      for (const field of [
+        "id",
+        "name",
+        "kind",
+        "category",
+        "pack_id",
+        "pack_name",
+        "base_points",
+        "cost_per_level",
+        "max_levels",
+        "difficulty",
+        "attribute",
+        "defaults",
+        "prerequisites",
+        "specialization",
+        "specialization_required",
+        "pack_version",
+      ]) {
+        expect(item).toHaveProperty(field);
+      }
+      expect(item["defaults"]).toBe("DX-5");
+      expect(item["prerequisites"]).toBe("None");
+    });
+
+    it("still accepts the deprecated name alias", async () => {
+      const tools = serverWith(
+        { library_entries: [candidateEntry], content_packs: packRow },
+        OWNER,
+      );
+      const result = await tools["library"]!.handler({
+        action: "search_pack_entries",
+        name: "Stealth",
+      });
+      const items = result.structuredContent["items"] as Array<Record<string, unknown>>;
+      expect(items).toHaveLength(1);
+    });
+
+    it("rejects a call with neither query nor name", async () => {
+      const tools = serverWith({ library_entries: [candidateEntry], content_packs: packRow }, OWNER);
+      await expectFailure(
+        tools["library"]!.handler({ action: "search_pack_entries" }),
+        /needs a query/,
+      );
+    });
+  });
 });
 
 /* ==================================================================== */

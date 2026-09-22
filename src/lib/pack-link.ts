@@ -104,24 +104,36 @@ export function canonicalJson(value: unknown): string {
 /**
  * The exact payload that is hashed. It is the DEFINITION of a pack item —
  * never editorial or provenance data (summary, description, notes, pages,
- * source labels, editions, timestamps, owner/campaign ids are all excluded),
- * so fixing a typo in a description never invalidates a link.
+ * source labels, editions, `source_rules.text`, modifier notes, timestamps,
+ * owner/campaign ids are all excluded), so fixing a typo in a description
+ * never invalidates a link. Character progression (invested points, chosen
+ * levels, specialisation, notes) is likewise never part of it.
  *
- * Shape (keys serialised in this alphabetical order by `canonicalJson`):
- *   attribute      string | null   controlling attribute (skill-like only)
- *   base_points    number          base cost
- *   category       string | null   normalised category
- *   cost_per_level number          cost of each level after the first
- *   difficulty     string | null   difficulty letter (skill-like only)
- *   kind           string          entry kind
- *   max_levels     number | null   level cap
- *   name           string          normalised base name (no specialisation)
+ * Every field below is read mechanically by the rules engine, so a change to
+ * any of them really does change what the item DOES:
+ *
+ *   attribute       string | null   controlling attribute   (src/rules/skills.ts)
+ *   base_points     number          base cost               (src/rules/points.ts)
+ *   base_skill      string | null   technique's base skill  (src/rules/skills.ts)
+ *   category        string | null   normalised category
+ *   cost_per_level  number          cost of each further level
+ *   default_penalty number | null   technique default penalty (src/rules/skills.ts)
+ *   defaults        string | null   skill/spell default list  (src/rules/skills.ts)
+ *   difficulty      string | null   difficulty letter         (src/rules/skills.ts)
+ *   kind            string          entry kind
+ *   max_levels      number | null   level cap
+ *   name            string          normalised base name (no specialisation)
+ *
+ * `canonicalJson` serialises those keys in exactly this alphabetical order.
  */
 export interface PackDefinition {
   attribute: string | null;
   base_points: number;
+  base_skill: string | null;
   category: string | null;
   cost_per_level: number;
+  default_penalty: number | null;
+  defaults: string | null;
   difficulty: string | null;
   kind: string;
   max_levels: number | null;
@@ -151,15 +163,40 @@ function text(value: unknown): string | null {
   return trimmed ? trimmed : null;
 }
 
+function numberOrNull(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Keys inside `data` that the pack DEFINES and the rules engine consumes.
+ * Restoring/updating an entry refreshes exactly these from the current pack
+ * item, so a stale copy on the sheet can never shadow the live definition.
+ */
+export const PACK_DATA_FIELDS = [
+  "attribute",
+  "difficulty",
+  "defaults",
+  "defaultPenalty",
+  "baseSkill",
+  "prerequisites",
+  "specialization_required",
+] as const;
+
 /** The canonical definition of a pack item. */
 export function packDefinition(item: PackItemLike): PackDefinition {
   const data = (item.data ?? {}) as Record<string, unknown>;
   const skillLike = isSkillLike(item.kind);
+  const technique = item.kind === "technique";
   return {
     attribute: skillLike ? text(data["attribute"]) : null,
     base_points: Number(item.base_points ?? 0),
+    base_skill: technique ? text(data["baseSkill"]) : null,
     category: text(item.category) ? normalizeText(String(item.category)) : null,
     cost_per_level: Number(item.cost_per_level ?? 0),
+    default_penalty: technique ? numberOrNull(data["defaultPenalty"]) : null,
+    defaults: skillLike ? text(data["defaults"]) : null,
     difficulty: skillLike ? text(data["difficulty"]) : null,
     kind: item.kind,
     max_levels:

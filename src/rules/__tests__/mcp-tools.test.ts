@@ -381,3 +381,455 @@ describe("add_character_entry", () => {
     expect((spy.inserted as Record<string, unknown>)["sort_order"]).toBe(8);
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* campaign authoring expansion                                        */
+/* ------------------------------------------------------------------ */
+
+const OUTSIDER = "99999999-9999-4999-8999-999999999999";
+
+async function expectFailure(run: Promise<unknown>, match: RegExp) {
+  await expect(run).rejects.toThrow(match);
+}
+
+describe("update_campaign", () => {
+  it("lets the Game Master rename a campaign and returns the full row", async () => {
+    const spy: Spy = {};
+    const tools = serverWith(
+      { campaigns: [{ __result: campaignRow }, { __result: { ...campaignRow, name: "Nadrel II" } }] },
+      GM,
+      spy,
+    );
+    const result = await tools["update_campaign"]!.handler({
+      campaign_id: CAMPAIGN,
+      name: "Nadrel II",
+    });
+    expect(spy.updated).toEqual({ name: "Nadrel II" });
+    expect(result.content[0]!.text).toContain(`Updated campaign "Nadrel II" (${CAMPAIGN}).`);
+    expect(result.content[0]!.text).toContain('"name": "Nadrel II"');
+    expect((result.structuredContent["item"] as Record<string, unknown>)["id"]).toBe(CAMPAIGN);
+  });
+
+  it("refuses a player and an empty patch", async () => {
+    await expectFailure(
+      serverWith({ campaigns: campaignRow }, USER)["update_campaign"]!.handler({
+        campaign_id: CAMPAIGN,
+        name: "Nope",
+      }),
+      /Game Master/,
+    );
+    await expectFailure(
+      serverWith({ campaigns: campaignRow }, GM)["update_campaign"]!.handler({
+        campaign_id: CAMPAIGN,
+      }),
+      /Nothing to update/,
+    );
+  });
+});
+
+describe("update_character", () => {
+  const updated = { ...sheetRow, concept: null, gm_notes: "hidden" };
+
+  function tools(userId: string, spy?: Spy) {
+    return serverWith(
+      { characters: [{ __result: sheetRow }, { __result: updated }], campaigns: campaignRow },
+      userId,
+      spy,
+    );
+  }
+
+  it("lets the owner clear a nullable field", async () => {
+    const spy: Spy = {};
+    const result = await tools(USER, spy)["update_character"]!.handler({
+      character_id: CHARACTER_ID,
+      concept: null,
+    });
+    expect(spy.updated).toEqual({ concept: null });
+    expect(result.content[0]!.text).toContain(`Updated character "Brann Ashfall"`);
+    expect(result.content[0]!.text).toContain('"concept": null');
+  });
+
+  it("lets the campaign Game Master edit and refuses an outsider", async () => {
+    const gmResult = await tools(GM)["update_character"]!.handler({
+      character_id: CHARACTER_ID,
+      notes: "Bell duty",
+    });
+    expect(gmResult.structuredContent["item"]).toBeDefined();
+    await expectFailure(
+      tools(OUTSIDER)["update_character"]!.handler({ character_id: CHARACTER_ID, notes: "x" }),
+      /owner|Game Master/,
+    );
+  });
+
+  it("rejects an empty patch", async () => {
+    await expectFailure(
+      tools(USER)["update_character"]!.handler({ character_id: CHARACTER_ID }),
+      /Nothing to update/,
+    );
+  });
+
+  it("accepts quarter-step speed and rejects anything else", () => {
+    const schema = serverWith({}, USER)["update_character"]!.inputSchema!;
+    expect(schema.safeParse({ character_id: CHARACTER_ID, speed_delta: 0.25 }).success).toBe(true);
+    expect(schema.safeParse({ character_id: CHARACTER_ID, speed_delta: -1.5 }).success).toBe(true);
+    expect(schema.safeParse({ character_id: CHARACTER_ID, speed_delta: 0.3 }).success).toBe(false);
+  });
+
+  it("verifies the target campaign before moving a sheet", async () => {
+    const spy: Spy = {};
+    const result = await serverWith(
+      {
+        characters: [{ __result: sheetRow }, { __result: { ...sheetRow, campaign_id: CAMPAIGN } }],
+        campaigns: campaignRow,
+      },
+      USER,
+      spy,
+    )["update_character"]!.handler({ character_id: CHARACTER_ID, campaign_id: CAMPAIGN });
+    expect(spy.updated).toEqual({ campaign_id: CAMPAIGN });
+    expect(result.content[0]!.text).toContain('"campaign_id"');
+  });
+
+  it("never returns gm_notes to a non-owner, non-GM caller", async () => {
+    await expectFailure(
+      tools(OUTSIDER)["update_character"]!.handler({ character_id: CHARACTER_ID, notes: "x" }),
+      /change this sheet/,
+    );
+  });
+});
+
+describe("create_character", () => {
+  it("writes only the fields given and returns the complete row with its id", async () => {
+    const spy: Spy = {};
+    const created = { ...sheetRow, st: 12, conditions: ["Shock"] };
+    const tools = serverWith({ characters: created, campaigns: campaignRow }, USER, spy);
+    const result = await tools["create_character"]!.handler({
+      name: "Brann Ashfall",
+      st: 12,
+      conditions: ["Shock"],
+      appearance: { hair: "ash" },
+      campaign_id: CAMPAIGN,
+    });
+    const inserted = spy.inserted as Record<string, unknown>;
+    expect(inserted["owner_id"]).toBe(USER);
+    expect(inserted["st"]).toBe(12);
+    expect(inserted).not.toHaveProperty("dx");
+    expect(result.content[0]!.text).toContain(`Created character "Brann Ashfall" (${CHARACTER_ID}).`);
+    expect(result.content[0]!.text).toContain('"st": 12');
+  });
+});
+
+describe("delete_character", () => {
+  function tools(userId: string) {
+    return serverWith(
+      { characters: [{ __result: sheetRow }, { __result: [{ id: CHARACTER_ID }] }], campaigns: campaignRow },
+      userId,
+    );
+  }
+
+  it("lets the owner delete and returns the delete payload", async () => {
+    const result = await tools(USER)["delete_character"]!.handler({ character_id: CHARACTER_ID });
+    expect(result.structuredContent).toEqual({ deleted: true, id: CHARACTER_ID });
+    expect(result.content[0]!.text).toContain('"deleted": true');
+  });
+
+  it("refuses a Game Master who does not own the sheet", async () => {
+    await expectFailure(
+      tools(GM)["delete_character"]!.handler({ character_id: CHARACTER_ID }),
+      /Only the owner/,
+    );
+  });
+});
+
+describe("update_character_entry", () => {
+  const found = { id: "e1", name: "Stealth", character_id: CHARACTER_ID };
+  const updatedEntry = { ...found, kind: "skill", category: null, points: 8, notes: null };
+
+  function tools(userId: string, spy?: Spy) {
+    return serverWith(
+      {
+        character_entries: [{ __result: found }, { __result: updatedEntry }],
+        characters: sheetRow,
+        campaigns: campaignRow,
+      },
+      userId,
+      spy,
+    );
+  }
+
+  it("applies a partial update with explicit nulls", async () => {
+    const spy: Spy = {};
+    const result = await tools(USER, spy)["update_character_entry"]!.handler({
+      entry_id: "e1",
+      points: 8,
+      category: null,
+    });
+    expect(spy.updated).toEqual({ points: 8, category: null });
+    expect(result.content[0]!.text).toContain('"points": 8');
+    expect(result.content[0]!.text).toContain('"category": null');
+  });
+
+  it("refuses an outsider and an empty patch", async () => {
+    await expectFailure(
+      tools(OUTSIDER)["update_character_entry"]!.handler({ entry_id: "e1", points: 1 }),
+      /change this sheet/,
+    );
+    await expectFailure(
+      tools(USER)["update_character_entry"]!.handler({ entry_id: "e1" }),
+      /Nothing to update/,
+    );
+  });
+});
+
+describe("add_character_entry sort order input", () => {
+  it("uses an explicit sort_order without looking up the maximum", async () => {
+    const spy: Spy = {};
+    const tools = serverWith(
+      {
+        characters: sheetRow,
+        campaigns: campaignRow,
+        character_entries: [
+          { __result: { id: "new", character_id: CHARACTER_ID, kind: "skill", name: "Stealth", sort_order: 3 } },
+        ],
+      },
+      USER,
+      spy,
+    );
+    const result = await tools["add_character_entry"]!.handler({
+      character_id: CHARACTER_ID,
+      kind: "skill",
+      name: "Stealth",
+      sort_order: 3,
+    });
+    expect((spy.inserted as Record<string, unknown>)["sort_order"]).toBe(3);
+    expect(result.content[0]!.text).toContain("entry_id: new");
+    expect(result.content[0]!.text).toContain('"sort_order": 3');
+  });
+});
+
+describe("update_entry expansion", () => {
+  const locationRow = {
+    id: ENTITY_ID,
+    campaign_id: CAMPAIGN,
+    kind: "LOCATION",
+    name: "Vault",
+    status: "Intact",
+    parent_id: null,
+  };
+  const PARENT = "55555555-5555-4555-8555-555555555555";
+
+  function tools(entities: TableResult[], spy?: Spy) {
+    return serverWith({ entities, campaigns: campaignRow }, GM, spy);
+  }
+
+  it("replaces data and aliases wholesale and returns the full row", async () => {
+    const spy: Spy = {};
+    const result = await tools(
+      [
+        { __result: locationRow },
+        { __result: { ...locationRow, data: { a: 1 }, aliases: ["Vault"] } },
+      ],
+      spy,
+    )["update_entry"]!.handler({ entry_id: ENTITY_ID, data: { a: 1 }, aliases: ["Vault"] });
+    expect(spy.updated).toEqual({ data: { a: 1 }, aliases: ["Vault"] });
+    expect(result.content[0]!.text).toContain('"aliases"');
+  });
+
+  it("rejects an unknown kind and an invalid status", async () => {
+    await expectFailure(
+      tools([{ __result: locationRow }])["update_entry"]!.handler({
+        entry_id: ENTITY_ID,
+        kind: "SPACESHIP",
+      }),
+      /Unknown entry kind/,
+    );
+    await expectFailure(
+      tools([{ __result: locationRow }])["update_entry"]!.handler({
+        entry_id: ENTITY_ID,
+        status: "intact",
+      }),
+      /Valid statuses/,
+    );
+  });
+
+  it("accepts a parent in the same campaign and unlinks with null", async () => {
+    const parentRow = { id: PARENT, campaign_id: CAMPAIGN, parent_id: null };
+    const ok = await tools([
+      { __result: locationRow },
+      { __result: parentRow },
+      { __result: { ...locationRow, parent_id: PARENT } },
+    ])["update_entry"]!.handler({ entry_id: ENTITY_ID, parent_id: PARENT });
+    expect(ok.content[0]!.text).toContain(PARENT);
+
+    const spy: Spy = {};
+    await tools([{ __result: locationRow }, { __result: locationRow }], spy)[
+      "update_entry"
+    ]!.handler({ entry_id: ENTITY_ID, parent_id: null });
+    expect(spy.updated).toEqual({ parent_id: null });
+  });
+
+  it("rejects itself as parent, an indirect loop and a parent in another campaign", async () => {
+    await expectFailure(
+      tools([{ __result: locationRow }])["update_entry"]!.handler({
+        entry_id: ENTITY_ID,
+        parent_id: ENTITY_ID,
+      }),
+      /own parent/,
+    );
+    await expectFailure(
+      tools([
+        { __result: locationRow },
+        { __result: { id: PARENT, campaign_id: CAMPAIGN, parent_id: ENTITY_ID } },
+      ])["update_entry"]!.handler({ entry_id: ENTITY_ID, parent_id: PARENT }),
+      /loop/,
+    );
+    await expectFailure(
+      tools([
+        { __result: locationRow },
+        { __result: { id: PARENT, campaign_id: "66666666-6666-4666-8666-666666666666", parent_id: null } },
+      ])["update_entry"]!.handler({ entry_id: ENTITY_ID, parent_id: PARENT }),
+      /same campaign/,
+    );
+  });
+
+  it("rejects an empty patch", async () => {
+    await expectFailure(
+      tools([{ __result: locationRow }])["update_entry"]!.handler({ entry_id: ENTITY_ID }),
+      /Nothing to update/,
+    );
+  });
+});
+
+describe("relationship tools", () => {
+  const RELATION = "77777777-7777-4777-8777-777777777777";
+  const relationRow = {
+    id: RELATION,
+    campaign_id: CAMPAIGN,
+    source_id: ENTITY_ID,
+    target_id: CHARACTER_ID,
+    rel_type: "ally",
+    strength: 2,
+    is_current: true,
+  };
+
+  it("bounds strength in both create and update schemas", () => {
+    const tools = serverWith({}, GM);
+    for (const name of ["create_relationship", "update_relationship"]) {
+      const schema = tools[name]!.inputSchema!;
+      const base =
+        name === "create_relationship"
+          ? {
+              campaign_id: CAMPAIGN,
+              source_id: ENTITY_ID,
+              target_id: CHARACTER_ID,
+              rel_type: "ally",
+            }
+          : { relationship_id: RELATION };
+      expect(schema.safeParse({ ...base, strength: -5 }).success).toBe(true);
+      expect(schema.safeParse({ ...base, strength: 5 }).success).toBe(true);
+      expect(schema.safeParse({ ...base, strength: 6 }).success).toBe(false);
+      expect(schema.safeParse({ ...base, strength: null }).success).toBe(true);
+    }
+  });
+
+  it("creates a link with only the values given and reports its id", async () => {
+    const spy: Spy = {};
+    const tools = serverWith(
+      {
+        campaigns: campaignRow,
+        entities: { ...entityRow, campaign_id: CAMPAIGN },
+        entity_relationships: relationRow,
+      },
+      GM,
+      spy,
+    );
+    const result = await tools["create_relationship"]!.handler({
+      campaign_id: CAMPAIGN,
+      source_id: ENTITY_ID,
+      target_id: CHARACTER_ID,
+      rel_type: "ally",
+      strength: 2,
+    });
+    const inserted = spy.inserted as Record<string, unknown>;
+    expect(inserted["strength"]).toBe(2);
+    expect(inserted).not.toHaveProperty("is_current");
+    expect(result.content[0]!.text).toContain(`(${RELATION}).`);
+    expect(result.content[0]!.text).toContain('"rel_type": "ally"');
+  });
+
+  it("updates and deletes a link for the Game Master only", async () => {
+    const spy: Spy = {};
+    const updateTools = (userId: string) =>
+      serverWith(
+        {
+          entity_relationships: [
+            { __result: relationRow },
+            { __result: { ...relationRow, gm_description: null } },
+          ],
+          campaigns: campaignRow,
+        },
+        userId,
+        spy,
+      );
+    const updated = await updateTools(GM)["update_relationship"]!.handler({
+      relationship_id: RELATION,
+      gm_description: null,
+    });
+    expect(spy.updated).toEqual({ gm_description: null });
+    expect(updated.content[0]!.text).toContain('"gm_description": null');
+    await expectFailure(
+      updateTools(USER)["update_relationship"]!.handler({
+        relationship_id: RELATION,
+        rel_type: "rival",
+      }),
+      /Game Master/,
+    );
+
+    const deleteTools = (userId: string) =>
+      serverWith(
+        {
+          entity_relationships: [{ __result: relationRow }, { __result: [{ id: RELATION }] }],
+          campaigns: campaignRow,
+        },
+        userId,
+      );
+    const deleted = await deleteTools(GM)["delete_relationship"]!.handler({
+      relationship_id: RELATION,
+    });
+    expect(deleted.structuredContent).toEqual({ deleted: true, id: RELATION });
+    await expectFailure(
+      deleteTools(USER)["delete_relationship"]!.handler({ relationship_id: RELATION }),
+      /Game Master/,
+    );
+  });
+});
+
+describe("get_character compact mode", () => {
+  const longNotes = "n".repeat(400);
+  const rows = [{ id: "e1", kind: "skill", name: "Stealth", notes: longNotes }];
+
+  function tools() {
+    return serverWith(
+      {
+        characters: sheetRow,
+        campaigns: campaignRow,
+        character_entries: [{ __result: rows }, { __result: null, extra: { count: 1 } }],
+      },
+      USER,
+    );
+  }
+
+  it("truncates long entry notes only when compact is requested", async () => {
+    const compact = await tools()["get_character"]!.handler({
+      character_id: CHARACTER_ID,
+      compact: true,
+    });
+    const compactItem = compact.structuredContent["item"] as { entries: { notes: string }[] };
+    expect(compactItem.entries[0]!.notes).toHaveLength(200);
+    expect(compactItem.entries[0]!.notes.endsWith("…")).toBe(true);
+    expect(compact.content[0]!.text).toContain("…");
+
+    const full = await tools()["get_character"]!.handler({ character_id: CHARACTER_ID });
+    const fullItem = full.structuredContent["item"] as { entries: { notes: string }[] };
+    expect(fullItem.entries[0]!.notes).toBe(longNotes);
+  });
+});

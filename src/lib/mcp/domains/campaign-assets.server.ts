@@ -118,7 +118,7 @@ const input = z.discriminatedUnion("action", [
       visible_to_players: z.boolean().optional(),
     })
     .describe(
-      "Download a file from a public https URL and create the asset. GM only. Changes data.",
+      "Disabled for security reasons: use prepare_upload + finalize_upload, or upload_base64 for small files.",
     ),
   z
     .object({
@@ -185,8 +185,8 @@ export function registerCampaignAssets(tool: ToolRegistrar, ctx: McpToolContext)
         "changes data), delete (remove the asset and its stored file, GM only, deletes data), " +
         "set_visibility (toggle player visibility, GM only, changes data), get_url (short-lived " +
         "signed view URL), prepare_upload (get a signed upload target, GM only), finalize_upload " +
-        "(create the asset row after uploading, GM only, changes data), upload_from_url (fetch a " +
-        "public https file and create the asset, GM only, changes data), upload_base64 (create the " +
+        "(create the asset row after uploading, GM only, changes data), upload_from_url (disabled for " +
+        "security reasons, use prepare_upload/finalize_upload or upload_base64 instead), upload_base64 (create the " +
         "asset from inline base64 bytes, small files only, GM only, changes data).",
       inputSchema: input,
       outputSchema: domainOutput,
@@ -331,35 +331,12 @@ export function registerCampaignAssets(tool: ToolRegistrar, ctx: McpToolContext)
         );
       },
 
-      upload_from_url: async (i) => {
-        const campaign = await loadCampaign(ctx, i.campaign_id);
-        requireGmFor(campaign, "upload assets");
-        const file = await fetchRemoteFile(i.url, {
-          maxBytes: ASSET_MAX_BYTES,
-          allowedMime: ASSET_TYPES,
-        });
-        const fileName = new URL(i.url).pathname.split("/").pop() ?? "asset";
-        const path = storagePathFor(`${ctx.userId}/${i.campaign_id}`, fileName);
-        await uploadBytes(ctx.supabase, ASSET_BUCKET, path, file);
-        const { data, error } = await ctx.supabase
-          .from("campaign_assets")
-          .insert({
-            campaign_id: i.campaign_id,
-            title: i.title,
-            caption: i.caption ?? null,
-            tags: i.tags ?? [],
-            storage_path: path,
-            mime_type: file.mime,
-            byte_size: file.size,
-            visible_to_players: i.visible_to_players ?? false,
-            created_by: ctx.userId,
-          })
-          .select("*")
-          .single();
-        if (error) fail("Creating asset", error);
-        return detailReply(
-          `Created asset "${(data as AssetRow).title}".`,
-          toStructured(data as AssetRow),
+      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
+      // resolve+pin SSRF protection is not achievable on this runtime.
+      upload_from_url: async () => {
+        throw new Error(
+          "Downloading files from a web address is turned off for security reasons. " +
+            "Use prepare_upload with finalize_upload instead, or send small files directly with upload_base64.",
         );
       },
 

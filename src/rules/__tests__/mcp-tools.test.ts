@@ -22,7 +22,7 @@ describe("assistant tool surface", () => {
       (server as unknown as { _registeredTools: Record<string, unknown> })._registeredTools,
     );
     expect(registered.sort()).toEqual([...MCP_TOOL_NAMES].sort());
-    expect(registered).toHaveLength(15);
+    expect(registered).toHaveLength(21);
   });
 
   it("marks read tools read-only and delete tools destructive", () => {
@@ -129,6 +129,10 @@ function query(data: unknown, extra: Record<string, unknown> = {}, spy?: Spy) {
   ]) {
     self[method] = () => self;
   }
+  self["update"] = (payload: unknown) => {
+    if (spy) spy.updated = payload;
+    return self;
+  };
   self["insert"] = (payload: unknown) => {
     if (spy) spy.inserted = payload;
     return self;
@@ -138,7 +142,7 @@ function query(data: unknown, extra: Record<string, unknown> = {}, spy?: Spy) {
   return self;
 }
 
-type Spy = { inserted?: unknown };
+type Spy = { inserted?: unknown; updated?: unknown };
 
 const USER = "00000000-0000-0000-0000-000000000001";
 const GM = "00000000-0000-0000-0000-0000000000ff";
@@ -252,7 +256,7 @@ describe("get_character text content", () => {
     const result = await tools["get_character"]!.handler({ character_id: CHARACTER_ID });
 
     const text = result.content[0]!.text;
-    expect(text).toContain('Character "Brann Ashfall" with 2 entries.');
+    expect(text).toContain('Character "Brann Ashfall" — showing 2 of 2 entries.');
     expect(text).toContain('"point_budget": 300');
     expect(text).toContain('"concept": "Disgraced bellkeeper"');
     expect(text).toContain('"name": "Dark Vision"');
@@ -308,7 +312,9 @@ describe("get_character entry counts", () => {
       USER,
     );
     const result = await tools["get_character"]!.handler({ character_id: CHARACTER_ID });
-    expect(result.content[0]!.text).toContain('Character "Brann Ashfall" with 2 entries.');
+    expect(result.content[0]!.text).toContain(
+      'Character "Brann Ashfall" — showing 2 of 2 entries.',
+    );
   });
 
   it("reports returned of total with a hint when truncated", async () => {
@@ -325,7 +331,7 @@ describe("get_character entry counts", () => {
       entry_limit: 2,
     });
     expect(result.content[0]!.text).toContain(
-      'Character "Brann Ashfall" with 2 of 57 entries (more may exist — raise entry_limit).',
+      'Character "Brann Ashfall" — showing 2 of 57 entries (more may exist — raise entry_limit).',
     );
   });
 });

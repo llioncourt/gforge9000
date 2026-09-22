@@ -552,9 +552,12 @@ export function BulkLinkDialog({
 /** Game Master overview: per-character counts for the whole campaign. */
 export function CampaignPackSummary({ campaignId }: { campaignId: string }) {
   const { t } = useT("characters");
+  const { user } = useSession();
+  const userId = user?.id ?? null;
   const summary = useQuery({
-    queryKey: ["pack-link-summary", campaignId],
-    queryFn: () => summarizeCampaign(supabase, campaignId),
+    queryKey: ["pack-link-summary", campaignId, userId],
+    queryFn: () => summarizeCampaign(supabase, campaignId, userId),
+
   });
   const rows = summary.data ?? [];
   if (rows.length === 0) return null;

@@ -196,6 +196,59 @@ function requireCharacterWrite(access: CharacterAccess): void {
   }
 }
 
+
+/* ------------------------------------------------------------------ */
+/* Registration helper                                                 */
+/* ------------------------------------------------------------------ */
+
+type ToolResult = {
+  content: { type: "text"; text: string }[];
+  structuredContent: Structured;
+};
+
+interface ToolDefinition<I extends z.ZodType, O extends z.ZodType> {
+  title: string;
+  description: string;
+  inputSchema: I;
+  outputSchema: O;
+  annotations: {
+    readOnlyHint: boolean;
+    destructiveHint: boolean;
+    idempotentHint: boolean;
+  };
+}
+
+/**
+ * The MCP SDK accepts any Standard Schema that can also describe itself as JSON
+ * Schema; zod covers the first half, so we attach the second.
+ */
+function withJson<T extends z.ZodType>(schema: T): T {
+  return Object.assign(schema, {
+    jsonSchema: z.toJSONSchema(schema, { io: "input", unrepresentable: "any" }),
+  });
+}
+
+function registrar(server: McpServer) {
+  return function tool<I extends z.ZodType, O extends z.ZodType>(
+    name: string,
+    definition: ToolDefinition<I, O>,
+    handler: (input: z.infer<I>) => Promise<ToolResult>,
+  ): void {
+    const prepared = {
+      ...definition,
+      inputSchema: withJson(definition.inputSchema),
+      outputSchema: withJson(definition.outputSchema),
+    };
+    (
+      server.registerTool as unknown as (
+        toolName: string,
+        config: unknown,
+        cb: unknown,
+      ) => void
+    )(name, prepared, handler);
+  };
+}
+
 /* ------------------------------------------------------------------ */
 /* Server construction                                                 */
 /* ------------------------------------------------------------------ */
@@ -212,9 +265,11 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
   const modify = { readOnlyHint: false, destructiveHint: false, idempotentHint: true } as const;
   const destroy = { readOnlyHint: false, destructiveHint: true, idempotentHint: true } as const;
 
+  const tool = registrar(server);
+
   /* ---------------- campaigns ---------------- */
 
-  server.registerTool(
+  tool(
     "list_campaigns",
     {
       title: "List campaigns",
@@ -244,7 +299,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-  server.registerTool(
+  tool(
     "create_campaign",
     {
       title: "Create a campaign",
@@ -270,12 +325,13 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
 
   /* ---------------- entry types ---------------- */
 
-  server.registerTool(
+  tool(
     "list_entry_types",
     {
       title: "List entry types",
       description:
         "Lists every kind of world or story entry a campaign can hold, with the statuses each kind accepts. Use the returned `kind` value with the entry tools.",
+      inputSchema: z.object({}),
       outputSchema: listOutput,
       annotations: read,
     },
@@ -298,7 +354,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
 
   /* ---------------- entries ---------------- */
 
-  server.registerTool(
+  tool(
     "list_entries",
     {
       title: "List campaign entries",
@@ -329,7 +385,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-  server.registerTool(
+  tool(
     "get_entry",
     {
       title: "Get a campaign entry",
@@ -350,7 +406,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-  server.registerTool(
+  tool(
     "create_entry",
     {
       title: "Create a campaign entry",
@@ -397,7 +453,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-  server.registerTool(
+  tool(
     "update_entry",
     {
       title: "Update a campaign entry",
@@ -434,7 +490,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-  server.registerTool(
+  tool(
     "delete_entry",
     {
       title: "Delete a campaign entry",
@@ -460,7 +516,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
 
   /* ---------------- relationships ---------------- */
 
-  server.registerTool(
+  tool(
     "list_relationships",
     {
       title: "List entry relationships",
@@ -490,7 +546,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-  server.registerTool(
+  tool(
     "create_relationship",
     {
       title: "Link two entries",
@@ -535,7 +591,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
 
   /* ---------------- characters ---------------- */
 
-  server.registerTool(
+  tool(
     "list_characters",
     {
       title: "List characters",
@@ -565,7 +621,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-  server.registerTool(
+  tool(
     "get_character",
     {
       title: "Get a character sheet",
@@ -592,7 +648,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-  server.registerTool(
+  tool(
     "create_character",
     {
       title: "Create a character",
@@ -628,7 +684,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-  server.registerTool(
+  tool(
     "add_character_entry",
     {
       title: "Add an entry to a character",
@@ -667,7 +723,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-  server.registerTool(
+  tool(
     "delete_character_entry",
     {
       title: "Remove an entry from a character",

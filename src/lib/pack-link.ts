@@ -126,6 +126,17 @@ export function canonicalJson(value: unknown): string {
  *
  * `canonicalJson` serialises those keys in exactly this alphabetical order.
  */
+export interface EquipmentDefinition {
+  container: string | null;
+  cost: number | null;
+  dr: number | null;
+  legality: string | null;
+  locations: string[] | null;
+  tl: number | null;
+  weapons: unknown[] | null;
+  weight: number | null;
+}
+
 export interface PackDefinition {
   attribute: string | null;
   base_points: number;
@@ -135,10 +146,19 @@ export interface PackDefinition {
   default_penalty: number | null;
   defaults: string | null;
   difficulty: string | null;
+  /**
+   * Mechanical gear stats, for `kind === "equipment"` only. The engine reads
+   * all of them (weight/cost drive encumbrance and wealth, dr/locations drive
+   * armour, weapons drive attacks), so a change to any of them changes what
+   * the item DOES. `quantity` and `carried` are character progression/state
+   * and are deliberately absent.
+   */
+  equipment: EquipmentDefinition | null;
   kind: string;
   max_levels: number | null;
   name: string;
 }
+
 
 /** Kinds whose controlling attribute / difficulty are part of the definition. */
 export const SKILL_LIKE_KINDS = ["skill", "technique", "spell"];
@@ -184,6 +204,47 @@ export const PACK_DATA_FIELDS = [
   "specialization_required",
 ] as const;
 
+/**
+ * Keys inside an equipment entry's `data` that the pack DEFINES. `quantity`
+ * and `carried` are the character's own state and never appear here.
+ */
+export const EQUIPMENT_DEFINITION_FIELDS = [
+  "container",
+  "cost",
+  "dr",
+  "legality",
+  "locations",
+  "tl",
+  "weapons",
+  "weight",
+] as const;
+
+function stringList(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const out = value.map((v) => normalizeText(String(v ?? ""))).filter(Boolean);
+  return out.length ? out : null;
+}
+
+function itemList(value: unknown): unknown[] | null {
+  if (!Array.isArray(value) || value.length === 0) return null;
+  return value as unknown[];
+}
+
+/** Canonical mechanical stats of a piece of gear. */
+export function equipmentDefinition(data: Record<string, unknown>): EquipmentDefinition {
+  const container = text(data["container"]);
+  return {
+    container: container ? normalizeText(container) : null,
+    cost: numberOrNull(data["cost"]),
+    dr: numberOrNull(data["dr"]),
+    legality: text(data["legality"]),
+    locations: stringList(data["locations"]),
+    tl: numberOrNull(data["tl"]),
+    weapons: itemList(data["weapons"]),
+    weight: numberOrNull(data["weight"]),
+  };
+}
+
 /** The canonical definition of a pack item. */
 export function packDefinition(item: PackItemLike): PackDefinition {
   const data = (item.data ?? {}) as Record<string, unknown>;
@@ -198,12 +259,14 @@ export function packDefinition(item: PackItemLike): PackDefinition {
     default_penalty: technique ? numberOrNull(data["defaultPenalty"]) : null,
     defaults: skillLike ? text(data["defaults"]) : null,
     difficulty: skillLike ? text(data["difficulty"]) : null,
+    equipment: item.kind === "equipment" ? equipmentDefinition(data) : null,
     kind: item.kind,
     max_levels:
       item.max_levels === null || item.max_levels === undefined ? null : Number(item.max_levels),
     name: normaliseName(item.name),
   };
 }
+
 
 function toHex(buffer: ArrayBuffer): string {
   return [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -388,7 +451,22 @@ export function compareDefinition(entry: CharacterEntryLike, item: PackItemLike)
     return out;
   }
 
-  if (entry.kind === "equipment") return out;
+  if (entry.kind === "equipment") {
+    // Only stats the pack actually defines are compared; anything the pack
+    // leaves open (and the character's quantity/carried) stays the player's.
+    const packGear = equipmentDefinition(itemData);
+    const entryGear = equipmentDefinition(entryData);
+    for (const field of EQUIPMENT_DEFINITION_FIELDS) {
+      const packValue = packGear[field];
+      if (packValue === null) continue;
+      const entryValue = entryGear[field];
+      if (canonicalJson(packValue) !== canonicalJson(entryValue)) {
+        out.push({ field, pack: packValue, character: entryValue });
+      }
+    }
+    return out;
+  }
+
 
   const maxLevels =
     item.max_levels === null || item.max_levels === undefined ? null : Number(item.max_levels);
@@ -582,11 +660,21 @@ export function restoreDefinitionPatch(
     if (value === undefined || value === null || value === "") delete data[field];
     else data[field] = value;
   }
+  // Gear: the pack owns the mechanical stats; quantity and carried are the
+  // character's own state and are never touched.
+  if (entry.kind === "equipment") {
+    for (const field of EQUIPMENT_DEFINITION_FIELDS) {
+      const value = itemData[field];
+      if (value === undefined || value === null || value === "") continue;
+      data[field] = value;
+    }
+  }
   // Invested points stay exactly as the player bought them.
   if (isSkillLike(entry.kind)) {
     data["points"] = Number(entryData["points"] ?? entry.points ?? 0);
   }
   if (specialization) data["specialization"] = specialization;
+
 
   const maxLevels =
     item.max_levels === null || item.max_levels === undefined ? null : Number(item.max_levels);

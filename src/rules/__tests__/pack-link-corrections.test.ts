@@ -17,6 +17,7 @@ import {
 import { resolutionFor, type ResolvedPackItems } from "@/lib/pack-link-service";
 import { validateCharacter } from "@/lib/pack-validation";
 import type { CharacterRecord } from "@/rules";
+import { defaultRuleset } from "@/rules/ruleset";
 
 const link: PackLink = {
   pack_id: "pack-1",
@@ -176,7 +177,7 @@ describe("character validation against campaign limits", () => {
       campaignSettings: { point_limit: 100, disadvantage_limit: -40, quirk_limit: 5, tech_level: 8 },
       // ...deliberately different from the house-rule engine numbers.
       ruleset: {
-        ...(await import("@/rules/ruleset")).defaultRuleset,
+        ...defaultRuleset,
         limits: {
           pointBudget: 999,
           disadvantageLimit: -999,

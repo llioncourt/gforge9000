@@ -487,6 +487,7 @@
       "pickerTitle": "Add from packs",
       "noPacksLinked": "This character is not linked to any pack yet. Link one on the Attributes tab.",
       "showingKinds": "Showing {{kinds}} from: {{packs}}.",
+      "showingAllKinds": "Showing {{kinds}} from every available pack.",
       "searchPlaceholder": "Search…",
       "nothingAvailable": "Nothing available here.",
       "descriptionAria": "Description for {{name}}",

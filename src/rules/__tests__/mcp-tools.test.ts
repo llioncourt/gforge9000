@@ -364,9 +364,10 @@ describe("add_character_entry", () => {
   it("returns the created entry id in the text content", async () => {
     const spy: Spy = {};
     const result = await addTools(null, spy)["add_character_entry"]!.handler(input);
-    expect(result.content[0]!.text).toBe(
+    expect(result.content[0]!.text).toContain(
       'Added "Stealth" to "Brann Ashfall" (entry_id: 44444444-4444-4444-8444-444444444444).',
     );
+    expect(result.content[0]!.text).toContain('"id": "44444444-4444-4444-8444-444444444444"');
   });
 
   it("uses sort_order 0 when the character has no entries", async () => {
@@ -396,7 +397,9 @@ describe("update_campaign", () => {
   it("lets the Game Master rename a campaign and returns the full row", async () => {
     const spy: Spy = {};
     const tools = serverWith(
-      { campaigns: [{ __result: campaignRow }, { __result: { ...campaignRow, name: "Nadrel II" } }] },
+      {
+        campaigns: [{ __result: campaignRow }, { __result: { ...campaignRow, name: "Nadrel II" } }],
+      },
       GM,
       spy,
     );
@@ -513,7 +516,9 @@ describe("create_character", () => {
     expect(inserted["owner_id"]).toBe(USER);
     expect(inserted["st"]).toBe(12);
     expect(inserted).not.toHaveProperty("dx");
-    expect(result.content[0]!.text).toContain(`Created character "Brann Ashfall" (${CHARACTER_ID}).`);
+    expect(result.content[0]!.text).toContain(
+      `Created character "Brann Ashfall" (${CHARACTER_ID}).`,
+    );
     expect(result.content[0]!.text).toContain('"st": 12');
   });
 });
@@ -521,7 +526,10 @@ describe("create_character", () => {
 describe("delete_character", () => {
   function tools(userId: string) {
     return serverWith(
-      { characters: [{ __result: sheetRow }, { __result: [{ id: CHARACTER_ID }] }], campaigns: campaignRow },
+      {
+        characters: [{ __result: sheetRow }, { __result: [{ id: CHARACTER_ID }] }],
+        campaigns: campaignRow,
+      },
       userId,
     );
   }
@@ -588,7 +596,15 @@ describe("add_character_entry sort order input", () => {
         characters: sheetRow,
         campaigns: campaignRow,
         character_entries: [
-          { __result: { id: "new", character_id: CHARACTER_ID, kind: "skill", name: "Stealth", sort_order: 3 } },
+          {
+            __result: {
+              id: "new",
+              character_id: CHARACTER_ID,
+              kind: "skill",
+              name: "Stealth",
+              sort_order: 3,
+            },
+          },
         ],
       },
       USER,
@@ -685,7 +701,13 @@ describe("update_entry expansion", () => {
     await expectFailure(
       tools([
         { __result: locationRow },
-        { __result: { id: PARENT, campaign_id: "66666666-6666-4666-8666-666666666666", parent_id: null } },
+        {
+          __result: {
+            id: PARENT,
+            campaign_id: "66666666-6666-4666-8666-666666666666",
+            parent_id: null,
+          },
+        },
       ])["update_entry"]!.handler({ entry_id: ENTITY_ID, parent_id: PARENT }),
       /same campaign/,
     );

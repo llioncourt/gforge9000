@@ -103,7 +103,6 @@ const quarterStep = z
 const intField = (min: number, max: number) => z.number().int().min(min).max(max);
 const strengthField = intField(-5, 5);
 
-
 interface CampaignAccess {
   id: string;
   name: string;
@@ -351,9 +350,6 @@ function compactEntryNotes<T extends { notes?: string | null }>(row: T): T {
   return { ...row, notes: `${notes.slice(0, COMPACT_NOTES_LIMIT - 1).trimEnd()}…` };
 }
 
-
-
-
 /* ------------------------------------------------------------------ */
 /* Registration helper                                                 */
 /* ------------------------------------------------------------------ */
@@ -507,7 +503,6 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       return detailReply(`Updated campaign "${data.name}" (${data.id}).`, data);
     },
   );
-
 
   /* ---------------- entry types ---------------- */
 
@@ -718,7 +713,6 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-
   /* ---------------- relationships ---------------- */
 
   tool(
@@ -857,7 +851,6 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       return deleteReply(`Removed the "${relation.row.rel_type}" link.`, relationship_id);
     },
   );
-
 
   /* ---------------- characters ---------------- */
 
@@ -1152,7 +1145,6 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-
   return server;
 }
 
@@ -1185,7 +1177,6 @@ export const MCP_TOOL_NAMES = [
   "update_character_entry",
   "delete_character_entry",
 ] as const;
-
 
 /** Exported for tests: the fields that must never reach a non-GM caller. */
 export const MCP_GM_ONLY_FIELDS = {

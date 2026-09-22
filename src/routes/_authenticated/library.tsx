@@ -299,13 +299,7 @@ function LibraryPage() {
   };
 
   const addToCharacter = useMutation({
-    mutationFn: async ({
-      entry,
-      characterId,
-    }: {
-      entry: LibraryListRow;
-      characterId: string;
-    }) => {
+    mutationFn: async ({ entry, characterId }: { entry: LibraryListRow; characterId: string }) => {
       const blocked = gateFor(characterId, entry.pack ?? null);
       if (blocked) throw new Error(blocked);
       // The detail blob is not carried by the list; fetch it for this entry only.

@@ -63,6 +63,7 @@ import {
 } from "@/lib/portable";
 import { supabase } from "@/integrations/supabase/client";
 import { buildLink, loadPackItem } from "@/lib/pack-link-service";
+import { invalidatePackLinkQueries } from "@/components/character/pack-link";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";
@@ -319,8 +320,8 @@ function LibraryPage() {
       );
       return addEntry({ ...draft, character_id: characterId } as never);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entries"] });
+    onSuccess: (_row, variables) => {
+      invalidatePackLinkQueries(queryClient, variables.characterId);
       toast.success(t("toasts.addedToCharacter"));
       setAddTarget(null);
     },

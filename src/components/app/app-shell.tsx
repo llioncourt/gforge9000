@@ -13,14 +13,15 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useAuth } from "@/lib/auth/auth-provider";
-import { clearDestination } from "@/lib/auth/pending-destination";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/app/command-palette";
 import { DiceTray } from "@/components/app/dice-tray";
 import { DiceOverlay } from "@/components/app/dice-overlay";
 import { CampaignSoundtrackProvider } from "@/components/campaign/campaign-soundtrack-player";
+import { AmbientBackground } from "@/components/app/ambient-background";
 import { NotificationBell } from "@/components/app/notification-bell";
 import { ProfileMenu } from "@/components/app/profile-menu";
 import { AppUpdateNotice } from "@/components/app/app-update-notice";
@@ -42,7 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [trayOpen, setTrayOpen] = useState(false);
   const navigate = useNavigate();
-  const auth = useAuth();
+  const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { t } = useT("navigation");
   useAccountLocale();
@@ -70,14 +71,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   async function signOut() {
-    clearDestination();
-    await auth.signOut();
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
 
   return (
     <CampaignSoundtrackProvider pathname={pathname}>
       <div className="relative min-h-screen">
+        <AmbientBackground />
         <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
         <DiceTray open={trayOpen} onOpenChange={setTrayOpen} />
         <DiceOverlay />

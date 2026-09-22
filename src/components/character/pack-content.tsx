@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { listContentPacks, listLibrary, type LibraryListRow } from "@/lib/api";
+import { listContentPacks, listLibrary, type LibraryRow } from "@/lib/api";
 import { rankSearch } from "@/lib/search";
 import { useT } from "@/i18n/hooks";
 
@@ -111,14 +111,14 @@ export function PackPickerDialog({
   onOpenChange: (v: boolean) => void;
   kinds: string[];
   packs: string[];
-  onAdd: (entry: LibraryListRow) => void;
+  onAdd: (entry: LibraryRow) => void;
   pending?: boolean;
 }) {
   const { t } = useT("characters");
   const { t: tc } = useT("common");
   const library = useQuery({ queryKey: ["library"], queryFn: listLibrary, enabled: open });
   const [search, setSearch] = useState("");
-  const [descFor, setDescFor] = useState<LibraryListRow | null>(null);
+  const [descFor, setDescFor] = useState<LibraryRow | null>(null);
 
   const rows = useMemo(() => {
     const linked = packs.map((p) => p.toLowerCase());
@@ -131,7 +131,7 @@ export function PackPickerDialog({
     }));
   }, [library.data, kinds, packs, search]);
 
-  const descParts = (e: LibraryListRow) =>
+  const descParts = (e: LibraryRow) =>
     [
       e.category,
       e.source_label,
@@ -139,7 +139,7 @@ export function PackPickerDialog({
       ...(e.tags ?? []),
     ].filter(Boolean) as string[];
 
-  const hasDesc = (e: LibraryListRow) =>
+  const hasDesc = (e: LibraryRow) =>
     !!(e.summary || e.category || e.source_label || e.source_page || (e.tags && e.tags.length));
 
   return (

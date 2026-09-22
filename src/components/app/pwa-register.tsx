@@ -24,15 +24,9 @@ export function PwaRegister() {
     }
 
     const register = () => {
-      void navigator.serviceWorker
-        .register("/sw.js", { scope: "/" })
-        .then((reg) => {
-          // Pick up a newly published worker instead of keeping the installed one.
-          void reg.update();
-        })
-        .catch(() => {
-          /* offline support is optional; ignore registration failures */
-        });
+      void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+        /* offline support is optional; ignore registration failures */
+      });
     };
 
     if (document.readyState === "complete") register();

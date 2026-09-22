@@ -1,13 +1,29 @@
-import type { User } from "@supabase/supabase-js";
-import { useAuth } from "@/lib/auth/auth-provider";
+import { useEffect, useState } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
-/**
- * Thin read of the single authentication owner. It registers no listener and
- * performs no session read of its own.
- */
 export function useSession() {
-  const { session, status } = useAuth();
-  return { session, user: session?.user ?? null, loading: status === "checking" };
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setSession(data.session);
+      setLoading(false);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+      setSession(next);
+      setLoading(false);
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  return { session, user: session?.user ?? null, loading };
 }
 
 export type { User };

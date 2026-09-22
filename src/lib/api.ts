@@ -331,93 +331,26 @@ export async function deleteNote(id: string) {
 
 /* ---------- library ---------- */
 
-/**
- * Every column the list views actually read. The `data` blob is deliberately
- * excluded: it is more than half of the catalogue payload and no list, search,
- * filter or card reads it. Call `getLibraryEntries` when it is really needed.
- */
-const LIBRARY_LIST_COLUMNS =
-  "id,owner_id,campaign_id,kind,name,category,summary,base_points,cost_per_level,max_levels,tags,visibility,source_label,source_edition,source_page,source_type,pack,created_at,updated_at";
-
-/** A catalogue row without the heavy detail blob. */
-export type LibraryListRow = Omit<LibraryRow, "data">;
-
-async function pageLibrary<T>(columns: string): Promise<T[]> {
+export async function listLibrary() {
   // PostgREST caps a single response at 1000 rows, so page through everything.
   const pageSize = 1000;
-  const all: T[] = [];
-  for (let from = 0; ; from += pageSize) {
-    const page = unwrap(
+  const all: Awaited<ReturnType<typeof fetchPage>> = [];
+  async function fetchPage(from: number) {
+    return unwrap(
       await supabase
         .from("library_entries")
-        .select(columns)
+        .select("*")
         .order("name", { ascending: true })
         .order("id", { ascending: true })
         .range(from, from + pageSize - 1),
-    ) as unknown as T[];
+    );
+  }
+  for (let from = 0; ; from += pageSize) {
+    const page = await fetchPage(from);
     all.push(...page);
     if (page.length < pageSize) break;
   }
   return all;
-}
-
-export async function listLibrary(): Promise<LibraryListRow[]> {
-  return pageLibrary<LibraryListRow>(LIBRARY_LIST_COLUMNS);
-}
-
-/** Whole catalogue including the detail blob — used by import reconciliation. */
-export async function listLibraryFull(): Promise<LibraryRow[]> {
-  return pageLibrary<LibraryRow>("*");
-}
-
-/** Full rows for specific entries, batched so request URLs stay short. */
-export async function getLibraryEntries(ids: string[]): Promise<LibraryRow[]> {
-  const out: LibraryRow[] = [];
-  for (let i = 0; i < ids.length; i += 200) {
-    const batch = ids.slice(i, i + 200);
-    if (!batch.length) continue;
-    out.push(...unwrap(await supabase.from("library_entries").select("*").in("id", batch)));
-  }
-  return out;
-}
-
-/** Re-attaches the detail blob to list rows, preserving their order. */
-export async function withLibraryDetails<T extends { id: string }>(
-  rows: T[],
-): Promise<(T & { data: Record<string, unknown> })[]> {
-  const details = await getLibraryEntries(rows.map((row) => row.id));
-  const byId = new Map(details.map((row) => [row.id, row.data]));
-  return rows.map((row) => ({
-    ...row,
-    data: (byId.get(row.id) ?? {}) as Record<string, unknown>,
-  }));
-}
-
-/** Row count only — avoids downloading the whole catalogue for a statistic. */
-export async function countLibrary(): Promise<number> {
-  const { count, error } = await supabase
-    .from("library_entries")
-    .select("id", { count: "exact", head: true });
-  if (error) throw new Error(error.message);
-  return count ?? 0;
-}
-
-/** Distinct pack names present in the catalogue, without fetching every field. */
-export async function listLibraryPackNames(): Promise<string[]> {
-  const pageSize = 1000;
-  const names = new Set<string>();
-  for (let from = 0; ; from += pageSize) {
-    const page = unwrap(
-      await supabase
-        .from("library_entries")
-        .select("pack")
-        .order("id", { ascending: true })
-        .range(from, from + pageSize - 1),
-    );
-    for (const row of page) if (row.pack) names.add(row.pack);
-    if (page.length < pageSize) break;
-  }
-  return [...names];
 }
 
 export async function createLibraryEntry(input: TablesInsert<"library_entries">) {

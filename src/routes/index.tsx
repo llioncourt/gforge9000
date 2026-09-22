@@ -1,10 +1,12 @@
+import type React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Calculator, Dices, Layers, ScrollText, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth/auth-provider";
-import { consumeDestination, DEFAULT_DESTINATION } from "@/lib/auth/pending-destination";
+import { useSession } from "@/hooks/use-session";
+import { useParallax } from "@/hooks/use-parallax";
+import { AmbientBackground } from "@/components/app/ambient-background";
 import { useT } from "@/i18n/hooks";
 import { metaLocale, metaText } from "@/i18n/meta";
 
@@ -49,21 +51,18 @@ const FEATURE_KEYS = [
 
 function Landing() {
   const { t } = useT("marketing");
-  const { status } = useAuth();
+  const { user, loading } = useSession();
   const navigate = useNavigate();
-  const moved = useRef(false);
 
-  // The sign-in provider always returns to this page. A signed-in visitor is
-  // sent on exactly once: to the destination recorded before sign-in started,
-  // or to the dashboard.
   useEffect(() => {
-    if (status !== "signed-in" || moved.current) return;
-    moved.current = true;
-    navigate({ to: consumeDestination() ?? DEFAULT_DESTINATION, replace: true });
-  }, [status, navigate]);
+    if (!loading && user) navigate({ to: "/dashboard", replace: true });
+  }, [loading, user, navigate]);
+
+  const heroRef = useParallax<HTMLElement>();
 
   return (
     <div className="relative min-h-screen">
+      <AmbientBackground />
       <header className="glass-bar sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border/60 px-4 py-4 sm:px-6 sm:py-5">
         <div className="flex items-center gap-2">
           <div className="grid h-8 w-8 place-content-center rounded-md bg-primary text-primary-foreground">
@@ -84,12 +83,20 @@ function Landing() {
         </div>
       </header>
 
-      <section className="relative z-10 border-y border-border/60">
-        <div className="relative mx-auto max-w-5xl px-5 py-20 text-center sm:px-6 sm:py-28">
+      <section ref={heroRef} className="relative z-10 overflow-hidden border-y border-border/60">
+        <div
+          className="parallax-layer pointer-events-none absolute inset-x-0 -top-24 h-[140%] grid-noise opacity-70"
+          style={{ "--speed": 0.12 } as React.CSSProperties}
+          aria-hidden="true"
+        />
+        <div
+          className="parallax-layer relative mx-auto max-w-5xl px-5 py-20 text-center sm:px-6 sm:py-28"
+          style={{ "--speed": -0.06 } as React.CSSProperties}
+        >
           <p className="mb-4 inline-flex items-center rounded-full border border-border px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
             {t("hero.eyebrow")}
           </p>
-          <h1 className="font-display text-3xl font-bold leading-tight sm:text-5xl lg:text-6xl">
+          <h1 className="rise-in font-display text-3xl font-bold leading-tight sm:text-5xl lg:text-6xl">
             {t("hero.title")}
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">

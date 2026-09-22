@@ -108,7 +108,7 @@ import {
   PackPickerDialog,
   isCustomEntry,
 } from "@/components/character/pack-content";
-import { getLibraryEntries, type LibraryListRow } from "@/lib/api";
+import type { LibraryRow } from "@/lib/api";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
 import { ModelPanel } from "@/components/character/model-panel";
 import { parseModelTransform } from "@/lib/model3d";
@@ -450,12 +450,10 @@ function CharacterPage() {
   }, [linkedPacks, campaignPacks]);
 
   const addFromPack = useMutation({
-    mutationFn: async (entry: LibraryListRow) => {
-      // The picker list omits the detail blob; fetch it for this entry only.
-      const [full] = await getLibraryEntries([entry.id]);
+    mutationFn: async (entry: LibraryRow) => {
       const draftRow = libraryEntryToCharacterDraft({
         ...entry,
-        data: (full?.data ?? {}) as Record<string, unknown>,
+        data: (entry.data ?? {}) as Record<string, unknown>,
       });
       return addEntry({ ...draftRow, character_id: id } as never);
     },

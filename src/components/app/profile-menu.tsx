@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { KeyRound, Loader2, LogOut, ShieldAlert, UserRound } from "lucide-react";
+import { Loader2, LogOut, ShieldAlert, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,7 +38,6 @@ import { getProfile, setProfilePreferences, upsertProfile, wipeAllMyData } from 
 import { lovable } from "@/integrations/lovable/index";
 import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { useSession } from "@/hooks/use-session";
-import { rememberDestination } from "@/lib/auth/pending-destination";
 import { useT } from "@/i18n/hooks";
 
 const THEME_KEY = "ucf:light-theme";
@@ -83,9 +81,8 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
     setVerifying(true);
     sessionStorage.setItem(WIPE_INTENT_KEY, String(Date.now()));
     try {
-      rememberDestination("/dashboard");
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/dashboard`,
       });
       if ("redirected" in result && result.redirected) return;
       if (result.error) throw result.error;
@@ -224,12 +221,6 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
           <DropdownMenuItem onSelect={() => setOpen(true)}>
             <UserRound className="mr-2 size-4" /> {t("account.profile")}
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to="/assistant">
-              <KeyRound className="mr-2 size-4" /> {ts("assistant.title")}
-            </Link>
-          </DropdownMenuItem>
-
           <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm">
             <span>{t("profile.lightTheme")}</span>
             <Switch

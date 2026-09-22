@@ -2,20 +2,19 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Dices, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/lib/auth/auth-provider";
-import { safeDestination, clearDestination } from "@/lib/auth/pending-destination";
+import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 import { metaLocale, metaText } from "@/i18n/meta";
 import { Trans } from "react-i18next";
 
 export const Route = createFileRoute("/auth")({
   staticData: { sitemap: false },
-  validateSearch: (search: Record<string, unknown>) =>
-    typeof search["redirect"] === "string" ? { redirect: search["redirect"] } : {},
   head: () => ({
     meta: [
       { title: metaText("auth", "meta.title") },
@@ -31,43 +30,62 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const { t } = useT("auth");
   const navigate = useNavigate();
-  const { status, signInWithPassword, signUpWithPassword, signInWithGoogle } = useAuth();
-  const { redirect: redirectParam } = Route.useSearch();
-  const target = safeDestination(redirectParam);
+  const { user, loading } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const busy = status === "signing-in";
-
-  // A session that already exists (or one just created in this tab) leaves the
-  // sign-in screen exactly once. Nothing else navigates from here.
   useEffect(() => {
-    if (status !== "signed-in") return;
-    clearDestination();
-    navigate({ to: target, replace: true });
-  }, [status, navigate, target]);
+    if (!loading && user) navigate({ to: "/dashboard", replace: true });
+  }, [loading, user, navigate]);
 
-  async function onSignIn(e: React.FormEvent) {
+  async function signIn(e: React.FormEvent) {
     e.preventDefault();
-    const { error } = await signInWithPassword(email, password);
-    if (error) toast.error(error);
-  }
-
-  async function onSignUp(e: React.FormEvent) {
-    e.preventDefault();
-    const { error, needsConfirmation } = await signUpWithPassword(email, password, displayName);
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setBusy(false);
     if (error) {
-      toast.error(error);
+      toast.error(error.message);
       return;
     }
-    if (needsConfirmation) setSent(true);
+    navigate({ to: "/dashboard", replace: true });
   }
 
-  async function onGoogle() {
-    const { error } = await signInWithGoogle(target);
-    if (error) toast.error(t("errors.googleSignInFailed"));
+  async function signUp(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin,
+        data: { display_name: displayName || email.split("@")[0] },
+      },
+    });
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (!data.session) {
+      setSent(true);
+      return;
+    }
+    navigate({ to: "/dashboard", replace: true });
+  }
+
+  async function google() {
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) {
+      toast.error(t("errors.googleSignInFailed"));
+      return;
+    }
+    if (result.redirected) return;
+    navigate({ to: "/dashboard", replace: true });
   }
 
   return (
@@ -107,7 +125,7 @@ function AuthPage() {
               </TabsList>
 
               <TabsContent value="signin" className="mt-6">
-                <form onSubmit={onSignIn} className="space-y-4">
+                <form onSubmit={signIn} className="space-y-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="email">{t("form.fields.email")}</Label>
                     <Input
@@ -134,17 +152,13 @@ function AuthPage() {
                     disabled={busy}
                     aria-label={t("form.actions.signIn")}
                   >
-                    {busy ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      t("form.actions.signIn")
-                    )}
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("form.actions.signIn")}
                   </Button>
                 </form>
               </TabsContent>
 
               <TabsContent value="signup" className="mt-6">
-                <form onSubmit={onSignUp} className="space-y-4">
+                <form onSubmit={signUp} className="space-y-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="name">{t("form.fields.displayName")}</Label>
                     <Input
@@ -194,7 +208,7 @@ function AuthPage() {
                 <span className="h-px flex-1 bg-border" /> {t("form.or")}{" "}
                 <span className="h-px flex-1 bg-border" />
               </div>
-              <Button variant="outline" className="w-full" onClick={onGoogle} disabled={busy}>
+              <Button variant="outline" className="w-full" onClick={google}>
                 {t("form.actions.continueWithGoogle")}
               </Button>
 

@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { countLibrary, createCharacter, listCampaigns, listCharacters, listRolls } from "@/lib/api";
+import { createCharacter, listCampaigns, listCharacters, listLibrary, listRolls } from "@/lib/api";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";
@@ -33,7 +33,7 @@ function Dashboard() {
   const queryClient = useQueryClient();
   const characters = useQuery({ queryKey: ["characters"], queryFn: listCharacters });
   const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: listCampaigns });
-  const library = useQuery({ queryKey: ["library-count"], queryFn: countLibrary });
+  const library = useQuery({ queryKey: ["library"], queryFn: listLibrary });
   const rolls = useQuery({ queryKey: ["rolls"], queryFn: () => listRolls(8) });
 
   const newCharacter = useMutation({
@@ -79,7 +79,7 @@ function Dashboard() {
         <StatCard
           icon={BookOpen}
           label={t("stats.libraryEntries")}
-          value={library.data}
+          value={library.data?.length}
           loading={library.isLoading}
         />
         <StatCard

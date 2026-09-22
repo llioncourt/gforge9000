@@ -3,7 +3,7 @@
  * Everything here is best effort: if the library cannot be read or the AI
  * pass fails, the import continues silently with the entries as written.
  */
-import { listLibraryFull } from "@/lib/api";
+import { listLibrary } from "@/lib/api";
 import { matchImportedTraits } from "@/lib/trait-match.functions";
 import {
   buildCatalogue,
@@ -23,7 +23,7 @@ export async function reconcileImportedEntries(
 ): Promise<ReconcileResult> {
   let rows: CatalogueEntry[] = [];
   try {
-    rows = (await listLibraryFull()) as unknown as CatalogueEntry[];
+    rows = (await listLibrary()) as unknown as CatalogueEntry[];
   } catch {
     return { entries, matched: 0, unmatched: 0 };
   }

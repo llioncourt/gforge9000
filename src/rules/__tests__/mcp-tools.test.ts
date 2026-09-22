@@ -111,6 +111,7 @@ type ToolResult = {
 
 interface RegisteredTool {
   handler: (input: Record<string, unknown>) => Promise<ToolResult>;
+  inputSchema?: { safeParse: (value: unknown) => { success: boolean } };
 }
 
 /** Chainable thenable standing in for a supabase-js query builder. */

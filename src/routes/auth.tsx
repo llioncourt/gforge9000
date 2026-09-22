@@ -47,6 +47,13 @@ function AuthPage() {
   const [displayName, setDisplayName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  // Until the page is interactive, a click would submit the form natively and
+  // reload the page (losing what was typed), so the actions stay disabled.
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(true);
+  }, []);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: target, replace: true });

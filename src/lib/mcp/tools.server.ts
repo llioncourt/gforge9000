@@ -25,7 +25,7 @@ async function admin(): Promise<Admin> {
   return (mod as unknown as { supabaseAdmin: Admin }).supabaseAdmin;
 }
 
-function unwrap<T>(res: { data: T; error: { message: string } | null }): T {
+function unwrap(res: { data: any; error: { message: string } | null }): any {
   if (res.error) throw new Error(res.error.message);
   return res.data;
 }

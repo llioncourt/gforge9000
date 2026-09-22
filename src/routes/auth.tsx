@@ -85,19 +85,24 @@ function AuthPage() {
       setSent(true);
       return;
     }
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: target, replace: true });
   }
 
   async function google() {
+    // Send Google back to /auth with the pending target so the consent flow resumes.
+    const redirectUri =
+      target === "/dashboard"
+        ? window.location.origin
+        : `${window.location.origin}/auth?redirect=${encodeURIComponent(target)}`;
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: redirectUri,
     });
     if (result.error) {
       toast.error(t("errors.googleSignInFailed"));
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: target, replace: true });
   }
 
   return (

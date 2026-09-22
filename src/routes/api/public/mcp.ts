@@ -12,7 +12,8 @@ const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
   "Cache-Control": "no-store",
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, content-type, mcp-session-id, mcp-protocol-version",
+  "Access-Control-Allow-Headers":
+    "authorization, content-type, mcp-session-id, mcp-protocol-version",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 

@@ -358,12 +358,13 @@ export const TOOLS: McpTool[] = [
       const campaignId = str(args, "campaign_id");
       const { isGm } = await access(userId, campaignId);
       const db = await admin();
-      const rows = (unwrap(
-        await db
-          .from("entity_relationships")
-          .select("id, source_id, target_id, rel_type, description, visibility, is_current")
-          .eq("campaign_id", campaignId),
-      ) as Json[]) ?? [];
+      const rows =
+        (unwrap(
+          await db
+            .from("entity_relationships")
+            .select("id, source_id, target_id, rel_type, description, visibility, is_current")
+            .eq("campaign_id", campaignId),
+        ) as Json[]) ?? [];
       return rows.filter((row) => isGm || isPlayerVisible(row["visibility"] as string));
     },
   },

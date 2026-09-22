@@ -66,8 +66,7 @@ function AssistantPage() {
 
   const tokens = useQuery({ queryKey: ["mcp-tokens"], queryFn: () => load({}) });
 
-  const endpoint =
-    typeof window === "undefined" ? "" : `${window.location.origin}/api/public/mcp`;
+  const endpoint = typeof window === "undefined" ? "" : `${window.location.origin}/api/public/mcp`;
 
   const createKey = useMutation({
     mutationFn: async () => create({ data: { name: name.trim() || "Claude" } }),

@@ -173,7 +173,19 @@ export function matchPackCandidates(
       (row) => candidateQualifier(row) === "" && row.specialization_required,
     );
     if (generic.length > 0) return decide(generic, parsed, query.category);
-    return decide(sameBase, parsed, query.category);
+    // Remaining rows carry their own, different specialisation. They may be
+    // offered as candidates to choose from, but a plain generic row is never
+    // auto-selected for a specialised search.
+    const specialised = sameBase.filter((row) => candidateQualifier(row) !== "");
+    if (specialised.length === 0) {
+      return { status: "none", item: null, candidates: [], specialization: parsed.rawQualifier };
+    }
+    return {
+      status: "ambiguous",
+      item: null,
+      candidates: specialised.slice(0, MAX_MATCH_CANDIDATES),
+      specialization: parsed.rawQualifier,
+    };
   }
 
   return decide(sameBase, parsed, query.category);

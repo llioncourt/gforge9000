@@ -7,16 +7,13 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  ACCESS_TOKEN_PREFIX,
   OAUTH_CORS_HEADERS,
-  generateToken,
+  REFRESH_TOKEN_PREFIX,
   hashToken,
   issueTokenPair,
   jsonResponse,
   oauthError,
   verifyPkceS256,
-  REFRESH_TOKEN_PREFIX,
-  ACCESS_TOKEN_TTL_MS,
 } from "@/lib/mcp/oauth.server";
 
 async function adminDb() {
@@ -81,9 +78,6 @@ async function handleRefreshToken(form: URLSearchParams): Promise<Response> {
 
   // Rotate: revoke the old pair, issue a new one.
   await db.from("mcp_oauth_tokens").update({ revoked_at: new Date().toISOString() }).eq("id", row.id);
-  void generateToken;
-  void ACCESS_TOKEN_PREFIX;
-  void ACCESS_TOKEN_TTL_MS;
   return jsonResponse(await issueTokenPair(row.user_id as string, clientId));
 }
 

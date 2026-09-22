@@ -26,6 +26,9 @@ import { Route as AuthenticatedPacksIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPacksPackRouteImport } from './routes/_authenticated/packs.$pack'
 import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
 import { Route as ApiPublicVersionRouteImport } from './routes/api/public/version'
+import { Route as ApiPublicOauthAuthorizeRouteImport } from './routes/api/public/oauth/authorize'
+import { Route as ApiPublicOauthRegisterRouteImport } from './routes/api/public/oauth/register'
+import { Route as ApiPublicOauthTokenRouteImport } from './routes/api/public/oauth/token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -115,6 +118,21 @@ const ApiPublicVersionRoute = ApiPublicVersionRouteImport.update({
   path: '/api/public/version',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOauthAuthorizeRoute = ApiPublicOauthAuthorizeRouteImport.update({
+  id: '/api/public/oauth/authorize',
+  path: '/api/public/oauth/authorize',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOauthRegisterRoute = ApiPublicOauthRegisterRouteImport.update({
+  id: '/api/public/oauth/register',
+  path: '/api/public/oauth/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOauthTokenRoute = ApiPublicOauthTokenRouteImport.update({
+  id: '/api/public/oauth/token',
+  path: '/api/public/oauth/token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -133,6 +151,9 @@ export interface FileRoutesByFullPath {
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/characters/': typeof AuthenticatedCharactersIndexRoute
   '/packs/': typeof AuthenticatedPacksIndexRoute
+  '/api/public/oauth/authorize': typeof ApiPublicOauthAuthorizeRoute
+  '/api/public/oauth/register': typeof ApiPublicOauthRegisterRoute
+  '/api/public/oauth/token': typeof ApiPublicOauthTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -151,6 +172,9 @@ export interface FileRoutesByTo {
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
   '/characters': typeof AuthenticatedCharactersIndexRoute
   '/packs': typeof AuthenticatedPacksIndexRoute
+  '/api/public/oauth/authorize': typeof ApiPublicOauthAuthorizeRoute
+  '/api/public/oauth/register': typeof ApiPublicOauthRegisterRoute
+  '/api/public/oauth/token': typeof ApiPublicOauthTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -171,6 +195,9 @@ export interface FileRoutesById {
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/_authenticated/characters/': typeof AuthenticatedCharactersIndexRoute
   '/_authenticated/packs/': typeof AuthenticatedPacksIndexRoute
+  '/api/public/oauth/authorize': typeof ApiPublicOauthAuthorizeRoute
+  '/api/public/oauth/register': typeof ApiPublicOauthRegisterRoute
+  '/api/public/oauth/token': typeof ApiPublicOauthTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,6 +218,9 @@ export interface FileRouteTypes {
     | '/campaigns/'
     | '/characters/'
     | '/packs/'
+    | '/api/public/oauth/authorize'
+    | '/api/public/oauth/register'
+    | '/api/public/oauth/token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -209,6 +239,9 @@ export interface FileRouteTypes {
     | '/campaigns'
     | '/characters'
     | '/packs'
+    | '/api/public/oauth/authorize'
+    | '/api/public/oauth/register'
+    | '/api/public/oauth/token'
   id:
     | '__root__'
     | '/'
@@ -228,6 +261,9 @@ export interface FileRouteTypes {
     | '/_authenticated/campaigns/'
     | '/_authenticated/characters/'
     | '/_authenticated/packs/'
+    | '/api/public/oauth/authorize'
+    | '/api/public/oauth/register'
+    | '/api/public/oauth/token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -238,6 +274,9 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicMcpRoute: typeof ApiPublicMcpRoute
   ApiPublicVersionRoute: typeof ApiPublicVersionRoute
+  ApiPublicOauthAuthorizeRoute: typeof ApiPublicOauthAuthorizeRoute
+  ApiPublicOauthRegisterRoute: typeof ApiPublicOauthRegisterRoute
+  ApiPublicOauthTokenRoute: typeof ApiPublicOauthTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -361,6 +400,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicVersionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/oauth/authorize': {
+      id: '/api/public/oauth/authorize'
+      path: '/api/public/oauth/authorize'
+      fullPath: '/api/public/oauth/authorize'
+      preLoaderRoute: typeof ApiPublicOauthAuthorizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/oauth/register': {
+      id: '/api/public/oauth/register'
+      path: '/api/public/oauth/register'
+      fullPath: '/api/public/oauth/register'
+      preLoaderRoute: typeof ApiPublicOauthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/oauth/token': {
+      id: '/api/public/oauth/token'
+      path: '/api/public/oauth/token'
+      fullPath: '/api/public/oauth/token'
+      preLoaderRoute: typeof ApiPublicOauthTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -401,6 +461,9 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicMcpRoute: ApiPublicMcpRoute,
   ApiPublicVersionRoute: ApiPublicVersionRoute,
+  ApiPublicOauthAuthorizeRoute: ApiPublicOauthAuthorizeRoute,
+  ApiPublicOauthRegisterRoute: ApiPublicOauthRegisterRoute,
+  ApiPublicOauthTokenRoute: ApiPublicOauthTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

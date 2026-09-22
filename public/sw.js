@@ -1,10 +1,14 @@
 /* Universal Character Forge service worker.
-   Network-first for navigations (never serve stale HTML), cache-first for
-   immutable build assets, offline fallback page. */
-const VERSION = "ucf-v1";
+   Pages always come from the network (an old page must never be replayed),
+   hashed build assets are cache-first, and the offline notice is the only
+   saved fallback.
+
+   VERSION is release-stamped: activating a new worker deletes every cache
+   that does not belong to this release, so a device can never keep running a
+   previous build. Bump it whenever this file changes. */
+const VERSION = "ucf-v2";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
-const PAGE_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = "/offline.html";
 
 const PRECACHE = [OFFLINE_URL, "/favicon.png", "/icons/icon-192.png", "/manifest.webmanifest"];

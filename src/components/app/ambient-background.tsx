@@ -1,57 +1,15 @@
 import type React from "react";
-import { useEffect, useRef } from "react";
 
 /**
- * Ambient aurora field with pointer + scroll parallax.
+ * Static ambient aurora field.
  *
- * Purely decorative: rendered behind the app (z-index -1, pointer-events none),
- * updated through CSS custom properties inside a single rAF frame so it never
- * triggers React re-renders. Disabled entirely for reduced-motion users and on
- * coarse pointers (phones/tablets) where the extra compositing is not worth it.
+ * These viewport-sized blurred layers must remain static. Moving them on every
+ * pointer event forces expensive compositor work and can make the browser's
+ * renderer unresponsive on some desktop GPUs.
  */
 export function AmbientBackground() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-    let frame = 0;
-    let px = 0;
-    let py = 0;
-
-    const apply = () => {
-      frame = 0;
-      el.style.setProperty("--px", px.toFixed(2));
-      el.style.setProperty("--py", py.toFixed(2));
-    };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(apply);
-    };
-
-    const onPointer = (event: PointerEvent) => {
-      px = (event.clientX / window.innerWidth - 0.5) * 40;
-      py = (event.clientY / window.innerHeight - 0.5) * 40 + window.scrollY * 0.04;
-      schedule();
-    };
-    const onScroll = () => {
-      py = window.scrollY * 0.04;
-      schedule();
-    };
-
-    if (fine) window.addEventListener("pointermove", onPointer, { passive: true });
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      if (frame) cancelAnimationFrame(frame);
-      window.removeEventListener("pointermove", onPointer);
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, []);
-
   return (
-    <div ref={ref} className="ambient-field no-print" aria-hidden="true">
+    <div className="ambient-field no-print" aria-hidden="true">
       <div
         className="ambient-blob"
         style={

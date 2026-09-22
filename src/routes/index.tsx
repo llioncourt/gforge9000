@@ -1,10 +1,11 @@
 import type React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Calculator, Dices, Layers, ScrollText, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSession } from "@/hooks/use-session";
+import { useAuth } from "@/lib/auth/auth-provider";
+import { consumeDestination, DEFAULT_DESTINATION } from "@/lib/auth/pending-destination";
 import { useParallax } from "@/hooks/use-parallax";
 import { AmbientBackground } from "@/components/app/ambient-background";
 import { useT } from "@/i18n/hooks";

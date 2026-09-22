@@ -62,6 +62,7 @@ function lookup(bundle: MetaBundle | undefined, path: string): string | undefine
 export function metaText(
   namespace:
     | "marketing"
+    | "assistant"
     | "auth"
     | "dashboard"
     | "library"

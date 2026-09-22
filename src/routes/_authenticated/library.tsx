@@ -1,5 +1,5 @@
 import { createFileRoute, useLocation } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Pencil, Plus, Trash2, Upload, UserPlus } from "lucide-react";
 import { toast } from "sonner";
@@ -316,7 +316,39 @@ function LibraryPage() {
     }));
   }, [data, kindFilter, packFilter, search]);
 
-  const portable = toPortableLibrary((rows ?? []) as unknown as Record<string, unknown>[]);
+  // Serialising the whole catalogue is expensive; only redo it when rows change.
+  const portable = useMemo(
+    () => toPortableLibrary((rows ?? []) as unknown as Record<string, unknown>[]),
+    [rows],
+  );
+
+  // Cards are rendered in chunks so a large catalogue does not build tens of
+  // thousands of DOM nodes at once; scrolling reveals the next chunk.
+  const PAGE = 60;
+  const [visibleCount, setVisibleCount] = useState(PAGE);
+  useEffect(() => {
+    setVisibleCount(PAGE);
+  }, [search, kindFilter, packFilter, data]);
+  const visibleRows = useMemo(() => rows.slice(0, visibleCount), [rows, visibleCount]);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || visibleCount >= rows.length) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setVisibleCount((current) => Math.min(current + PAGE, rows.length));
+      }
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [visibleCount, rows.length]);
+
+  // A deep-linked entry may sit past the rendered chunk — reveal up to it.
+  useEffect(() => {
+    if (!itemParam) return;
+    const index = rows.findIndex((row) => row.id === itemParam);
+    if (index >= 0 && index >= visibleCount) setVisibleCount(index + 1);
+  }, [itemParam, rows, visibleCount]);
 
   return (
     <div>
@@ -425,7 +457,7 @@ function LibraryPage() {
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {rows.map((e) => {
+          {visibleRows.map((e) => {
             const mine = e.owner_id === user?.id;
             return (
               <div
@@ -494,6 +526,7 @@ function LibraryPage() {
               </div>
             );
           })}
+          <div ref={sentinelRef} aria-hidden className="h-1 w-full" />
         </div>
       )}
 

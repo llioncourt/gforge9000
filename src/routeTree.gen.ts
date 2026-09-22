@@ -29,6 +29,7 @@ import { Route as AuthenticatedPacksIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPacksPackRouteImport } from './routes/_authenticated/packs.$pack'
 import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
 import { Route as ApiPublicVersionRouteImport } from './routes/api/public/version'
+import { Route as ApiPublicMcpSplatRouteImport } from './routes/api/public/mcp.$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -135,6 +136,11 @@ const ApiPublicVersionRoute = ApiPublicVersionRouteImport.update({
   path: '/api/public/version',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMcpSplatRoute = ApiPublicMcpSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => ApiPublicMcpRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -151,11 +157,12 @@ export interface FileRoutesByFullPath {
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
-  '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/mcp': typeof ApiPublicMcpRouteWithChildren
   '/api/public/version': typeof ApiPublicVersionRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/characters/': typeof AuthenticatedCharactersIndexRoute
   '/packs/': typeof AuthenticatedPacksIndexRoute
+  '/api/public/mcp/$': typeof ApiPublicMcpSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -172,11 +179,12 @@ export interface FileRoutesByTo {
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
-  '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/mcp': typeof ApiPublicMcpRouteWithChildren
   '/api/public/version': typeof ApiPublicVersionRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
   '/characters': typeof AuthenticatedCharactersIndexRoute
   '/packs': typeof AuthenticatedPacksIndexRoute
+  '/api/public/mcp/$': typeof ApiPublicMcpSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -195,11 +203,12 @@ export interface FileRoutesById {
   '/_authenticated/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/_authenticated/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/_authenticated/packs/$pack': typeof AuthenticatedPacksPackRoute
-  '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/mcp': typeof ApiPublicMcpRouteWithChildren
   '/api/public/version': typeof ApiPublicVersionRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/_authenticated/characters/': typeof AuthenticatedCharactersIndexRoute
   '/_authenticated/packs/': typeof AuthenticatedPacksIndexRoute
+  '/api/public/mcp/$': typeof ApiPublicMcpSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/campaigns/'
     | '/characters/'
     | '/packs/'
+    | '/api/public/mcp/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -244,6 +254,7 @@ export interface FileRouteTypes {
     | '/campaigns'
     | '/characters'
     | '/packs'
+    | '/api/public/mcp/$'
   id:
     | '__root__'
     | '/'
@@ -266,6 +277,7 @@ export interface FileRouteTypes {
     | '/_authenticated/campaigns/'
     | '/_authenticated/characters/'
     | '/_authenticated/packs/'
+    | '/api/public/mcp/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -276,7 +288,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   DotwellKnownOauthProtectedResourceRoute: typeof DotwellKnownOauthProtectedResourceRouteWithChildren
   OauthConsentRoute: typeof OauthConsentRoute
-  ApiPublicMcpRoute: typeof ApiPublicMcpRoute
+  ApiPublicMcpRoute: typeof ApiPublicMcpRouteWithChildren
   ApiPublicVersionRoute: typeof ApiPublicVersionRoute
 }
 
@@ -422,6 +434,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicVersionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mcp/$': {
+      id: '/api/public/mcp/$'
+      path: '/$'
+      fullPath: '/api/public/mcp/$'
+      preLoaderRoute: typeof ApiPublicMcpSplatRouteImport
+      parentRoute: typeof ApiPublicMcpRoute
+    }
   }
 }
 
@@ -469,6 +488,18 @@ const DotwellKnownOauthProtectedResourceRouteWithChildren =
     DotwellKnownOauthProtectedResourceRouteChildren,
   )
 
+interface ApiPublicMcpRouteChildren {
+  ApiPublicMcpSplatRoute: typeof ApiPublicMcpSplatRoute
+}
+
+const ApiPublicMcpRouteChildren: ApiPublicMcpRouteChildren = {
+  ApiPublicMcpSplatRoute: ApiPublicMcpSplatRoute,
+}
+
+const ApiPublicMcpRouteWithChildren = ApiPublicMcpRoute._addFileChildren(
+  ApiPublicMcpRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -478,7 +509,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotwellKnownOauthProtectedResourceRoute:
     DotwellKnownOauthProtectedResourceRouteWithChildren,
   OauthConsentRoute: OauthConsentRoute,
-  ApiPublicMcpRoute: ApiPublicMcpRoute,
+  ApiPublicMcpRoute: ApiPublicMcpRouteWithChildren,
   ApiPublicVersionRoute: ApiPublicVersionRoute,
 }
 export const routeTree = rootRouteImport

@@ -2401,6 +2401,54 @@ export type Database = {
           visibility: string
         }[]
       }
+      mcp_campaign_settings_patch: {
+        Args: { _patch: Json; _settings: Json }
+        Returns: Json
+      }
+      mcp_create_campaign: {
+        Args: { _description?: string; _name: string; _settings_patch?: Json }
+        Returns: {
+          created_at: string
+          description: string | null
+          gm_id: string
+          id: string
+          import_key: string | null
+          invite_code: string
+          name: string
+          settings: Json
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "campaigns"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mcp_delete_campaign: {
+        Args: { _campaign: string; _confirm_name: string }
+        Returns: Json
+      }
+      mcp_update_campaign: {
+        Args: { _campaign: string; _patch?: Json; _settings_patch?: Json }
+        Returns: {
+          created_at: string
+          description: string | null
+          gm_id: string
+          id: string
+          import_key: string | null
+          invite_code: string
+          name: string
+          settings: Json
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "campaigns"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       remove_character_from_campaign: {
         Args: { _character: string }
         Returns: undefined

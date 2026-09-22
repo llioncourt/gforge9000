@@ -47,6 +47,10 @@
     "revoke": "Revoke",
     "revoked": "Key revoked",
     "revokeTitle": "Revoke this key?",
-    "revokeDescription": "Anything using this key stops working right away. You can create a new one at any time."
+    "revokeDescription": "Anything using this key stops working right away. You can create a new one at any time.",
+    "promptTitle": "Setup prompt",
+    "promptDescription": "Copy a ready-made prompt and paste it into Claude so it learns how to connect and what it can do in your campaigns.",
+    "copyPrompt": "Copy setup prompt",
+    "copyPromptWithKey": "Copy prompt with this key"
   }
 }

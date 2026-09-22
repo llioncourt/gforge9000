@@ -47,6 +47,10 @@
     "revoke": "Revogar",
     "revoked": "Chave revogada",
     "revokeTitle": "Revogar esta chave?",
-    "revokeDescription": "Tudo que usa esta chave para de funcionar na hora. Você pode criar outra quando quiser."
+    "revokeDescription": "Tudo que usa esta chave para de funcionar na hora. Você pode criar outra quando quiser.",
+    "promptTitle": "Prompt de configuração",
+    "promptDescription": "Copie um prompt pronto e cole no Claude para ele aprender como se conectar e o que pode fazer nas suas campanhas.",
+    "copyPrompt": "Copiar prompt de configuração",
+    "copyPromptWithKey": "Copiar prompt com esta chave"
   }
 }

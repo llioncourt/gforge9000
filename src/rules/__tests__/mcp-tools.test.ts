@@ -130,7 +130,7 @@ function query(data: unknown) {
   ]) {
     self[method] = () => self;
   }
-  self.then = (resolve: (value: unknown) => unknown) =>
+  self["then"] = (resolve: (value: unknown) => unknown) =>
     Promise.resolve({ data, error: null }).then(resolve);
   return self;
 }

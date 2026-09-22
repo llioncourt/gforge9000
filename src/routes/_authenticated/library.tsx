@@ -61,6 +61,8 @@ import {
   parsePortableLibrary,
   toPortableLibrary,
 } from "@/lib/portable";
+import { supabase } from "@/integrations/supabase/client";
+import { buildLink, loadPackItem } from "@/lib/pack-link-service";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";
@@ -304,10 +306,17 @@ function LibraryPage() {
       if (blocked) throw new Error(blocked);
       // The detail blob is not carried by the list; fetch it for this entry only.
       const [full] = await getLibraryEntries([entry.id]);
-      const draft = libraryEntryToCharacterDraft({
-        ...entry,
-        data: (full?.data ?? {}) as Record<string, unknown>,
-      });
+      // Adding from the library always records where the entry came from
+      // (PL-001); free-text/custom entries are never linked this way.
+      const item = entry.pack ? await loadPackItem(supabase, entry.id) : null;
+      const link = item?.pack_id ? await buildLink(item, "ui_picker") : null;
+      const draft = libraryEntryToCharacterDraft(
+        {
+          ...entry,
+          data: (full?.data ?? {}) as Record<string, unknown>,
+        },
+        link,
+      );
       return addEntry({ ...draft, character_id: characterId } as never);
     },
     onSuccess: () => {

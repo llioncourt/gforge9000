@@ -115,6 +115,7 @@ import {
   isCustomEntry,
 } from "@/components/character/pack-content";
 import { getLibraryEntries, type LibraryListRow } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 import { buildLink, loadPackItem } from "@/lib/pack-link-service";
 import { invalidatePackLinkQueries } from "@/components/character/pack-link";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";

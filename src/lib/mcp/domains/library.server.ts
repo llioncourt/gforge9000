@@ -36,6 +36,9 @@ import {
 } from "@/lib/mcp/kit.server";
 import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.server";
 import type { Database } from "@/integrations/supabase/types";
+import { allowedPacksOf, isPackAllowed } from "@/lib/packs";
+import { loadCampaignSettings } from "@/lib/pack-link-service";
+import { loadPackCandidates, parseSearchName, withVersions } from "@/lib/pack-match";
 
 // Source of truth: src/lib/ai-import-guides.ts (ENTRY_KINDS, not exported there)
 const LIBRARY_KINDS = [
@@ -145,9 +148,30 @@ const input = z.discriminatedUnion("action", [
         "it. Deletes data.",
     ),
   z
-    .object({ action: z.literal("list_packs"), limit: limitField })
+    .object({
+      action: z.literal("list_packs"),
+      limit: limitField,
+      campaign_id: uuid.optional(),
+    })
     .describe(
-      "List content packs visible to the caller (own packs, public packs, or packs shared with the caller).",
+      "List content packs visible to the caller (own packs, public packs, or packs shared with " +
+        "the caller), with how many entries each one holds and whether the caller owns it. With " +
+        "campaign_id, each pack also says whether that campaign allows it.",
+    ),
+  z
+    .object({
+      action: z.literal("search_pack_entries"),
+      name: boundedText(200),
+      kind: z.enum(LIBRARY_KINDS).optional(),
+      pack_id: uuid.optional(),
+      campaign_id: uuid.optional(),
+      limit: limitField,
+    })
+    .describe(
+      "Search pack items the caller may actually use, the same way character entries are matched " +
+        "by name. With campaign_id the search is limited to the packs that campaign allows. Each " +
+        "result carries the fields needed to link it to a character entry, including its id and " +
+        "current definition fingerprint.",
     ),
   z
     .object({ action: z.literal("get_pack"), pack_id: uuid })
@@ -254,7 +278,14 @@ async function ensureContentPack(ctx: McpToolContext, name: string): Promise<voi
   if (insertError) fail("Creating content pack", insertError);
 }
 
-/** Mirrors src/lib/api.ts `deletePackContents`: unlinks copies, then deletes the pack's entries. */
+/**
+ * Mirrors src/lib/api.ts `deletePackContents`: deletes the pack's library
+ * entries and drops the pack from the caller's sheets.
+ *
+ * Copies already on a character sheet are left exactly as they are — their
+ * provenance and any pack link are kept, so the sheet can still show where the
+ * entry came from and report it as out of date.
+ */
 async function deletePackContents(ctx: McpToolContext, name: string): Promise<void> {
   const { data: mine, error: charsError } = await ctx.supabase
     .from("characters")
@@ -264,25 +295,7 @@ async function deletePackContents(ctx: McpToolContext, name: string): Promise<vo
   const ids = (mine ?? []).map((row) => row.id);
 
   if (ids.length) {
-    const { data: entries, error: entriesError } = await ctx.supabase
-      .from("character_entries")
-      .select("id, source")
-      .in("character_id", ids);
-    if (entriesError) fail("Listing character entries", entriesError);
-    const affected = (entries ?? []).filter((entry) => {
-      const source = (entry.source ?? {}) as Record<string, unknown>;
-      return (
-        typeof source["pack"] === "string" && source["pack"].toLowerCase() === name.toLowerCase()
-      );
-    });
-    for (let i = 0; i < affected.length; i += 200) {
-      const chunk = affected.slice(i, i + 200).map((entry) => entry.id);
-      const { error } = await ctx.supabase
-        .from("character_entries")
-        .update({ source: { type: "custom" } })
-        .in("id", chunk);
-      if (error) fail("Unlinking character entries from pack", error);
-    }
+
 
     const groups = new Map<string, { packs: string[]; ids: string[] }>();
     for (const character of mine ?? []) {
@@ -328,7 +341,9 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
         "changes data), rename_pack (rename a pack and re-tag its entries, owner only, changes " +
         "data), delete_pack (delete a pack and every entry inside it, owner only, deletes data), " +
         "set_entry_pack (move an entry into or out of a pack, owner only, changes data), " +
-        "import_entries (bulk-create entries owned by the caller, changes data).",
+        "import_entries (bulk-create entries owned by the caller, changes data), " +
+        "search_pack_entries (find pack items the caller may use, for linking to character " +
+        "entries).",
       inputSchema: input,
       outputSchema: domainOutput,
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
@@ -462,8 +477,69 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
           .from("content_packs")
           .select("id", { count: "exact", head: true });
         if (countError) fail("Counting content packs", countError);
-        const items = ((data ?? []) as ContentPackRow[]).map(toStructured);
+
+        const rows = (data ?? []) as ContentPackRow[];
+        const { data: entryRows, error: entriesError } = await ctx.supabase
+          .from("library_entries")
+          .select("pack")
+          .limit(10000);
+        if (entriesError) fail("Counting pack entries", entriesError);
+        const counts = new Map<string, number>();
+        for (const row of entryRows ?? []) {
+          const key = (row.pack ?? "").trim().toLowerCase();
+          if (!key) continue;
+          counts.set(key, (counts.get(key) ?? 0) + 1);
+        }
+
+        let allowed: string[] | null = null;
+        if (i.campaign_id) {
+          const settings = await loadCampaignSettings(ctx.supabase, i.campaign_id);
+          allowed = allowedPacksOf(settings);
+        }
+
+        const items = rows.map((row) => ({
+          ...toStructured(row),
+          entry_count: counts.get(row.name.trim().toLowerCase()) ?? 0,
+          owned_by_caller: row.owner_id === ctx.userId,
+          ...(allowed === null
+            ? {}
+            : { allowed_in_campaign: isPackAllowed(row.name, allowed) }),
+        }));
         return listReply("content packs", items, count ?? items.length);
+      },
+
+      search_pack_entries: async (i) => {
+        const settings = i.campaign_id
+          ? await loadCampaignSettings(ctx.supabase, i.campaign_id)
+          : undefined;
+        const parsed = parseSearchName(i.name);
+        const scope: Parameters<typeof loadPackCandidates>[1] = {
+          search: parsed.base,
+          limit: (i.limit ?? 25) * 4,
+        };
+        if (i.kind) scope.kind = i.kind;
+        if (i.pack_id) scope.packId = i.pack_id;
+        if (settings !== undefined) scope.campaignSettings = settings;
+        const candidates = await loadPackCandidates(ctx.supabase, scope);
+        const limited = candidates.slice(0, i.limit ?? 25);
+        const withVersion = await withVersions(limited);
+        const items = withVersion.map((candidate) => ({
+          id: candidate.id,
+          name: candidate.name,
+          kind: candidate.kind,
+          category: candidate.category,
+          pack_id: candidate.pack_id,
+          pack_name: candidate.pack_name,
+          base_points: candidate.base_points,
+          cost_per_level: candidate.cost_per_level,
+          max_levels: candidate.max_levels,
+          attribute: candidate.attribute,
+          difficulty: candidate.difficulty,
+          specialization: candidate.specialization,
+          specialization_required: candidate.specialization_required,
+          pack_version: candidate.pack_version ?? null,
+        }));
+        return listReply("pack items", items as unknown as Structured[], items.length);
       },
 
       get_pack: async (i) => {

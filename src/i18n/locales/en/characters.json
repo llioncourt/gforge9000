@@ -517,6 +517,62 @@
       }
     },
     "deleteEntryTitle": "Remove this item?",
-    "deleteEntryDescription": "It will be taken off the sheet. You can add it again later."
+    "deleteEntryDescription": "It will be taken off the sheet. You can add it again later.",
+    "packLink": {
+      "state": {
+        "official": "official",
+        "modified": "modified",
+        "custom": "custom",
+        "stale": "out of date"
+      },
+      "reason": {
+        "removed": "This item no longer exists in the content pack.",
+        "inaccessible": "You no longer have access to this content pack.",
+        "pack_not_allowed": "This campaign does not allow that content pack.",
+        "version_changed": "The content pack changed since this was added."
+      },
+      "field": {
+        "name": "Name",
+        "category": "Category",
+        "points": "Points",
+        "cost_per_level": "Cost per level",
+        "max_levels": "Maximum levels",
+        "attribute": "Attribute",
+        "difficulty": "Difficulty"
+      },
+      "fromPack": "From {{pack}}",
+      "noPack": "Written by hand, not from a content pack.",
+      "badgeAria": "{{name}}: {{state}}. Open origin details.",
+      "restored": "\"{{name}}\" now matches the content pack.",
+      "unlinked": "\"{{name}}\" is no longer tied to a content pack.",
+      "linked": "\"{{name}}\" is now tied to a content pack.",
+      "actions": {
+        "restore": "Restore from pack",
+        "update": "Update to current version",
+        "unlink": "Detach",
+        "link": "Find in packs"
+      },
+      "picker": {
+        "title": "Find this in a content pack",
+        "description": "Pick the item this entry comes from. Your numbers stay as they are.",
+        "searchAria": "Search content packs",
+        "searchPlaceholder": "Search by name",
+        "empty": "Nothing matches that name."
+      },
+      "bulk": {
+        "open": "Match entries to packs",
+        "title": "Match entries to packs",
+        "description": "Nothing is changed until you confirm. Only entries with a single clear match are matched.",
+        "ambiguous": "several matches",
+        "none": "no match",
+        "empty": "Every entry already has an origin.",
+        "confirm": "Match {{count}} entries",
+        "done": "Matched {{count}} entries."
+      },
+      "summary": {
+        "title": "Entry origins",
+        "counts": "{{official}} official · {{modified}} modified · {{custom}} custom · {{stale}} out of date"
+      }
+    }
   }
 }

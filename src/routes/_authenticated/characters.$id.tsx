@@ -79,6 +79,12 @@ import {
   type EntryKind,
   type WeaponMode,
 } from "@/rules";
+import {
+  BulkLinkDialog,
+  PackStateBadge,
+  usePackLinkStatuses,
+} from "@/components/character/pack-link";
+import type { PackLinkStatus } from "@/lib/pack-link";
 import { rulesetFromSettings } from "@/rules/campaign-ruleset";
 import { AttackModeCard } from "@/components/character/attack-mode-card";
 import {
@@ -355,6 +361,10 @@ function CharacterPage() {
     () => (form ? buildSheet(toCharacterRecord(form), entries, campaignRuleset) : null),
     [form, entries, campaignRuleset],
   );
+
+  const campaignSettings = campaignQuery.data?.settings;
+  const packStatuses = usePackLinkStatuses(entries, campaignSettings);
+  const [bulkLinkOpen, setBulkLinkOpen] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draft, setDraft] = useState<EntryDraft>(emptyDraft("advantage"));
@@ -837,6 +847,9 @@ function CharacterPage() {
                 onAddFromPack={() => setPickerKinds([kind])}
                 onEdit={openEdit}
                 onDelete={(eid) => setPendingEntryDelete(eid)}
+                statuses={packStatuses.data}
+                campaignSettings={campaignSettings}
+                characterId={id}
               />
             ))}
           </TabsContent>
@@ -871,7 +884,21 @@ function CharacterPage() {
                 variant="outline"
                 onClick={() => openNew("spell")}
               />
+              <Button variant="outline" onClick={() => setBulkLinkOpen(true)}>
+                {t("sheet.packLink.bulk.open")}
+              </Button>
             </div>
+            <BulkLinkDialog
+              open={bulkLinkOpen}
+              onOpenChange={setBulkLinkOpen}
+              entries={entries}
+              statuses={packStatuses.data}
+              campaignSettings={campaignSettings}
+              onDone={() => {
+                void queryClient.invalidateQueries({ queryKey: ["entries", id] });
+                void queryClient.invalidateQueries({ queryKey: ["pack-link-status"] });
+              }}
+            />
             <div className="panel overflow-hidden">
               <Table>
                 <TableHeader>
@@ -921,11 +948,13 @@ function CharacterPage() {
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {entry.kind}
-                            {isCustomEntry(entry.source) ? (
-                              <Badge variant="outline" className="ml-1">
-                                {t("sheet.source.custom")}
-                              </Badge>
-                            ) : null}
+                            <PackStateBadge
+                              status={packStatuses.data?.get(entry.id)}
+                              entry={entry}
+                              campaignSettings={campaignSettings}
+                              characterId={id}
+                              canEdit
+                            />
                           </TableCell>
                           <TableCell className="text-right font-mono">{level.label}</TableCell>
                           <TableCell className="text-right font-mono">
@@ -1434,6 +1463,9 @@ function EntryGroup({
   onAddFromPack,
   onEdit,
   onDelete,
+  statuses,
+  campaignSettings,
+  characterId,
 }: {
   title: string;
   kind: EntryKind;
@@ -1442,6 +1474,9 @@ function EntryGroup({
   onAddFromPack?: () => void;
   onEdit: (e: CharacterEntry) => void;
   onDelete: (id: string) => void;
+  statuses?: Map<string, PackLinkStatus> | undefined;
+  campaignSettings?: unknown;
+  characterId: string;
 }) {
   const { t } = useT("characters");
   const [descFor, setDescFor] = useState<CharacterEntry | null>(null);
@@ -1483,6 +1518,13 @@ function EntryGroup({
                   <p className="text-sm font-medium">
                     {e.name}
                     {e.levels > 1 ? ` ${e.levels}` : ""}
+                    <PackStateBadge
+                      status={statuses?.get(e.id)}
+                      entry={e}
+                      campaignSettings={campaignSettings}
+                      characterId={characterId}
+                      canEdit
+                    />
                     {hasDesc ? (
                       <button
                         type="button"

@@ -517,6 +517,62 @@
       }
     },
     "deleteEntryTitle": "Remover este item?",
-    "deleteEntryDescription": "Ele sairá da ficha. Você pode adicioná-lo de novo depois."
+    "deleteEntryDescription": "Ele sairá da ficha. Você pode adicioná-lo de novo depois.",
+    "packLink": {
+      "state": {
+        "official": "oficial",
+        "modified": "modificado",
+        "custom": "casa",
+        "stale": "desatualizado"
+      },
+      "reason": {
+        "removed": "Este item não existe mais no pacote de conteúdo.",
+        "inaccessible": "Você não tem mais acesso a esse pacote de conteúdo.",
+        "pack_not_allowed": "Esta campanha não permite esse pacote de conteúdo.",
+        "version_changed": "O pacote de conteúdo mudou depois que isto foi adicionado."
+      },
+      "field": {
+        "name": "Nome",
+        "category": "Categoria",
+        "points": "Pontos",
+        "cost_per_level": "Custo por nível",
+        "max_levels": "Níveis máximos",
+        "attribute": "Atributo",
+        "difficulty": "Dificuldade"
+      },
+      "fromPack": "De {{pack}}",
+      "noPack": "Feito à mão, fora de um pacote de conteúdo.",
+      "badgeAria": "{{name}}: {{state}}. Abrir detalhes de origem.",
+      "restored": "\"{{name}}\" voltou a corresponder ao pacote de conteúdo.",
+      "unlinked": "\"{{name}}\" não está mais ligado a um pacote de conteúdo.",
+      "linked": "\"{{name}}\" agora está ligado a um pacote de conteúdo.",
+      "actions": {
+        "restore": "Restaurar do pacote",
+        "update": "Atualizar para a versão atual",
+        "unlink": "Desvincular",
+        "link": "Procurar nos pacotes"
+      },
+      "picker": {
+        "title": "Procurar em pacotes de conteúdo",
+        "description": "Escolha o item de origem. Seus números continuam como estão.",
+        "searchAria": "Procurar em pacotes de conteúdo",
+        "searchPlaceholder": "Procurar pelo nome",
+        "empty": "Nada corresponde a esse nome."
+      },
+      "bulk": {
+        "open": "Casar entradas com pacotes",
+        "title": "Casar entradas com pacotes",
+        "description": "Nada muda até você confirmar. Só entradas com uma correspondência única são ligadas.",
+        "ambiguous": "várias correspondências",
+        "none": "sem correspondência",
+        "empty": "Toda entrada já tem origem.",
+        "confirm": "Casar {{count}} entradas",
+        "done": "{{count}} entradas casadas."
+      },
+      "summary": {
+        "title": "Origem das entradas",
+        "counts": "{{official}} oficiais · {{modified}} modificadas · {{custom}} de casa · {{stale}} desatualizadas"
+      }
+    }
   }
 }

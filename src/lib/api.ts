@@ -655,8 +655,11 @@ export async function renameContentPack(id: string, oldName: string, newName: st
 }
 
 /**
- * Deletes every library entry inside a pack. Copies already on a character
- * sheet are kept but lose their pack provenance and become custom entries.
+ * Deletes every library entry inside a pack.
+ *
+ * Copies already on a character sheet are left untouched: their origin and any
+ * link they carry are preserved, so the sheet keeps showing where the entry
+ * came from and can report it as no longer available.
  */
 export async function deletePackContents(name: string) {
   const { data: auth } = await supabase.auth.getUser();
@@ -667,24 +670,7 @@ export async function deletePackContents(name: string) {
     .eq("owner_id", auth.user.id);
   const ids = (mine ?? []).map((c) => c.id);
   if (ids.length) {
-    const { data: entries } = await supabase
-      .from("character_entries")
-      .select("id, source")
-      .in("character_id", ids);
-    const affected = (entries ?? []).filter((e) => {
-      const s = (e.source ?? {}) as Record<string, unknown>;
-      return typeof s["pack"] === "string" && s["pack"].toLowerCase() === name.toLowerCase();
-    });
-    // One statement per batch instead of one per row: the new source value is
-    // identical for every affected entry.
-    for (let i = 0; i < affected.length; i += 200) {
-      const chunk = affected.slice(i, i + 200).map((e) => e.id);
-      const { error } = await supabase
-        .from("character_entries")
-        .update({ source: { type: "custom" } })
-        .in("id", chunk);
-      if (error) throw new Error(error.message);
-    }
+
 
     // Characters are grouped by the pack list they end up with, so identical
     // results are written in one statement instead of one per character.

@@ -33,7 +33,11 @@ export interface EntryDraft {
   levels: number;
   notes: string;
   data: Record<string, unknown>;
-  source: { label: string; edition: string; page: string; type: string };
+  /**
+   * Origin of the entry. Unknown keys written by other parts of the app (such
+   * as a content-pack link) are carried through untouched by the editor.
+   */
+  source: { label: string; edition: string; page: string; type: string } & Record<string, unknown>;
 }
 
 export function emptyDraft(kind: EntryKind): EntryDraft {
@@ -86,6 +90,7 @@ export function toDraft(entry: CharacterEntry): EntryDraft {
     notes: entry.notes ?? "",
     data: { ...(entry.data as Record<string, unknown>) },
     source: {
+      ...((entry.source ?? {}) as Record<string, unknown>),
       label: s["label"] ?? "User created",
       edition: s["edition"] ?? "",
       page: s["page"] ?? "",

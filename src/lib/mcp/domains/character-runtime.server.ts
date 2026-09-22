@@ -21,6 +21,66 @@ import {
   uuid,
 } from "@/lib/mcp/kit.server";
 import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.server";
+import type { Database } from "@/integrations/supabase/types";
+import type { CharacterEntry, CharacterRecord } from "@/rules";
+import { rulesetFromSettings } from "@/rules/campaign-ruleset";
+import { validateCharacter } from "@/lib/pack-validation";
+import { readPackLink, type PackItemLike, type PackLink } from "@/lib/pack-link";
+import {
+  deriveStatuses,
+  loadCampaignSettings,
+  resolveLinkedItems,
+  type EntryRowLike,
+} from "@/lib/pack-link-service";
+
+type EntryRow = Database["public"]["Tables"]["character_entries"]["Row"];
+type CharacterRow = Database["public"]["Tables"]["characters"]["Row"];
+
+/** Local copies of the api.ts mappers: that module pulls in the browser client. */
+function toRulesEntry(row: EntryRow): CharacterEntry {
+  return {
+    id: row.id,
+    character_id: row.character_id,
+    kind: row.kind as CharacterEntry["kind"],
+    name: row.name,
+    category: row.category,
+    points: row.points,
+    levels: row.levels,
+    data: (row.data ?? {}) as CharacterEntry["data"],
+    notes: row.notes,
+    source: (row.source ?? {}) as CharacterEntry["source"],
+    sort_order: row.sort_order,
+  };
+}
+
+function toCharacterRecord(row: CharacterRow): CharacterRecord {
+  return {
+    id: row.id,
+    name: row.name,
+    player_name: row.player_name,
+    concept: row.concept,
+    point_budget: row.point_budget,
+    tech_level: row.tech_level,
+    st: row.st,
+    dx: row.dx,
+    iq: row.iq,
+    ht: row.ht,
+    hp_delta: row.hp_delta,
+    will_delta: row.will_delta,
+    per_delta: row.per_delta,
+    fp_delta: row.fp_delta,
+    speed_delta: Number(row.speed_delta),
+    move_delta: row.move_delta,
+    current_hp: row.current_hp,
+    current_fp: row.current_fp,
+    conditions: row.conditions ?? [],
+    wealth: row.wealth,
+    status: row.status,
+    notes: row.notes,
+    is_npc: row.is_npc,
+    approved: row.approved,
+  };
+}
 
 /** Matches the `mode:<index>` shape produced by attackModeKey() in weapon-state.ts. */
 const MODE_KEY_PATTERN = /^mode:\d+$/;
@@ -68,6 +128,15 @@ const input = z.discriminatedUnion("action", [
     .describe(
       "Atomically add (or, with a negative delta, subtract) shots for an attack mode via the " +
         "adjust_weapon_ammo RPC, clamped at zero. Owner or campaign GM only. Changes data.",
+    ),
+  z
+    .object({ action: z.literal("validate"), character_id: uuid })
+    .describe(
+      "Check a sheet without changing anything: point totals against the sheet budget and any " +
+        "campaign limits, calculated skill levels against any level written on an entry, and how " +
+        "each entry compares with its content-pack definition (official, modified, custom or out " +
+        "of date). Campaign house rules change calculated numbers only and never change whether " +
+        "an entry counts as official.",
     ),
 ]);
 
@@ -164,6 +233,47 @@ export function registerCharacterRuntime(tool: ToolRegistrar, ctx: McpToolContex
         return detailReply(
           `Adjusted ${i.mode_key} by ${i.delta >= 0 ? "+" : ""}${i.delta}.`,
           data as Structured,
+        );
+      },
+
+      validate: async (i) => {
+        const access = await loadCharacter(ctx, i.character_id);
+        const { data: rows, error } = await ctx.supabase
+          .from("character_entries")
+          .select("*")
+          .eq("character_id", i.character_id)
+          .order("sort_order");
+        if (error) fail("Reading character entries", error);
+        const entryRows = (rows ?? []) as EntryRow[];
+        const entries = entryRows.map(toRulesEntry);
+
+        const settings = await loadCampaignSettings(ctx.supabase, access.row.campaign_id);
+        const statuses = await deriveStatuses(
+          ctx.supabase,
+          entryRows as unknown as EntryRowLike[],
+          settings,
+        );
+        const links = entryRows
+          .map((row) => readPackLink(row.source))
+          .filter((link): link is PackLink => link !== null);
+        const resolved = await resolveLinkedItems(ctx.supabase, links);
+        const packItems = new Map<string, PackItemLike>();
+        for (const row of entryRows) {
+          const link = readPackLink(row.source);
+          const item = link ? resolved.byId.get(link.pack_entry_id) : null;
+          if (item) packItems.set(row.id, item);
+        }
+
+        const report = validateCharacter({
+          character: toCharacterRecord(access.row as CharacterRow),
+          entries,
+          statuses,
+          packItems,
+          ruleset: rulesetFromSettings(settings),
+        });
+        return detailReply(
+          `Checked "${access.row.name}": ${report.findings.length} finding(s).`,
+          report as unknown as Structured,
         );
       },
     }),

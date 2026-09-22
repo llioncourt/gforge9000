@@ -17,6 +17,18 @@ import type { Database, Json } from "@/integrations/supabase/types";
 import { KINDS } from "@/lib/entity-kinds";
 import { VISIBILITY_VALUES } from "@/lib/visibility";
 import {
+  assertLinkFlags,
+  candidateView,
+  definitionFill,
+  resolveTarget,
+  settingsForCharacter,
+  sourceWithLink,
+  sourceWithoutLink,
+  statusFor,
+  withPackState,
+} from "@/lib/mcp/pack-link.server";
+import type { EntryRowLike } from "@/lib/pack-link-service";
+import {
   CREATE,
   DESTROY,
   DEFAULT_LIMIT,
@@ -1022,7 +1034,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "Add an entry to a character",
       description:
-        "Adds one trait, skill, technique or piece of equipment to a character sheet. Only the sheet's owner or their campaign's Game Master can do this. Without `sort_order` the entry is appended at the end.",
+        "Adds one trait, skill, technique or piece of equipment to a character sheet. Only the sheet's owner or their campaign's Game Master can do this. Without `sort_order` the entry is appended at the end. Optionally the new entry can be linked to a content-pack item: pass `pack_entry_id` to link a specific item, or `match_pack: true` to look one up by name among the packs the caller may use (and, for a sheet in a campaign, that the campaign allows). `pack_entry_id` and `match_pack` are mutually exclusive. A link fills in mechanical fields you left out but never overwrites values you supplied; an ambiguous name match writes nothing and returns the candidates instead; no match simply creates a normal custom entry.",
       inputSchema: z.object({
         character_id: uuid,
         kind: boundedText(40),
@@ -1032,6 +1044,8 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         levels: intField(0, 1000, "levels").optional(),
         notes: z.string().max(4000).nullable().optional(),
         sort_order: intField(0, 1000000, "sort_order").optional(),
+        pack_entry_id: uuid.optional(),
+        match_pack: z.boolean().optional(),
       }),
       outputSchema: itemOutput,
       annotations: create,
@@ -1039,6 +1053,23 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     async (input) => {
       const access = await loadCharacter(ctx, input.character_id);
       requireCharacterWrite(access);
+      assertLinkFlags({ pack_entry_id: input.pack_entry_id, match_pack: input.match_pack });
+      const settings = await settingsForCharacter(ctx, access.row.campaign_id);
+
+      const target = await resolveTarget(
+        ctx,
+        { pack_entry_id: input.pack_entry_id, match_pack: input.match_pack },
+        { kind: input.kind, name: input.name, category: input.category },
+        settings,
+      );
+      if (target.ambiguous) {
+        const candidates = target.ambiguous.map(candidateView);
+        return detailReply(
+          `"${input.name}" matches ${candidates.length} pack items — nothing was added. Call again with pack_entry_id set to the one you mean.`,
+          { created: false, match_status: "ambiguous", candidates },
+        );
+      }
+
       let sortOrder = input.sort_order;
       if (sortOrder === undefined) {
         const { data: last, error: lastError } = await ctx.supabase
@@ -1052,24 +1083,43 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         const currentMax = typeof last?.sort_order === "number" ? last.sort_order : null;
         sortOrder = currentMax === null ? 0 : currentMax + 1;
       }
+
+      let linkFields: Record<string, unknown> = {};
+      if (target.item && target.method) {
+        const filled = definitionFill(
+          target.item,
+          { category: input.category, points: input.points, levels: input.levels },
+          input.kind,
+          target.specialization,
+        );
+        const { source } = await sourceWithLink({}, target.item, target.method);
+        linkFields = { ...filled, source };
+      }
+
+      const payload: Record<string, unknown> = {
+        character_id: input.character_id,
+        kind: input.kind,
+        name: input.name,
+        category: input.category ?? null,
+        notes: input.notes ?? null,
+        sort_order: sortOrder,
+        ...(input.points === undefined ? {} : { points: input.points }),
+        ...(input.levels === undefined ? {} : { levels: input.levels }),
+        ...linkFields,
+      };
       const { data, error } = await ctx.supabase
         .from("character_entries")
-        .insert({
-          character_id: input.character_id,
-          kind: input.kind,
-          name: input.name,
-          category: input.category ?? null,
-          notes: input.notes ?? null,
-          sort_order: sortOrder,
-          ...(input.points === undefined ? {} : { points: input.points }),
-          ...(input.levels === undefined ? {} : { levels: input.levels }),
-        })
+        .insert(payload as Database["public"]["Tables"]["character_entries"]["Insert"])
         .select("*")
         .single();
       if (error) fail("Adding the entry", error);
+
+      const status = await statusFor(ctx, data as unknown as EntryRowLike, settings);
+      const matchNote =
+        input.match_pack === true && !target.item ? " No matching pack item was found." : "";
       return detailReply(
-        `Added "${data.name}" to "${access.row.name}" (entry_id: ${data.id}).`,
-        data,
+        `Added "${data.name}" to "${access.row.name}" (entry_id: ${data.id}).${matchNote}`,
+        withPackState(data, status),
       );
     },
   );
@@ -1079,7 +1129,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "Update an entry on a character",
       description:
-        "Changes one trait, skill, technique or piece of equipment on a character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged.",
+        "Changes one trait, skill, technique or piece of equipment on a character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged. Pack linking is optional and separate from the sheet values: `pack_entry_id` links this entry to a specific pack item, `match_pack: true` tries to find one by name, and `unlink: true` removes the link while keeping every value and all other provenance. The three are mutually exclusive. Linking never rewrites existing sheet values, and a name match that finds nothing leaves an existing link in place.",
       inputSchema: z.object({
         entry_id: uuid,
         kind: boundedText(40).optional(),
@@ -1089,14 +1139,18 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         levels: intField(0, 1000, "levels").optional(),
         notes: z.string().max(4000).nullable().optional(),
         sort_order: intField(0, 1000000, "sort_order").optional(),
+        pack_entry_id: uuid.optional(),
+        match_pack: z.boolean().optional(),
+        unlink: z.boolean().optional(),
       }),
       outputSchema: itemOutput,
       annotations: modify,
     },
-    async ({ entry_id, ...patch }) => {
+    async ({ entry_id, pack_entry_id, match_pack, unlink, ...patch }) => {
+      assertLinkFlags({ pack_entry_id, match_pack, unlink });
       const { data: found, error: lookupError } = await ctx.supabase
         .from("character_entries")
-        .select("id, name, character_id")
+        .select("id, name, kind, category, character_id, source")
         .eq("id", entry_id)
         .maybeSingle();
       if (lookupError) fail("Entry lookup", lookupError);
@@ -1104,9 +1158,55 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
 
       const access = await loadCharacter(ctx, found.character_id);
       requireCharacterWrite(access);
+      const settings = await settingsForCharacter(ctx, access.row.campaign_id);
 
-      const update = buildPatch(patch);
-      requirePatch(update);
+      const update = buildPatch(patch) as Record<string, unknown>;
+      const touchesLink = Boolean(pack_entry_id) || match_pack === true || unlink === true;
+      if (Object.keys(update).length === 0 && !touchesLink) requirePatch(update);
+
+      let ambiguousNote = "";
+      if (unlink === true) {
+        update["source"] = sourceWithoutLink(found.source);
+      } else if (pack_entry_id || match_pack === true) {
+        const target = await resolveTarget(
+          ctx,
+          { pack_entry_id, match_pack },
+          {
+            kind: (update["kind"] as string | undefined) ?? found.kind,
+            name: (update["name"] as string | undefined) ?? found.name,
+            category: (update["category"] as string | null | undefined) ?? found.category,
+          },
+          settings,
+        );
+        if (target.ambiguous) {
+          const candidates = target.ambiguous.map(candidateView);
+          return detailReply(
+            `"${found.name}" matches ${candidates.length} pack items — nothing was changed. Call again with pack_entry_id set to the one you mean.`,
+            { updated: false, match_status: "ambiguous", candidates },
+          );
+        }
+        if (target.item && target.method) {
+          const { source } = await sourceWithLink(found.source, target.item, target.method);
+          update["source"] = source;
+        } else {
+          // No match: an existing link is never silently removed.
+          ambiguousNote = " No matching pack item was found; any existing link was kept.";
+        }
+      }
+
+      if (Object.keys(update).length === 0) {
+        const current = (await ctx.supabase
+          .from("character_entries")
+          .select("*")
+          .eq("id", entry_id)
+          .single()) as { data: Database["public"]["Tables"]["character_entries"]["Row"] };
+        const status = await statusFor(ctx, current.data as unknown as EntryRowLike, settings);
+        return detailReply(
+          `No changes were needed for "${found.name}".${ambiguousNote}`,
+          withPackState(current.data, status),
+        );
+      }
+
       const { data, error } = await ctx.supabase
         .from("character_entries")
         .update(update as Database["public"]["Tables"]["character_entries"]["Update"])
@@ -1114,7 +1214,11 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         .select("*")
         .single();
       if (error) fail("Updating the entry", error);
-      return detailReply(`Updated "${data.name}" on "${access.row.name}" (${data.id}).`, data);
+      const status = await statusFor(ctx, data as unknown as EntryRowLike, settings);
+      return detailReply(
+        `Updated "${data.name}" on "${access.row.name}" (${data.id}).${ambiguousNote}`,
+        withPackState(data, status),
+      );
     },
   );
 

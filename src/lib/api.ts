@@ -353,6 +353,33 @@ export async function listLibrary() {
   return all;
 }
 
+/** Row count only — avoids downloading the whole catalogue for a statistic. */
+export async function countLibrary(): Promise<number> {
+  const { count, error } = await supabase
+    .from("library_entries")
+    .select("id", { count: "exact", head: true });
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
+/** Distinct pack names present in the catalogue, without fetching every field. */
+export async function listLibraryPackNames(): Promise<string[]> {
+  const pageSize = 1000;
+  const names = new Set<string>();
+  for (let from = 0; ; from += pageSize) {
+    const page = unwrap(
+      await supabase
+        .from("library_entries")
+        .select("pack")
+        .order("id", { ascending: true })
+        .range(from, from + pageSize - 1),
+    );
+    for (const row of page) if (row.pack) names.add(row.pack);
+    if (page.length < pageSize) break;
+  }
+  return [...names];
+}
+
 export async function createLibraryEntry(input: TablesInsert<"library_entries">) {
   const { data: auth } = await supabase.auth.getUser();
   const pack = (input.pack ?? "").trim() || DEFAULT_PACK_NAME;

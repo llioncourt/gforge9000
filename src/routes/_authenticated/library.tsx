@@ -457,7 +457,7 @@ function LibraryPage() {
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {rows.map((e) => {
+          {visibleRows.map((e) => {
             const mine = e.owner_id === user?.id;
             return (
               <div

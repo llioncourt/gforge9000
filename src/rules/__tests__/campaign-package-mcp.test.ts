@@ -121,7 +121,9 @@ describe("campaign_package MCP tool (export/import wiring)", () => {
       { id: "camp-1", name: "Not Mine", gm_id: "someone-else", settings: {} },
     ];
     const supabase = makeFakeSupabase({ campaigns, storageFiles: new Map() });
-    const server = buildMcpServer({ supabase, userId } as unknown as Parameters<typeof buildMcpServer>[0]);
+    const server = buildMcpServer({ supabase, userId } as unknown as Parameters<
+      typeof buildMcpServer
+    >[0]);
     const tool = await getTool(server, "campaign_package");
     expect(tool).toBeTruthy();
     await expect(tool.handler({ action: "export", campaign_id: "camp-1" })).rejects.toThrow(
@@ -132,7 +134,9 @@ describe("campaign_package MCP tool (export/import wiring)", () => {
   it("import rejects a staged path outside the caller's own prefix", async () => {
     const userId = "user-1";
     const supabase = makeFakeSupabase({ campaigns: [], storageFiles: new Map() });
-    const server = buildMcpServer({ supabase, userId } as unknown as Parameters<typeof buildMcpServer>[0]);
+    const server = buildMcpServer({ supabase, userId } as unknown as Parameters<
+      typeof buildMcpServer
+    >[0]);
     const tool = await getTool(server, "campaign_package");
     await expect(
       tool.handler({ action: "import", storage_path: "other-user/file.zip" }),

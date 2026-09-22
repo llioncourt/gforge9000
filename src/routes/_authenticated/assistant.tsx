@@ -46,6 +46,9 @@ function buildSetupPrompt(endpoint: string, key?: string): string {
     `Endpoint: POST ${endpoint}`,
     `Authorization header: Bearer ${keyLine}`,
     "Protocol: JSON-RPC 2.0 MCP (streamable HTTP, single POST endpoint).",
+    key
+      ? ""
+      : "If you cannot send an Authorization header, ask me to add the endpoint as a custom connector in claude.ai (Settings → Connectors) — it supports sign-in with my account, no key needed.",
     "",
     "Start with the `initialize` method, then `tools/list`, then call tools with `tools/call`.",
     "",
@@ -132,6 +135,7 @@ function AssistantPage() {
           </Button>
         </div>
         <p className="text-muted-foreground text-sm">{t("assistant.addressHint")}</p>
+        <p className="text-muted-foreground text-sm">{t("assistant.webHint")}</p>
       </section>
 
       <section className="space-y-3 rounded-xl border p-4">

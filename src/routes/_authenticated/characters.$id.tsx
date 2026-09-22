@@ -108,7 +108,7 @@ import {
   PackPickerDialog,
   isCustomEntry,
 } from "@/components/character/pack-content";
-import type { LibraryRow } from "@/lib/api";
+import { getLibraryEntries, type LibraryListRow } from "@/lib/api";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
 import { ModelPanel } from "@/components/character/model-panel";
 import { parseModelTransform } from "@/lib/model3d";

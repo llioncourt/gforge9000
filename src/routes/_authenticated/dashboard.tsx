@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { createCharacter, listCampaigns, listCharacters, listLibrary, listRolls } from "@/lib/api";
+import { countLibrary, createCharacter, listCampaigns, listCharacters, listRolls } from "@/lib/api";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";

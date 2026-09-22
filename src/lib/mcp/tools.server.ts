@@ -1156,22 +1156,34 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
 
 /** Names of every tool this server exposes, in registration order. */
 export const MCP_TOOL_NAMES = [
+  // campaigns
   "list_campaigns",
   "create_campaign",
+  "update_campaign",
+  // entries
   "list_entry_types",
   "list_entries",
   "get_entry",
   "create_entry",
   "update_entry",
   "delete_entry",
+  // relationships
   "list_relationships",
   "create_relationship",
+  "update_relationship",
+  "delete_relationship",
+  // characters
   "list_characters",
   "get_character",
   "create_character",
+  "update_character",
+  "delete_character",
+  // character entries
   "add_character_entry",
+  "update_character_entry",
   "delete_character_entry",
 ] as const;
+
 
 /** Exported for tests: the fields that must never reach a non-GM caller. */
 export const MCP_GM_ONLY_FIELDS = {

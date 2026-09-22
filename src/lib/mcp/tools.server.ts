@@ -297,6 +297,21 @@ async function assertParentIsSafe(
   if (cursor) throw new Error("The entry hierarchy is too deep to verify this move safely.");
 }
 
+async function loadRelationship(
+  ctx: McpToolContext,
+  relationshipId: string,
+): Promise<{ row: RelationshipRow; campaign: CampaignAccess }> {
+  const { data, error } = await ctx.supabase
+    .from("entity_relationships")
+    .select("*")
+    .eq("id", relationshipId)
+    .maybeSingle();
+  if (error) fail("Relationship lookup", error);
+  if (!data) throw new Error("Link not found, or you do not have access to it.");
+  const campaign = await loadCampaign(ctx, data.campaign_id);
+  return { row: data, campaign };
+}
+
 
 /* ------------------------------------------------------------------ */
 /* Registration helper                                                 */

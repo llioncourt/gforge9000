@@ -121,7 +121,7 @@ import { invalidatePackLinkQueries } from "@/components/character/pack-link";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
 import { ModelPanel } from "@/components/character/model-panel";
 import { parseModelTransform } from "@/lib/model3d";
-import { allowedPacksOf } from "@/lib/packs";
+import { allowedPacksOf, pickerPacks } from "@/lib/packs";
 import { buildImagePrompt } from "@/lib/image-prompt";
 import { metaText } from "@/i18n/meta";
 

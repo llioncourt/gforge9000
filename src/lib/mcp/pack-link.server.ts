@@ -128,13 +128,12 @@ export function definitionFill(
 
   const levels = supplied.levels ?? 1;
   if (supplied.points === undefined) {
+    const costPerLevel = Number(item.cost_per_level ?? 0);
     out.points = isSkillLike(kind)
       ? Number(item.base_points ?? 0)
-      : expectedLeveledCost(
-          Number(item.base_points ?? 0),
-          Number(item.cost_per_level ?? 0),
-          levels,
-        );
+      : costPerLevel
+        ? packLeveledCost(costPerLevel, levels)
+        : Number(item.base_points ?? 0);
   }
 
   const data: Record<string, unknown> = {};

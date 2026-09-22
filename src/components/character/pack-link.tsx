@@ -93,16 +93,29 @@ export function invalidatePackLinkQueries(
   void queryClient.invalidateQueries({ queryKey: ["pack-link-summary"] });
 }
 
-/** Derived state for every entry on the sheet; nothing is stored. */
-export function usePackLinkStatuses(entries: CharacterEntry[], campaignSettings: unknown) {
+/**
+ * Derived state for every entry on the sheet; nothing is stored.
+ *
+ * The signed-in user's id is passed to the shared derivation so a link whose
+ * pack the user owns can honestly report "removed"; for someone else's pack
+ * the derivation stays conservative and reports "inaccessible".
+ */
+export function usePackLinkStatuses(
+  entries: CharacterEntry[],
+  campaignSettings: unknown,
+  callerUserId?: string | null,
+) {
+  const { user } = useSession();
+  const userId = callerUserId ?? user?.id ?? null;
   const key = entries.map((entry) => `${entry.id}:${entryStatusFingerprint(entry)}`).join("|");
   return useQuery({
-    queryKey: ["pack-link-status", key, JSON.stringify(campaignSettings ?? null)],
-    queryFn: () => deriveStatuses(supabase, entries.map(asRow), campaignSettings),
+    queryKey: ["pack-link-status", key, JSON.stringify(campaignSettings ?? null), userId],
+    queryFn: () => deriveStatuses(supabase, entries.map(asRow), campaignSettings, userId),
     enabled: entries.length > 0,
     staleTime: 30_000,
   });
 }
+
 
 /** Whether the "restore"/"update" action should be offered (PL-007). */
 export function shouldShowRestoreAction(status: PackLinkStatus | undefined): boolean {

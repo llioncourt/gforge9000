@@ -143,7 +143,7 @@ function query(data: unknown, extra: Record<string, unknown> = {}, spy?: Spy) {
   return self;
 }
 
-type Spy = { inserted?: unknown; updated?: unknown };
+type Spy = { inserted?: unknown; updated?: unknown; rpc?: { fn: string; args: unknown }[] };
 
 const USER = "00000000-0000-0000-0000-000000000001";
 const GM = "00000000-0000-0000-0000-0000000000ff";
@@ -181,7 +181,10 @@ function serverWith(
     mcp_delete_campaign: "rpc_delete_campaign",
   };
   const supabase = {
-    rpc: (fn: string) => resolve(RPC_TABLES[fn] ?? "entities"),
+    rpc: (fn: string, args?: unknown) => {
+      if (spy) (spy.rpc ??= []).push({ fn, args });
+      return resolve(RPC_TABLES[fn] ?? "entities");
+    },
     from: (table: string) => resolve(table),
   };
   const server = buildMcpServer({ supabase: supabase as never, userId });

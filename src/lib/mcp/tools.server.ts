@@ -41,16 +41,30 @@ function fail(operation: string, error: { message: string } | null): never {
 }
 
 const uuid = z.string().uuid();
-const limitField = z.number().int().min(1).max(MCP_MAX_LIMIT).optional();
+const limitField = z
+  .number({ error: "limit must be an integer between 1 and 200" })
+  .int({ error: "limit must be an integer between 1 and 200" })
+  .min(1, { error: "limit must be an integer between 1 and 200" })
+  .max(MCP_MAX_LIMIT, { error: "limit must be an integer between 1 and 200" })
+  .optional();
 const boundedText = (max: number) => z.string().min(1).max(max);
 
 const listOutput = z.object({
   count: z.number().int(),
+  total: z.number().int(),
   truncated: z.boolean(),
   items: z.array(z.record(z.string(), z.unknown())),
 });
 const itemOutput = z.object({ item: z.record(z.string(), z.unknown()) });
 const deleteOutput = z.object({ deleted: z.boolean(), id: z.string() });
+const deleteCampaignOutput = z.object({
+  deleted: z.boolean(),
+  id: z.string(),
+  entries_deleted: z.number().int(),
+  relationships_deleted: z.number().int(),
+  characters_deleted: z.number().int(),
+  characters_unlinked: z.number().int(),
+});
 
 type Structured = Record<string, unknown>;
 

@@ -57,17 +57,10 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/api/")) return;
 
   if (req.mode === "navigate") {
+    // Pages are never stored, so a previous release can never be replayed.
+    // When the network is unavailable the offline notice is shown instead.
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(PAGE_CACHE).then((cache) => cache.put(req, copy));
-          return res;
-        })
-        .catch(async () => {
-          const cached = await caches.match(req);
-          return cached || (await caches.match(OFFLINE_URL)) || Response.error();
-        }),
+      fetch(req).catch(async () => (await caches.match(OFFLINE_URL)) || Response.error()),
     );
     return;
   }

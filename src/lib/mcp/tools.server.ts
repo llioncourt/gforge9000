@@ -715,7 +715,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "List campaign entries",
       description:
-        "Lists the world and story entries of one campaign that the signed-in account is allowed to see. Game Master notes are removed for players.",
+        "Lists the world and story entries of one campaign that the signed-in account is allowed to see. Game Master notes are removed for players. The reply reports how many entries were returned out of the exact total matching the same filters.",
       inputSchema: z.object({
         campaign_id: uuid,
         kind: z.string().max(40).optional(),
@@ -728,16 +728,33 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     async ({ campaign_id, kind, search, limit }) => {
       const campaign = await loadCampaign(ctx, campaign_id);
       const max = limit ?? DEFAULT_LIMIT;
-      let query = safeRpc(ctx.supabase)("list_entities_safe", { _campaign: campaign_id })
-        .order("kind", { ascending: true })
-        .order("name", { ascending: true })
-        .limit(max);
-      if (kind) query = query.eq("kind", kind);
-      if (search) query = query.ilike("name", `%${search}%`);
-      const { data, error } = await query;
+      const filtered = (builder: ReturnType<ReturnType<typeof safeRpc>>) => {
+        let query = builder;
+        if (kind) query = query.eq("kind", kind);
+        if (search) query = query.ilike("name", `%${search}%`);
+        return query;
+      };
+      const { data, error } = await filtered(
+        safeRpc(ctx.supabase)("list_entities_safe", { _campaign: campaign_id })
+          .order("kind", { ascending: true })
+          .order("name", { ascending: true })
+          .limit(max),
+      );
       if (error) fail("Listing entries", error);
       const items = ((data ?? []) as EntityRow[]).map(entitySummary);
-      return listReply(`entries in "${campaign.name}"`, items, max);
+      const { count, error: countError } = await filtered(
+        safeRpc(ctx.supabase)(
+          "list_entities_safe",
+          { _campaign: campaign_id },
+          { count: "exact", head: true },
+        ),
+      );
+      if (countError) fail("Counting entries", countError);
+      return listReply(
+        `entries in "${campaign.name}"`,
+        items,
+        typeof count === "number" ? count : items.length,
+      );
     },
   );
 

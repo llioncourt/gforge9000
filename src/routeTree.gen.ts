@@ -23,6 +23,7 @@ import { Route as AuthenticatedCharactersIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedEntitiesIdRouteImport } from './routes/_authenticated/entities.$id'
 import { Route as AuthenticatedPacksIndexRouteImport } from './routes/_authenticated/packs.index'
 import { Route as AuthenticatedPacksPackRouteImport } from './routes/_authenticated/packs.$pack'
+import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
 import { Route as ApiPublicVersionRouteImport } from './routes/api/public/version'
 
 const IndexRoute = IndexRouteImport.update({
@@ -98,6 +99,11 @@ const AuthenticatedPacksPackRoute = AuthenticatedPacksPackRouteImport.update({
   path: '/packs/$pack',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicMcpRoute = ApiPublicMcpRouteImport.update({
+  id: '/api/public/mcp',
+  path: '/api/public/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicVersionRoute = ApiPublicVersionRouteImport.update({
   id: '/api/public/version',
   path: '/api/public/version',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/characters/': typeof AuthenticatedCharactersIndexRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
   '/characters': typeof AuthenticatedCharactersIndexRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/_authenticated/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/_authenticated/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/_authenticated/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/_authenticated/characters/': typeof AuthenticatedCharactersIndexRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/characters/$id'
     | '/entities/$id'
     | '/packs/$pack'
+    | '/api/public/mcp'
     | '/api/public/version'
     | '/campaigns/'
     | '/characters/'
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/characters/$id'
     | '/entities/$id'
     | '/packs/$pack'
+    | '/api/public/mcp'
     | '/api/public/version'
     | '/campaigns'
     | '/characters'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/_authenticated/characters/$id'
     | '/_authenticated/entities/$id'
     | '/_authenticated/packs/$pack'
+    | '/api/public/mcp'
     | '/api/public/version'
     | '/_authenticated/campaigns/'
     | '/_authenticated/characters/'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   LegalRoute: typeof LegalRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicMcpRoute: typeof ApiPublicMcpRoute
   ApiPublicVersionRoute: typeof ApiPublicVersionRoute
 }
 
@@ -315,6 +328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPacksPackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/mcp': {
+      id: '/api/public/mcp'
+      path: '/api/public/mcp'
+      fullPath: '/api/public/mcp'
+      preLoaderRoute: typeof ApiPublicMcpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/version': {
       id: '/api/public/version'
       path: '/api/public/version'
@@ -358,6 +378,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   LegalRoute: LegalRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicMcpRoute: ApiPublicMcpRoute,
   ApiPublicVersionRoute: ApiPublicVersionRoute,
 }
 export const routeTree = rootRouteImport

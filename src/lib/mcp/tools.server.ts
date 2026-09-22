@@ -856,11 +856,15 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       title: "Get a character sheet",
       description:
         "Reads one character sheet with its entries (traits, skills, equipment). Game Master notes are only included for the sheet's owner or their campaign's Game Master.",
-      inputSchema: z.object({ character_id: uuid, entry_limit: limitField }),
+      inputSchema: z.object({
+        character_id: uuid,
+        entry_limit: limitField,
+        compact: z.boolean().optional(),
+      }),
       outputSchema: itemOutput,
       annotations: read,
     },
-    async ({ character_id, entry_limit }) => {
+    async ({ character_id, entry_limit, compact }) => {
       const access = await loadCharacter(ctx, character_id);
       const max = entry_limit ?? MCP_MAX_LIMIT;
       const { data, error } = await ctx.supabase
@@ -872,19 +876,21 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         .order("name")
         .limit(max);
       if (error) fail("Loading character entries", error);
-      const returned = data?.length ?? 0;
+      const rows = data ?? [];
+      const returned = rows.length;
       const { count, error: countError } = await ctx.supabase
         .from("character_entries")
         .select("id", { count: "exact", head: true })
         .eq("character_id", character_id);
       if (countError) fail("Counting character entries", countError);
       const total = typeof count === "number" ? count : returned;
+      const entries = compact === true ? rows.map(compactEntryNotes) : rows;
       const header =
         returned < total
-          ? `Character "${access.row.name}" with ${returned} of ${total} entries (more may exist — raise entry_limit).`
-          : `Character "${access.row.name}" with ${total} entries.`;
-      const item = { ...characterView(access), entries: data ?? [] };
-      return reply(`${header}\n\n${JSON.stringify(item, null, 2)}`, { item });
+          ? `Character "${access.row.name}" — showing ${returned} of ${total} entries (more may exist — raise entry_limit).`
+          : `Character "${access.row.name}" — showing ${returned} of ${total} entries.`;
+      const item = { ...characterView(access), entries };
+      return detailReply(header, item);
     },
   );
 
@@ -892,35 +898,82 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     "create_character",
     {
       title: "Create a character",
-      description: "Creates a new character sheet owned by the signed-in account.",
-      inputSchema: z.object({
-        name: boundedText(120),
-        concept: z.string().max(400).optional(),
-        campaign_id: uuid.optional(),
-        is_npc: z.boolean().optional(),
-        point_budget: z.number().int().min(0).max(100000).optional(),
-        tech_level: z.number().int().min(0).max(20).optional(),
-      }),
+      description:
+        "Creates a new character sheet owned by the signed-in account. Fields left out keep their normal defaults.",
+      inputSchema: z.object({ name: boundedText(120), ...characterWritableFields }),
       outputSchema: itemOutput,
       annotations: create,
     },
-    async (input) => {
-      if (input.campaign_id) await loadCampaign(ctx, input.campaign_id);
+    async ({ name, ...rest }) => {
+      if (rest.campaign_id) await loadCampaign(ctx, rest.campaign_id);
       const { data, error } = await ctx.supabase
         .from("characters")
         .insert({
-          name: input.name,
-          concept: input.concept ?? null,
-          campaign_id: input.campaign_id ?? null,
+          name,
           owner_id: ctx.userId,
-          ...(input.is_npc === undefined ? {} : { is_npc: input.is_npc }),
-          ...(input.point_budget === undefined ? {} : { point_budget: input.point_budget }),
-          ...(input.tech_level === undefined ? {} : { tech_level: input.tech_level }),
+          ...(buildPatch(rest) as Database["public"]["Tables"]["characters"]["Insert"]),
         })
-        .select("id, name, concept, campaign_id, point_budget, tech_level")
+        .select("*")
         .single();
       if (error) fail("Creating the character", error);
-      return reply(`Created character "${data.name}" (${data.id}).`, { item: data });
+      return detailReply(
+        `Created character "${data.name}" (${data.id}).`,
+        characterView({ row: data, isOwner: true, isGm: false }),
+      );
+    },
+  );
+
+  tool(
+    "update_character",
+    {
+      title: "Update a character",
+      description:
+        "Changes fields on an existing character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged.",
+      inputSchema: z.object({ character_id: uuid, ...characterWritableFields }),
+      outputSchema: itemOutput,
+      annotations: modify,
+    },
+    async ({ character_id, ...patch }) => {
+      const access = await loadCharacter(ctx, character_id);
+      requireCharacterWrite(access);
+      const update = buildPatch(patch);
+      requirePatch(update);
+      if (patch.campaign_id) await loadCampaign(ctx, patch.campaign_id);
+      const { data, error } = await ctx.supabase
+        .from("characters")
+        .update(update)
+        .eq("id", character_id)
+        .select("*")
+        .single();
+      if (error) fail("Updating the character", error);
+      return detailReply(
+        `Updated character "${data.name}" (${data.id}).`,
+        characterView({ ...access, row: data }),
+      );
+    },
+  );
+
+  tool(
+    "delete_character",
+    {
+      title: "Delete a character",
+      description:
+        "Permanently removes a character sheet and everything on it. Only the sheet's owner can delete it — not the campaign's Game Master.",
+      inputSchema: z.object({ character_id: uuid }),
+      outputSchema: deleteOutput,
+      annotations: destroy,
+    },
+    async ({ character_id }) => {
+      const access = await loadCharacter(ctx, character_id);
+      requireCharacterOwner(access);
+      const { data, error } = await ctx.supabase
+        .from("characters")
+        .delete()
+        .eq("id", character_id)
+        .select("id");
+      if (error) fail("Deleting the character", error);
+      if (!data || data.length === 0) throw new Error("The character was not deleted.");
+      return deleteReply(`Deleted character "${access.row.name}".`, character_id);
     },
   );
 
@@ -929,15 +982,16 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "Add an entry to a character",
       description:
-        "Adds one trait, skill, technique or piece of equipment to a character sheet. Only the sheet's owner or their campaign's Game Master can do this.",
+        "Adds one trait, skill, technique or piece of equipment to a character sheet. Only the sheet's owner or their campaign's Game Master can do this. Without `sort_order` the entry is appended at the end.",
       inputSchema: z.object({
         character_id: uuid,
         kind: boundedText(40),
         name: boundedText(200),
-        category: z.string().max(120).optional(),
-        points: z.number().int().min(-10000).max(10000).optional(),
-        levels: z.number().int().min(0).max(1000).optional(),
-        notes: z.string().max(4000).optional(),
+        category: z.string().max(120).nullable().optional(),
+        points: intField(-10000, 10000).optional(),
+        levels: intField(0, 1000).optional(),
+        notes: z.string().max(4000).nullable().optional(),
+        sort_order: intField(0, 1000000).optional(),
       }),
       outputSchema: itemOutput,
       annotations: create,
@@ -945,16 +999,19 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     async (input) => {
       const access = await loadCharacter(ctx, input.character_id);
       requireCharacterWrite(access);
-      const { data: last, error: lastError } = await ctx.supabase
-        .from("character_entries")
-        .select("sort_order")
-        .eq("character_id", input.character_id)
-        .order("sort_order", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (lastError) fail("Reading the current entry order", lastError);
-      const currentMax = typeof last?.sort_order === "number" ? last.sort_order : null;
-      const sortOrder = currentMax === null ? 0 : currentMax + 1;
+      let sortOrder = input.sort_order;
+      if (sortOrder === undefined) {
+        const { data: last, error: lastError } = await ctx.supabase
+          .from("character_entries")
+          .select("sort_order")
+          .eq("character_id", input.character_id)
+          .order("sort_order", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (lastError) fail("Reading the current entry order", lastError);
+        const currentMax = typeof last?.sort_order === "number" ? last.sort_order : null;
+        sortOrder = currentMax === null ? 0 : currentMax + 1;
+      }
       const { data, error } = await ctx.supabase
         .from("character_entries")
         .insert({
@@ -967,12 +1024,57 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           ...(input.points === undefined ? {} : { points: input.points }),
           ...(input.levels === undefined ? {} : { levels: input.levels }),
         })
-        .select("id, character_id, kind, name, category, points, levels, sort_order")
+        .select("*")
         .single();
       if (error) fail("Adding the entry", error);
-      return reply(`Added "${data.name}" to "${access.row.name}" (entry_id: ${data.id}).`, {
-        item: data,
-      });
+      return detailReply(
+        `Added "${data.name}" to "${access.row.name}" (entry_id: ${data.id}).`,
+        data,
+      );
+    },
+  );
+
+  tool(
+    "update_character_entry",
+    {
+      title: "Update an entry on a character",
+      description:
+        "Changes one trait, skill, technique or piece of equipment on a character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged.",
+      inputSchema: z.object({
+        entry_id: uuid,
+        kind: boundedText(40).optional(),
+        name: boundedText(200).optional(),
+        category: z.string().max(120).nullable().optional(),
+        points: intField(-10000, 10000).optional(),
+        levels: intField(0, 1000).optional(),
+        notes: z.string().max(4000).nullable().optional(),
+        sort_order: intField(0, 1000000).optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: modify,
+    },
+    async ({ entry_id, ...patch }) => {
+      const { data: found, error: lookupError } = await ctx.supabase
+        .from("character_entries")
+        .select("id, name, character_id")
+        .eq("id", entry_id)
+        .maybeSingle();
+      if (lookupError) fail("Entry lookup", lookupError);
+      if (!found) throw new Error("Entry not found, or you do not have access to it.");
+
+      const access = await loadCharacter(ctx, found.character_id);
+      requireCharacterWrite(access);
+
+      const update = buildPatch(patch);
+      requirePatch(update);
+      const { data, error } = await ctx.supabase
+        .from("character_entries")
+        .update(update)
+        .eq("id", entry_id)
+        .select("*")
+        .single();
+      if (error) fail("Updating the entry", error);
+      return detailReply(`Updated "${data.name}" on "${access.row.name}" (${data.id}).`, data);
     },
   );
 
@@ -1005,12 +1107,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         .select("id");
       if (error) fail("Deleting the entry", error);
       if (!data || data.length === 0) throw new Error("The entry was not deleted.");
-      return reply(`Removed "${found.name}" from "${access.row.name}".`, {
-        deleted: true,
-        id: entry_id,
-      });
+      return deleteReply(`Removed "${found.name}" from "${access.row.name}".`, entry_id);
     },
   );
+
 
   return server;
 }

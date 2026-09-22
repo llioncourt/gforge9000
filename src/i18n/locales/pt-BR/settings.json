@@ -51,6 +51,16 @@
     "promptTitle": "Prompt de configuração",
     "promptDescription": "Copie um prompt pronto e cole no Claude para ele aprender como se conectar e o que pode fazer nas suas campanhas.",
     "copyPrompt": "Copiar prompt de configuração",
-    "copyPromptWithKey": "Copiar prompt com esta chave"
+    "copyPromptWithKey": "Copiar prompt com esta chave",
+    "webHint": "Usando o Claude na web? Adicione este endereço como conector personalizado em Configurações → Conectores e entre com sua conta quando pedido — sem precisar de chave.",
+    "consentMetaTitle": "Conectar assistente — Universal Character Forge",
+    "consentMetaDescription": "Permita que um assistente trabalhe nas suas campanhas como você.",
+    "consentTitle": "Conectar {{client}}?",
+    "consentUnknownClient": "um aplicativo assistente",
+    "consentDescription": "Ele agirá como você: pode ler suas campanhas e criar ou editar entradas do mundo e fichas de personagem nas campanhas que você mestra.",
+    "consentAllow": "Permitir",
+    "consentDeny": "Negar",
+    "consentInvalid": "Este pedido de conexão é inválido ou expirou. Comece de novo pelo seu assistente.",
+    "consentNote": "Você pode revogar o acesso quando quiser na página de Acesso do assistente."
   }
 }

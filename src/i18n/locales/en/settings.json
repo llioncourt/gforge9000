@@ -51,6 +51,16 @@
     "promptTitle": "Setup prompt",
     "promptDescription": "Copy a ready-made prompt and paste it into Claude so it learns how to connect and what it can do in your campaigns.",
     "copyPrompt": "Copy setup prompt",
-    "copyPromptWithKey": "Copy prompt with this key"
+    "copyPromptWithKey": "Copy prompt with this key",
+    "webHint": "Using Claude on the web? Add this address as a custom connector in Settings → Connectors and sign in with your account when asked — no key needed.",
+    "consentMetaTitle": "Connect assistant — Universal Character Forge",
+    "consentMetaDescription": "Allow an assistant to work in your campaigns as you.",
+    "consentTitle": "Connect {{client}}?",
+    "consentUnknownClient": "an assistant app",
+    "consentDescription": "It will act as you: it can read your campaigns and create or edit world entries and character sheets in campaigns you run as game master.",
+    "consentAllow": "Allow",
+    "consentDeny": "Deny",
+    "consentInvalid": "This connection request is invalid or expired. Start again from your assistant.",
+    "consentNote": "You can revoke access anytime on the Assistant access page."
   }
 }

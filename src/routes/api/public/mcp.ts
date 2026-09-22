@@ -77,7 +77,12 @@ async function handle(request: Request): Promise<Response> {
   if (method === "ping") return rpcResult(id, {});
 
   const userId = await resolveUser(request);
-  if (!userId) return rpcError(id, -32001, "Invalid or missing access key.", 401);
+  if (!userId) {
+    const origin = new URL(request.url).origin;
+    return rpcError(id, -32001, "Sign in or provide a valid access key.", 401, {
+      "WWW-Authenticate": `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"`,
+    });
+  }
 
   const { TOOLS, TOOL_MAP } = await import("@/lib/mcp/tools.server");
 

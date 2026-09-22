@@ -277,3 +277,102 @@ describe("get_character text content", () => {
     expect(result.content[0]!.text).toContain('"point_budget": 300');
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* entry count reporting and append ordering                           */
+/* ------------------------------------------------------------------ */
+
+const sheetRow = {
+  id: CHARACTER_ID,
+  name: "Brann Ashfall",
+  owner_id: USER,
+  campaign_id: CAMPAIGN,
+  is_npc: false,
+  is_template: false,
+  point_budget: 300,
+  tech_level: 4,
+};
+
+describe("get_character entry counts", () => {
+  const rows = [
+    { id: "e1", kind: "trait", name: "Dark Vision" },
+    { id: "e2", kind: "skill", name: "Stealth" },
+  ];
+
+  it("reports the full total when nothing was truncated", async () => {
+    const tools = serverWith(
+      {
+        characters: sheetRow,
+        campaigns: campaignRow,
+        character_entries: [{ __result: rows }, { __result: null, extra: { count: 2 } }],
+      },
+      USER,
+    );
+    const result = await tools["get_character"]!.handler({ character_id: CHARACTER_ID });
+    expect(result.content[0]!.text).toContain('Character "Brann Ashfall" with 2 entries.');
+  });
+
+  it("reports returned of total with a hint when truncated", async () => {
+    const tools = serverWith(
+      {
+        characters: sheetRow,
+        campaigns: campaignRow,
+        character_entries: [{ __result: rows }, { __result: null, extra: { count: 57 } }],
+      },
+      USER,
+    );
+    const result = await tools["get_character"]!.handler({
+      character_id: CHARACTER_ID,
+      entry_limit: 2,
+    });
+    expect(result.content[0]!.text).toContain(
+      'Character "Brann Ashfall" with 2 of 57 entries (more may exist — raise entry_limit).',
+    );
+  });
+});
+
+describe("add_character_entry", () => {
+  function addTools(lastSortOrder: unknown, spy: Spy) {
+    return serverWith(
+      {
+        characters: sheetRow,
+        campaigns: campaignRow,
+        character_entries: [
+          { __result: lastSortOrder },
+          {
+            __result: {
+              id: "44444444-4444-4444-8444-444444444444",
+              character_id: CHARACTER_ID,
+              kind: "skill",
+              name: "Stealth",
+            },
+          },
+        ],
+      },
+      USER,
+      spy,
+    );
+  }
+
+  const input = { character_id: CHARACTER_ID, kind: "skill", name: "Stealth" };
+
+  it("returns the created entry id in the text content", async () => {
+    const spy: Spy = {};
+    const result = await addTools(null, spy)["add_character_entry"]!.handler(input);
+    expect(result.content[0]!.text).toBe(
+      'Added "Stealth" to "Brann Ashfall" (entry_id: 44444444-4444-4444-8444-444444444444).',
+    );
+  });
+
+  it("uses sort_order 0 when the character has no entries", async () => {
+    const spy: Spy = {};
+    await addTools(null, spy)["add_character_entry"]!.handler(input);
+    expect((spy.inserted as Record<string, unknown>)["sort_order"]).toBe(0);
+  });
+
+  it("appends with max + 1 when entries already exist", async () => {
+    const spy: Spy = {};
+    await addTools({ sort_order: 7 }, spy)["add_character_entry"]!.handler(input);
+    expect((spy.inserted as Record<string, unknown>)["sort_order"]).toBe(8);
+  });
+});

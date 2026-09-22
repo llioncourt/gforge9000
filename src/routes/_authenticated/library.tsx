@@ -1,5 +1,5 @@
 import { createFileRoute, useLocation } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Pencil, Plus, Trash2, Upload, UserPlus } from "lucide-react";
 import { toast } from "sonner";
@@ -45,12 +45,14 @@ import {
   addEntry,
   createLibraryEntry,
   deleteLibraryEntry,
+  getLibraryEntries,
   importLibraryEntries,
   listCharacters,
   listCampaigns,
   listLibrary,
   updateLibraryEntry,
-  type LibraryRow,
+  withLibraryDetails,
+  type LibraryListRow,
 } from "@/lib/api";
 import {
   download,
@@ -126,7 +128,7 @@ const blankForm: LibraryForm = {
   visibility: "private",
 };
 
-function toForm(row: LibraryRow): LibraryForm {
+function toForm(row: LibraryListRow): LibraryForm {
   return {
     id: row.id,
     name: row.name,
@@ -152,14 +154,16 @@ function LibraryPage() {
   const { data, isLoading } = useQuery({ queryKey: ["library"], queryFn: listLibrary });
   const characters = useQuery({ queryKey: ["characters"], queryFn: listCharacters });
   const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: listCampaigns });
+  // What the user is typing, and the value the (expensive) filtering uses.
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [kindFilter, setKindFilter] = useState("all");
   const [packFilter, setPackFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<LibraryForm>(blankForm);
-  const [pendingDelete, setPendingDelete] = useState<LibraryRow | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<LibraryListRow | null>(null);
   const [foundLabel, setFoundLabel] = useState("");
-  const [addTarget, setAddTarget] = useState<LibraryRow | null>(null);
+  const [addTarget, setAddTarget] = useState<LibraryListRow | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const exportTask = useTransferTask();
   const location = useLocation();
@@ -168,10 +172,18 @@ function LibraryPage() {
     [location.searchStr],
   );
 
+  // Filtering a large catalogue on every keystroke stalls the page; apply the
+  // typed value once the user pauses briefly.
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSearch(searchInput), 150);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
   // Deep-link from global search: clear filters, scroll to the entry and flash it.
   useEffect(() => {
     const requestedId = itemParam;
     if (!requestedId) return;
+    setSearchInput("");
     setSearch("");
     setKindFilter("all");
     setPackFilter("all");
@@ -287,12 +299,20 @@ function LibraryPage() {
   };
 
   const addToCharacter = useMutation({
-    mutationFn: async ({ entry, characterId }: { entry: LibraryRow; characterId: string }) => {
+    mutationFn: async ({
+      entry,
+      characterId,
+    }: {
+      entry: LibraryListRow;
+      characterId: string;
+    }) => {
       const blocked = gateFor(characterId, entry.pack ?? null);
       if (blocked) throw new Error(blocked);
+      // The detail blob is not carried by the list; fetch it for this entry only.
+      const [full] = await getLibraryEntries([entry.id]);
       const draft = libraryEntryToCharacterDraft({
         ...entry,
-        data: (entry.data ?? {}) as Record<string, unknown>,
+        data: (full?.data ?? {}) as Record<string, unknown>,
       });
       return addEntry({ ...draft, character_id: characterId } as never);
     },
@@ -316,7 +336,40 @@ function LibraryPage() {
     }));
   }, [data, kindFilter, packFilter, search]);
 
-  const portable = toPortableLibrary((rows ?? []) as unknown as Record<string, unknown>[]);
+  // Export is the only consumer of the detail blob and of the serialised form,
+  // so both are produced when the user exports — never while typing.
+  const buildPortable = async () => {
+    const detailed = await withLibraryDetails(rows);
+    return toPortableLibrary(detailed as unknown as Record<string, unknown>[]);
+  };
+
+  // Cards are rendered in chunks so a large catalogue does not build tens of
+  // thousands of DOM nodes at once; scrolling reveals the next chunk.
+  const PAGE = 60;
+  const [visibleCount, setVisibleCount] = useState(PAGE);
+  useEffect(() => {
+    setVisibleCount(PAGE);
+  }, [search, kindFilter, packFilter, data]);
+  const visibleRows = useMemo(() => rows.slice(0, visibleCount), [rows, visibleCount]);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || visibleCount >= rows.length) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setVisibleCount((current) => Math.min(current + PAGE, rows.length));
+      }
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [visibleCount, rows.length]);
+
+  // A deep-linked entry may sit past the rendered chunk — reveal up to it.
+  useEffect(() => {
+    if (!itemParam) return;
+    const index = rows.findIndex((row) => row.id === itemParam);
+    if (index >= 0 && index >= visibleCount) setVisibleCount(index + 1);
+  }, [itemParam, rows, visibleCount]);
 
   return (
     <div>
@@ -337,6 +390,7 @@ function LibraryPage() {
               onClick={() =>
                 void exportTask.run(t("export.task"), async (report) => {
                   report(t("export.building"), 40);
+                  const portable = await buildPortable();
                   const contents = JSON.stringify(portable, null, 2);
                   report(t("export.downloading"), 85);
                   download("ucf-library.json", contents);
@@ -352,6 +406,7 @@ function LibraryPage() {
               onClick={() =>
                 void exportTask.run(t("export.taskCsv"), async (report) => {
                   report(t("export.building"), 40);
+                  const portable = await buildPortable();
                   const contents = libraryToCsv(portable.entries);
                   report(t("export.downloading"), 85);
                   download("ucf-library.csv", contents, "text/csv");
@@ -378,8 +433,8 @@ function LibraryPage() {
           <Input
             className="max-w-xs"
             placeholder={t("filters.searchPlaceholder")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
           <Select value={kindFilter} onValueChange={setKindFilter}>
             <SelectTrigger className="w-40">
@@ -425,7 +480,7 @@ function LibraryPage() {
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {rows.map((e) => {
+          {visibleRows.map((e) => {
             const mine = e.owner_id === user?.id;
             return (
               <div
@@ -494,6 +549,7 @@ function LibraryPage() {
               </div>
             );
           })}
+          <div ref={sentinelRef} aria-hidden className="h-1 w-full" />
         </div>
       )}
 

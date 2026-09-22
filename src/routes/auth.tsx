@@ -219,10 +219,10 @@ function AuthPage() {
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={busy}
+                    disabled={busy || !ready}
                     aria-label={t("form.actions.createAccount")}
                   >
-                    {busy ? (
+                    {busy || !ready ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       t("form.actions.createAccount")

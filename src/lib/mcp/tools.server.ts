@@ -272,11 +272,13 @@ async function assertParentIsSafe(
   const seen = new Set<string>([entryId]);
   let cursor: string | null = parentId;
   for (let depth = 0; depth < MAX_PARENT_DEPTH && cursor; depth += 1) {
+    const currentId: string = cursor;
     const { data, error } = await ctx.supabase
       .from("entities")
       .select("id, campaign_id, parent_id")
-      .eq("id", cursor)
+      .eq("id", currentId)
       .maybeSingle();
+
     if (error) fail("Parent lookup", error);
     if (!data) throw new Error("Parent entry not found, or you do not have access to it.");
     if (data.campaign_id !== campaignId) {

@@ -974,60 +974,24 @@ describe("uploads.server: decodeBase64File", () => {
   });
 });
 
-describe("uploads.server: fetchRemoteFile", () => {
+describe("uploads.server: downloading from a web address is off", () => {
   const originalFetch = global.fetch;
   afterEach(() => {
     global.fetch = originalFetch;
   });
 
-  it("rejects a non-https source before ever calling fetch", async () => {
+  // The runtime cannot prove that a hostname resolves only to public addresses
+  // and cannot pin the connection to a verified address, so the feature is
+  // refused outright rather than shipped with partial protection.
+  it("refuses every call without touching the network", async () => {
     const fetchSpy = vi.fn();
     global.fetch = fetchSpy as unknown as typeof fetch;
     await expect(
-      fetchRemoteFile("http://example.com/file.png", { maxBytes: 1000, allowedMime: ["image/png"] }),
-    ).rejects.toThrow(/Only https addresses are accepted/);
-    expect(fetchSpy).not.toHaveBeenCalled();
-  });
-
-  it("rejects a disallowed MIME type reported by the remote server", async () => {
-    global.fetch = vi.fn(async () =>
-      new Response(new Uint8Array([1, 2, 3]), {
-        status: 200,
-        headers: { "content-type": "application/x-executable" },
-      }),
-    ) as unknown as typeof fetch;
-    await expect(
-      fetchRemoteFile("https://example.com/file.exe", { maxBytes: 1000, allowedMime: ["image/png"] }),
-    ).rejects.toThrow(/Unsupported file type/);
-  });
-
-  it("rejects a payload larger than the declared size cap", async () => {
-    const bytes = new Uint8Array(2000);
-    global.fetch = vi.fn(async () =>
-      new Response(bytes, {
-        status: 200,
-        headers: { "content-type": "image/png", "content-length": String(bytes.byteLength) },
-      }),
-    ) as unknown as typeof fetch;
-    await expect(
       fetchRemoteFile("https://example.com/file.png", { maxBytes: 1000, allowedMime: ["image/png"] }),
-    ).rejects.toThrow(/too large/);
-  });
-
-  it("accepts an allowed https fixture via a mocked fetch", async () => {
-    const bytes = new Uint8Array([1, 2, 3, 4]);
-    global.fetch = vi.fn(async () =>
-      new Response(bytes, {
-        status: 200,
-        headers: { "content-type": "image/png", "content-length": String(bytes.byteLength) },
-      }),
-    ) as unknown as typeof fetch;
-    const file = await fetchRemoteFile("https://example.com/file.png", {
-      maxBytes: 1000,
-      allowedMime: ["image/png"],
-    });
-    expect(file.mime).toBe("image/png");
-    expect(file.size).toBe(4);
-    expect([...file.bytes]).toEqual([1, 2, 3, 4]);
+    ).rejects.toThrow();
+    await expect(
+      fetchRemoteFile("http://example.com/file.png", { maxBytes: 1000, allowedMime: ["image/png"] }),
+    ).rejects.toThrow();
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 });

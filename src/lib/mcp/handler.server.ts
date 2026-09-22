@@ -42,6 +42,23 @@ const protectedHandler = withSupabase<Database>({ auth: "user" }, async (request
   }
 });
 
+/**
+ * Point the 401 challenge at the RFC 9728 path-aware location we actually
+ * serve. The outer middleware leaves an existing header alone.
+ */
+async function challengeAwareHandler(request: Request): Promise<Response> {
+  const response = await protectedHandler(request);
+  if (response.status !== 401 || response.headers.has("www-authenticate")) return response;
+  const metadataUrl = new URL(MCP_RESOURCE_METADATA_PATH, request.url).toString();
+  const headers = new Headers(response.headers);
+  headers.set("www-authenticate", `Bearer resource_metadata="${metadataUrl}"`);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 let composed: ((request: Request) => Promise<Response>) | undefined;
 
 /** Entry point used by the public route. */
@@ -52,7 +69,7 @@ export function handleMcpRequest(request: Request): Promise<Response> {
         resourceServer: (req: Request) => new URL(MCP_ENDPOINT_PATH, req.url).toString(),
         authorizationServer: authorizationServerUrl(),
       },
-      protectedHandler,
+      challengeAwareHandler,
     );
   }
   return composed(request);

@@ -33,7 +33,7 @@ describe("character import ordering", () => {
   it("numbers the imported entries in file order starting at zero", async () => {
     const captured: { entries?: ImportedEntry[] } = {};
     await runCharacterImport(file, deps(captured));
-    expect(captured.entries?.map((e) => [e.name, e.sort_order])).toEqual([
+    expect(captured.entries?.map((e) => [e.name, e["sort_order"]])).toEqual([
       ["Dark Vision", 0],
       ["Stealth", 1],
       ["Brawling", 2],
@@ -50,6 +50,6 @@ describe("character import ordering", () => {
       ],
     } as unknown as PortableCharacter;
     await runCharacterImport(messy, deps(captured));
-    expect(captured.entries?.map((e) => e.sort_order)).toEqual([0, 1]);
+    expect(captured.entries?.map((e) => e["sort_order"])).toEqual([0, 1]);
   });
 });

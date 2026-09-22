@@ -263,6 +263,9 @@ export const DEFINITION_FIELDS = [
   "category",
   "attribute",
   "difficulty",
+  "defaults",
+  "defaultPenalty",
+  "baseSkill",
   "base_points",
   "cost_per_level",
   "max_levels",
@@ -292,7 +295,8 @@ export interface CharacterEntryLike {
  *
  * Mirrors the existing import rule in `applyCatalogue` (src/lib/trait-match.ts):
  * base cost covers the first level, each further level adds `cost_per_level`.
- * Not a new formula — the same one the app already applies when importing.
+ * Kept for the import path only — the pack-link pricing check deliberately
+ * does NOT use it (see `packLeveledCost`).
  */
 export function expectedLeveledCost(
   basePoints: number,
@@ -303,6 +307,22 @@ export function expectedLeveledCost(
   return costPerLevel ? basePoints + costPerLevel * (lv - 1) : basePoints;
 }
 
+/**
+ * Cost a leveled pack trait should carry, for the PACK-LINK check only.
+ *
+ * A per-level pack row prices every level, including the first: most real
+ * rows carry `base_points = 0` with `cost_per_level = 5`, so charging the base
+ * cost once and only then adding per-level cost would mis-price them. Two
+ * levels of a 5/level trait therefore cost 10, not 5.
+ *
+ * Deliberately separate from `expectedLeveledCost`: the import path keeps its
+ * own historical behaviour and this contract stays stable.
+ */
+export function packLeveledCost(costPerLevel: number, levels: number): number {
+  const lv = Math.max(1, Number(levels) || 1);
+  return Number(costPerLevel) * lv;
+}
+
 /** Pricing check for leveled traits; null when the pack has no per-level cost. */
 export function leveledPricing(
   entry: CharacterEntryLike,
@@ -311,7 +331,7 @@ export function leveledPricing(
   if (isSkillLike(entry.kind) || entry.kind === "equipment") return null;
   const costPerLevel = Number(item.cost_per_level ?? 0);
   if (!costPerLevel) return null;
-  const expected = expectedLeveledCost(Number(item.base_points ?? 0), costPerLevel, entry.levels);
+  const expected = packLeveledCost(costPerLevel, entry.levels);
   const actual = Number(entry.points ?? 0);
   return { expected, actual, consistent: expected === actual };
 }

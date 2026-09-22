@@ -788,7 +788,7 @@ describe("library", () => {
 
     it("accepts the canonical query field and returns the full candidate view", async () => {
       const tools = serverWith(
-        { library_entries: [candidateEntry], content_packs: packRow },
+        { library_entries: [candidateEntry], content_packs: [packRow] },
         OWNER,
       );
       const result = await tools["library"]!.handler({
@@ -824,7 +824,7 @@ describe("library", () => {
 
     it("still accepts the deprecated name alias", async () => {
       const tools = serverWith(
-        { library_entries: [candidateEntry], content_packs: packRow },
+        { library_entries: [candidateEntry], content_packs: [packRow] },
         OWNER,
       );
       const result = await tools["library"]!.handler({
@@ -836,7 +836,7 @@ describe("library", () => {
     });
 
     it("rejects a call with neither query nor name", async () => {
-      const tools = serverWith({ library_entries: [candidateEntry], content_packs: packRow }, OWNER);
+      const tools = serverWith({ library_entries: [candidateEntry], content_packs: [packRow] }, OWNER);
       await expectFailure(
         tools["library"]!.handler({ action: "search_pack_entries" }),
         /needs a query/,

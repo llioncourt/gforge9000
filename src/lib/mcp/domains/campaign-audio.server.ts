@@ -733,41 +733,13 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
         return detailReply("Upload target prepared for a track.", { ...prepared });
       },
 
-      upload_track_from_url: async (i) => {
-        const album = await loadAlbum(ctx, i.album_id);
-        const campaign = await loadCampaign(ctx, album.campaign_id);
-        requireGmFor(campaign, "upload a track");
-        const file = await fetchRemoteFile(i.url, {
-          maxBytes: CAMPAIGN_SOUNDTRACK_TRACK_MAX_BYTES,
-          allowedMime: SOUNDTRACK_TRACK_MIME_TYPES,
-        });
-        const path = storagePathFor(
-          `${ctx.userId}/${album.campaign_id}/${i.album_id}/tracks`,
-          i.file_name ?? i.url,
+      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
+      // resolve+pin SSRF protection is not achievable on this runtime.
+      upload_track_from_url: async () => {
+        throw new Error(
+          "Downloading files from a web address is turned off for security reasons. " +
+            "Use prepare_track_upload instead, or send small tracks directly with upload_track_base64.",
         );
-        await uploadBytes(ctx.supabase, CAMPAIGN_SOUNDTRACK_BUCKET, path, file);
-        const { data, error } = await ctx.supabase
-          .from("campaign_soundtrack_tracks")
-          .insert({
-            campaign_id: album.campaign_id,
-            album_id: i.album_id,
-            storage_path: path,
-            file_name: i.file_name ?? i.url,
-            byte_size: file.size,
-            mime_type: file.mime,
-            title: i.title,
-            position: i.position,
-            composer: i.composer ?? null,
-            duration_seconds: i.duration_seconds ?? null,
-            lyrics: i.lyrics ?? null,
-          })
-          .select("*")
-          .single();
-        if (error) {
-          await removeStoredObject(ctx.supabase, CAMPAIGN_SOUNDTRACK_BUCKET, path);
-          fail("Adding track", error);
-        }
-        return detailReply(`Track "${i.title}" uploaded and added to "${album["title"]}".`, data);
       },
 
       upload_track_base64: async (i) => {
@@ -988,46 +960,13 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
         return detailReply("Upload target prepared for a sound effect.", { ...prepared });
       },
 
-      upload_effect_from_url: async (i) => {
-        const campaign = await loadCampaign(ctx, i.campaign_id);
-        requireGmFor(campaign, "upload a sound effect");
-        const file = await fetchRemoteFile(i.url, {
-          maxBytes: CAMPAIGN_SOUND_FX_MAX_BYTES,
-          allowedMime: SOUND_FX_MIME_TYPES,
-        });
-        const path = storagePathFor(`${ctx.userId}/${i.campaign_id}`, i.url);
-        await uploadBytes(ctx.supabase, CAMPAIGN_SOUND_FX_BUCKET, path, file);
-        const { data: last, error: lastError } = await ctx.supabase
-          .from("campaign_sound_fx")
-          .select("sort_order")
-          .eq("campaign_id", i.campaign_id)
-          .order("sort_order", { ascending: false })
-          .limit(1);
-        if (lastError) {
-          await removeStoredObject(ctx.supabase, CAMPAIGN_SOUND_FX_BUCKET, path);
-          fail("Reading sort order", lastError);
-        }
-        const nextSort = (last?.[0]?.sort_order ?? -1) + 1;
-        const { data, error } = await ctx.supabase
-          .from("campaign_sound_fx")
-          .insert({
-            campaign_id: i.campaign_id,
-            title: i.title,
-            storage_path: path,
-            file_name: i.url.split("/").pop() ?? "sound-effect",
-            byte_size: file.size,
-            mime_type: file.mime,
-            created_by: ctx.userId,
-            sort_order: nextSort,
-            visible_to_players: i.visible_to_players ?? true,
-          })
-          .select("*")
-          .single();
-        if (error) {
-          await removeStoredObject(ctx.supabase, CAMPAIGN_SOUND_FX_BUCKET, path);
-          fail("Creating sound effect", error);
-        }
-        return detailReply(`Sound effect "${i.title}" uploaded and created.`, data);
+      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
+      // resolve+pin SSRF protection is not achievable on this runtime.
+      upload_effect_from_url: async () => {
+        throw new Error(
+          "Downloading files from a web address is turned off for security reasons. " +
+            "Use prepare_effect_upload instead, or send small effects directly with upload_effect_base64.",
+        );
       },
 
       upload_effect_base64: async (i) => {

@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 import type { CharacterEntry } from "@/rules";
 import { type PackLinkState, type PackLinkStatus, type StaleReason } from "@/lib/pack-link";
@@ -93,12 +94,24 @@ export function invalidatePackLinkQueries(
   void queryClient.invalidateQueries({ queryKey: ["pack-link-summary"] });
 }
 
-/** Derived state for every entry on the sheet; nothing is stored. */
-export function usePackLinkStatuses(entries: CharacterEntry[], campaignSettings: unknown) {
+/**
+ * Derived state for every entry on the sheet; nothing is stored.
+ *
+ * The signed-in user's id is passed to the shared derivation so a link whose
+ * pack the user owns can honestly report "removed"; for someone else's pack
+ * the derivation stays conservative and reports "inaccessible".
+ */
+export function usePackLinkStatuses(
+  entries: CharacterEntry[],
+  campaignSettings: unknown,
+  callerUserId?: string | null,
+) {
+  const { user } = useSession();
+  const userId = callerUserId ?? user?.id ?? null;
   const key = entries.map((entry) => `${entry.id}:${entryStatusFingerprint(entry)}`).join("|");
   return useQuery({
-    queryKey: ["pack-link-status", key, JSON.stringify(campaignSettings ?? null)],
-    queryFn: () => deriveStatuses(supabase, entries.map(asRow), campaignSettings),
+    queryKey: ["pack-link-status", key, JSON.stringify(campaignSettings ?? null), userId],
+    queryFn: () => deriveStatuses(supabase, entries.map(asRow), campaignSettings, userId),
     enabled: entries.length > 0,
     staleTime: 30_000,
   });
@@ -538,9 +551,11 @@ export function BulkLinkDialog({
 /** Game Master overview: per-character counts for the whole campaign. */
 export function CampaignPackSummary({ campaignId }: { campaignId: string }) {
   const { t } = useT("characters");
+  const { user } = useSession();
+  const userId = user?.id ?? null;
   const summary = useQuery({
-    queryKey: ["pack-link-summary", campaignId],
-    queryFn: () => summarizeCampaign(supabase, campaignId),
+    queryKey: ["pack-link-summary", campaignId, userId],
+    queryFn: () => summarizeCampaign(supabase, campaignId, userId),
   });
   const rows = summary.data ?? [];
   if (rows.length === 0) return null;

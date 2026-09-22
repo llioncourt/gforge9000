@@ -33,6 +33,9 @@ import {
 import { campaignPackageImportKey, packageChildImportKey } from "@/lib/import-identity";
 import { normalizeVisibility } from "@/lib/visibility";
 import { parsePortable } from "@/lib/portable";
+import { allowedPacksOf } from "@/lib/packs";
+import { reconcileEntriesWithClient } from "@/lib/trait-reconcile-core";
+import type { ImportedEntry } from "@/lib/trait-match";
 import { soundtrackAudioMime } from "@/lib/campaign-soundtrack-pack";
 
 // Source of truth for bucket names: the browser lib modules named above.
@@ -298,11 +301,17 @@ export async function importCampaignPackageCore(
         characterIds.set(entry.key, characterId);
 
         if (portable.entries.length) {
-          // No AI trait-reconciliation server-side (best-effort only in the
-          // browser importer too — see module comment); entries are written
-          // exactly as authored, which is also the browser importer's own
-          // fallback when the library catalogue is unavailable.
-          const rows = portable.entries.map((item, index) => ({
+          // Same canonicalisation the browser importer performs (minus its
+          // best-effort AI pass for translated names, which needs a browser
+          // session): entries are matched against the library the caller can
+          // actually use, and their provenance — including any content-pack
+          // link — is written through untouched.
+          const reconciled = await reconcileEntriesWithClient(
+            supabase,
+            portable.entries as unknown as ImportedEntry[],
+            allowedPacksOf(settings),
+          );
+          const rows = reconciled.entries.map((item, index) => ({
             character_id: characterId,
             kind: item.kind,
             name: item.name,
@@ -311,7 +320,7 @@ export async function importCampaignPackageCore(
             levels: item.levels,
             data: (item.data ?? {}) as never,
             notes: item.notes ?? null,
-            source: {} as never,
+            source: (item.source ?? {}) as never,
             sort_order: (item as { sort_order?: number }).sort_order ?? index,
           }));
           const entriesResult = await supabase.from("character_entries").insert(rows as never);

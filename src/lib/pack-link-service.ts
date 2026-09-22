@@ -369,6 +369,7 @@ export interface CharacterPackSummary {
 export async function summarizeCampaign(
   client: SupabaseClient<Database>,
   campaignId: string,
+  callerUserId?: string | null | undefined,
 ): Promise<CharacterPackSummary[]> {
   const { data: characters, error } = await client
     .from("characters")
@@ -387,7 +388,7 @@ export async function summarizeCampaign(
 
   const settings = await loadCampaignSettings(client, campaignId);
   const rows = (entries ?? []) as unknown as EntryRowLike[];
-  const statuses = await deriveStatuses(client, rows, settings);
+  const statuses = await deriveStatuses(client, rows, settings, callerUserId);
 
   return (characters ?? []).map((character) => {
     const summary: CharacterPackSummary = {

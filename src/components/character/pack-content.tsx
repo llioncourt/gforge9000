@@ -110,7 +110,8 @@ export function PackPickerDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   kinds: string[];
-  packs: string[];
+  /** `null` means every pack the user can see is offered. */
+  packs: string[] | null;
   onAdd: (entry: LibraryListRow) => void;
   pending?: boolean;
 }) {
@@ -121,9 +122,12 @@ export function PackPickerDialog({
   const [descFor, setDescFor] = useState<LibraryListRow | null>(null);
 
   const rows = useMemo(() => {
-    const linked = packs.map((p) => p.toLowerCase());
+    const linked = packs?.map((p) => p.toLowerCase()) ?? null;
     const base = (library.data ?? []).filter(
-      (e) => kinds.includes(e.kind) && !!e.pack && linked.includes(e.pack.toLowerCase()),
+      (e) =>
+        kinds.includes(e.kind) &&
+        !!e.pack &&
+        (linked === null || linked.includes(e.pack.toLowerCase())),
     );
     return rankSearch(search, base, (e) => ({
       name: e.name,
@@ -148,9 +152,14 @@ export function PackPickerDialog({
         <DialogHeader>
           <DialogTitle>{t("sheet.pack.pickerTitle")}</DialogTitle>
           <DialogDescription>
-            {packs.length === 0
-              ? t("sheet.pack.noPacksLinked")
-              : t("sheet.pack.showingKinds", { kinds: kinds.join(", "), packs: packs.join(", ") })}
+            {packs === null
+              ? t("sheet.pack.showingAllKinds", { kinds: kinds.join(", ") })
+              : packs.length === 0
+                ? t("sheet.pack.noPacksLinked")
+                : t("sheet.pack.showingKinds", {
+                    kinds: kinds.join(", "),
+                    packs: packs.join(", "),
+                  })}
           </DialogDescription>
         </DialogHeader>
 

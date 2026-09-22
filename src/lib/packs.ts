@@ -27,6 +27,40 @@ export function packGateReason(pack: string | null | undefined, allowed: string[
   return `Pack “${(pack ?? "").trim()}” is not enabled for this campaign.`;
 }
 
+/**
+ * Which packs the "add from pack" picker may offer.
+ *
+ * - No campaign: the packs the character itself is linked to (unchanged).
+ * - Campaign with an empty allow list: `null`, meaning every pack the caller
+ *   can already see is offered — the player does not have to link them by hand.
+ * - Campaign with a whitelist: exactly that whitelist. Packs linked on the
+ *   character can never re-introduce a pack the campaign does not allow.
+ */
+export function pickerPacks(
+  characterPacks: string[],
+  campaignSettings: unknown,
+  inCampaign: boolean,
+): string[] | null {
+  const dedupe = (names: string[]): string[] => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const name of names) {
+      const key = name.trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(name);
+    }
+    return out;
+  };
+  if (!inCampaign) return dedupe(characterPacks);
+  const allowed = allowedPacksOf(campaignSettings);
+  if (allowed.length === 0) return null;
+  return dedupe([
+    ...allowed,
+    ...characterPacks.filter((pack) => isPackAllowed(pack, allowed) && pack.trim()),
+  ]);
+}
+
 /* ---------- pack grouping ---------- */
 
 /** Every library entry belongs to a pack; entries without one land here. */

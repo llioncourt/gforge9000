@@ -487,6 +487,7 @@
       "pickerTitle": "Adicionar de pacotes",
       "noPacksLinked": "Este personagem ainda não está vinculado a nenhum pacote. Vincule um na aba Atributos.",
       "showingKinds": "Mostrando {{kinds}} de: {{packs}}.",
+      "showingAllKinds": "Mostrando {{kinds}} de todos os pacotes disponíveis.",
       "searchPlaceholder": "Buscar…",
       "nothingAvailable": "Nada disponível aqui.",
       "descriptionAria": "Descrição de {{name}}",

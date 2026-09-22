@@ -221,6 +221,12 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
           <DropdownMenuItem onSelect={() => setOpen(true)}>
             <UserRound className="mr-2 size-4" /> {t("account.profile")}
           </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/assistant">
+              <KeyRound className="mr-2 size-4" /> {ts("assistant.title")}
+            </Link>
+          </DropdownMenuItem>
+
           <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm">
             <span>{t("profile.lightTheme")}</span>
             <Switch

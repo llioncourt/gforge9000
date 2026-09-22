@@ -17,7 +17,7 @@ import {
   type EntryRowLike,
 } from "@/lib/pack-link-service";
 import {
-  expectedLeveledCost,
+  packLeveledCost,
   isSkillLike,
   withPackLink,
   withoutPackLink,

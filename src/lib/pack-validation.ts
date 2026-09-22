@@ -77,6 +77,7 @@ export interface CharacterValidation {
     disadvantages: number;
     quirks: number;
   };
+  /** The ORDINARY campaign settings limits — not the house-rule engine numbers. */
   campaign_limits: {
     point_limit: number | null;
     disadvantage_limit: number | null;
@@ -87,6 +88,13 @@ export interface CharacterValidation {
     /** True when the campaign overrides any engine number. */
     active: boolean;
     changed_paths: string[];
+    /** The engine's effective limits after house rules; informational only. */
+    effective_limits: {
+      point_limit: number | null;
+      disadvantage_limit: number | null;
+      quirk_limit: number | null;
+      tech_level: number | null;
+    };
     note: string;
   };
   pack_states: ReturnType<typeof countStates>;
@@ -106,6 +114,13 @@ export interface ValidationInput {
   statuses: Map<string, PackLinkStatus>;
   /** Pack definition of each linked entry, keyed by entry id, when resolved. */
   packItems?: Map<string, PackItemLike>;
+  /**
+   * The campaign's own `settings` object. Its `point_limit`,
+   * `disadvantage_limit`, `quirk_limit` and `tech_level` are the constraints a
+   * character is actually judged against — deliberately separate from
+   * `ruleset`, which carries house-rule engine overrides.
+   */
+  campaignSettings?: unknown;
   ruleset?: Ruleset;
 }
 
@@ -113,6 +128,15 @@ function statedLevelOf(entry: CharacterEntry): number | null {
   const raw = (entry.data ?? {})["level"];
   if (raw === undefined || raw === null || !Number.isFinite(Number(raw))) return null;
   return Number(raw);
+}
+
+/** Reads one numeric campaign setting; absent or unusable values mean "no limit". */
+function settingNumber(settings: unknown, key: string): number | null {
+  if (!settings || typeof settings !== "object") return null;
+  const raw = (settings as Record<string, unknown>)[key];
+  if (raw === null || raw === undefined || raw === "") return null;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : null;
 }
 
 export function validateCharacter(input: ValidationInput): CharacterValidation {

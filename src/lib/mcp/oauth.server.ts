@@ -44,16 +44,10 @@ export function oauthError(error: string, description: string, status = 400): Re
   return jsonResponse({ error, error_description: description }, status);
 }
 
-type Db = {
-  from: (table: string) => never;
-};
-
 async function adminDb() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- tables added after types were generated
-  return supabaseAdmin as any as {
-    from: (table: string) => any;
-  } & Db;
+  return supabaseAdmin as any;
 }
 
 /** Resolve the user behind a Bearer token: personal key (ucf_) or OAuth access token (mcpo_). */

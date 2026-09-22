@@ -172,6 +172,14 @@ function LibraryPage() {
     [location.searchStr],
   );
 
+  // Filtering a large catalogue on every keystroke stalls the page; apply the
+  // typed value once the user pauses briefly.
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSearch(searchInput), 150);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+
   // Deep-link from global search: clear filters, scroll to the entry and flash it.
   useEffect(() => {
     const requestedId = itemParam;

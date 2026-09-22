@@ -18,8 +18,6 @@ import type { Client } from "@/lib/mcp/kit.server";
 /** Base64 intake is deliberately capped far below the storage limits. */
 export const MAX_BASE64_BYTES = 8 * 1024 * 1024;
 
-/** Longest redirect chain we will follow when fetching a remote source. */
-const MAX_REDIRECTS = 3;
 
 /** Signed URLs handed to an assistant are intentionally short-lived. */
 export const SIGNED_URL_SECONDS = 600;
@@ -106,44 +104,42 @@ function assertMime(mime: string, allowed: readonly string[]): void {
 }
 
 /**
- * Downloads a remote file with the size limit enforced while reading, so a
- * dishonest `Content-Length` cannot be used to slip a large file through.
+ * TD-002: `upload_from_url` is disabled everywhere. Do not re-enable it
+ * without a genuine resolve-and-pin fetch.
+ *
+ * Why this cannot be made SSRF-safe on this runtime: to be safe, the code
+ * must resolve the hostname, validate every returned address as public, and
+ * then guarantee the TCP connection actually goes to one of those validated
+ * addresses (otherwise a second, attacker-controlled DNS answer served
+ * between validation and connection — "DNS rebinding" — lets a hostname that
+ * looked public actually connect to a private/internal address). Cloudflare
+ * Workers (workerd) give us no primitive that does both parts safely:
+ *  - `node:dns` / `dns.promises.resolve4` are not implemented in workerd
+ *    (nodejs_compat does not include a real resolver), so there is no way to
+ *    even learn the candidate addresses ourselves.
+ *  - The platform `fetch()` takes a hostname and resolves + connects
+ *    internally; there is no option to pin it to a caller-chosen IP, so even
+ *    a DNS-over-HTTPS lookup we did ourselves could not be trusted to be the
+ *    address `fetch()` actually dials.
+ *  - `cloudflare:sockets` can open a raw TCP connection to a literal IP, but
+ *    TLS certificate validation is then checked against that IP, not the
+ *    original hostname, so it would either break certificate validation or
+ *    require disabling it — trading SSRF risk for MITM risk. Sending the
+ *    real hostname as SNI/Host while connecting to a pinned IP is not
+ *    something the available APIs let us do together with normal cert
+ *    checks.
+ * Since resolve+pin cannot be guaranteed here, per the approved spec this
+ * function refuses instead of shipping partial protection.
  */
 export async function fetchRemoteFile(
-  rawUrl: string,
-  options: { maxBytes: number; allowedMime: readonly string[] },
+  _rawUrl: string,
+  _options: { maxBytes: number; allowedMime: readonly string[] },
 ): Promise<FetchedFile> {
-  let url = assertPublicHttpsUrl(rawUrl);
-  let response: Response | null = null;
-
-  for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
-    response = await fetch(url, { redirect: "manual", headers: { accept: "*/*" } });
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get("location");
-      if (!location) throw new Error("The source address could not be followed.");
-      if (hop === MAX_REDIRECTS) throw new Error("The source address redirects too many times.");
-      url = assertPublicHttpsUrl(new URL(location, url).toString());
-      continue;
-    }
-    break;
-  }
-
-  if (!response || !response.ok) {
-    throw new Error(`The file could not be downloaded (${response?.status ?? "no response"}).`);
-  }
-
-  const mime =
-    (response.headers.get("content-type") ?? "").split(";")[0]?.trim().toLowerCase() ?? "";
-  assertMime(mime, options.allowedMime);
-
-  const declared = Number(response.headers.get("content-length") ?? "0");
-  if (declared > options.maxBytes) throw new Error("That file is too large.");
-
-  const buffer = new Uint8Array(await response.arrayBuffer());
-  if (buffer.byteLength > options.maxBytes) throw new Error("That file is too large.");
-  if (buffer.byteLength === 0) throw new Error("That file is empty.");
-
-  return { bytes: buffer, mime, size: buffer.byteLength };
+  throw new Error(
+    "Downloading files from a web address is turned off for security reasons. " +
+      "Use the signed upload target (prepare_upload / finalize_upload) instead, " +
+      "or send small files directly with the base64 upload option.",
+  );
 }
 
 /* ------------------------------------------------------------------ */

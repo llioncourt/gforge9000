@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns.index'
@@ -49,6 +50,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/assistant'
     | '/dashboard'
     | '/library'
     | '/campaigns/$id'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/assistant'
     | '/dashboard'
     | '/library'
     | '/campaigns/$id'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/_authenticated/assistant'
     | '/_authenticated/dashboard'
     | '/_authenticated/library'
     | '/_authenticated/campaigns/$id'
@@ -264,6 +276,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/assistant': {
+      id: '/_authenticated/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AuthenticatedAssistantRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -346,6 +365,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
@@ -358,6 +378,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,

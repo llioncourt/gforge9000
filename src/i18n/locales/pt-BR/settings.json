@@ -30,5 +30,23 @@
   "language": {
     "title": "Idioma",
     "description": "Escolha o idioma da interface."
+  },
+  "assistant": {
+    "metaTitle": "Acesso do assistente — Universal Character Forge",
+    "metaDescription": "Crie e revogue chaves que permitem a um assistente externo trabalhar nas suas campanhas.",
+    "title": "Acesso do assistente",
+    "description": "Dê ao Claude uma chave para ele ler suas campanhas e criar entradas por você. Ele age como você: trabalho de mestre apenas nas campanhas que você mestra.",
+    "addressTitle": "Endereço",
+    "addressHint": "Cole este endereço e sua chave no Claude ao adicionar uma nova conexão.",
+    "nameLabel": "Nome da chave",
+    "createKey": "Criar chave",
+    "empty": "Nenhuma chave ainda.",
+    "newKeyTitle": "Sua nova chave",
+    "newKeyDescription": "Copie agora — ela aparece só uma vez.",
+    "copied": "Copiado",
+    "revoke": "Revogar",
+    "revoked": "Chave revogada",
+    "revokeTitle": "Revogar esta chave?",
+    "revokeDescription": "Tudo que usa esta chave para de funcionar na hora. Você pode criar outra quando quiser."
   }
 }

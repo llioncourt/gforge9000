@@ -15,6 +15,7 @@ import {
   packVersionOf,
   readPackLink,
   restoreDefinitionPatch,
+  type RestoreWarning,
   specializationOf,
   withPackLink,
   withoutPackLink,
@@ -344,7 +345,11 @@ export async function restoreFromPack(
     data: patch.data,
     source: withPackLink(entry.source, refreshed),
   });
-  return { entry: updated, status: await statusOf(client, updated, campaignSettings) };
+  return {
+    entry: updated,
+    status: await statusOf(client, updated, campaignSettings),
+    warnings: patch.warnings,
+  };
 }
 
 /* ------------------------------------------------------------------ */

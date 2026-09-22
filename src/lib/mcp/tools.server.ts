@@ -75,13 +75,24 @@ function reply(text: string, structuredContent: Structured) {
   };
 }
 
-function listReply(label: string, items: Structured[], limit: number) {
-  const truncated = items.length >= limit;
-  const text = items.length
-    ? `${items.length} ${label}${truncated ? " (more may exist — raise `limit` or narrow the query)" : ""}:\n` +
-      items.map((row) => `- ${JSON.stringify(row)}`).join("\n")
-    : `No ${label} found.`;
-  return reply(text, { count: items.length, truncated, items });
+/**
+ * List response contract: a "showing N of M" summary line, a blank line, then
+ * the complete safe list as pretty JSON. `total` is an exact count taken with
+ * the very same visibility and filters as the listed rows, so `limit: 1` is a
+ * reliable way to count.
+ */
+function listReply(label: string, items: Structured[], total: number) {
+  const count = items.length;
+  const truncated = count < total;
+  const summary = `Showing ${count} of ${total} ${label}${
+    truncated ? " (more may exist — raise limit)" : ""
+  }.`;
+  return reply(`${summary}\n\n${JSON.stringify(items, null, 2)}`, {
+    count,
+    total,
+    truncated,
+    items,
+  });
 }
 
 /**
@@ -111,11 +122,56 @@ function requirePatch(update: Record<string, unknown>): void {
 const quarterStep = z
   .number()
   .refine((value) => Number.isFinite(value) && Number.isInteger(value * 4), {
-    message: "Must be a multiple of 0.25.",
+    message: "speed_delta must be a multiple of 0.25",
   });
 
-const intField = (min: number, max: number) => z.number().int().min(min).max(max);
-const strengthField = intField(-5, 5);
+/** Bounded integer with a message that names the field and its range. */
+const intField = (min: number, max: number, label?: string) => {
+  const error = label
+    ? `${label} must be an integer between ${min} and ${max}`
+    : `Must be an integer between ${min} and ${max}`;
+  return z
+    .number({ error })
+    .int({ error })
+    .min(min, { error })
+    .max(max, { error });
+};
+const strengthField = intField(-5, 5, "strength");
+
+/* ---------------- campaign settings ---------------- */
+
+/**
+ * The first-level campaign settings the app itself edits, each exposed as its
+ * own parameter. Omitted keeps the current value, a value replaces the whole
+ * setting, and `null` removes the key so the app falls back to its default.
+ */
+const campaignSettingFields = {
+  point_limit: intField(0, 100000, "point_limit").nullable().optional(),
+  disadvantage_limit: intField(-100000, 0, "disadvantage_limit").nullable().optional(),
+  tech_level: intField(0, 20, "tech_level").nullable().optional(),
+  house_rules: z.string().max(20000).nullable().optional(),
+  allowed_packs: z.array(z.string().max(120)).max(500).nullable().optional(),
+  cover_path: z.string().max(400).nullable().optional(),
+  ruleset_overrides: z.record(z.string(), z.unknown()).nullable().optional(),
+} as const;
+
+const CAMPAIGN_SETTING_KEYS = Object.keys(campaignSettingFields) as (keyof typeof campaignSettingFields)[];
+
+/**
+ * Builds the first-level settings patch sent to the atomic database helper:
+ * only keys the caller actually supplied, with explicit `null` preserved as a
+ * removal instruction. Nested values are passed through untouched.
+ */
+function campaignSettingsPatch(input: Record<string, unknown>): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
+  for (const key of CAMPAIGN_SETTING_KEYS) {
+    if (key in input && input[key] !== undefined) patch[key] = input[key] ?? null;
+  }
+  return patch;
+}
+
+const SETTINGS_DOC =
+  "Each campaign setting is an independent parameter: leave one out to keep its current value (or its normal default on a new campaign), send a value to replace that whole setting, or send null to remove it so the app falls back to its default. Objects and arrays are replaced wholesale, never merged.";
 
 interface CampaignAccess {
   id: string;

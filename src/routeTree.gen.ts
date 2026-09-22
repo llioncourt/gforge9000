@@ -14,6 +14,8 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as DotwellKnownOauthAuthorizationServerRouteImport } from './routes/[.]well-known/oauth-authorization-server'
+import { Route as DotwellKnownOauthProtectedResourceRouteImport } from './routes/[.]well-known/oauth-protected-resource'
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
@@ -55,6 +57,18 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotwellKnownOauthAuthorizationServerRoute =
+  DotwellKnownOauthAuthorizationServerRouteImport.update({
+    id: '/.well-known/oauth-authorization-server',
+    path: '/.well-known/oauth-authorization-server',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotwellKnownOauthProtectedResourceRoute =
+  DotwellKnownOauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
   id: '/assistant',
   path: '/assistant',
@@ -146,6 +160,8 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
+  '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRoute
   '/assistant': typeof AuthenticatedAssistantRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
@@ -168,6 +184,8 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
+  '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRoute
   '/assistant': typeof AuthenticatedAssistantRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
@@ -192,6 +210,8 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
+  '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRoute
   '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
@@ -216,6 +236,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/.well-known/oauth-authorization-server'
+    | '/.well-known/oauth-protected-resource'
     | '/assistant'
     | '/dashboard'
     | '/library'
@@ -238,6 +260,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/.well-known/oauth-authorization-server'
+    | '/.well-known/oauth-protected-resource'
     | '/assistant'
     | '/dashboard'
     | '/library'
@@ -261,6 +285,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/.well-known/oauth-authorization-server'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/assistant'
     | '/_authenticated/dashboard'
     | '/_authenticated/library'
@@ -285,6 +311,8 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   LegalRoute: typeof LegalRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  DotwellKnownOauthAuthorizationServerRoute: typeof DotwellKnownOauthAuthorizationServerRoute
+  DotwellKnownOauthProtectedResourceRoute: typeof DotwellKnownOauthProtectedResourceRoute
   ApiPublicMcpRoute: typeof ApiPublicMcpRoute
   ApiPublicVersionRoute: typeof ApiPublicVersionRoute
   ApiPublicOauthAuthorizeRoute: typeof ApiPublicOauthAuthorizeRoute
@@ -327,6 +355,20 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-authorization-server': {
+      id: '/.well-known/oauth-authorization-server'
+      path: '/.well-known/oauth-authorization-server'
+      fullPath: '/.well-known/oauth-authorization-server'
+      preLoaderRoute: typeof DotwellKnownOauthAuthorizationServerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof DotwellKnownOauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/assistant': {
@@ -481,6 +523,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   LegalRoute: LegalRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  DotwellKnownOauthAuthorizationServerRoute:
+    DotwellKnownOauthAuthorizationServerRoute,
+  DotwellKnownOauthProtectedResourceRoute:
+    DotwellKnownOauthProtectedResourceRoute,
   ApiPublicMcpRoute: ApiPublicMcpRoute,
   ApiPublicVersionRoute: ApiPublicVersionRoute,
   ApiPublicOauthAuthorizeRoute: ApiPublicOauthAuthorizeRoute,

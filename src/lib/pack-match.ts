@@ -18,6 +18,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { allowedPacksOf, isPackAllowed } from "@/lib/packs";
 import { normaliseName, rawQualifier } from "@/lib/trait-match";
 import { normalizeText } from "@/lib/text-normalize";
+import { rankSearch } from "@/lib/search";
+
 import { packVersionOf, type PackItemLike } from "@/lib/pack-link";
 
 export type PackClient = SupabaseClient<Database>;

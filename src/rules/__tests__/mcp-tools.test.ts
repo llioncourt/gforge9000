@@ -22,7 +22,61 @@ describe("assistant tool surface", () => {
       (server as unknown as { _registeredTools: Record<string, unknown> })._registeredTools,
     );
     expect(registered.sort()).toEqual([...MCP_TOOL_NAMES].sort());
-    expect(registered).toHaveLength(23);
+    expect(registered).toHaveLength(39);
+    expect(new Set(MCP_TOOL_NAMES).size).toBe(MCP_TOOL_NAMES.length);
+  });
+
+  it("keeps every original tool available", () => {
+    const original = [
+      "list_campaigns",
+      "get_campaign",
+      "create_campaign",
+      "update_campaign",
+      "delete_campaign",
+      "list_entry_types",
+      "list_entries",
+      "get_entry",
+      "create_entry",
+      "update_entry",
+      "delete_entry",
+      "list_relationships",
+      "create_relationship",
+      "update_relationship",
+      "delete_relationship",
+      "list_characters",
+      "get_character",
+      "create_character",
+      "update_character",
+      "delete_character",
+      "add_character_entry",
+      "update_character_entry",
+      "delete_character_entry",
+    ];
+    expect(original).toHaveLength(23);
+    for (const name of original) expect(MCP_TOOL_NAMES).toContain(name);
+  });
+
+  it("registers the sixteen domain tools", () => {
+    const domains = [
+      "campaign_members",
+      "campaign_knowledge",
+      "campaign_notifications",
+      "campaign_notes",
+      "session_chronicles",
+      "history",
+      "maps",
+      "dice",
+      "character_runtime",
+      "campaign_assets",
+      "campaign_audio",
+      "campaign_videos",
+      "character_portrait",
+      "library",
+      "campaign_package",
+      "adaptation",
+    ];
+    expect(domains).toHaveLength(16);
+    for (const name of domains) expect(MCP_TOOL_NAMES).toContain(name);
   });
 
   it("marks read tools read-only and delete tools destructive", () => {

@@ -13,50 +13,59 @@
 
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod/v4";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { KINDS } from "@/lib/entity-kinds";
 import { VISIBILITY_VALUES } from "@/lib/visibility";
+import {
+  CREATE,
+  DESTROY,
+  DEFAULT_LIMIT,
+  MCP_MAX_LIMIT,
+  MODIFY,
+  READ,
+  boundedText,
+  buildPatch,
+  characterView,
+  deleteOutput,
+  deleteReply,
+  detailReply,
+  fail,
+  intField,
+  itemOutput,
+  limitField,
+  listOutput,
+  listReply,
+  loadCampaign,
+  loadCharacter,
+  quarterStep,
+  registrar,
+  reply,
+  requireCharacterOwner,
+  requireCharacterWrite,
+  requireGm,
+  requirePatch,
+  safeRpc,
+  stripGmFields,
+  uuid,
+} from "@/lib/mcp/kit.server";
+import type {
+  CampaignAccess,
+  CharacterAccess,
+  McpToolContext,
+  Structured,
+} from "@/lib/mcp/kit.server";
+import { registerDomainTools, DOMAIN_TOOL_NAMES } from "@/lib/mcp/domains/index.server";
 
 export const MCP_SERVER_NAME = "universal-character-forge";
 export const MCP_SERVER_VERSION = "2.0.0";
 
-/** Hard ceiling on rows any single tool call may return. */
-export const MCP_MAX_LIMIT = 200;
-const DEFAULT_LIMIT = 50;
-
-type Client = SupabaseClient<Database>;
-
-export interface McpToolContext {
-  supabase: Client;
-  userId: string;
-}
+export { MCP_MAX_LIMIT } from "@/lib/mcp/kit.server";
+export type { McpToolContext } from "@/lib/mcp/kit.server";
 
 /* ------------------------------------------------------------------ */
 /* Shared helpers                                                      */
 /* ------------------------------------------------------------------ */
 
-function fail(operation: string, error: { message: string } | null): never {
-  throw new Error(`${operation} failed: ${error?.message ?? "unknown error"}`);
-}
-
-const uuid = z.string().uuid();
-const limitField = z
-  .number({ error: "limit must be an integer between 1 and 200" })
-  .int({ error: "limit must be an integer between 1 and 200" })
-  .min(1, { error: "limit must be an integer between 1 and 200" })
-  .max(MCP_MAX_LIMIT, { error: "limit must be an integer between 1 and 200" })
-  .optional();
-const boundedText = (max: number) => z.string().min(1).max(max);
-
-const listOutput = z.object({
-  count: z.number().int(),
-  total: z.number().int(),
-  truncated: z.boolean(),
-  items: z.array(z.record(z.string(), z.unknown())),
-});
-const itemOutput = z.object({ item: z.record(z.string(), z.unknown()) });
-const deleteOutput = z.object({ deleted: z.boolean(), id: z.string() });
 const deleteCampaignOutput = z.object({
   deleted: z.boolean(),
   id: z.string(),
@@ -66,72 +75,6 @@ const deleteCampaignOutput = z.object({
   characters_unlinked: z.number().int(),
 });
 
-type Structured = Record<string, unknown>;
-
-function reply(text: string, structuredContent: Structured) {
-  return {
-    content: [{ type: "text" as const, text }],
-    structuredContent,
-  };
-}
-
-/**
- * List response contract: a "showing N of M" summary line, a blank line, then
- * the complete safe list as pretty JSON. `total` is an exact count taken with
- * the very same visibility and filters as the listed rows, so `limit: 1` is a
- * reliable way to count.
- */
-function listReply(label: string, items: Structured[], total: number) {
-  const count = items.length;
-  const truncated = count < total;
-  const summary = `Showing ${count} of ${total} ${label}${
-    truncated ? " (more may exist — raise limit)" : ""
-  }.`;
-  return reply(`${summary}\n\n${JSON.stringify(items, null, 2)}`, {
-    count,
-    total,
-    truncated,
-    items,
-  });
-}
-
-/**
- * Single place enforcing the detail response contract: one summary line, a
- * blank line, then the complete safe object as pretty JSON — and the very same
- * object as structured content.
- */
-function detailReply(summary: string, item: Structured) {
-  return reply(`${summary}\n\n${JSON.stringify(item, null, 2)}`, { item });
-}
-
-function deleteReply(summary: string, id: string) {
-  const payload = { deleted: true, id };
-  return reply(`${summary}\n\n${JSON.stringify(payload, null, 2)}`, payload);
-}
-
-/** Drops keys the caller did not send; explicit `null` is kept (it clears). */
-function buildPatch<T extends Record<string, unknown>>(patch: T): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined));
-}
-
-function requirePatch(update: Record<string, unknown>): void {
-  if (Object.keys(update).length === 0) throw new Error("Nothing to update — no fields given.");
-}
-
-/** Deltas move in exact quarter steps. */
-const quarterStep = z
-  .number()
-  .refine((value) => Number.isFinite(value) && Number.isInteger(value * 4), {
-    message: "speed_delta must be a multiple of 0.25",
-  });
-
-/** Bounded integer with a message that names the field and its range. */
-const intField = (min: number, max: number, label?: string) => {
-  const error = label
-    ? `${label} must be an integer between ${min} and ${max}`
-    : `Must be an integer between ${min} and ${max}`;
-  return z.number({ error }).int({ error }).min(min, { error }).max(max, { error });
-};
 const strengthField = intField(-5, 5, "strength");
 
 /* ---------------- campaign settings ---------------- */
@@ -171,52 +114,9 @@ function campaignSettingsPatch(input: Record<string, unknown>): Record<string, u
 const SETTINGS_DOC =
   "Each campaign setting is an independent parameter: leave one out to keep its current value (or its normal default on a new campaign), send a value to replace that whole setting, or send null to remove it so the app falls back to its default. Objects and arrays are replaced wholesale, never merged.";
 
-interface CampaignAccess {
-  id: string;
-  name: string;
-  gmId: string;
-  isGm: boolean;
-}
-
-async function loadCampaign(ctx: McpToolContext, campaignId: string): Promise<CampaignAccess> {
-  const { data, error } = await ctx.supabase
-    .from("campaigns")
-    .select("id, name, gm_id")
-    .eq("id", campaignId)
-    .maybeSingle();
-  if (error) fail("Campaign lookup", error);
-  if (!data) throw new Error("Campaign not found, or you do not have access to it.");
-  return { id: data.id, name: data.name, gmId: data.gm_id, isGm: data.gm_id === ctx.userId };
-}
-
-function requireGm(campaign: CampaignAccess): void {
-  if (!campaign.isGm) {
-    throw new Error(`Only the Game Master of "${campaign.name}" can change its world entries.`);
-  }
-}
-
 /** GM-only columns that must never reach a non-GM caller. */
 const GM_ONLY_ENTITY_FIELDS = ["gm_notes"] as const;
 const GM_ONLY_RELATIONSHIP_FIELDS = ["gm_description"] as const;
-
-function stripGmFields<T extends Record<string, unknown>>(
-  row: T,
-  isGm: boolean,
-  fields: readonly string[],
-): Record<string, unknown> {
-  if (isGm) return { ...row };
-  const out: Record<string, unknown> = { ...row };
-  for (const field of fields) delete out[field];
-  return out;
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any -- the safe-list RPCs are
-   security-definer set-returning functions; supabase-js types their filter
-   chain loosely. */
-function safeRpc(supabase: Client) {
-  return supabase.rpc.bind(supabase) as any;
-}
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 type EntityRow = Database["public"]["Tables"]["entities"]["Row"];
 type RelationshipRow = Database["public"]["Tables"]["entity_relationships"]["Row"];
@@ -252,55 +152,6 @@ async function loadEntity(
   const row = data as EntityRow;
   const campaign = await loadCampaign(ctx, row.campaign_id);
   return { row, campaign };
-}
-
-interface CharacterAccess {
-  row: Database["public"]["Tables"]["characters"]["Row"];
-  isOwner: boolean;
-  isGm: boolean;
-}
-
-async function loadCharacter(ctx: McpToolContext, characterId: string): Promise<CharacterAccess> {
-  const { data, error } = await ctx.supabase
-    .from("characters")
-    .select("*")
-    .eq("id", characterId)
-    .maybeSingle();
-  if (error) fail("Character lookup", error);
-  if (!data) throw new Error("Character not found, or you do not have access to it.");
-
-  const isOwner = data.owner_id === ctx.userId;
-  let isGm = false;
-  if (data.campaign_id) {
-    const { data: campaign } = await ctx.supabase
-      .from("campaigns")
-      .select("gm_id")
-      .eq("id", data.campaign_id)
-      .maybeSingle();
-    isGm = campaign?.gm_id === ctx.userId;
-  }
-  return { row: data, isOwner, isGm };
-}
-
-function characterView(access: CharacterAccess): Structured {
-  const { gm_notes, ...rest } = access.row;
-  const out: Structured = { ...rest };
-  if (access.isOwner || access.isGm) out["gm_notes"] = gm_notes;
-  return out;
-}
-
-function requireCharacterWrite(access: CharacterAccess): void {
-  if (!access.isOwner && !access.isGm) {
-    throw new Error(
-      `Only the owner of "${access.row.name}" or their campaign's Game Master can change this sheet.`,
-    );
-  }
-}
-
-function requireCharacterOwner(access: CharacterAccess): void {
-  if (!access.isOwner) {
-    throw new Error(`Only the owner of "${access.row.name}" can delete this sheet.`);
-  }
 }
 
 /** Longest parent chain we are willing to walk before refusing the move. */
@@ -425,56 +276,6 @@ function compactEntryNotes<T extends { notes?: string | null }>(row: T): T {
 }
 
 /* ------------------------------------------------------------------ */
-/* Registration helper                                                 */
-/* ------------------------------------------------------------------ */
-
-type ToolResult = {
-  content: { type: "text"; text: string }[];
-  structuredContent: Structured;
-};
-
-interface ToolDefinition<I extends z.ZodType, O extends z.ZodType> {
-  title: string;
-  description: string;
-  inputSchema: I;
-  outputSchema: O;
-  annotations: {
-    readOnlyHint: boolean;
-    destructiveHint: boolean;
-    idempotentHint: boolean;
-  };
-}
-
-/**
- * The MCP SDK accepts any Standard Schema that can also describe itself as JSON
- * Schema; zod covers the first half, so we attach the second.
- */
-function withJson<T extends z.ZodType>(schema: T): T {
-  return Object.assign(schema, {
-    jsonSchema: z.toJSONSchema(schema, { io: "input", unrepresentable: "any" }),
-  });
-}
-
-function registrar(server: McpServer) {
-  return function tool<I extends z.ZodType, O extends z.ZodType>(
-    name: string,
-    definition: ToolDefinition<I, O>,
-    handler: (input: z.infer<I>) => Promise<ToolResult>,
-  ): void {
-    const prepared = {
-      ...definition,
-      inputSchema: withJson(definition.inputSchema),
-      outputSchema: withJson(definition.outputSchema),
-    };
-    (server.registerTool as unknown as (toolName: string, config: unknown, cb: unknown) => void)(
-      name,
-      prepared,
-      handler,
-    );
-  };
-}
-
-/* ------------------------------------------------------------------ */
 /* Server construction                                                 */
 /* ------------------------------------------------------------------ */
 
@@ -485,10 +286,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     title: "Universal Character Forge",
   });
 
-  const read = { readOnlyHint: true, destructiveHint: false, idempotentHint: true } as const;
-  const create = { readOnlyHint: false, destructiveHint: false, idempotentHint: false } as const;
-  const modify = { readOnlyHint: false, destructiveHint: false, idempotentHint: true } as const;
-  const destroy = { readOnlyHint: false, destructiveHint: true, idempotentHint: true } as const;
+  const read = READ;
+  const create = CREATE;
+  const modify = MODIFY;
+  const destroy = DESTROY;
 
   const tool = registrar(server);
 
@@ -1350,6 +1151,8 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
+  registerDomainTools(tool, ctx);
+
   return server;
 }
 
@@ -1383,6 +1186,8 @@ export const MCP_TOOL_NAMES = [
   "add_character_entry",
   "update_character_entry",
   "delete_character_entry",
+  // domain tools (one discoverable tool per domain, routed by `action`)
+  ...DOMAIN_TOOL_NAMES,
 ] as const;
 
 /** Exported for tests: the fields that must never reach a non-GM caller. */

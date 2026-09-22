@@ -1169,7 +1169,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "Update a character",
       description:
-        "Changes fields on an existing character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged. When supplied, `appearance` and `conditions` replace the entire stored object/array rather than being merged. Read the character first and resend any existing keys/items you want to preserve.",
+        "Changes fields on an existing character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged. When supplied, `appearance` and `conditions` replace the entire stored object/array rather than being merged. Read the character first and resend any existing keys/items you want to preserve. `campaign_id` is restricted: once a sheet belongs to a campaign, only that campaign's Game Master can move it to another campaign or detach it — the owner cannot. A sheet that belongs to no campaign can be attached by its owner wherever they are allowed to.",
       inputSchema: z.object({ character_id: uuid, ...characterWritableFields }),
       outputSchema: itemOutput,
       annotations: modify,

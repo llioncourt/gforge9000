@@ -230,20 +230,48 @@ export function validateCharacter(input: ValidationInput): CharacterValidation {
       message: `Point total ${points.total} exceeds this sheet's budget of ${input.character.point_budget}.`,
     });
   }
-  for (const violation of sheet.limits) {
-    const type: ValidationFindingType =
-      violation.limit === "pointBudget"
-        ? "campaign_point_limit"
-        : violation.limit === "disadvantageLimit"
-          ? "disadvantage_limit"
-          : violation.limit === "quirkLimit"
-            ? "quirk_limit"
-            : "tech_level";
+  // Findings come from the campaign's OWN settings, not from house-rule engine
+  // overrides: those two are different concepts and must never be conflated.
+  const campaignLimits = {
+    point_limit: settingNumber(input.campaignSettings, "point_limit"),
+    disadvantage_limit: settingNumber(input.campaignSettings, "disadvantage_limit"),
+    quirk_limit: settingNumber(input.campaignSettings, "quirk_limit"),
+    tech_level: settingNumber(input.campaignSettings, "tech_level"),
+  };
+
+  if (campaignLimits.point_limit !== null && points.total > campaignLimits.point_limit) {
     findings.push({
-      type,
-      value: violation.value,
-      allowed: violation.allowed,
-      message: violation.message,
+      type: "campaign_point_limit",
+      value: points.total,
+      allowed: campaignLimits.point_limit,
+      message: `Point total ${points.total} exceeds the campaign limit of ${campaignLimits.point_limit}.`,
+    });
+  }
+  if (
+    campaignLimits.disadvantage_limit !== null &&
+    Math.abs(points.disadvantages) > Math.abs(campaignLimits.disadvantage_limit)
+  ) {
+    findings.push({
+      type: "disadvantage_limit",
+      value: points.disadvantages,
+      allowed: campaignLimits.disadvantage_limit,
+      message: `Disadvantages total ${points.disadvantages}, beyond the campaign limit of ${campaignLimits.disadvantage_limit}.`,
+    });
+  }
+  if (campaignLimits.quirk_limit !== null && points.quirks > campaignLimits.quirk_limit) {
+    findings.push({
+      type: "quirk_limit",
+      value: points.quirks,
+      allowed: campaignLimits.quirk_limit,
+      message: `Quirks total ${points.quirks}, beyond the campaign limit of ${campaignLimits.quirk_limit}.`,
+    });
+  }
+  if (campaignLimits.tech_level !== null && input.character.tech_level > campaignLimits.tech_level) {
+    findings.push({
+      type: "tech_level",
+      value: input.character.tech_level,
+      allowed: campaignLimits.tech_level,
+      message: `Tech level ${input.character.tech_level} is above the campaign tech level ${campaignLimits.tech_level}.`,
     });
   }
 
@@ -259,19 +287,21 @@ export function validateCharacter(input: ValidationInput): CharacterValidation {
       disadvantages: points.disadvantages,
       quirks: points.quirks,
     },
-    campaign_limits: {
-      point_limit: rules.limits.pointBudget,
-      disadvantage_limit: rules.limits.disadvantageLimit,
-      quirk_limit: rules.limits.quirkLimit,
-      tech_level: rules.limits.techLevel,
-    },
+    campaign_limits: campaignLimits,
     house_rules: {
       active: changed.length > 0,
       changed_paths: changed,
+      effective_limits: {
+        point_limit: rules.limits.pointBudget,
+        disadvantage_limit: rules.limits.disadvantageLimit,
+        quirk_limit: rules.limits.quirkLimit,
+        tech_level: rules.limits.techLevel,
+      },
       note:
         "Campaign house rules change calculated costs and levels only. They never affect " +
         "whether an entry counts as official, modified, custom or stale — pack state is always " +
-        "measured against the canonical pack definition.",
+        "measured against the canonical pack definition, and they are not the limits a " +
+        "character is judged against.",
     },
     pack_states: countStates(
       input.entries.map((entry) => input.statuses.get(entry.id) ?? { state: "custom" as const }),

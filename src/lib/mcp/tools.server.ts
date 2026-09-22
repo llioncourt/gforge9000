@@ -643,7 +643,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "Update a campaign entry",
       description:
-        "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. Fields left out are untouched; `data` and `aliases` fully replace the stored value when supplied.",
+        "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. Fields left out are untouched. When supplied, `data`, `aliases`, and `tags` replace the entire stored object/array rather than being merged. Read the entry first and resend any existing keys/items you want to preserve.",
       inputSchema: z.object({
         entry_id: uuid,
         kind: boundedText(40).optional(),
@@ -962,7 +962,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "Update a character",
       description:
-        "Changes fields on an existing character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged.",
+        "Changes fields on an existing character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged. When supplied, `appearance` and `conditions` replace the entire stored object/array rather than being merged. Read the character first and resend any existing keys/items you want to preserve.",
       inputSchema: z.object({ character_id: uuid, ...characterWritableFields }),
       outputSchema: itemOutput,
       annotations: modify,

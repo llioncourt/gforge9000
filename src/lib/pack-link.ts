@@ -531,19 +531,39 @@ export function countStates(statuses: { state: PackLinkState }[]): PackLinkCount
 /* Restoring definition fields                                         */
 /* ------------------------------------------------------------------ */
 
+/** Something the player should know about, never silently applied. */
+export interface RestoreWarning {
+  code: "levels_over_max";
+  message_key: string;
+  value: number;
+  allowed: number;
+}
+
 export interface RestorePatch {
   name: string;
   category: string | null;
   points: number;
   levels: number;
   data: Record<string, unknown>;
+  /** Reported, not applied: the patch never quietly changes the player's choices. */
+  warnings: RestoreWarning[];
 }
 
 /**
- * Definition fields taken from the current pack item, progression kept:
- * invested skill points, chosen levels, specialisation and notes are never
- * overwritten. Used by both "Restaurar do pack" and "Atualizar para a versão
- * atual" so the two can never drift apart.
+ * Definition fields taken from the current pack item, progression kept.
+ *
+ * Two rules, both deliberate:
+ *  - PROGRESSION is preserved exactly: invested skill points, chosen levels,
+ *    specialisation and notes are never rewritten. Chosen levels above the
+ *    pack's current cap are KEPT and reported as a warning — a restore must
+ *    not silently take levels away from a character.
+ *  - DEFINITION is refreshed from the current pack: attribute, difficulty,
+ *    defaults, technique penalty/base skill and prerequisites are taken from
+ *    the live item, and a field the pack no longer defines is dropped, so an
+ *    outdated copy on the sheet can never shadow the current definition.
+ *
+ * Used by both "restore from pack" and "update to the current version" so the
+ * two can never drift apart.
  */
 export function restoreDefinitionPatch(
   entry: CharacterEntryLike,
@@ -552,21 +572,33 @@ export function restoreDefinitionPatch(
   const entryData = { ...((entry.data ?? {}) as Record<string, unknown>) };
   const itemData = { ...((item.data ?? {}) as Record<string, unknown>) };
   const specialization = specializationOf(entry);
+  const warnings: RestoreWarning[] = [];
 
-  // Pack definition data first, then the player's own choices back on top.
-  const data: Record<string, unknown> = { ...itemData, ...entryData };
+  // Start from what the player has, then let the CURRENT pack definition win
+  // on every field the pack owns.
+  const data: Record<string, unknown> = { ...entryData };
+  for (const field of PACK_DATA_FIELDS) {
+    const value = itemData[field];
+    if (value === undefined || value === null || value === "") delete data[field];
+    else data[field] = value;
+  }
+  // Invested points stay exactly as the player bought them.
   if (isSkillLike(entry.kind)) {
-    if (text(itemData["attribute"])) data["attribute"] = itemData["attribute"];
-    if (text(itemData["difficulty"])) data["difficulty"] = itemData["difficulty"];
-    // Invested points stay exactly as the player bought them.
     data["points"] = Number(entryData["points"] ?? entry.points ?? 0);
   }
   if (specialization) data["specialization"] = specialization;
 
   const maxLevels =
     item.max_levels === null || item.max_levels === undefined ? null : Number(item.max_levels);
-  let levels = Math.max(1, Number(entry.levels ?? 1) || 1);
-  if (maxLevels !== null && maxLevels > 0 && levels > maxLevels) levels = maxLevels;
+  const levels = Math.max(1, Number(entry.levels ?? 1) || 1);
+  if (maxLevels !== null && maxLevels > 0 && levels > maxLevels) {
+    warnings.push({
+      code: "levels_over_max",
+      message_key: "packLink.warning.levels_over_max",
+      value: levels,
+      allowed: maxLevels,
+    });
+  }
 
   const basePoints = Number(item.base_points ?? 0);
   const costPerLevel = Number(item.cost_per_level ?? 0);
@@ -574,7 +606,9 @@ export function restoreDefinitionPatch(
     ? Number(entry.points ?? 0)
     : entry.kind === "equipment"
       ? Number(entry.points ?? 0)
-      : expectedLeveledCost(basePoints, costPerLevel, levels);
+      : costPerLevel
+        ? packLeveledCost(costPerLevel, levels)
+        : basePoints;
 
   const name =
     specialization && !rawQualifier(item.name)
@@ -587,5 +621,6 @@ export function restoreDefinitionPatch(
     points,
     levels,
     data,
+    warnings,
   };
 }

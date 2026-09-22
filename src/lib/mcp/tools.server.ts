@@ -644,11 +644,19 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         .order("name")
         .limit(max);
       if (error) fail("Loading character entries", error);
+      const returned = data?.length ?? 0;
+      const { count, error: countError } = await ctx.supabase
+        .from("character_entries")
+        .select("id", { count: "exact", head: true })
+        .eq("character_id", character_id);
+      if (countError) fail("Counting character entries", countError);
+      const total = typeof count === "number" ? count : returned;
+      const header =
+        returned < total
+          ? `Character "${access.row.name}" with ${returned} of ${total} entries (more may exist — raise entry_limit).`
+          : `Character "${access.row.name}" with ${total} entries.`;
       const item = { ...characterView(access), entries: data ?? [] };
-      return reply(
-        `Character "${access.row.name}" with ${data?.length ?? 0} entries.\n\n${JSON.stringify(item, null, 2)}`,
-        { item },
-      );
+      return reply(`${header}\n\n${JSON.stringify(item, null, 2)}`, { item });
     },
   );
 
@@ -709,6 +717,16 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     async (input) => {
       const access = await loadCharacter(ctx, input.character_id);
       requireCharacterWrite(access);
+      const { data: last, error: lastError } = await ctx.supabase
+        .from("character_entries")
+        .select("sort_order")
+        .eq("character_id", input.character_id)
+        .order("sort_order", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (lastError) fail("Reading the current entry order", lastError);
+      const currentMax = typeof last?.sort_order === "number" ? last.sort_order : null;
+      const sortOrder = currentMax === null ? 0 : currentMax + 1;
       const { data, error } = await ctx.supabase
         .from("character_entries")
         .insert({
@@ -717,13 +735,16 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           name: input.name,
           category: input.category ?? null,
           notes: input.notes ?? null,
+          sort_order: sortOrder,
           ...(input.points === undefined ? {} : { points: input.points }),
           ...(input.levels === undefined ? {} : { levels: input.levels }),
         })
-        .select("id, character_id, kind, name, category, points, levels")
+        .select("id, character_id, kind, name, category, points, levels, sort_order")
         .single();
       if (error) fail("Adding the entry", error);
-      return reply(`Added "${data.name}" to "${access.row.name}".`, { item: data });
+      return reply(`Added "${data.name}" to "${access.row.name}" (entry_id: ${data.id}).`, {
+        item: data,
+      });
     },
   );
 

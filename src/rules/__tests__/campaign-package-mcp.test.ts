@@ -9,10 +9,7 @@ import { buildMcpServer } from "@/lib/mcp/tools.server";
 
 type Row = Record<string, unknown>;
 
-function makeFakeSupabase(opts: {
-  campaigns: Row[];
-  storageFiles: Map<string, Uint8Array>;
-}) {
+function makeFakeSupabase(opts: { campaigns: Row[]; storageFiles: Map<string, Uint8Array> }) {
   const { campaigns, storageFiles } = opts;
   const inserted: Record<string, Row[]> = {};
 
@@ -28,18 +25,14 @@ function makeFakeSupabase(opts: {
       in: () => builder,
       maybeSingle: async () => {
         if (name === "campaigns") {
-          const row = campaigns.find((c) =>
-            state.filters.every(([k, v]) => c[k] === v),
-          );
+          const row = campaigns.find((c) => state.filters.every(([k, v]) => c[k] === v));
           return { data: row ?? null, error: null };
         }
         return { data: null, error: null };
       },
       single: async () => {
         if (name === "campaigns") {
-          const row = campaigns.find((c) =>
-            state.filters.every(([k, v]) => c[k] === v),
-          );
+          const row = campaigns.find((c) => state.filters.every(([k, v]) => c[k] === v));
           return { data: row ?? null, error: row ? null : { message: "not found" } };
         }
         return { data: null, error: { message: "unsupported" } };
@@ -81,7 +74,9 @@ function makeFakeSupabase(opts: {
       list: async (_folder: string, opts: { search: string }) => {
         const match = [...storageFiles.keys()].some((k) => k.endsWith(opts.search));
         return {
-          data: match ? [{ name: opts.search, metadata: { size: 10, mimetype: "application/zip" } }] : [],
+          data: match
+            ? [{ name: opts.search, metadata: { size: 10, mimetype: "application/zip" } }]
+            : [],
           error: null,
         };
       },
@@ -118,9 +113,9 @@ describe("campaign_package MCP tool (export/import wiring)", () => {
     const server = buildMcpServer({ supabase, userId } as any);
     const tool = await getTool(server, "campaign_package");
     expect(tool).toBeTruthy();
-    await expect(
-      tool.handler({ action: "export", campaign_id: "camp-1" }),
-    ).rejects.toThrow(/Game Master/);
+    await expect(tool.handler({ action: "export", campaign_id: "camp-1" })).rejects.toThrow(
+      /Game Master/,
+    );
   });
 
   it("import rejects a staged path outside the caller's own prefix", async () => {

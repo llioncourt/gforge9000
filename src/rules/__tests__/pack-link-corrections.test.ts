@@ -174,7 +174,12 @@ describe("character validation against campaign limits", () => {
       entries: [],
       statuses: new Map(),
       // Ordinary campaign constraints...
-      campaignSettings: { point_limit: 100, disadvantage_limit: -40, quirk_limit: 5, tech_level: 8 },
+      campaignSettings: {
+        point_limit: 100,
+        disadvantage_limit: -40,
+        quirk_limit: 5,
+        tech_level: 8,
+      },
       // ...deliberately different from the house-rule engine numbers.
       ruleset: {
         ...defaultRuleset,

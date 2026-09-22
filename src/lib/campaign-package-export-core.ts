@@ -455,7 +455,15 @@ export async function buildCampaignPackageZipCore(
   step("Exporting battle maps…");
   const manifestMaps: CampaignPackageManifest["maps"] = [];
   for (const map of maps) {
-    const image = await copy(supabase, bundle, MAP_BUCKET, map.image_path, "maps", map.name, "webp");
+    const image = await copy(
+      supabase,
+      bundle,
+      MAP_BUCKET,
+      map.image_path,
+      "maps",
+      map.name,
+      "webp",
+    );
     const objects = mapObjectsByMap.get(map.id) ?? [];
     manifestMaps.push({
       name: map.name,

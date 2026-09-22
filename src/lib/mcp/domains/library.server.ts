@@ -165,7 +165,9 @@ const input = z.discriminatedUnion("action", [
       query: boundedText(200).optional(),
       name: boundedText(200)
         .optional()
-        .describe("Deprecated alias for query. Use query instead; support for name will be removed."),
+        .describe(
+          "Deprecated alias for query. Use query instead; support for name will be removed.",
+        ),
       kind: z.enum(LIBRARY_KINDS).optional(),
       pack_id: uuid.optional(),
       campaign_id: uuid.optional(),
@@ -301,8 +303,6 @@ async function deletePackContents(ctx: McpToolContext, name: string): Promise<vo
   const ids = (mine ?? []).map((row) => row.id);
 
   if (ids.length) {
-
-
     const groups = new Map<string, { packs: string[]; ids: string[] }>();
     for (const character of mine ?? []) {
       const packs = (character.packs ?? []) as string[];
@@ -511,9 +511,7 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
           ...toStructured(row),
           entry_count: counts.get(`${row.owner_id}::${row.name.trim().toLowerCase()}`) ?? 0,
           owned_by_caller: row.owner_id === ctx.userId,
-          ...(allowed === null
-            ? {}
-            : { allowed_in_campaign: isPackAllowed(row.name, allowed) }),
+          ...(allowed === null ? {} : { allowed_in_campaign: isPackAllowed(row.name, allowed) }),
         }));
         return listReply("content packs", items, count ?? items.length);
       },

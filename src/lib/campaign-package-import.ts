@@ -10,10 +10,7 @@
 import { unzipSync, zipSync } from "fflate";
 import { supabase } from "@/integrations/supabase/client";
 import { convertToAvif, isImageFile } from "@/lib/image-avif";
-import {
-  MAX_CAMPAIGN_PACKAGE_BYTES,
-  type CampaignImportSummary,
-} from "@/lib/campaign-package";
+import { MAX_CAMPAIGN_PACKAGE_BYTES, type CampaignImportSummary } from "@/lib/campaign-package";
 import { importCampaignPackageCore } from "@/lib/campaign-package-import-core";
 
 type Archive = Record<string, Uint8Array>;

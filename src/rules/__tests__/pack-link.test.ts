@@ -19,11 +19,7 @@ import {
   type PackItemLike,
   type PackLink,
 } from "@/lib/pack-link";
-import {
-  matchPackCandidates,
-  parseSearchName,
-  type PackCandidate,
-} from "@/lib/pack-match";
+import { matchPackCandidates, parseSearchName, type PackCandidate } from "@/lib/pack-match";
 import { validateCharacter } from "@/lib/pack-validation";
 import type { CharacterEntry, CharacterRecord } from "@/rules";
 
@@ -158,25 +154,32 @@ describe("pack link: derived state", () => {
       derivePackLinkState(entry(), { item: null, packAllowed: true, missingReason: "inaccessible" })
         .stale_reason,
     ).toBe("inaccessible");
-    expect(
-      derivePackLinkState(entry(), resolution({ packAllowed: false })).stale_reason,
-    ).toBe("pack_not_allowed");
+    expect(derivePackLinkState(entry(), resolution({ packAllowed: false })).stale_reason).toBe(
+      "pack_not_allowed",
+    );
     expect(
       derivePackLinkState(entry(), resolution({ currentVersion: "v1:sha256:other" })).stale_reason,
     ).toBe("version_changed");
   });
 
   it("counts states for a summary", () => {
-    expect(
-      countStates([{ state: "official" }, { state: "official" }, { state: "stale" }]),
-    ).toEqual({ official: 2, modified: 0, custom: 0, stale: 1 });
+    expect(countStates([{ state: "official" }, { state: "official" }, { state: "stale" }])).toEqual(
+      { official: 2, modified: 0, custom: 0, stale: 1 },
+    );
   });
 });
 
 describe("pack link: definition versus progression", () => {
   it("does not call invested skill points a modification", () => {
     const skill = entry({ kind: "skill", name: "Stealth", points: 8, data: { difficulty: "A" } });
-    const packSkill = item({ kind: "skill", name: "Stealth", base_points: 1, cost_per_level: 0, category: "Physical", data: { difficulty: "A" } });
+    const packSkill = item({
+      kind: "skill",
+      name: "Stealth",
+      base_points: 1,
+      cost_per_level: 0,
+      category: "Physical",
+      data: { difficulty: "A" },
+    });
     expect(compareDefinition(skill, packSkill)).toEqual([]);
   });
 
@@ -195,7 +198,9 @@ describe("pack link: definition versus progression", () => {
 
 describe("pack link: specialization", () => {
   it("prefers the structural field and falls back to the name", () => {
-    expect(specializationOf({ name: "Survival", data: { specialization: "Jungle" } })).toBe("Jungle");
+    expect(specializationOf({ name: "Survival", data: { specialization: "Jungle" } })).toBe(
+      "Jungle",
+    );
     expect(specializationOf({ name: "Survival (Jungle)" })).toBe("Jungle");
     expect(specializationOf({ name: "Stealth" })).toBe("");
   });
@@ -250,7 +255,9 @@ describe("pack link: matching", () => {
   });
 
   it("reports no match across kinds", () => {
-    expect(matchPackCandidates({ kind: "trait", name: "Survival" }, [candidate()]).status).toBe("none");
+    expect(matchPackCandidates({ kind: "trait", name: "Survival" }, [candidate()]).status).toBe(
+      "none",
+    );
   });
 });
 
@@ -264,7 +271,14 @@ describe("pack link: restoring", () => {
     });
     const patch = restoreDefinitionPatch(
       skill,
-      item({ kind: "skill", name: "Survival", category: "Outdoor", base_points: 1, cost_per_level: 0, data: { difficulty: "H", attribute: "Per" } }),
+      item({
+        kind: "skill",
+        name: "Survival",
+        category: "Outdoor",
+        base_points: 1,
+        cost_per_level: 0,
+        data: { difficulty: "H", attribute: "Per" },
+      }),
     );
     expect(patch.points).toBe(8);
     expect(patch.name).toBe("Survival (Jungle)");

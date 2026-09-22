@@ -1393,9 +1393,15 @@ describe("pack linking contracts", () => {
   it("offers pack search inside the single library tool", () => {
     const tools = schemas();
     expect(tools["library"]).toBeDefined();
-    expect(tools["library"]?.inputSchema!.safeParse({ action: "search_pack_entries", query: "Stealth" }).success).toBe(true);
+    expect(
+      tools["library"]?.inputSchema!.safeParse({ action: "search_pack_entries", query: "Stealth" })
+        .success,
+    ).toBe(true);
     // Deprecated `name` alias still parses, for one release of backward compatibility.
-    expect(tools["library"]?.inputSchema!.safeParse({ action: "search_pack_entries", name: "Stealth" }).success).toBe(true);
+    expect(
+      tools["library"]?.inputSchema!.safeParse({ action: "search_pack_entries", name: "Stealth" })
+        .success,
+    ).toBe(true);
     expect(tools["library"]?.inputSchema!.safeParse({ action: "list_packs" }).success).toBe(true);
     expect(tools["library"]?.description).toContain("search_pack_entries");
   });

@@ -18,7 +18,6 @@ import type { Client } from "@/lib/mcp/kit.server";
 /** Base64 intake is deliberately capped far below the storage limits. */
 export const MAX_BASE64_BYTES = 8 * 1024 * 1024;
 
-
 /** Signed URLs handed to an assistant are intentionally short-lived. */
 export const SIGNED_URL_SECONDS = 600;
 

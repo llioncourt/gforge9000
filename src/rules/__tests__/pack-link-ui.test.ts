@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { libraryEntryToCharacterDraft } from "@/lib/portable";
 import type { PackLink } from "@/lib/pack-link";
-import { readPackLink, withoutPackLink, derivePackLinkState, type CharacterEntryLike } from "@/lib/pack-link";
+import {
+  readPackLink,
+  withoutPackLink,
+  derivePackLinkState,
+  type CharacterEntryLike,
+} from "@/lib/pack-link";
 import {
   entryStatusFingerprint,
   shouldShowRestoreAction,
@@ -132,8 +137,12 @@ describe("badge state mapping", () => {
 
 describe("shouldShowRestoreAction (PL-007)", () => {
   it("is true only when modified/stale AND can_update", () => {
-    expect(shouldShowRestoreAction({ state: "modified", link: SAMPLE_LINK, can_update: true })).toBe(true);
-    expect(shouldShowRestoreAction({ state: "stale", link: SAMPLE_LINK, can_update: true })).toBe(true);
+    expect(
+      shouldShowRestoreAction({ state: "modified", link: SAMPLE_LINK, can_update: true }),
+    ).toBe(true);
+    expect(shouldShowRestoreAction({ state: "stale", link: SAMPLE_LINK, can_update: true })).toBe(
+      true,
+    );
   });
 
   it("is false for removed/inaccessible/pack_not_allowed statuses", () => {
@@ -162,7 +171,9 @@ describe("shouldShowRestoreAction (PL-007)", () => {
       }),
     ).toBe(false);
     expect(shouldShowRestoreAction(undefined)).toBe(false);
-    expect(shouldShowRestoreAction({ state: "official", link: SAMPLE_LINK, can_update: true })).toBe(false);
+    expect(
+      shouldShowRestoreAction({ state: "official", link: SAMPLE_LINK, can_update: true }),
+    ).toBe(false);
     expect(shouldShowRestoreAction({ state: "custom", link: null })).toBe(false);
   });
 });
@@ -176,7 +187,12 @@ describe("diff rows for a pack-vs-sheet difference", () => {
       points: 4,
     });
     const status = derivePackLinkState(modifiedEntry as unknown as CharacterEntryLike, {
-      item: candidate({ kind: "advantage", category: "Physical", base_points: 1, cost_per_level: 0 }),
+      item: candidate({
+        kind: "advantage",
+        category: "Physical",
+        base_points: 1,
+        cost_per_level: 0,
+      }),
       currentVersion: SAMPLE_LINK.pack_version,
       packAllowed: true,
     });
@@ -206,7 +222,12 @@ describe("unlink preserves other provenance keys", () => {
 });
 
 describe("bulk-link helpers (PL-009)", () => {
-  const unique = { entry: entry({ id: "e1" }), item: candidate({ id: "p1" }), candidates: [], status: "unique" as const };
+  const unique = {
+    entry: entry({ id: "e1" }),
+    item: candidate({ id: "p1" }),
+    candidates: [],
+    status: "unique" as const,
+  };
   const ambiguous = {
     entry: entry({ id: "e2" }),
     item: null,
@@ -259,9 +280,7 @@ describe("entry fingerprint (PL-011)", () => {
     expect(entryStatusFingerprint(entry({ points: 2 }))).not.toBe(base);
     expect(entryStatusFingerprint(entry({ levels: 2 }))).not.toBe(base);
     expect(entryStatusFingerprint(entry({ category: "Physical" }))).not.toBe(base);
-    expect(
-      entryStatusFingerprint(entry({ data: { attribute: "DX" } as never })),
-    ).not.toBe(base);
+    expect(entryStatusFingerprint(entry({ data: { attribute: "DX" } as never }))).not.toBe(base);
   });
 
   it("stays the same when an unrelated field (notes) changes", () => {
@@ -272,8 +291,26 @@ describe("entry fingerprint (PL-011)", () => {
 
 describe("GM campaign summary (summarizeCampaign)", () => {
   it("counts official/modified/custom/stale per character", async () => {
-    const linkedRow = { id: "r1", character_id: "ch1", kind: "skill", name: "Climbing", points: 1, levels: 1, data: {}, source: { link: SAMPLE_LINK } };
-    const customRow = { id: "r2", character_id: "ch1", kind: "skill", name: "Riding", points: 1, levels: 1, data: {}, source: null };
+    const linkedRow = {
+      id: "r1",
+      character_id: "ch1",
+      kind: "skill",
+      name: "Climbing",
+      points: 1,
+      levels: 1,
+      data: {},
+      source: { link: SAMPLE_LINK },
+    };
+    const customRow = {
+      id: "r2",
+      character_id: "ch1",
+      kind: "skill",
+      name: "Riding",
+      points: 1,
+      levels: 1,
+      data: {},
+      source: null,
+    };
 
     const fakeClient = {
       from(table: string) {
@@ -296,7 +333,9 @@ describe("GM campaign summary (summarizeCampaign)", () => {
         if (table === "campaigns") {
           return {
             select: () => ({
-              eq: () => ({ maybeSingle: async () => ({ data: { settings: undefined }, error: null }) }),
+              eq: () => ({
+                maybeSingle: async () => ({ data: { settings: undefined }, error: null }),
+              }),
             }),
           };
         }
@@ -326,7 +365,9 @@ describe("GM campaign summary (summarizeCampaign)", () => {
     );
     expect(summary).toHaveLength(1);
     expect(summary[0]?.character_id).toBe("ch1");
-    expect(summary[0]!.official + summary[0]!.modified + summary[0]!.custom + summary[0]!.stale).toBe(2);
+    expect(
+      summary[0]!.official + summary[0]!.modified + summary[0]!.custom + summary[0]!.stale,
+    ).toBe(2);
     expect(summary[0]!.custom).toBeGreaterThanOrEqual(1);
   });
 });

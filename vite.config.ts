@@ -21,7 +21,6 @@ const stripTsdSourceInR3F = {
       .replace(/\s*data-tsd-source=(?:"[^"]*"|\{[^}]*\})/g, "")
       .replace(/"data-tsd-source":\s*"[^"]*",?\s*/g, "");
     return { code: stripped, map: null };
-
   },
 };
 
@@ -44,5 +43,3 @@ export default defineConfig({
     },
   },
 });
-
-

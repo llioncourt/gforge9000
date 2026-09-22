@@ -87,7 +87,13 @@ function sniffImageMime(bytes: Uint8Array): string | null {
     const brand = String.fromCharCode(bytes[8]!, bytes[9]!, bytes[10]!, bytes[11]!);
     if (brand === "avif" || brand === "avis") return "image/avif";
   }
-  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47)
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47
+  )
     return "image/png";
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff)
     return "image/jpeg";
@@ -103,7 +109,8 @@ function sniffImageMime(bytes: Uint8Array): string | null {
     bytes[11] === 0x50
   )
     return "image/webp";
-  if (bytes.length >= 6 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) return "image/gif";
+  if (bytes.length >= 6 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46)
+    return "image/gif";
   return null;
 }
 
@@ -180,7 +187,11 @@ export async function importCampaignPackageCore(
     step("Updating campaign…");
     const { error } = await supabase
       .from("campaigns")
-      .update({ name: manifest.campaign.name, description: manifest.campaign.description ?? null, settings })
+      .update({
+        name: manifest.campaign.name,
+        description: manifest.campaign.description ?? null,
+        settings,
+      })
       .eq("id", previous.id);
     if (error) throw new Error(error.message);
     campaignId = previous.id;
@@ -264,10 +275,16 @@ export async function importCampaignPackageCore(
           .maybeSingle();
         let characterId: string;
         if (existing) {
-          const { error } = await supabase.from("characters").update(insert as never).eq("id", existing.id);
+          const { error } = await supabase
+            .from("characters")
+            .update(insert as never)
+            .eq("id", existing.id);
           if (error) throw new Error(error.message);
           characterId = existing.id;
-          const cleared = await supabase.from("character_entries").delete().eq("character_id", characterId);
+          const cleared = await supabase
+            .from("character_entries")
+            .delete()
+            .eq("character_id", characterId);
           if (cleared.error) throw new Error(cleared.error.message);
         } else {
           const { data: createdRow, error } = await supabase
@@ -303,8 +320,18 @@ export async function importCampaignPackageCore(
 
         if (entry.portrait_file && !existing) {
           const path = `${userId}/${characterId}/${crypto.randomUUID()}.${extOf(entry.portrait_file, "png")}`;
-          await uploadFromZip(supabase, archive, entry.portrait_file, PORTRAIT_BUCKET, path, "image/png");
-          const update = await supabase.from("characters").update({ portrait_path: path }).eq("id", characterId);
+          await uploadFromZip(
+            supabase,
+            archive,
+            entry.portrait_file,
+            PORTRAIT_BUCKET,
+            path,
+            "image/png",
+          );
+          const update = await supabase
+            .from("characters")
+            .update({ portrait_path: path })
+            .eq("id", characterId);
           if (update.error) throw new Error(update.error.message);
         }
         summary.characters += 1;
@@ -316,14 +343,17 @@ export async function importCampaignPackageCore(
       step("Importing lore…");
       const existingByKey = new Map<string, { id: string; image_url: string | null }>();
       if (!firstImport) {
-        const keys = manifest.lore.entities.map((e) => packageChildImportKey(packageKey, "entity", e.key));
+        const keys = manifest.lore.entities.map((e) =>
+          packageChildImportKey(packageKey, "entity", e.key),
+        );
         const { data: rows } = await supabase
           .from("entities")
           .select("id, import_key, image_url")
           .eq("campaign_id", campaignId)
           .in("import_key", keys);
         for (const row of rows ?? []) {
-          if (row.import_key) existingByKey.set(row.import_key, { id: row.id, image_url: row.image_url });
+          if (row.import_key)
+            existingByKey.set(row.import_key, { id: row.id, image_url: row.image_url });
         }
       }
       for (const entity of manifest.lore.entities) {
@@ -332,10 +362,18 @@ export async function importCampaignPackageCore(
         let imagePath: string | null = previousEntity?.image_url ?? null;
         if (entity.image_file && !imagePath) {
           imagePath = `${userId}/${campaignId}/${crypto.randomUUID()}.${extOf(entity.image_file, "png")}`;
-          await uploadFromZip(supabase, archive, entity.image_file, ASSET_BUCKET, imagePath, "image/png");
+          await uploadFromZip(
+            supabase,
+            archive,
+            entity.image_file,
+            ASSET_BUCKET,
+            imagePath,
+            "image/png",
+          );
         }
         const data: Record<string, unknown> = { ...entity.data };
-        if (entity.character_key) data["character_sheet_id"] = characterIds.get(entity.character_key) ?? null;
+        if (entity.character_key)
+          data["character_sheet_id"] = characterIds.get(entity.character_key) ?? null;
         const payload = {
           campaign_id: campaignId,
           import_key: importKey,
@@ -351,11 +389,16 @@ export async function importCampaignPackageCore(
           tags: entity.tags,
           sort_order: entity.sort_order,
           image_url: imagePath,
-          character_id: entity.character_key ? (characterIds.get(entity.character_key) ?? null) : null,
+          character_id: entity.character_key
+            ? (characterIds.get(entity.character_key) ?? null)
+            : null,
           data: data as never,
         };
         if (previousEntity) {
-          const { error } = await supabase.from("entities").update(payload as never).eq("id", previousEntity.id);
+          const { error } = await supabase
+            .from("entities")
+            .update(payload as never)
+            .eq("id", previousEntity.id);
           if (error) throw new Error(error.message);
           entityIds.set(entity.key, previousEntity.id);
         } else {
@@ -374,7 +417,10 @@ export async function importCampaignPackageCore(
         const id = entityIds.get(entity.key);
         const parentId = entityIds.get(entity.parent_key);
         if (id && parentId) {
-          const { error } = await supabase.from("entities").update({ parent_id: parentId }).eq("id", id);
+          const { error } = await supabase
+            .from("entities")
+            .update({ parent_id: parentId })
+            .eq("id", id);
           if (error) throw new Error(error.message);
         }
       }
@@ -476,7 +522,14 @@ export async function importCampaignPackageCore(
             let tokenImage: string | null = null;
             if (object.image_file) {
               tokenImage = `${userId}/${campaignId}/${crypto.randomUUID()}.${extOf(object.image_file, "png")}`;
-              await uploadFromZip(supabase, archive, object.image_file, ASSET_BUCKET, tokenImage, "image/png");
+              await uploadFromZip(
+                supabase,
+                archive,
+                object.image_file,
+                ASSET_BUCKET,
+                tokenImage,
+                "image/png",
+              );
             }
             const data: Record<string, unknown> = { ...object.data };
             if (object.entity_key) data["entity_id"] = entityIds.get(object.entity_key) ?? null;
@@ -492,7 +545,9 @@ export async function importCampaignPackageCore(
               color: object.color ?? null,
               hidden: object.hidden,
               image_url: tokenImage,
-              character_id: object.character_key ? (characterIds.get(object.character_key) ?? null) : null,
+              character_id: object.character_key
+                ? (characterIds.get(object.character_key) ?? null)
+                : null,
               data: data as never,
               created_by: userId,
             } as never);
@@ -506,7 +561,14 @@ export async function importCampaignPackageCore(
         step("Importing videos…");
         for (const video of manifest.videos) {
           const path = `${userId}/${campaignId}/${crypto.randomUUID()}.mp4`;
-          await uploadFromZip(supabase, archive, video.file, CAMPAIGN_INTRO_BUCKET, path, "video/mp4");
+          await uploadFromZip(
+            supabase,
+            archive,
+            video.file,
+            CAMPAIGN_INTRO_BUCKET,
+            path,
+            "video/mp4",
+          );
           const { error } = await supabase.from("campaign_videos").insert({
             campaign_id: campaignId,
             storage_path: path,
@@ -531,7 +593,14 @@ export async function importCampaignPackageCore(
           const albumId = crypto.randomUUID();
           const root = `${userId}/${campaignId}/${albumId}`;
           const coverPath = `${root}/cover.${extOf(album.cover, "jpg")}`;
-          await uploadFromZip(supabase, archive, album.cover, CAMPAIGN_SOUNDTRACK_BUCKET, coverPath, "image/jpeg");
+          await uploadFromZip(
+            supabase,
+            archive,
+            album.cover,
+            CAMPAIGN_SOUNDTRACK_BUCKET,
+            coverPath,
+            "image/jpeg",
+          );
           const { error: albumError } = await supabase.from("campaign_soundtrack_albums").insert({
             id: albumId,
             campaign_id: campaignId,
@@ -554,7 +623,14 @@ export async function importCampaignPackageCore(
               "_",
             );
             const trackPath = `${root}/tracks/${String(track.position).padStart(2, "0")}-${safeName}`;
-            await uploadFromZip(supabase, archive, track.file, CAMPAIGN_SOUNDTRACK_BUCKET, trackPath, mime);
+            await uploadFromZip(
+              supabase,
+              archive,
+              track.file,
+              CAMPAIGN_SOUNDTRACK_BUCKET,
+              trackPath,
+              mime,
+            );
             const { error: trackError } = await supabase.from("campaign_soundtrack_tracks").insert({
               campaign_id: campaignId,
               album_id: albumId,
@@ -600,7 +676,14 @@ export async function importCampaignPackageCore(
       if (manifest.intro) {
         step("Uploading intro video…");
         const path = `${userId}/${campaignId}/${crypto.randomUUID()}.mp4`;
-        await uploadFromZip(supabase, archive, manifest.intro.file, CAMPAIGN_INTRO_BUCKET, path, "video/mp4");
+        await uploadFromZip(
+          supabase,
+          archive,
+          manifest.intro.file,
+          CAMPAIGN_INTRO_BUCKET,
+          path,
+          "video/mp4",
+        );
         const { error } = await supabase.from("campaign_videos").insert({
           campaign_id: campaignId,
           storage_path: path,

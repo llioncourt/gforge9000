@@ -670,8 +670,6 @@ export async function deletePackContents(name: string) {
     .eq("owner_id", auth.user.id);
   const ids = (mine ?? []).map((c) => c.id);
   if (ids.length) {
-
-
     // Characters are grouped by the pack list they end up with, so identical
     // results are written in one statement instead of one per character.
     const groups = new Map<string, { packs: string[]; ids: string[] }>();

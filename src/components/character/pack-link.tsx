@@ -95,9 +95,7 @@ export function invalidatePackLinkQueries(
 
 /** Derived state for every entry on the sheet; nothing is stored. */
 export function usePackLinkStatuses(entries: CharacterEntry[], campaignSettings: unknown) {
-  const key = entries
-    .map((entry) => `${entry.id}:${entryStatusFingerprint(entry)}`)
-    .join("|");
+  const key = entries.map((entry) => `${entry.id}:${entryStatusFingerprint(entry)}`).join("|");
   return useQuery({
     queryKey: ["pack-link-status", key, JSON.stringify(campaignSettings ?? null)],
     queryFn: () => deriveStatuses(supabase, entries.map(asRow), campaignSettings),

@@ -266,7 +266,10 @@ export function validateCharacter(input: ValidationInput): CharacterValidation {
       message: `Quirks total ${points.quirks}, beyond the campaign limit of ${campaignLimits.quirk_limit}.`,
     });
   }
-  if (campaignLimits.tech_level !== null && input.character.tech_level > campaignLimits.tech_level) {
+  if (
+    campaignLimits.tech_level !== null &&
+    input.character.tech_level > campaignLimits.tech_level
+  ) {
     findings.push({
       type: "tech_level",
       value: input.character.tech_level,

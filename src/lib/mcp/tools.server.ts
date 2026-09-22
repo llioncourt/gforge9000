@@ -1,0 +1,734 @@
+/**
+ * Tool surface exposed to external assistants over MCP.
+ *
+ * Every tool runs against the RLS-scoped Supabase client built from the
+ * caller's own access token — there is no service-role access anywhere in this
+ * file. On top of RLS, the application's own Game Master / owner rules are
+ * checked explicitly so a write never depends on a policy alone.
+ *
+ * Reads of campaign world data go through `list_entities_safe` /
+ * `list_relationships_safe`, the same security-definer functions the app uses,
+ * which strip GM-only notes and GM-only data keys for non-GM callers.
+ */
+
+import { McpServer } from "@modelcontextprotocol/server";
+import { z } from "zod/v4";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database, Json } from "@/integrations/supabase/types";
+import { KINDS } from "@/lib/entity-kinds";
+import { VISIBILITY_VALUES } from "@/lib/visibility";
+
+export const MCP_SERVER_NAME = "universal-character-forge";
+export const MCP_SERVER_VERSION = "2.0.0";
+
+/** Hard ceiling on rows any single tool call may return. */
+export const MCP_MAX_LIMIT = 200;
+const DEFAULT_LIMIT = 50;
+
+type Client = SupabaseClient<Database>;
+
+export interface McpToolContext {
+  supabase: Client;
+  userId: string;
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared helpers                                                      */
+/* ------------------------------------------------------------------ */
+
+function fail(operation: string, error: { message: string } | null): never {
+  throw new Error(`${operation} failed: ${error?.message ?? "unknown error"}`);
+}
+
+const uuid = z.string().uuid();
+const limitField = z.number().int().min(1).max(MCP_MAX_LIMIT).optional();
+const boundedText = (max: number) => z.string().min(1).max(max);
+
+const listOutput = z.object({
+  count: z.number().int(),
+  truncated: z.boolean(),
+  items: z.array(z.record(z.string(), z.unknown())),
+});
+const itemOutput = z.object({ item: z.record(z.string(), z.unknown()) });
+const deleteOutput = z.object({ deleted: z.boolean(), id: z.string() });
+
+type Structured = Record<string, unknown>;
+
+function reply(text: string, structuredContent: Structured) {
+  return {
+    content: [{ type: "text" as const, text }],
+    structuredContent,
+  };
+}
+
+function listReply(label: string, items: Structured[], limit: number) {
+  const truncated = items.length >= limit;
+  const text = items.length
+    ? `${items.length} ${label}${truncated ? " (more may exist — raise `limit` or narrow the query)" : ""}:\n` +
+      items.map((row) => `- ${JSON.stringify(row)}`).join("\n")
+    : `No ${label} found.`;
+  return reply(text, { count: items.length, truncated, items });
+}
+
+interface CampaignAccess {
+  id: string;
+  name: string;
+  gmId: string;
+  isGm: boolean;
+}
+
+async function loadCampaign(ctx: McpToolContext, campaignId: string): Promise<CampaignAccess> {
+  const { data, error } = await ctx.supabase
+    .from("campaigns")
+    .select("id, name, gm_id")
+    .eq("id", campaignId)
+    .maybeSingle();
+  if (error) fail("Campaign lookup", error);
+  if (!data) throw new Error("Campaign not found, or you do not have access to it.");
+  return { id: data.id, name: data.name, gmId: data.gm_id, isGm: data.gm_id === ctx.userId };
+}
+
+function requireGm(campaign: CampaignAccess): void {
+  if (!campaign.isGm) {
+    throw new Error(`Only the Game Master of "${campaign.name}" can change its world entries.`);
+  }
+}
+
+/** GM-only columns that must never reach a non-GM caller. */
+const GM_ONLY_ENTITY_FIELDS = ["gm_notes"] as const;
+const GM_ONLY_RELATIONSHIP_FIELDS = ["gm_description"] as const;
+
+function stripGmFields<T extends Record<string, unknown>>(
+  row: T,
+  isGm: boolean,
+  fields: readonly string[],
+): Record<string, unknown> {
+  if (isGm) return { ...row };
+  const out: Record<string, unknown> = { ...row };
+  for (const field of fields) delete out[field];
+  return out;
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any -- the safe-list RPCs are
+   security-definer set-returning functions; supabase-js types their filter
+   chain loosely. */
+function safeRpc(supabase: Client) {
+  return supabase.rpc.bind(supabase) as any;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+type EntityRow = Database["public"]["Tables"]["entities"]["Row"];
+type RelationshipRow = Database["public"]["Tables"]["entity_relationships"]["Row"];
+
+const ENTITY_SUMMARY_FIELDS = [
+  "id",
+  "campaign_id",
+  "kind",
+  "name",
+  "status",
+  "visibility",
+  "summary",
+  "tags",
+  "parent_id",
+  "updated_at",
+] as const;
+
+function entitySummary(row: EntityRow): Structured {
+  const out: Structured = {};
+  for (const field of ENTITY_SUMMARY_FIELDS) out[field] = row[field];
+  return out;
+}
+
+async function loadEntity(
+  ctx: McpToolContext,
+  entryId: string,
+): Promise<{ row: EntityRow; campaign: CampaignAccess }> {
+  const { data, error } = await safeRpc(ctx.supabase)("list_entities_safe")
+    .eq("id", entryId)
+    .maybeSingle();
+  if (error) fail("Entry lookup", error);
+  if (!data) throw new Error("Entry not found, or you do not have access to it.");
+  const row = data as EntityRow;
+  const campaign = await loadCampaign(ctx, row.campaign_id);
+  return { row, campaign };
+}
+
+interface CharacterAccess {
+  row: Database["public"]["Tables"]["characters"]["Row"];
+  isOwner: boolean;
+  isGm: boolean;
+}
+
+async function loadCharacter(ctx: McpToolContext, characterId: string): Promise<CharacterAccess> {
+  const { data, error } = await ctx.supabase
+    .from("characters")
+    .select("*")
+    .eq("id", characterId)
+    .maybeSingle();
+  if (error) fail("Character lookup", error);
+  if (!data) throw new Error("Character not found, or you do not have access to it.");
+
+  const isOwner = data.owner_id === ctx.userId;
+  let isGm = false;
+  if (data.campaign_id) {
+    const { data: campaign } = await ctx.supabase
+      .from("campaigns")
+      .select("gm_id")
+      .eq("id", data.campaign_id)
+      .maybeSingle();
+    isGm = campaign?.gm_id === ctx.userId;
+  }
+  return { row: data, isOwner, isGm };
+}
+
+function characterView(access: CharacterAccess): Structured {
+  const { gm_notes, ...rest } = access.row;
+  const out: Structured = { ...rest };
+  if (access.isOwner || access.isGm) out.gm_notes = gm_notes;
+  return out;
+}
+
+function requireCharacterWrite(access: CharacterAccess): void {
+  if (!access.isOwner && !access.isGm) {
+    throw new Error(
+      `Only the owner of "${access.row.name}" or their campaign's Game Master can change this sheet.`,
+    );
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Server construction                                                 */
+/* ------------------------------------------------------------------ */
+
+export function buildMcpServer(ctx: McpToolContext): McpServer {
+  const server = new McpServer({
+    name: MCP_SERVER_NAME,
+    version: MCP_SERVER_VERSION,
+    title: "Universal Character Forge",
+  });
+
+  const read = { readOnlyHint: true, destructiveHint: false, idempotentHint: true } as const;
+  const create = { readOnlyHint: false, destructiveHint: false, idempotentHint: false } as const;
+  const modify = { readOnlyHint: false, destructiveHint: false, idempotentHint: true } as const;
+  const destroy = { readOnlyHint: false, destructiveHint: true, idempotentHint: true } as const;
+
+  /* ---------------- campaigns ---------------- */
+
+  server.registerTool(
+    "list_campaigns",
+    {
+      title: "List campaigns",
+      description:
+        "Lists the campaigns the signed-in account can see: the ones they run as Game Master and the ones they have joined as a player.",
+      inputSchema: z.object({ limit: limitField }),
+      outputSchema: listOutput,
+      annotations: read,
+    },
+    async ({ limit }) => {
+      const max = limit ?? DEFAULT_LIMIT;
+      const { data, error } = await ctx.supabase
+        .from("campaigns")
+        .select("id, name, description, gm_id, created_at, updated_at")
+        .order("created_at", { ascending: false })
+        .limit(max);
+      if (error) fail("Listing campaigns", error);
+      const items = (data ?? []).map((row) => ({
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        is_gm: row.gm_id === ctx.userId,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      }));
+      return listReply("campaigns", items, max);
+    },
+  );
+
+  server.registerTool(
+    "create_campaign",
+    {
+      title: "Create a campaign",
+      description:
+        "Creates a new campaign owned by the signed-in account, who becomes its Game Master.",
+      inputSchema: z.object({
+        name: boundedText(120),
+        description: z.string().max(4000).optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: create,
+    },
+    async ({ name, description }) => {
+      const { data, error } = await ctx.supabase
+        .from("campaigns")
+        .insert({ name, description: description ?? null, gm_id: ctx.userId })
+        .select("id, name, description, created_at")
+        .single();
+      if (error) fail("Creating the campaign", error);
+      return reply(`Created campaign "${data.name}" (${data.id}).`, { item: data });
+    },
+  );
+
+  /* ---------------- entry types ---------------- */
+
+  server.registerTool(
+    "list_entry_types",
+    {
+      title: "List entry types",
+      description:
+        "Lists every kind of world or story entry a campaign can hold, with the statuses each kind accepts. Use the returned `kind` value with the entry tools.",
+      outputSchema: listOutput,
+      annotations: read,
+    },
+    async () => {
+      const items = KINDS.map((kind) => ({
+        kind: kind.kind,
+        label: kind.label,
+        plural: kind.plural,
+        group: kind.group,
+        statuses: kind.statuses,
+        default_status: kind.defaultStatus,
+        nestable: kind.nestable === true,
+      }));
+      return reply(
+        `${items.length} entry types: ${items.map((k) => k.kind).join(", ")}.`,
+        { count: items.length, truncated: false, items },
+      );
+    },
+  );
+
+  /* ---------------- entries ---------------- */
+
+  server.registerTool(
+    "list_entries",
+    {
+      title: "List campaign entries",
+      description:
+        "Lists the world and story entries of one campaign that the signed-in account is allowed to see. Game Master notes are removed for players.",
+      inputSchema: z.object({
+        campaign_id: uuid,
+        kind: z.string().max(40).optional(),
+        search: z.string().max(200).optional(),
+        limit: limitField,
+      }),
+      outputSchema: listOutput,
+      annotations: read,
+    },
+    async ({ campaign_id, kind, search, limit }) => {
+      const campaign = await loadCampaign(ctx, campaign_id);
+      const max = limit ?? DEFAULT_LIMIT;
+      let query = safeRpc(ctx.supabase)("list_entities_safe", { _campaign: campaign_id })
+        .order("kind", { ascending: true })
+        .order("name", { ascending: true })
+        .limit(max);
+      if (kind) query = query.eq("kind", kind);
+      if (search) query = query.ilike("name", `%${search}%`);
+      const { data, error } = await query;
+      if (error) fail("Listing entries", error);
+      const items = ((data ?? []) as EntityRow[]).map(entitySummary);
+      return listReply(`entries in "${campaign.name}"`, items, max);
+    },
+  );
+
+  server.registerTool(
+    "get_entry",
+    {
+      title: "Get a campaign entry",
+      description:
+        "Reads one world or story entry in full. Game Master notes and GM-only fields are removed for players.",
+      inputSchema: z.object({ entry_id: uuid }),
+      outputSchema: itemOutput,
+      annotations: read,
+    },
+    async ({ entry_id }) => {
+      const { row, campaign } = await loadEntity(ctx, entry_id);
+      const item = stripGmFields(
+        row as unknown as Record<string, unknown>,
+        campaign.isGm,
+        GM_ONLY_ENTITY_FIELDS,
+      );
+      return reply(`${row.kind} "${row.name}" in "${campaign.name}".`, { item });
+    },
+  );
+
+  server.registerTool(
+    "create_entry",
+    {
+      title: "Create a campaign entry",
+      description:
+        "Adds a world or story entry to a campaign. Only the campaign's Game Master can do this.",
+      inputSchema: z.object({
+        campaign_id: uuid,
+        kind: boundedText(40),
+        name: boundedText(200),
+        summary: z.string().max(2000).optional(),
+        description: z.string().max(20000).optional(),
+        gm_notes: z.string().max(20000).optional(),
+        status: z.string().max(60).optional(),
+        visibility: z.enum(VISIBILITY_VALUES).optional(),
+        tags: z.array(z.string().max(60)).max(30).optional(),
+        parent_id: uuid.optional(),
+        data: z.record(z.string(), z.unknown()).optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: create,
+    },
+    async (input) => {
+      const campaign = await loadCampaign(ctx, input.campaign_id);
+      requireGm(campaign);
+      const { data, error } = await ctx.supabase
+        .from("entities")
+        .insert({
+          campaign_id: input.campaign_id,
+          kind: input.kind,
+          name: input.name,
+          summary: input.summary ?? null,
+          description: input.description ?? null,
+          gm_notes: input.gm_notes ?? null,
+          ...(input.status ? { status: input.status } : {}),
+          ...(input.visibility ? { visibility: input.visibility } : {}),
+          ...(input.tags ? { tags: input.tags } : {}),
+          parent_id: input.parent_id ?? null,
+          ...(input.data ? { data: input.data as Json } : {}),
+        })
+        .select("id, campaign_id, kind, name, status, visibility, summary")
+        .single();
+      if (error) fail("Creating the entry", error);
+      return reply(`Created ${data.kind} "${data.name}" (${data.id}).`, { item: data });
+    },
+  );
+
+  server.registerTool(
+    "update_entry",
+    {
+      title: "Update a campaign entry",
+      description:
+        "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. Fields left out are untouched.",
+      inputSchema: z.object({
+        entry_id: uuid,
+        name: boundedText(200).optional(),
+        summary: z.string().max(2000).optional(),
+        description: z.string().max(20000).optional(),
+        gm_notes: z.string().max(20000).optional(),
+        status: z.string().max(60).optional(),
+        visibility: z.enum(VISIBILITY_VALUES).optional(),
+        tags: z.array(z.string().max(60)).max(30).optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: modify,
+    },
+    async ({ entry_id, ...patch }) => {
+      const { campaign } = await loadEntity(ctx, entry_id);
+      requireGm(campaign);
+      const update = Object.fromEntries(
+        Object.entries(patch).filter(([, value]) => value !== undefined),
+      );
+      if (Object.keys(update).length === 0) throw new Error("Nothing to update — no fields given.");
+      const { data, error } = await ctx.supabase
+        .from("entities")
+        .update(update)
+        .eq("id", entry_id)
+        .select("id, campaign_id, kind, name, status, visibility, summary")
+        .single();
+      if (error) fail("Updating the entry", error);
+      return reply(`Updated ${data.kind} "${data.name}".`, { item: data });
+    },
+  );
+
+  server.registerTool(
+    "delete_entry",
+    {
+      title: "Delete a campaign entry",
+      description:
+        "Permanently removes a world or story entry. Only the campaign's Game Master can do this.",
+      inputSchema: z.object({ entry_id: uuid }),
+      outputSchema: deleteOutput,
+      annotations: destroy,
+    },
+    async ({ entry_id }) => {
+      const { row, campaign } = await loadEntity(ctx, entry_id);
+      requireGm(campaign);
+      const { data, error } = await ctx.supabase
+        .from("entities")
+        .delete()
+        .eq("id", entry_id)
+        .select("id");
+      if (error) fail("Deleting the entry", error);
+      if (!data || data.length === 0) throw new Error("The entry was not deleted.");
+      return reply(`Deleted ${row.kind} "${row.name}".`, { deleted: true, id: entry_id });
+    },
+  );
+
+  /* ---------------- relationships ---------------- */
+
+  server.registerTool(
+    "list_relationships",
+    {
+      title: "List entry relationships",
+      description:
+        "Lists the links between entries in one campaign. Game Master descriptions are removed for players.",
+      inputSchema: z.object({ campaign_id: uuid, limit: limitField }),
+      outputSchema: listOutput,
+      annotations: read,
+    },
+    async ({ campaign_id, limit }) => {
+      const campaign = await loadCampaign(ctx, campaign_id);
+      const max = limit ?? DEFAULT_LIMIT;
+      const { data, error } = await safeRpc(ctx.supabase)("list_relationships_safe", {
+        _campaign: campaign_id,
+      })
+        .order("created_at", { ascending: true })
+        .limit(max);
+      if (error) fail("Listing relationships", error);
+      const items = ((data ?? []) as RelationshipRow[]).map((row) =>
+        stripGmFields(
+          row as unknown as Record<string, unknown>,
+          campaign.isGm,
+          GM_ONLY_RELATIONSHIP_FIELDS,
+        ),
+      );
+      return listReply(`relationships in "${campaign.name}"`, items, max);
+    },
+  );
+
+  server.registerTool(
+    "create_relationship",
+    {
+      title: "Link two entries",
+      description:
+        "Creates a link between two entries of the same campaign. Only the campaign's Game Master can do this.",
+      inputSchema: z.object({
+        campaign_id: uuid,
+        source_id: uuid,
+        target_id: uuid,
+        rel_type: boundedText(60),
+        description: z.string().max(2000).optional(),
+        visibility: z.enum(VISIBILITY_VALUES).optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: create,
+    },
+    async (input) => {
+      const campaign = await loadCampaign(ctx, input.campaign_id);
+      requireGm(campaign);
+      for (const id of [input.source_id, input.target_id]) {
+        const { campaign: owner } = await loadEntity(ctx, id);
+        if (owner.id !== campaign.id) {
+          throw new Error("Both entries must belong to the same campaign.");
+        }
+      }
+      const { data, error } = await ctx.supabase
+        .from("entity_relationships")
+        .insert({
+          campaign_id: input.campaign_id,
+          source_id: input.source_id,
+          target_id: input.target_id,
+          rel_type: input.rel_type,
+          description: input.description ?? null,
+          ...(input.visibility ? { visibility: input.visibility } : {}),
+        })
+        .select("id, campaign_id, source_id, target_id, rel_type, visibility")
+        .single();
+      if (error) fail("Creating the relationship", error);
+      return reply(`Linked the two entries as "${data.rel_type}".`, { item: data });
+    },
+  );
+
+  /* ---------------- characters ---------------- */
+
+  server.registerTool(
+    "list_characters",
+    {
+      title: "List characters",
+      description:
+        "Lists the character sheets the signed-in account can see, optionally limited to one campaign.",
+      inputSchema: z.object({ campaign_id: uuid.optional(), limit: limitField }),
+      outputSchema: listOutput,
+      annotations: read,
+    },
+    async ({ campaign_id, limit }) => {
+      const max = limit ?? DEFAULT_LIMIT;
+      let query = ctx.supabase
+        .from("characters")
+        .select(
+          "id, name, concept, campaign_id, owner_id, is_npc, is_template, point_budget, tech_level, updated_at",
+        )
+        .order("updated_at", { ascending: false })
+        .limit(max);
+      if (campaign_id) query = query.eq("campaign_id", campaign_id);
+      const { data, error } = await query;
+      if (error) fail("Listing characters", error);
+      const items = (data ?? []).map((row) => ({
+        ...row,
+        is_owner: row.owner_id === ctx.userId,
+      }));
+      return listReply("characters", items, max);
+    },
+  );
+
+  server.registerTool(
+    "get_character",
+    {
+      title: "Get a character sheet",
+      description:
+        "Reads one character sheet with its entries (traits, skills, equipment). Game Master notes are only included for the sheet's owner or their campaign's Game Master.",
+      inputSchema: z.object({ character_id: uuid, entry_limit: limitField }),
+      outputSchema: itemOutput,
+      annotations: read,
+    },
+    async ({ character_id, entry_limit }) => {
+      const access = await loadCharacter(ctx, character_id);
+      const max = entry_limit ?? MCP_MAX_LIMIT;
+      const { data, error } = await ctx.supabase
+        .from("character_entries")
+        .select("id, kind, name, category, points, levels, notes, sort_order")
+        .eq("character_id", character_id)
+        .order("kind")
+        .order("sort_order")
+        .order("name")
+        .limit(max);
+      if (error) fail("Loading character entries", error);
+      const item = { ...characterView(access), entries: data ?? [] };
+      return reply(`Character "${access.row.name}" with ${data?.length ?? 0} entries.`, { item });
+    },
+  );
+
+  server.registerTool(
+    "create_character",
+    {
+      title: "Create a character",
+      description: "Creates a new character sheet owned by the signed-in account.",
+      inputSchema: z.object({
+        name: boundedText(120),
+        concept: z.string().max(400).optional(),
+        campaign_id: uuid.optional(),
+        is_npc: z.boolean().optional(),
+        point_budget: z.number().int().min(0).max(100000).optional(),
+        tech_level: z.number().int().min(0).max(20).optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: create,
+    },
+    async (input) => {
+      if (input.campaign_id) await loadCampaign(ctx, input.campaign_id);
+      const { data, error } = await ctx.supabase
+        .from("characters")
+        .insert({
+          name: input.name,
+          concept: input.concept ?? null,
+          campaign_id: input.campaign_id ?? null,
+          owner_id: ctx.userId,
+          ...(input.is_npc === undefined ? {} : { is_npc: input.is_npc }),
+          ...(input.point_budget === undefined ? {} : { point_budget: input.point_budget }),
+          ...(input.tech_level === undefined ? {} : { tech_level: input.tech_level }),
+        })
+        .select("id, name, concept, campaign_id, point_budget, tech_level")
+        .single();
+      if (error) fail("Creating the character", error);
+      return reply(`Created character "${data.name}" (${data.id}).`, { item: data });
+    },
+  );
+
+  server.registerTool(
+    "add_character_entry",
+    {
+      title: "Add an entry to a character",
+      description:
+        "Adds one trait, skill, technique or piece of equipment to a character sheet. Only the sheet's owner or their campaign's Game Master can do this.",
+      inputSchema: z.object({
+        character_id: uuid,
+        kind: boundedText(40),
+        name: boundedText(200),
+        category: z.string().max(120).optional(),
+        points: z.number().int().min(-10000).max(10000).optional(),
+        levels: z.number().int().min(0).max(1000).optional(),
+        notes: z.string().max(4000).optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: create,
+    },
+    async (input) => {
+      const access = await loadCharacter(ctx, input.character_id);
+      requireCharacterWrite(access);
+      const { data, error } = await ctx.supabase
+        .from("character_entries")
+        .insert({
+          character_id: input.character_id,
+          kind: input.kind,
+          name: input.name,
+          category: input.category ?? null,
+          notes: input.notes ?? null,
+          ...(input.points === undefined ? {} : { points: input.points }),
+          ...(input.levels === undefined ? {} : { levels: input.levels }),
+        })
+        .select("id, character_id, kind, name, category, points, levels")
+        .single();
+      if (error) fail("Adding the entry", error);
+      return reply(`Added "${data.name}" to "${access.row.name}".`, { item: data });
+    },
+  );
+
+  server.registerTool(
+    "delete_character_entry",
+    {
+      title: "Remove an entry from a character",
+      description:
+        "Permanently removes one entry from a character sheet. Only the sheet's owner or their campaign's Game Master can do this.",
+      inputSchema: z.object({ entry_id: uuid }),
+      outputSchema: deleteOutput,
+      annotations: destroy,
+    },
+    async ({ entry_id }) => {
+      const { data: found, error: lookupError } = await ctx.supabase
+        .from("character_entries")
+        .select("id, name, character_id")
+        .eq("id", entry_id)
+        .maybeSingle();
+      if (lookupError) fail("Entry lookup", lookupError);
+      if (!found) throw new Error("Entry not found, or you do not have access to it.");
+
+      const access = await loadCharacter(ctx, found.character_id);
+      requireCharacterWrite(access);
+
+      const { data, error } = await ctx.supabase
+        .from("character_entries")
+        .delete()
+        .eq("id", entry_id)
+        .select("id");
+      if (error) fail("Deleting the entry", error);
+      if (!data || data.length === 0) throw new Error("The entry was not deleted.");
+      return reply(`Removed "${found.name}" from "${access.row.name}".`, {
+        deleted: true,
+        id: entry_id,
+      });
+    },
+  );
+
+  return server;
+}
+
+/** Names of every tool this server exposes, in registration order. */
+export const MCP_TOOL_NAMES = [
+  "list_campaigns",
+  "create_campaign",
+  "list_entry_types",
+  "list_entries",
+  "get_entry",
+  "create_entry",
+  "update_entry",
+  "delete_entry",
+  "list_relationships",
+  "create_relationship",
+  "list_characters",
+  "get_character",
+  "create_character",
+  "add_character_entry",
+  "delete_character_entry",
+] as const;
+
+/** Exported for tests: the fields that must never reach a non-GM caller. */
+export const MCP_GM_ONLY_FIELDS = {
+  entity: GM_ONLY_ENTITY_FIELDS,
+  relationship: GM_ONLY_RELATIONSHIP_FIELDS,
+} as const;
+
+export { stripGmFields as __stripGmFields };

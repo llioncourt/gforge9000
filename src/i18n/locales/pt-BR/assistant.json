@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "title": "Acesso de assistente — Universal Character Forge",
+    "description": "Conecte um assistente externo às suas campanhas e personagens usando a sua própria conta.",
+    "ogDescription": "Conecte um assistente externo às suas campanhas e personagens usando a sua própria conta."
+  },
+  "page": {
+    "title": "Acesso de assistente",
+    "description": "Permita que um assistente que você já usa leia e atualize suas campanhas e fichas."
+  },
+  "endpoint": {
+    "label": "Endereço de conexão",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "help": "Cole este endereço no assistente que você quer conectar. Ele vai pedir que você entre com a sua conta de sempre e aprove o acesso."
+  },
+  "access": {
+    "title": "O que um assistente pode fazer",
+    "description": "Um assistente só enxerga o que você enxerga e só altera o que você pode alterar.",
+    "pointOne": "Consultar suas campanhas, entradas de mundo e fichas de personagem.",
+    "pointTwo": "Anotações de Mestre continuam ocultas para quem não é o Mestre.",
+    "pointThree": "Você pode recusar uma conexão a qualquer momento na tela de aprovação."
+  },
+  "consent": {
+    "meta": {
+      "title": "Aprovar acesso — Universal Character Forge",
+      "description": "Revise e aprove o pedido de um assistente para usar a sua conta."
+    },
+    "title": "Aprovar acesso",
+    "description": "{{app}} quer usar a sua conta para ler e atualizar suas campanhas e personagens.",
+    "clientLabel": "Aplicativo solicitante",
+    "websiteLabel": "Site",
+    "accountLabel": "Sua conta",
+    "scopesLabel": "Acesso solicitado",
+    "scopesNone": "Acesso básico à conta.",
+    "unknownApp": "Um aplicativo externo",
+    "approve": "Aprovar",
+    "deny": "Recusar",
+    "redirecting": "Levando você de volta ao aplicativo…",
+    "invalidTitle": "Este link não é válido",
+    "invalidDescription": "O pedido está ausente ou expirou. Comece a conexão novamente pelo aplicativo que você estava usando.",
+    "errorTitle": "Não foi possível carregar este pedido",
+    "errorDescription": "O pedido pode ter expirado. Tente de novo ou comece a conexão novamente pelo aplicativo que você estava usando.",
+    "retry": "Tentar de novo",
+    "backHome": "Ir para o início"
+  }
+}

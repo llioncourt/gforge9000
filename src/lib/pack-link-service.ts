@@ -15,6 +15,7 @@ import {
   packVersionOf,
   readPackLink,
   restoreDefinitionPatch,
+  type RestoreWarning,
   specializationOf,
   withPackLink,
   withoutPackLink,
@@ -45,28 +46,38 @@ const CANDIDATE_COLUMNS =
 
 export interface ResolvedPackItems {
   byId: Map<string, PackCandidate>;
-  /** Pack ids the caller can still see — used to tell "removed" from "hidden". */
+  /** Pack ids the caller can still see. */
   visiblePackIds: Set<string>;
+  /**
+   * Pack ids the caller OWNS. Only for these can an absent item be proved to
+   * have been removed — see `resolutionFor`.
+   */
+  ownedPackIds: Set<string>;
 }
 
 /**
  * Loads the pack items referenced by a set of links, under the caller's own
  * access.
  *
- * RLS note: with the caller's client, an item that was deleted and an item
- * that merely became invisible both come back as "no row". The distinction is
- * therefore derived from whether the *pack* is still visible: a visible pack
- * whose item is gone means the item was removed, and a pack that is no longer
- * visible means the caller lost access. No policy is weakened and no
- * service-role client is used to learn more than that.
+ * RLS note: with the caller's client an item that was deleted and an item that
+ * merely became invisible both come back as "no row", so the two can normally
+ * NOT be told apart. The one case where they can is when the caller owns the
+ * linked pack: `library_entries` is readable by its owner
+ * (`owner_id = auth.uid()`) and a pack is owner-scoped, so the owner sees every
+ * entry in their own pack. If the linked id is absent there, it really is gone.
+ *
+ * In every other case the result stays the conservative "inaccessible" — we do
+ * not guess. No policy is weakened and no service-role client is used.
  */
 export async function resolveLinkedItems(
   client: PackClient,
   links: PackLink[],
+  callerUserId?: string | null | undefined,
 ): Promise<ResolvedPackItems> {
   const byId = new Map<string, PackCandidate>();
   const visiblePackIds = new Set<string>();
-  if (links.length === 0) return { byId, visiblePackIds };
+  const ownedPackIds = new Set<string>();
+  if (links.length === 0) return { byId, visiblePackIds, ownedPackIds };
 
   const entryIds = [...new Set(links.map((l) => l.pack_entry_id))];
   const packIds = [...new Set(links.map((l) => l.pack_id).filter(Boolean))];
@@ -75,9 +86,15 @@ export async function resolveLinkedItems(
   for (const value of packIndex.values()) visiblePackIds.add(value.id);
 
   if (packIds.length) {
-    const { data, error } = await client.from("content_packs").select("id").in("id", packIds);
+    const { data, error } = await client
+      .from("content_packs")
+      .select("id,owner_id")
+      .in("id", packIds);
     if (error) throw new Error(error.message);
-    for (const row of data ?? []) visiblePackIds.add(row.id);
+    for (const row of data ?? []) {
+      visiblePackIds.add(row.id);
+      if (callerUserId && row.owner_id === callerUserId) ownedPackIds.add(row.id);
+    }
   }
 
   for (let i = 0; i < entryIds.length; i += 200) {
@@ -92,7 +109,7 @@ export async function resolveLinkedItems(
       byId.set(candidate.id, candidate);
     }
   }
-  return { byId, visiblePackIds };
+  return { byId, visiblePackIds, ownedPackIds };
 }
 
 export async function resolutionFor(
@@ -102,10 +119,12 @@ export async function resolutionFor(
 ): Promise<PackResolution> {
   const item = resolved.byId.get(link.pack_entry_id) ?? null;
   if (!item) {
+    // "removed" is only claimed when it is provable: the caller owns the pack,
+    // so they would see the item if it still existed. Otherwise: inaccessible.
     return {
       item: null,
       packAllowed: true,
-      missingReason: resolved.visiblePackIds.has(link.pack_id) ? "removed" : "inaccessible",
+      missingReason: resolved.ownedPackIds.has(link.pack_id) ? "removed" : "inaccessible",
     };
   }
   const allowed = allowedPacksOf(campaignSettings);
@@ -121,11 +140,12 @@ export async function deriveStatuses(
   client: PackClient,
   entries: EntryRowLike[],
   campaignSettings: unknown,
+  callerUserId?: string | null | undefined,
 ): Promise<Map<string, PackLinkStatus>> {
   const links = entries
     .map((entry) => readPackLink(entry.source))
     .filter((link): link is PackLink => link !== null);
-  const resolved = await resolveLinkedItems(client, links);
+  const resolved = await resolveLinkedItems(client, links, callerUserId);
   const out = new Map<string, PackLinkStatus>();
   for (const entry of entries) {
     const link = readPackLink(entry.source);
@@ -231,14 +251,17 @@ export async function buildLink(
 export interface LinkOutcome {
   entry: EntryRowLike;
   status: PackLinkStatus;
+  /** Things the player should be told about; never applied silently. */
+  warnings?: RestoreWarning[];
 }
 
 async function statusOf(
   client: PackClient,
   entry: EntryRowLike,
   campaignSettings: unknown,
+  callerUserId?: string | null | undefined,
 ): Promise<PackLinkStatus> {
-  const statuses = await deriveStatuses(client, [entry], campaignSettings);
+  const statuses = await deriveStatuses(client, [entry], campaignSettings, callerUserId);
   return statuses.get(entry.id) ?? { state: "custom", link: null };
 }
 
@@ -322,7 +345,11 @@ export async function restoreFromPack(
     data: patch.data,
     source: withPackLink(entry.source, refreshed),
   });
-  return { entry: updated, status: await statusOf(client, updated, campaignSettings) };
+  return {
+    entry: updated,
+    status: await statusOf(client, updated, campaignSettings),
+    warnings: patch.warnings,
+  };
 }
 
 /* ------------------------------------------------------------------ */

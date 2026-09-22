@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { CharacterEntry, CharacterRecord, CharacterSheet } from "@/rules";
+import { withPackLink, type PackLink } from "@/lib/pack-link";
 
 /**
  * Canonical portable format (UCF-JSON v1). Adapters for other tools should
@@ -294,19 +295,28 @@ export function libraryToCsv(rows: PortableLibraryEntry[]): string {
  * Pure mapping from a library entry to a character entry payload so the
  * builder can add saved content without retyping it.
  */
-export function libraryEntryToCharacterDraft(entry: {
-  kind: string;
-  name: string;
-  category: string | null;
-  base_points: number;
-  summary: string | null;
-  data: Record<string, unknown> | null;
-  pack?: string | null;
-  source_label: string;
-  source_edition: string | null;
-  source_page: string | null;
-  source_type: string;
-}): {
+export function libraryEntryToCharacterDraft(
+  entry: {
+    kind: string;
+    name: string;
+    category: string | null;
+    base_points: number;
+    summary: string | null;
+    data: Record<string, unknown> | null;
+    pack?: string | null;
+    source_label: string;
+    source_edition: string | null;
+    source_page: string | null;
+    source_type: string;
+  },
+  /**
+   * The pack-link record, when the caller explicitly picked this entry from a
+   * content pack (see `buildLink`/`withPackLink` in `pack-link-service.ts`).
+   * `null`/omitted keeps the entry a plain custom addition — free-text or
+   * hand-typed content is never auto-linked.
+   */
+  link?: PackLink | null,
+): {
   kind: string;
   name: string;
   category: string | null;
@@ -326,6 +336,13 @@ export function libraryEntryToCharacterDraft(entry: {
     data["quantity"] = Number(data["quantity"] ?? 1);
     data["carried"] = data["carried"] ?? true;
   }
+  const baseSource: Record<string, unknown> = {
+    label: entry.source_label,
+    edition: entry.source_edition ?? "",
+    page: entry.source_page ?? "",
+    type: entry.source_type,
+    pack: entry.pack ?? null,
+  };
   return {
     kind: entry.kind,
     name: entry.name,
@@ -334,13 +351,7 @@ export function libraryEntryToCharacterDraft(entry: {
     levels: 1,
     notes: entry.summary,
     data,
-    source: {
-      label: entry.source_label,
-      edition: entry.source_edition ?? "",
-      page: entry.source_page ?? "",
-      type: entry.source_type,
-      pack: entry.pack ?? null,
-    },
+    source: link ? withPackLink(baseSource, link) : baseSource,
   };
 }
 

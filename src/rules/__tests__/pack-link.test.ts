@@ -8,6 +8,7 @@ import {
   hashDefinition,
   leveledPricing,
   packDefinition,
+  packLeveledCost,
   packVersionOf,
   readPackLink,
   restoreDefinitionPatch,
@@ -18,11 +19,7 @@ import {
   type PackItemLike,
   type PackLink,
 } from "@/lib/pack-link";
-import {
-  matchPackCandidates,
-  parseSearchName,
-  type PackCandidate,
-} from "@/lib/pack-match";
+import { matchPackCandidates, parseSearchName, type PackCandidate } from "@/lib/pack-match";
 import { validateCharacter } from "@/lib/pack-validation";
 import type { CharacterEntry, CharacterRecord } from "@/rules";
 
@@ -157,25 +154,32 @@ describe("pack link: derived state", () => {
       derivePackLinkState(entry(), { item: null, packAllowed: true, missingReason: "inaccessible" })
         .stale_reason,
     ).toBe("inaccessible");
-    expect(
-      derivePackLinkState(entry(), resolution({ packAllowed: false })).stale_reason,
-    ).toBe("pack_not_allowed");
+    expect(derivePackLinkState(entry(), resolution({ packAllowed: false })).stale_reason).toBe(
+      "pack_not_allowed",
+    );
     expect(
       derivePackLinkState(entry(), resolution({ currentVersion: "v1:sha256:other" })).stale_reason,
     ).toBe("version_changed");
   });
 
   it("counts states for a summary", () => {
-    expect(
-      countStates([{ state: "official" }, { state: "official" }, { state: "stale" }]),
-    ).toEqual({ official: 2, modified: 0, custom: 0, stale: 1 });
+    expect(countStates([{ state: "official" }, { state: "official" }, { state: "stale" }])).toEqual(
+      { official: 2, modified: 0, custom: 0, stale: 1 },
+    );
   });
 });
 
 describe("pack link: definition versus progression", () => {
   it("does not call invested skill points a modification", () => {
     const skill = entry({ kind: "skill", name: "Stealth", points: 8, data: { difficulty: "A" } });
-    const packSkill = item({ kind: "skill", name: "Stealth", base_points: 1, cost_per_level: 0, category: "Physical", data: { difficulty: "A" } });
+    const packSkill = item({
+      kind: "skill",
+      name: "Stealth",
+      base_points: 1,
+      cost_per_level: 0,
+      category: "Physical",
+      data: { difficulty: "A" },
+    });
     expect(compareDefinition(skill, packSkill)).toEqual([]);
   });
 
@@ -194,7 +198,9 @@ describe("pack link: definition versus progression", () => {
 
 describe("pack link: specialization", () => {
   it("prefers the structural field and falls back to the name", () => {
-    expect(specializationOf({ name: "Survival", data: { specialization: "Jungle" } })).toBe("Jungle");
+    expect(specializationOf({ name: "Survival", data: { specialization: "Jungle" } })).toBe(
+      "Jungle",
+    );
     expect(specializationOf({ name: "Survival (Jungle)" })).toBe("Jungle");
     expect(specializationOf({ name: "Stealth" })).toBe("");
   });
@@ -206,13 +212,20 @@ describe("pack link: specialization", () => {
 });
 
 describe("pack link: matching", () => {
-  it("matches a base item and keeps the typed specialization", () => {
-    const result = matchPackCandidates(
-      { kind: "skill", name: "Survival (Jungle)" },
-      [candidate()],
-    );
+  it("matches a specialization-capable base item and keeps the typed specialization", () => {
+    const result = matchPackCandidates({ kind: "skill", name: "Survival (Jungle)" }, [
+      candidate({ specialization_required: true }),
+    ]);
     expect(result.status).toBe("unique");
     expect(result.specialization).toBe("Jungle");
+  });
+
+  it("never attaches a specialization to a plain generic item", () => {
+    // The pack says nothing about specializations, so "Survival (Jungle)" is
+    // not the same thing as the generic "Survival": report no match.
+    const result = matchPackCandidates({ kind: "skill", name: "Survival (Jungle)" }, [candidate()]);
+    expect(result.status).toBe("none");
+    expect(result.item).toBeNull();
   });
 
   it("prefers the exact specialization over the base item", () => {
@@ -242,7 +255,9 @@ describe("pack link: matching", () => {
   });
 
   it("reports no match across kinds", () => {
-    expect(matchPackCandidates({ kind: "trait", name: "Survival" }, [candidate()]).status).toBe("none");
+    expect(matchPackCandidates({ kind: "trait", name: "Survival" }, [candidate()]).status).toBe(
+      "none",
+    );
   });
 });
 
@@ -256,7 +271,14 @@ describe("pack link: restoring", () => {
     });
     const patch = restoreDefinitionPatch(
       skill,
-      item({ kind: "skill", name: "Survival", category: "Outdoor", base_points: 1, cost_per_level: 0, data: { difficulty: "H", attribute: "Per" } }),
+      item({
+        kind: "skill",
+        name: "Survival",
+        category: "Outdoor",
+        base_points: 1,
+        cost_per_level: 0,
+        data: { difficulty: "H", attribute: "Per" },
+      }),
     );
     expect(patch.points).toBe(8);
     expect(patch.name).toBe("Survival (Jungle)");
@@ -271,8 +293,25 @@ describe("pack link: restoring", () => {
     expect(patch.points).toBe(6);
   });
 
-  it("clamps levels above the pack maximum", () => {
-    expect(restoreDefinitionPatch(entry({ levels: 12 }), item()).levels).toBe(5);
+  it("keeps levels above the pack maximum and warns instead of clamping", () => {
+    const patch = restoreDefinitionPatch(entry({ levels: 12 }), item());
+    expect(patch.levels).toBe(12);
+    expect(patch.warnings.map((w) => w.code)).toContain("levels_over_max");
+  });
+
+  it("refreshes pack-defined mechanics and drops an outdated copy on the sheet", () => {
+    const patch = restoreDefinitionPatch(
+      entry({
+        kind: "skill",
+        name: "Stealth",
+        data: { defaults: "DX-5", difficulty: "E", attribute: "IQ" },
+      }),
+      item({ kind: "skill", name: "Stealth", data: { difficulty: "A", attribute: "DX" } }),
+    );
+    expect(patch.data["difficulty"]).toBe("A");
+    expect(patch.data["attribute"]).toBe("DX");
+    // The pack no longer defines defaults, so the stale sheet copy goes away.
+    expect(patch.data["defaults"]).toBeUndefined();
   });
 });
 
@@ -353,5 +392,20 @@ describe("character validation", () => {
     });
     expect(result.points.over_budget).toBe(true);
     expect(result.findings.some((f) => f.type === "point_budget")).toBe(true);
+  });
+});
+
+describe("pack link: leveled pricing (pack-link contract)", () => {
+  // A per-level pack row prices EVERY level, including the first: most real
+  // rows carry base_points = 0 with cost_per_level = 5.
+  it("prices two levels of a 5/level trait at 10", () => {
+    expect(packLeveledCost(5, 2)).toBe(10);
+    const perLevel = item({ base_points: 0, cost_per_level: 5, max_levels: 10 });
+    expect(leveledPricing(entry({ levels: 2, points: 5 }), perLevel)).toMatchObject({
+      expected: 10,
+      actual: 5,
+      consistent: false,
+    });
+    expect(leveledPricing(entry({ levels: 2, points: 10 }), perLevel)?.consistent).toBe(true);
   });
 });

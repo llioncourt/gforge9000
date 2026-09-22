@@ -213,8 +213,7 @@ const input = z.discriminatedUnion("action", [
       url: z.string().url(),
     })
     .describe(
-      "Fetch a cover image from a public https URL and store it, returning its storage path for " +
-        "create_album/update_album. GM only, changes data.",
+      "Disabled for security reasons: use prepare_cover_upload + create_album/update_album, or upload_cover_base64.",
     ),
   z
     .object({
@@ -248,8 +247,7 @@ const input = z.discriminatedUnion("action", [
       ...trackFields,
     })
     .describe(
-      "Fetch a track's audio from a public https URL, store it, and add it to the album in one " +
-        "step. GM only, changes data.",
+      "Disabled for security reasons: use prepare_track_upload + add_track, or upload_track_base64.",
     ),
   z
     .object({
@@ -335,7 +333,7 @@ const input = z.discriminatedUnion("action", [
       visible_to_players: z.boolean().optional(),
     })
     .describe(
-      "Fetch a sound effect's audio from a public https URL and create it in one step. GM only, changes data.",
+      "Disabled for security reasons: use prepare_effect_upload + create_sound_fx, or upload_effect_base64.",
     ),
   z
     .object({
@@ -433,15 +431,18 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
         "delete_album removes stored files, changes/deletes data), set_album_visibility (GM only, " +
         "changes data), add_track/update_track/delete_track (GM only, delete_track removes the " +
         "stored file, changes/deletes data), get_track_url (short-lived signed URL), set_playback " +
-        "(GM only, changes data), prepare_cover_upload/upload_cover_from_url/upload_cover_base64 " +
-        "(GM only, stage a cover image for create_album/update_album, changes data), " +
-        "prepare_track_upload/upload_track_from_url/upload_track_base64 (GM only, stage or add " +
-        "track audio, changes data), list_sound_fx (read), create_sound_fx/update_sound_fx/" +
+        "(GM only, changes data), prepare_cover_upload/upload_cover_base64 " +
+        "(GM only, stage a cover image for create_album/update_album, changes data; " +
+        "upload_cover_from_url is disabled for security reasons), " +
+        "prepare_track_upload/upload_track_base64 (GM only, stage or add " +
+        "track audio, changes data; upload_track_from_url is disabled for security reasons), " +
+        "list_sound_fx (read), create_sound_fx/update_sound_fx/" +
         "delete_sound_fx (GM only, delete_sound_fx removes the stored file, changes/deletes data), " +
         "reorder_sound_fx (GM only, rewrites play order, changes data), set_sound_fx_visibility " +
         "(GM only, changes data), get_sound_fx_url (short-lived signed URL), trigger_sound_fx (GM " +
-        "only, fires a shared event, changes data), prepare_effect_upload/upload_effect_from_url/" +
-        "upload_effect_base64 (GM only, stage or create a sound effect, changes data).",
+        "only, fires a shared event, changes data), prepare_effect_upload/" +
+        "upload_effect_base64 (GM only, stage or create a sound effect, changes data; " +
+        "upload_effect_from_url is disabled for security reasons).",
       inputSchema: input,
       outputSchema: domainOutput,
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
@@ -689,20 +690,13 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
         return detailReply("Upload target prepared for an album cover.", { ...prepared });
       },
 
-      upload_cover_from_url: async (i) => {
-        const campaign = await loadCampaign(ctx, i.campaign_id);
-        requireGmFor(campaign, "upload an album cover");
-        const file = await fetchRemoteFile(i.url, {
-          maxBytes: CAMPAIGN_COVER_MAX_BYTES,
-          allowedMime: CAMPAIGN_COVER_MIME_TYPES,
-        });
-        const path = storagePathFor(`${ctx.userId}/${i.campaign_id}/covers`, i.url);
-        await uploadBytes(ctx.supabase, CAMPAIGN_SOUNDTRACK_BUCKET, path, file);
-        return detailReply("Cover image uploaded.", {
-          storage_path: path,
-          byte_size: file.size,
-          mime_type: file.mime,
-        });
+      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
+      // resolve+pin SSRF protection is not achievable on this runtime.
+      upload_cover_from_url: async () => {
+        throw new Error(
+          "Downloading files from a web address is turned off for security reasons. " +
+            "Use prepare_cover_upload instead, or send small images directly with upload_cover_base64.",
+        );
       },
 
       upload_cover_base64: async (i) => {
@@ -739,41 +733,13 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
         return detailReply("Upload target prepared for a track.", { ...prepared });
       },
 
-      upload_track_from_url: async (i) => {
-        const album = await loadAlbum(ctx, i.album_id);
-        const campaign = await loadCampaign(ctx, album.campaign_id);
-        requireGmFor(campaign, "upload a track");
-        const file = await fetchRemoteFile(i.url, {
-          maxBytes: CAMPAIGN_SOUNDTRACK_TRACK_MAX_BYTES,
-          allowedMime: SOUNDTRACK_TRACK_MIME_TYPES,
-        });
-        const path = storagePathFor(
-          `${ctx.userId}/${album.campaign_id}/${i.album_id}/tracks`,
-          i.file_name ?? i.url,
+      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
+      // resolve+pin SSRF protection is not achievable on this runtime.
+      upload_track_from_url: async () => {
+        throw new Error(
+          "Downloading files from a web address is turned off for security reasons. " +
+            "Use prepare_track_upload instead, or send small tracks directly with upload_track_base64.",
         );
-        await uploadBytes(ctx.supabase, CAMPAIGN_SOUNDTRACK_BUCKET, path, file);
-        const { data, error } = await ctx.supabase
-          .from("campaign_soundtrack_tracks")
-          .insert({
-            campaign_id: album.campaign_id,
-            album_id: i.album_id,
-            storage_path: path,
-            file_name: i.file_name ?? i.url,
-            byte_size: file.size,
-            mime_type: file.mime,
-            title: i.title,
-            position: i.position,
-            composer: i.composer ?? null,
-            duration_seconds: i.duration_seconds ?? null,
-            lyrics: i.lyrics ?? null,
-          })
-          .select("*")
-          .single();
-        if (error) {
-          await removeStoredObject(ctx.supabase, CAMPAIGN_SOUNDTRACK_BUCKET, path);
-          fail("Adding track", error);
-        }
-        return detailReply(`Track "${i.title}" uploaded and added to "${album["title"]}".`, data);
       },
 
       upload_track_base64: async (i) => {
@@ -994,46 +960,13 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
         return detailReply("Upload target prepared for a sound effect.", { ...prepared });
       },
 
-      upload_effect_from_url: async (i) => {
-        const campaign = await loadCampaign(ctx, i.campaign_id);
-        requireGmFor(campaign, "upload a sound effect");
-        const file = await fetchRemoteFile(i.url, {
-          maxBytes: CAMPAIGN_SOUND_FX_MAX_BYTES,
-          allowedMime: SOUND_FX_MIME_TYPES,
-        });
-        const path = storagePathFor(`${ctx.userId}/${i.campaign_id}`, i.url);
-        await uploadBytes(ctx.supabase, CAMPAIGN_SOUND_FX_BUCKET, path, file);
-        const { data: last, error: lastError } = await ctx.supabase
-          .from("campaign_sound_fx")
-          .select("sort_order")
-          .eq("campaign_id", i.campaign_id)
-          .order("sort_order", { ascending: false })
-          .limit(1);
-        if (lastError) {
-          await removeStoredObject(ctx.supabase, CAMPAIGN_SOUND_FX_BUCKET, path);
-          fail("Reading sort order", lastError);
-        }
-        const nextSort = (last?.[0]?.sort_order ?? -1) + 1;
-        const { data, error } = await ctx.supabase
-          .from("campaign_sound_fx")
-          .insert({
-            campaign_id: i.campaign_id,
-            title: i.title,
-            storage_path: path,
-            file_name: i.url.split("/").pop() ?? "sound-effect",
-            byte_size: file.size,
-            mime_type: file.mime,
-            created_by: ctx.userId,
-            sort_order: nextSort,
-            visible_to_players: i.visible_to_players ?? true,
-          })
-          .select("*")
-          .single();
-        if (error) {
-          await removeStoredObject(ctx.supabase, CAMPAIGN_SOUND_FX_BUCKET, path);
-          fail("Creating sound effect", error);
-        }
-        return detailReply(`Sound effect "${i.title}" uploaded and created.`, data);
+      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
+      // resolve+pin SSRF protection is not achievable on this runtime.
+      upload_effect_from_url: async () => {
+        throw new Error(
+          "Downloading files from a web address is turned off for security reasons. " +
+            "Use prepare_effect_upload instead, or send small effects directly with upload_effect_base64.",
+        );
       },
 
       upload_effect_base64: async (i) => {

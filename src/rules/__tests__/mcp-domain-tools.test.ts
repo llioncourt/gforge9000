@@ -1,10 +1,6 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { buildMcpServer } from "@/lib/mcp/tools.server";
-import {
-  assertPublicHttpsUrl,
-  decodeBase64File,
-  fetchRemoteFile,
-} from "@/lib/mcp/uploads.server";
+import { assertPublicHttpsUrl, decodeBase64File, fetchRemoteFile } from "@/lib/mcp/uploads.server";
 
 /* ------------------------------------------------------------------ */
 /* Shared fake-Supabase plumbing (mirrors src/rules/__tests__/mcp-tools.test.ts) */
@@ -33,16 +29,7 @@ type TableValue = unknown | QueueItem[];
 /** Chainable thenable standing in for a supabase-js query builder. */
 function query(data: unknown, extra: Record<string, unknown> = {}, spy?: Spy) {
   const self: Record<string, unknown> = {};
-  for (const method of [
-    "select",
-    "eq",
-    "order",
-    "limit",
-    "ilike",
-    "single",
-    "maybeSingle",
-    "in",
-  ]) {
+  for (const method of ["select", "eq", "order", "limit", "ilike", "single", "maybeSingle", "in"]) {
     self[method] = () => self;
   }
   self["update"] = (payload: unknown) => {
@@ -64,8 +51,7 @@ function query(data: unknown, extra: Record<string, unknown> = {}, spy?: Spy) {
 
 function rpcResult(data: unknown, error: { message: string } | null) {
   const self: Record<string, unknown> = {
-    then: (resolve: (value: unknown) => unknown) =>
-      Promise.resolve({ data, error }).then(resolve),
+    then: (resolve: (value: unknown) => unknown) => Promise.resolve({ data, error }).then(resolve),
   };
   self["single"] = () => self;
   return self;
@@ -220,18 +206,14 @@ describe("campaign_knowledge", () => {
   });
 
   it("GM cannot reveal an entry to self", async () => {
-    const tools = serverWith(
-      { campaigns: campaignRow, entities: entityRow },
-      GM,
-      {
-        rpc: (fn, args) => {
-          if (fn === "grant_entity_knowledge" && (args as { _user: string })._user === GM) {
-            return { data: null, error: { message: "The Game Master already sees every entry." } };
-          }
-          return { data: {}, error: null };
-        },
+    const tools = serverWith({ campaigns: campaignRow, entities: entityRow }, GM, {
+      rpc: (fn, args) => {
+        if (fn === "grant_entity_knowledge" && (args as { _user: string })._user === GM) {
+          return { data: null, error: { message: "The Game Master already sees every entry." } };
+        }
+        return { data: {}, error: null };
       },
-    );
+    });
     await expectFailure(
       tools["campaign_knowledge"]!.handler({
         action: "grant",
@@ -245,21 +227,17 @@ describe("campaign_knowledge", () => {
 
   it("revoking the last grant demotes the entry back to GM_ONLY", async () => {
     const grantRow = { id: "g1", campaign_id: CAMPAIGN };
-    const tools = serverWith(
-      { campaigns: campaignRow, knowledge_grants: grantRow },
-      GM,
-      {
-        rpc: (fn) => {
-          if (fn === "revoke_entity_knowledge") {
-            return {
-              data: { deleted: true, id: "g1", remaining_grants: 0, demoted: true },
-              error: null,
-            };
-          }
-          return { data: null, error: null };
-        },
+    const tools = serverWith({ campaigns: campaignRow, knowledge_grants: grantRow }, GM, {
+      rpc: (fn) => {
+        if (fn === "revoke_entity_knowledge") {
+          return {
+            data: { deleted: true, id: "g1", remaining_grants: 0, demoted: true },
+            error: null,
+          };
+        }
+        return { data: null, error: null };
       },
-    );
+    });
     const result = await tools["campaign_knowledge"]!.handler({ action: "revoke", grant_id: "g1" });
     const item = result.structuredContent["item"] as Record<string, unknown>;
     expect(item["demoted"]).toBe(true);
@@ -311,7 +289,10 @@ describe("campaign_notes", () => {
     // RLS filters the row out entirely, so the select returns no row.
     const tools = serverWith({ campaign_notes: null }, USER);
     await expectFailure(
-      tools["campaign_notes"]!.handler({ action: "get", note_id: "33333333-3333-4333-8333-333333333333" }),
+      tools["campaign_notes"]!.handler({
+        action: "get",
+        note_id: "33333333-3333-4333-8333-333333333333",
+      }),
       /Note not found, or you do not have access to it\./,
     );
   });
@@ -356,7 +337,10 @@ describe("history", () => {
       revision_id: "44444444-4444-4444-8444-444444444444",
     });
     expect(spy.rpc).toEqual([
-      { fn: "restore_entity_revision", args: { _revision: "44444444-4444-4444-8444-444444444444" } },
+      {
+        fn: "restore_entity_revision",
+        args: { _revision: "44444444-4444-4444-8444-444444444444" },
+      },
     ]);
     expect(spy.updated).toBeUndefined();
     expect(spy.inserted).toBeUndefined();
@@ -403,8 +387,22 @@ describe("maps", () => {
     image_path: null,
   };
   const objects = [
-    { id: "o1", map_id: MAP_ID, campaign_id: CAMPAIGN, hidden: false, owner_user_id: null, character_id: null },
-    { id: "o2", map_id: MAP_ID, campaign_id: CAMPAIGN, hidden: true, owner_user_id: GM, character_id: null },
+    {
+      id: "o1",
+      map_id: MAP_ID,
+      campaign_id: CAMPAIGN,
+      hidden: false,
+      owner_user_id: null,
+      character_id: null,
+    },
+    {
+      id: "o2",
+      map_id: MAP_ID,
+      campaign_id: CAMPAIGN,
+      hidden: true,
+      owner_user_id: GM,
+      character_id: null,
+    },
   ];
 
   it("excludes hidden objects for a player but shows everything to the GM", async () => {
@@ -440,10 +438,7 @@ describe("maps", () => {
 
   it("does not return a map hidden from players", async () => {
     const hiddenMap = { ...mapRow, visible_to_players: false };
-    const tools = serverWith(
-      { campaigns: campaignRow, maps: hiddenMap },
-      USER,
-    );
+    const tools = serverWith({ campaigns: campaignRow, maps: hiddenMap }, USER);
     await expectFailure(
       tools["maps"]!.handler({ action: "get", map_id: MAP_ID }),
       /Map not found, or you do not have access to it\./,
@@ -596,10 +591,7 @@ describe("campaign_assets", () => {
   });
 
   it("refuses set_visibility for a non-GM", async () => {
-    const tools = serverWith(
-      { campaigns: campaignRow, campaign_assets: hiddenAsset },
-      USER,
-    );
+    const tools = serverWith({ campaigns: campaignRow, campaign_assets: hiddenAsset }, USER);
     await expectFailure(
       tools["campaign_assets"]!.handler({
         action: "set_visibility",
@@ -630,8 +622,18 @@ describe("campaign_audio", () => {
 });
 
 describe("campaign_videos", () => {
-  const visibleVideo = { id: "v1", campaign_id: CAMPAIGN, title: "Recap", visible_to_players: true };
-  const hiddenVideo = { id: "v2", campaign_id: CAMPAIGN, title: "Secret cut", visible_to_players: false };
+  const visibleVideo = {
+    id: "v1",
+    campaign_id: CAMPAIGN,
+    title: "Recap",
+    visible_to_players: true,
+  };
+  const hiddenVideo = {
+    id: "v2",
+    campaign_id: CAMPAIGN,
+    title: "Secret cut",
+    visible_to_players: false,
+  };
 
   it("excludes hidden videos for a player but shows all to the GM", async () => {
     const playerTools = serverWith(
@@ -667,10 +669,7 @@ describe("campaign_videos", () => {
   });
 
   it("refuses set_visibility for a non-GM", async () => {
-    const tools = serverWith(
-      { campaigns: campaignRow, campaign_videos: hiddenVideo },
-      USER,
-    );
+    const tools = serverWith({ campaigns: campaignRow, campaign_videos: hiddenVideo }, USER);
     await expectFailure(
       tools["campaign_videos"]!.handler({
         action: "set_visibility",
@@ -742,6 +741,109 @@ describe("library", () => {
       deleteTools["library"]!.handler({ action: "delete_pack", pack_id: "p1" }),
       /Only the owner of the "My Pack" pack can delete it\./,
     );
+  });
+
+  // PL-012: entry_count must be owner-aware, not just keyed off the pack name.
+  it("does not bleed entry counts between two owners' same-named packs", async () => {
+    const OTHER_OWNER = OUTSIDER;
+    const packs = [
+      { id: "p1", owner_id: OWNER, name: "Adventurers' Guide" },
+      { id: "p2", owner_id: OTHER_OWNER, name: "Adventurers' Guide" },
+    ];
+    const entries = [
+      { owner_id: OWNER, pack: "Adventurers' Guide" },
+      { owner_id: OWNER, pack: "Adventurers' Guide" },
+      { owner_id: OTHER_OWNER, pack: "Adventurers' Guide" },
+    ];
+    const tools = serverWith(
+      {
+        content_packs: [{ __result: packs }, { __result: packs, extra: { count: packs.length } }],
+        library_entries: entries,
+      },
+      OWNER,
+    );
+    const result = await tools["library"]!.handler({ action: "list_packs" });
+    const items = result.structuredContent["items"] as Array<Record<string, unknown>>;
+    const mine = items.find((row) => row["owner_id"] === OWNER)!;
+    const theirs = items.find((row) => row["owner_id"] === OTHER_OWNER)!;
+    expect(mine["entry_count"]).toBe(2);
+    expect(theirs["entry_count"]).toBe(1);
+  });
+
+  // PL-013: search_pack_entries canonical/deprecated input and full output contract.
+  describe("search_pack_entries", () => {
+    const candidateEntry = {
+      id: "ce1",
+      owner_id: OWNER,
+      kind: "skill",
+      name: "Stealth",
+      category: "Physical",
+      base_points: 4,
+      cost_per_level: 1,
+      max_levels: 4,
+      pack: "My Pack",
+      data: { defaults: "DX-5", prerequisites: "None", attribute: "DX", difficulty: "A" },
+    };
+
+    it("accepts the canonical query field and returns the full candidate view", async () => {
+      const tools = serverWith(
+        { library_entries: [candidateEntry], content_packs: [packRow] },
+        OWNER,
+      );
+      const result = await tools["library"]!.handler({
+        action: "search_pack_entries",
+        query: "Stealth",
+      });
+      const items = result.structuredContent["items"] as Array<Record<string, unknown>>;
+      expect(items).toHaveLength(1);
+      const item = items[0]!;
+      for (const field of [
+        "id",
+        "name",
+        "kind",
+        "category",
+        "pack_id",
+        "pack_name",
+        "base_points",
+        "cost_per_level",
+        "max_levels",
+        "difficulty",
+        "attribute",
+        "defaults",
+        "prerequisites",
+        "specialization",
+        "specialization_required",
+        "pack_version",
+      ]) {
+        expect(item).toHaveProperty(field);
+      }
+      expect(item["defaults"]).toBe("DX-5");
+      expect(item["prerequisites"]).toBe("None");
+    });
+
+    it("still accepts the deprecated name alias", async () => {
+      const tools = serverWith(
+        { library_entries: [candidateEntry], content_packs: [packRow] },
+        OWNER,
+      );
+      const result = await tools["library"]!.handler({
+        action: "search_pack_entries",
+        name: "Stealth",
+      });
+      const items = result.structuredContent["items"] as Array<Record<string, unknown>>;
+      expect(items).toHaveLength(1);
+    });
+
+    it("rejects a call with neither query nor name", async () => {
+      const tools = serverWith(
+        { library_entries: [candidateEntry], content_packs: [packRow] },
+        OWNER,
+      );
+      await expectFailure(
+        tools["library"]!.handler({ action: "search_pack_entries" }),
+        /needs a query/,
+      );
+    });
   });
 });
 
@@ -824,9 +926,7 @@ describe("uploads.server: assertPublicHttpsUrl", () => {
   });
 
   it("rejects localhost and loopback hosts", () => {
-    expect(() => assertPublicHttpsUrl("https://localhost/file.png")).toThrow(
-      /not accepted/,
-    );
+    expect(() => assertPublicHttpsUrl("https://localhost/file.png")).toThrow(/not accepted/);
     expect(() => assertPublicHttpsUrl("https://127.0.0.1/file.png")).toThrow(/not accepted/);
   });
 
@@ -868,66 +968,39 @@ describe("uploads.server: decodeBase64File", () => {
   it("accepts an allowed small payload under the size cap", () => {
     const bytes = Buffer.from("hello world");
     const data = bytes.toString("base64");
-    const file = decodeBase64File(data, "image/png", { maxBytes: 1000, allowedMime: ["image/png"] });
+    const file = decodeBase64File(data, "image/png", {
+      maxBytes: 1000,
+      allowedMime: ["image/png"],
+    });
     expect(file.mime).toBe("image/png");
     expect(file.size).toBe(bytes.byteLength);
   });
 });
 
-describe("uploads.server: fetchRemoteFile", () => {
+describe("uploads.server: downloading from a web address is off", () => {
   const originalFetch = global.fetch;
   afterEach(() => {
     global.fetch = originalFetch;
   });
 
-  it("rejects a non-https source before ever calling fetch", async () => {
+  // The runtime cannot prove that a hostname resolves only to public addresses
+  // and cannot pin the connection to a verified address, so the feature is
+  // refused outright rather than shipped with partial protection.
+  it("refuses every call without touching the network", async () => {
     const fetchSpy = vi.fn();
     global.fetch = fetchSpy as unknown as typeof fetch;
     await expect(
-      fetchRemoteFile("http://example.com/file.png", { maxBytes: 1000, allowedMime: ["image/png"] }),
-    ).rejects.toThrow(/Only https addresses are accepted/);
+      fetchRemoteFile("https://example.com/file.png", {
+        maxBytes: 1000,
+        allowedMime: ["image/png"],
+      }),
+    ).rejects.toThrow();
+    await expect(
+      fetchRemoteFile("http://example.com/file.png", {
+        maxBytes: 1000,
+        allowedMime: ["image/png"],
+      }),
+    ).rejects.toThrow();
     expect(fetchSpy).not.toHaveBeenCalled();
-  });
-
-  it("rejects a disallowed MIME type reported by the remote server", async () => {
-    global.fetch = vi.fn(async () =>
-      new Response(new Uint8Array([1, 2, 3]), {
-        status: 200,
-        headers: { "content-type": "application/x-executable" },
-      }),
-    ) as unknown as typeof fetch;
-    await expect(
-      fetchRemoteFile("https://example.com/file.exe", { maxBytes: 1000, allowedMime: ["image/png"] }),
-    ).rejects.toThrow(/Unsupported file type/);
-  });
-
-  it("rejects a payload larger than the declared size cap", async () => {
-    const bytes = new Uint8Array(2000);
-    global.fetch = vi.fn(async () =>
-      new Response(bytes, {
-        status: 200,
-        headers: { "content-type": "image/png", "content-length": String(bytes.byteLength) },
-      }),
-    ) as unknown as typeof fetch;
-    await expect(
-      fetchRemoteFile("https://example.com/file.png", { maxBytes: 1000, allowedMime: ["image/png"] }),
-    ).rejects.toThrow(/too large/);
-  });
-
-  it("accepts an allowed https fixture via a mocked fetch", async () => {
-    const bytes = new Uint8Array([1, 2, 3, 4]);
-    global.fetch = vi.fn(async () =>
-      new Response(bytes, {
-        status: 200,
-        headers: { "content-type": "image/png", "content-length": String(bytes.byteLength) },
-      }),
-    ) as unknown as typeof fetch;
-    const file = await fetchRemoteFile("https://example.com/file.png", {
-      maxBytes: 1000,
-      allowedMime: ["image/png"],
-    });
-    expect(file.mime).toBe("image/png");
-    expect(file.size).toBe(4);
-    expect([...file.bytes]).toEqual([1, 2, 3, 4]);
   });
 });

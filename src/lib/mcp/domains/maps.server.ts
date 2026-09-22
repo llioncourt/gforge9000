@@ -140,7 +140,7 @@ const input = z.discriminatedUnion("action", [
   z
     .object({ action: z.literal("upload_image_from_url"), map_id: uuid, url: boundedText(2000) })
     .describe(
-      "Fetch a map image from a public https URL and attach it to the map. Changes data. GM only.",
+      "Disabled for security reasons: use prepare_upload + finalize_image_upload, or upload_image_base64.",
     ),
   z
     .object({
@@ -284,8 +284,8 @@ export function registerMaps(tool: ToolRegistrar, ctx: McpToolContext): void {
         "tokens, hidden ones excluded unless yours), create_object (add a token, changes data, GM " +
         "only), update_object (change a token, changes data, GM may change any token, a player " +
         "only their own non-hidden token), delete_object (remove a token, deletes data, GM only), " +
-        "prepare_upload/finalize_image_upload/upload_image_from_url/upload_image_base64 (attach a " +
-        "map image, changes data, GM only).",
+        "prepare_upload/finalize_image_upload/upload_image_base64 (attach a map image, changes " +
+        "data, GM only; upload_image_from_url is disabled for security reasons).",
       inputSchema: input,
       outputSchema: domainOutput,
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
@@ -528,18 +528,13 @@ export function registerMaps(tool: ToolRegistrar, ctx: McpToolContext): void {
         return detailReply(`Map image attached to "${access.map.name}".`, item);
       },
 
-      upload_image_from_url: async (i) => {
-        const access = await loadMap(ctx, i.map_id);
-        const campaign = await loadCampaign(ctx, access.campaignId);
-        requireGmFor(campaign, "upload map images");
-        const file = await fetchRemoteFile(i.url, {
-          maxBytes: MAP_MAX_BYTES,
-          allowedMime: MAP_TYPES,
-        });
-        const path = storagePathFor(`${ctx.userId}/${access.campaignId}`, "map-image");
-        await uploadBytes(ctx.supabase, MAP_BUCKET, path, file);
-        const item = await afterImageAttach(ctx, access, path, {});
-        return detailReply(`Map image attached to "${access.map.name}".`, item);
+      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
+      // resolve+pin SSRF protection is not achievable on this runtime.
+      upload_image_from_url: async () => {
+        throw new Error(
+          "Downloading files from a web address is turned off for security reasons. " +
+            "Use prepare_upload with finalize_image_upload instead, or upload_image_base64 for small files.",
+        );
       },
 
       upload_image_base64: async (i) => {

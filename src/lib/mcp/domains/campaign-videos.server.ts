@@ -112,7 +112,7 @@ const input = z.discriminatedUnion("action", [
       visible_to_players: z.boolean().optional(),
     })
     .describe(
-      "Download an MP4 from a public https URL and create the video. Uploading a new intro replaces the campaign's current intro. GM only. Changes data.",
+      "Disabled for security reasons: use prepare_upload + finalize_upload, or upload_base64 for small clips.",
     ),
   z
     .object({
@@ -263,8 +263,8 @@ export function registerCampaignVideos(tool: ToolRegistrar, ctx: McpToolContext)
         "thumbnail, GM only, deletes data), set_visibility (toggle player visibility, GM only, " +
         "changes data), get_url and get_thumb_url (short-lived signed links), prepare_upload (signed " +
         "upload target for an MP4, GM only), finalize_upload (create the row after uploading, GM " +
-        "only, changes data), upload_from_url (fetch a public https MP4 and create the video, GM " +
-        "only, changes data), upload_base64 (create the video from inline base64 bytes, small clips " +
+        "only, changes data), upload_from_url (disabled for security reasons, use " +
+        "prepare_upload/finalize_upload or upload_base64 instead), upload_base64 (create the video from inline base64 bytes, small clips " +
         "only, GM only, changes data), prepare_thumb_upload and set_thumb (replace the thumbnail " +
         "image, GM only, changes data). A campaign has at most one intro video; adding a new intro " +
         "replaces the old one.",
@@ -423,31 +423,13 @@ export function registerCampaignVideos(tool: ToolRegistrar, ctx: McpToolContext)
         return detailReply(`Created video "${row.title}".`, toStructured(row));
       },
 
-      upload_from_url: async (i) => {
-        const campaign = await loadCampaign(ctx, i.campaign_id);
-        requireGmFor(campaign, "upload videos");
-        const file = await fetchRemoteFile(i.url, {
-          maxBytes: CAMPAIGN_VIDEO_MAX_BYTES,
-          allowedMime: VIDEO_MIME,
-        });
-        const fileName = new URL(i.url).pathname.split("/").pop() || "video.mp4";
-        const path = storagePathFor(`${ctx.userId}/${i.campaign_id}`, fileName);
-        await uploadBytes(ctx.supabase, CAMPAIGN_INTRO_BUCKET, path, file);
-        const row = await createVideo(
-          ctx,
-          i.campaign_id,
-          {
-            title: i.title,
-            video_type: i.video_type,
-            storage_path: path,
-            file_name: fileName,
-            byte_size: file.size,
-            mime_type: "video/mp4",
-            visible_to_players: i.visible_to_players ?? true,
-          },
-          [path],
+      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
+      // resolve+pin SSRF protection is not achievable on this runtime.
+      upload_from_url: async () => {
+        throw new Error(
+          "Downloading files from a web address is turned off for security reasons. " +
+            "Use prepare_upload with finalize_upload instead, or send small clips directly with upload_base64.",
         );
-        return detailReply(`Created video "${row.title}".`, toStructured(row));
       },
 
       upload_base64: async (i) => {
@@ -507,13 +489,11 @@ export function registerCampaignVideos(tool: ToolRegistrar, ctx: McpToolContext)
           );
           path = stored.path;
         } else if (i.url) {
-          const file = await fetchRemoteFile(i.url, {
-            maxBytes: THUMB_MAX_BYTES,
-            allowedMime: THUMB_MIME,
-          });
-          const fileName = new URL(i.url).pathname.split("/").pop() || "thumb.jpg";
-          path = storagePathFor(`${ctx.userId}/${video.campaign_id}`, fileName);
-          await uploadBytes(ctx.supabase, CAMPAIGN_INTRO_BUCKET, path, file);
+          // TD-002: disabled — see fetchRemoteFile in uploads.server.ts.
+          throw new Error(
+            "Setting a thumbnail from a web address is turned off for security reasons. " +
+              "Use storage_path (prepare_upload/finalize_upload) or send it directly as base64 data.",
+          );
         } else {
           if (!i.mime_type) throw new Error("Give mime_type together with base64 thumbnail data.");
           const file = decodeBase64File(i.data ?? "", i.mime_type, {

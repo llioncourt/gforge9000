@@ -73,7 +73,7 @@ const input = z.discriminatedUnion("action", [
   z
     .object({ action: z.literal("upload_from_url"), character_id: uuid, url: z.string().max(2000) })
     .describe(
-      "Download an image from a public https URL and set it as the portrait. Owner or campaign GM only. Changes data.",
+      "Disabled for security reasons: use prepare_upload + finalize_upload, or upload_base64 for small files.",
     ),
   z
     .object({
@@ -129,8 +129,8 @@ export function registerCharacterPortrait(tool: ToolRegistrar, ctx: McpToolConte
         "and a short-lived signed view URL, or null if none), clear (remove the portrait, owner or " +
         "campaign GM only, deletes data), prepare_upload (get a signed upload target, owner or " +
         "campaign GM only), finalize_upload (set the portrait after uploading, owner or campaign GM " +
-        "only, changes data), upload_from_url (fetch a public https image and set it as the " +
-        "portrait, owner or campaign GM only, changes data), upload_base64 (set the portrait from " +
+        "only, changes data), upload_from_url (disabled for security reasons, use " +
+        "prepare_upload/finalize_upload or upload_base64 instead), upload_base64 (set the portrait from " +
         "inline base64 bytes, small files only, owner or campaign GM only, changes data).",
       inputSchema: input,
       outputSchema: domainOutput,
@@ -194,17 +194,13 @@ export function registerCharacterPortrait(tool: ToolRegistrar, ctx: McpToolConte
         return replacePortrait(ctx, i.character_id, stored.path);
       },
 
-      upload_from_url: async (i) => {
-        const access = await loadCharacter(ctx, i.character_id);
-        requireCharacterWrite(access);
-        const file = await fetchRemoteFile(i.url, {
-          maxBytes: PORTRAIT_MAX_BYTES,
-          allowedMime: PORTRAIT_TYPES,
-        });
-        const fileName = new URL(i.url).pathname.split("/").pop() ?? "portrait";
-        const path = storagePathFor(`${ctx.userId}/${i.character_id}`, fileName);
-        await uploadBytes(ctx.supabase, PORTRAIT_BUCKET, path, file);
-        return replacePortrait(ctx, i.character_id, path);
+      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
+      // resolve+pin SSRF protection is not achievable on this runtime.
+      upload_from_url: async () => {
+        throw new Error(
+          "Downloading files from a web address is turned off for security reasons. " +
+            "Use prepare_upload with finalize_upload instead, or send small files directly with upload_base64.",
+        );
       },
 
       upload_base64: async (i) => {

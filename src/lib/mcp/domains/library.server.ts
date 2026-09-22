@@ -39,6 +39,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { allowedPacksOf, isPackAllowed } from "@/lib/packs";
 import { loadCampaignSettings } from "@/lib/pack-link-service";
 import { loadPackCandidates, parseSearchName, withVersions } from "@/lib/pack-match";
+import { candidateView } from "@/lib/mcp/pack-link.server";
 
 // Source of truth: src/lib/ai-import-guides.ts (ENTRY_KINDS, not exported there)
 const LIBRARY_KINDS = [
@@ -161,7 +162,12 @@ const input = z.discriminatedUnion("action", [
   z
     .object({
       action: z.literal("search_pack_entries"),
-      name: boundedText(200),
+      query: boundedText(200).optional(),
+      name: boundedText(200)
+        .optional()
+        .describe(
+          "Deprecated alias for query. Use query instead; support for name will be removed.",
+        ),
       kind: z.enum(LIBRARY_KINDS).optional(),
       pack_id: uuid.optional(),
       campaign_id: uuid.optional(),
@@ -169,9 +175,10 @@ const input = z.discriminatedUnion("action", [
     })
     .describe(
       "Search pack items the caller may actually use, the same way character entries are matched " +
-        "by name. With campaign_id the search is limited to the packs that campaign allows. Each " +
-        "result carries the fields needed to link it to a character entry, including its id and " +
-        "current definition fingerprint.",
+        "by name (query, or the deprecated name alias — one of the two is required). With " +
+        "campaign_id the search is limited to the packs that campaign allows. Each result carries " +
+        "the fields needed to link it to a character entry (defaults, prerequisites, difficulty, " +
+        "attribute, specialization, etc.), including its id and current definition fingerprint.",
     ),
   z
     .object({ action: z.literal("get_pack"), pack_id: uuid })
@@ -195,8 +202,9 @@ const input = z.discriminatedUnion("action", [
     .object({ action: z.literal("delete_pack"), pack_id: uuid })
     .describe(
       "Delete a pack and every library entry inside it. Copies already placed on a character " +
-        "sheet are kept but lose their pack provenance. Only the pack's owner may delete it. " +
-        "Deletes data.",
+        "sheet keep their origin information; they simply show as out of date or no longer " +
+        "available once it can be shown that the source pack is gone. Only the pack's owner may " +
+        "delete it. Deletes data.",
     ),
   z
     .object({
@@ -295,8 +303,6 @@ async function deletePackContents(ctx: McpToolContext, name: string): Promise<vo
   const ids = (mine ?? []).map((row) => row.id);
 
   if (ids.length) {
-
-
     const groups = new Map<string, { packs: string[]; ids: string[] }>();
     for (const character of mine ?? []) {
       const packs = (character.packs ?? []) as string[];
@@ -479,15 +485,19 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
         if (countError) fail("Counting content packs", countError);
 
         const rows = (data ?? []) as ContentPackRow[];
+        // Keyed by owner_id + normalized pack name so two owners with a
+        // same-named pack never contaminate each other's counts. RLS still
+        // decides which library_entries rows are visible in the first place.
         const { data: entryRows, error: entriesError } = await ctx.supabase
           .from("library_entries")
-          .select("pack")
+          .select("owner_id,pack")
           .limit(10000);
         if (entriesError) fail("Counting pack entries", entriesError);
         const counts = new Map<string, number>();
         for (const row of entryRows ?? []) {
-          const key = (row.pack ?? "").trim().toLowerCase();
-          if (!key) continue;
+          const packName = (row.pack ?? "").trim().toLowerCase();
+          if (!packName) continue;
+          const key = `${row.owner_id}::${packName}`;
           counts.set(key, (counts.get(key) ?? 0) + 1);
         }
 
@@ -499,20 +509,25 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
 
         const items = rows.map((row) => ({
           ...toStructured(row),
-          entry_count: counts.get(row.name.trim().toLowerCase()) ?? 0,
+          entry_count: counts.get(`${row.owner_id}::${row.name.trim().toLowerCase()}`) ?? 0,
           owned_by_caller: row.owner_id === ctx.userId,
-          ...(allowed === null
-            ? {}
-            : { allowed_in_campaign: isPackAllowed(row.name, allowed) }),
+          ...(allowed === null ? {} : { allowed_in_campaign: isPackAllowed(row.name, allowed) }),
         }));
         return listReply("content packs", items, count ?? items.length);
       },
 
       search_pack_entries: async (i) => {
+        // `name` is a deprecated compatibility alias for `query`; at least one is required.
+        const searchText = i.query ?? i.name;
+        if (!searchText) {
+          throw new Error(
+            "search_pack_entries needs a query (the deprecated name field may be used instead).",
+          );
+        }
         const settings = i.campaign_id
           ? await loadCampaignSettings(ctx.supabase, i.campaign_id)
           : undefined;
-        const parsed = parseSearchName(i.name);
+        const parsed = parseSearchName(searchText);
         const scope: Parameters<typeof loadPackCandidates>[1] = {
           search: parsed.base,
           limit: (i.limit ?? 25) * 4,
@@ -523,23 +538,8 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
         const candidates = await loadPackCandidates(ctx.supabase, scope);
         const limited = candidates.slice(0, i.limit ?? 25);
         const withVersion = await withVersions(limited);
-        const items = withVersion.map((candidate) => ({
-          id: candidate.id,
-          name: candidate.name,
-          kind: candidate.kind,
-          category: candidate.category,
-          pack_id: candidate.pack_id,
-          pack_name: candidate.pack_name,
-          base_points: candidate.base_points,
-          cost_per_level: candidate.cost_per_level,
-          max_levels: candidate.max_levels,
-          attribute: candidate.attribute,
-          difficulty: candidate.difficulty,
-          specialization: candidate.specialization,
-          specialization_required: candidate.specialization_required,
-          pack_version: candidate.pack_version ?? null,
-        }));
-        return listReply("pack items", items as unknown as Structured[], items.length);
+        const items = withVersion.map((candidate) => candidateView(candidate));
+        return listReply("pack items", items, items.length);
       },
 
       get_pack: async (i) => {

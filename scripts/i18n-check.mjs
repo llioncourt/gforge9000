@@ -26,8 +26,7 @@ const VIRTUAL_LOCALES = new Set(["en-XA"]);
 const configSrc = readFileSync(join(root, "src/i18n/config.ts"), "utf8");
 const namespaces = [
   ...configSrc.matchAll(/export const NAMESPACES = \[([\s\S]*?)\] as const;/g),
-]
-  .flatMap((m) => [...m[1].matchAll(/"([\w-]+)"/g)].map((x) => x[1]));
+].flatMap((m) => [...m[1].matchAll(/"([\w-]+)"/g)].map((x) => x[1]));
 
 const locales = readdirSync(localesDir, { withFileTypes: true })
   .filter((d) => d.isDirectory())

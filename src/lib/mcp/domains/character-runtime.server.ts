@@ -252,11 +252,12 @@ export function registerCharacterRuntime(tool: ToolRegistrar, ctx: McpToolContex
           ctx.supabase,
           entryRows as unknown as EntryRowLike[],
           settings,
+          ctx.userId,
         );
         const links = entryRows
           .map((row) => readPackLink(row.source))
           .filter((link): link is PackLink => link !== null);
-        const resolved = await resolveLinkedItems(ctx.supabase, links);
+        const resolved = await resolveLinkedItems(ctx.supabase, links, ctx.userId);
         const packItems = new Map<string, PackItemLike>();
         for (const row of entryRows) {
           const link = readPackLink(row.source);
@@ -269,6 +270,9 @@ export function registerCharacterRuntime(tool: ToolRegistrar, ctx: McpToolContex
           entries,
           statuses,
           packItems,
+          // The ordinary campaign limits and the house-rule engine overrides are
+          // two different things and are reported separately.
+          campaignSettings: settings,
           ruleset: rulesetFromSettings(settings),
         });
         return detailReply(

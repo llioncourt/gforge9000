@@ -143,9 +143,13 @@ function decide(
  *
  * Order of attempts:
  *  1. same kind, same base name, same specialisation;
- *  2. same kind, same base name, candidate carries no specialisation of its
- *     own (a base item such as "Sobrevivência" that a specialisation is chosen
- *     for) — the specialisation is then stored structurally;
+ *  2. same kind, same base name, candidate carries no specialisation of its own
+ *     AND declares `specialization_required` — only such a row is a genuine
+ *     "choose your specialisation" base item, so the typed specialisation may
+ *     be attached to it and stored structurally. A plain generic row that says
+ *     nothing about specialisations is NOT silently reused: pretending
+ *     "Survival (Jungle)" is the unrelated generic "Survival" would invent a
+ *     link the pack never declared.
  *  3. same kind, same base name, any specialisation (only when the search
  *     carried none);
  * a tie is narrowed by category and otherwise reported as ambiguous.
@@ -165,9 +169,23 @@ export function matchPackCandidates(
   if (exact.length > 0) return decide(exact, parsed, query.category);
 
   if (parsed.qualifier) {
-    const generic = sameBase.filter((row) => candidateQualifier(row) === "");
+    const generic = sameBase.filter(
+      (row) => candidateQualifier(row) === "" && row.specialization_required,
+    );
     if (generic.length > 0) return decide(generic, parsed, query.category);
-    return decide(sameBase, parsed, query.category);
+    // Remaining rows carry their own, different specialisation. They may be
+    // offered as candidates to choose from, but a plain generic row is never
+    // auto-selected for a specialised search.
+    const specialised = sameBase.filter((row) => candidateQualifier(row) !== "");
+    if (specialised.length === 0) {
+      return { status: "none", item: null, candidates: [], specialization: parsed.rawQualifier };
+    }
+    return {
+      status: "ambiguous",
+      item: null,
+      candidates: specialised.slice(0, MAX_MATCH_CANDIDATES),
+      specialization: parsed.rawQualifier,
+    };
   }
 
   return decide(sameBase, parsed, query.category);

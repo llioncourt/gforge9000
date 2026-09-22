@@ -550,7 +550,8 @@
         "restore": "Restore from pack",
         "update": "Update to current version",
         "unlink": "Detach",
-        "link": "Find in packs"
+        "link": "Find in packs",
+        "updateGated": "Update to current version"
       },
       "picker": {
         "title": "Find this in a content pack",
@@ -567,11 +568,20 @@
         "none": "no match",
         "empty": "Every entry already has an origin.",
         "confirm": "Match {{count}} entries",
-        "done": "Matched {{count}} entries."
+        "done": "Matched {{count}} entries.",
+        "selectAria": "Include {{name}} in this update",
+        "candidateLabel": "Choose a match",
+        "choosePlaceholder": "Choose which one…",
+        "ambiguousHint": "More than one item matches this name. Pick the right one, or leave it unresolved.",
+        "noneHint": "No matching item was found.",
+        "unresolved": "Not resolved yet"
       },
       "summary": {
         "title": "Entry origins",
         "counts": "{{official}} official · {{modified}} modified · {{custom}} custom · {{stale}} out of date"
+      },
+      "warning": {
+        "levels_over_max": "This item's levels ({{value}}) are above what the content pack now allows ({{allowed}}). Your chosen levels were kept — nothing was changed automatically."
       }
     }
   }

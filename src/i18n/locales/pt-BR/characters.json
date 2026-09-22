@@ -550,7 +550,8 @@
         "restore": "Restaurar do pacote",
         "update": "Atualizar para a versão atual",
         "unlink": "Desvincular",
-        "link": "Procurar nos pacotes"
+        "link": "Procurar nos pacotes",
+        "updateGated": "Atualizar para a versão atual"
       },
       "picker": {
         "title": "Procurar em pacotes de conteúdo",
@@ -567,11 +568,20 @@
         "none": "sem correspondência",
         "empty": "Toda entrada já tem origem.",
         "confirm": "Casar {{count}} entradas",
-        "done": "{{count}} entradas casadas."
+        "done": "{{count}} entradas casadas.",
+        "selectAria": "Incluir {{name}} nesta atualização",
+        "candidateLabel": "Escolha uma correspondência",
+        "choosePlaceholder": "Escolha qual…",
+        "ambiguousHint": "Mais de um item corresponde a este nome. Escolha o certo, ou deixe sem resolver.",
+        "noneHint": "Nenhum item correspondente foi encontrado.",
+        "unresolved": "Ainda não resolvido"
       },
       "summary": {
         "title": "Origem das entradas",
         "counts": "{{official}} oficiais · {{modified}} modificadas · {{custom}} de casa · {{stale}} desatualizadas"
+      },
+      "warning": {
+        "levels_over_max": "Os níveis deste item ({{value}}) estão acima do que o pacote de conteúdo permite agora ({{allowed}}). Os níveis escolhidos foram mantidos — nada foi alterado automaticamente."
       }
     }
   }

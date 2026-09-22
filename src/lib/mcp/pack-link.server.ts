@@ -17,7 +17,7 @@ import {
   type EntryRowLike,
 } from "@/lib/pack-link-service";
 import {
-  expectedLeveledCost,
+  packLeveledCost,
   isSkillLike,
   withPackLink,
   withoutPackLink,
@@ -128,13 +128,12 @@ export function definitionFill(
 
   const levels = supplied.levels ?? 1;
   if (supplied.points === undefined) {
+    const costPerLevel = Number(item.cost_per_level ?? 0);
     out.points = isSkillLike(kind)
       ? Number(item.base_points ?? 0)
-      : expectedLeveledCost(
-          Number(item.base_points ?? 0),
-          Number(item.cost_per_level ?? 0),
-          levels,
-        );
+      : costPerLevel
+        ? packLeveledCost(costPerLevel, levels)
+        : Number(item.base_points ?? 0);
   }
 
   const data: Record<string, unknown> = {};
@@ -151,15 +150,21 @@ export function definitionFill(
   return out;
 }
 
+/**
+ * Adds `source.link` and touches NOTHING else in the provenance bag.
+ *
+ * Linking states where an entry came from; it must never rewrite the recorded
+ * label, edition, page, type, legacy pack name or any unknown key another part
+ * of the app wrote. A brand-new entry gets its legacy provenance from the
+ * normal library-to-sheet mapping before this is called.
+ */
 export async function sourceWithLink(
   existingSource: unknown,
   item: PackCandidate,
   method: PackLinkMethod,
 ): Promise<{ source: Record<string, unknown>; link: PackLink }> {
   const link = await buildLink(item, method);
-  const base = { ...(existingSource && typeof existingSource === "object" ? existingSource : {}) };
-  const withPack = { ...base, pack: item.pack_name ?? item.pack ?? null };
-  return { source: withPackLink(withPack, link), link };
+  return { source: withPackLink(existingSource, link), link };
 }
 
 export function sourceWithoutLink(existingSource: unknown): Record<string, unknown> {
@@ -172,7 +177,7 @@ export async function statusFor(
   entry: EntryRowLike,
   campaignSettings: unknown,
 ): Promise<PackLinkStatus> {
-  const statuses = await deriveStatuses(ctx.supabase, [entry], campaignSettings);
+  const statuses = await deriveStatuses(ctx.supabase, [entry], campaignSettings, ctx.userId);
   return statuses.get(entry.id) ?? { state: "custom", link: null };
 }
 

@@ -104,24 +104,36 @@ export function canonicalJson(value: unknown): string {
 /**
  * The exact payload that is hashed. It is the DEFINITION of a pack item —
  * never editorial or provenance data (summary, description, notes, pages,
- * source labels, editions, timestamps, owner/campaign ids are all excluded),
- * so fixing a typo in a description never invalidates a link.
+ * source labels, editions, `source_rules.text`, modifier notes, timestamps,
+ * owner/campaign ids are all excluded), so fixing a typo in a description
+ * never invalidates a link. Character progression (invested points, chosen
+ * levels, specialisation, notes) is likewise never part of it.
  *
- * Shape (keys serialised in this alphabetical order by `canonicalJson`):
- *   attribute      string | null   controlling attribute (skill-like only)
- *   base_points    number          base cost
- *   category       string | null   normalised category
- *   cost_per_level number          cost of each level after the first
- *   difficulty     string | null   difficulty letter (skill-like only)
- *   kind           string          entry kind
- *   max_levels     number | null   level cap
- *   name           string          normalised base name (no specialisation)
+ * Every field below is read mechanically by the rules engine, so a change to
+ * any of them really does change what the item DOES:
+ *
+ *   attribute       string | null   controlling attribute   (src/rules/skills.ts)
+ *   base_points     number          base cost               (src/rules/points.ts)
+ *   base_skill      string | null   technique's base skill  (src/rules/skills.ts)
+ *   category        string | null   normalised category
+ *   cost_per_level  number          cost of each further level
+ *   default_penalty number | null   technique default penalty (src/rules/skills.ts)
+ *   defaults        string | null   skill/spell default list  (src/rules/skills.ts)
+ *   difficulty      string | null   difficulty letter         (src/rules/skills.ts)
+ *   kind            string          entry kind
+ *   max_levels      number | null   level cap
+ *   name            string          normalised base name (no specialisation)
+ *
+ * `canonicalJson` serialises those keys in exactly this alphabetical order.
  */
 export interface PackDefinition {
   attribute: string | null;
   base_points: number;
+  base_skill: string | null;
   category: string | null;
   cost_per_level: number;
+  default_penalty: number | null;
+  defaults: string | null;
   difficulty: string | null;
   kind: string;
   max_levels: number | null;
@@ -151,15 +163,40 @@ function text(value: unknown): string | null {
   return trimmed ? trimmed : null;
 }
 
+function numberOrNull(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Keys inside `data` that the pack DEFINES and the rules engine consumes.
+ * Restoring/updating an entry refreshes exactly these from the current pack
+ * item, so a stale copy on the sheet can never shadow the live definition.
+ */
+export const PACK_DATA_FIELDS = [
+  "attribute",
+  "difficulty",
+  "defaults",
+  "defaultPenalty",
+  "baseSkill",
+  "prerequisites",
+  "specialization_required",
+] as const;
+
 /** The canonical definition of a pack item. */
 export function packDefinition(item: PackItemLike): PackDefinition {
   const data = (item.data ?? {}) as Record<string, unknown>;
   const skillLike = isSkillLike(item.kind);
+  const technique = item.kind === "technique";
   return {
     attribute: skillLike ? text(data["attribute"]) : null,
     base_points: Number(item.base_points ?? 0),
+    base_skill: technique ? text(data["baseSkill"]) : null,
     category: text(item.category) ? normalizeText(String(item.category)) : null,
     cost_per_level: Number(item.cost_per_level ?? 0),
+    default_penalty: technique ? numberOrNull(data["defaultPenalty"]) : null,
+    defaults: skillLike ? text(data["defaults"]) : null,
     difficulty: skillLike ? text(data["difficulty"]) : null,
     kind: item.kind,
     max_levels:
@@ -226,6 +263,9 @@ export const DEFINITION_FIELDS = [
   "category",
   "attribute",
   "difficulty",
+  "defaults",
+  "defaultPenalty",
+  "baseSkill",
   "base_points",
   "cost_per_level",
   "max_levels",
@@ -255,7 +295,8 @@ export interface CharacterEntryLike {
  *
  * Mirrors the existing import rule in `applyCatalogue` (src/lib/trait-match.ts):
  * base cost covers the first level, each further level adds `cost_per_level`.
- * Not a new formula — the same one the app already applies when importing.
+ * Kept for the import path only — the pack-link pricing check deliberately
+ * does NOT use it (see `packLeveledCost`).
  */
 export function expectedLeveledCost(
   basePoints: number,
@@ -266,6 +307,22 @@ export function expectedLeveledCost(
   return costPerLevel ? basePoints + costPerLevel * (lv - 1) : basePoints;
 }
 
+/**
+ * Cost a leveled pack trait should carry, for the PACK-LINK check only.
+ *
+ * A per-level pack row prices every level, including the first: most real
+ * rows carry `base_points = 0` with `cost_per_level = 5`, so charging the base
+ * cost once and only then adding per-level cost would mis-price them. Two
+ * levels of a 5/level trait therefore cost 10, not 5.
+ *
+ * Deliberately separate from `expectedLeveledCost`: the import path keeps its
+ * own historical behaviour and this contract stays stable.
+ */
+export function packLeveledCost(costPerLevel: number, levels: number): number {
+  const lv = Math.max(1, Number(levels) || 1);
+  return Number(costPerLevel) * lv;
+}
+
 /** Pricing check for leveled traits; null when the pack has no per-level cost. */
 export function leveledPricing(
   entry: CharacterEntryLike,
@@ -274,7 +331,7 @@ export function leveledPricing(
   if (isSkillLike(entry.kind) || entry.kind === "equipment") return null;
   const costPerLevel = Number(item.cost_per_level ?? 0);
   if (!costPerLevel) return null;
-  const expected = expectedLeveledCost(Number(item.base_points ?? 0), costPerLevel, entry.levels);
+  const expected = packLeveledCost(costPerLevel, entry.levels);
   const actual = Number(entry.points ?? 0);
   return { expected, actual, consistent: expected === actual };
 }
@@ -309,6 +366,23 @@ export function compareDefinition(entry: CharacterEntryLike, item: PackItemLike)
     const entryDiff = text(entryData["difficulty"]);
     if (packDiff && packDiff !== entryDiff) {
       out.push({ field: "difficulty", pack: packDiff, character: entryDiff });
+    }
+    const packDefaults = text(itemData["defaults"]);
+    const entryDefaults = text(entryData["defaults"]);
+    if (packDefaults && packDefaults !== entryDefaults) {
+      out.push({ field: "defaults", pack: packDefaults, character: entryDefaults });
+    }
+    if (item.kind === "technique") {
+      const packPenalty = numberOrNull(itemData["defaultPenalty"]);
+      const entryPenalty = numberOrNull(entryData["defaultPenalty"]);
+      if (packPenalty !== null && packPenalty !== entryPenalty) {
+        out.push({ field: "defaultPenalty", pack: packPenalty, character: entryPenalty });
+      }
+      const packBase = text(itemData["baseSkill"]);
+      const entryBase = text(entryData["baseSkill"]);
+      if (packBase && packBase !== entryBase) {
+        out.push({ field: "baseSkill", pack: packBase, character: entryBase });
+      }
     }
     // Invested points are progression for skill-like entries: never compared.
     return out;
@@ -457,19 +531,39 @@ export function countStates(statuses: { state: PackLinkState }[]): PackLinkCount
 /* Restoring definition fields                                         */
 /* ------------------------------------------------------------------ */
 
+/** Something the player should know about, never silently applied. */
+export interface RestoreWarning {
+  code: "levels_over_max";
+  message_key: string;
+  value: number;
+  allowed: number;
+}
+
 export interface RestorePatch {
   name: string;
   category: string | null;
   points: number;
   levels: number;
   data: Record<string, unknown>;
+  /** Reported, not applied: the patch never quietly changes the player's choices. */
+  warnings: RestoreWarning[];
 }
 
 /**
- * Definition fields taken from the current pack item, progression kept:
- * invested skill points, chosen levels, specialisation and notes are never
- * overwritten. Used by both "Restaurar do pack" and "Atualizar para a versão
- * atual" so the two can never drift apart.
+ * Definition fields taken from the current pack item, progression kept.
+ *
+ * Two rules, both deliberate:
+ *  - PROGRESSION is preserved exactly: invested skill points, chosen levels,
+ *    specialisation and notes are never rewritten. Chosen levels above the
+ *    pack's current cap are KEPT and reported as a warning — a restore must
+ *    not silently take levels away from a character.
+ *  - DEFINITION is refreshed from the current pack: attribute, difficulty,
+ *    defaults, technique penalty/base skill and prerequisites are taken from
+ *    the live item, and a field the pack no longer defines is dropped, so an
+ *    outdated copy on the sheet can never shadow the current definition.
+ *
+ * Used by both "restore from pack" and "update to the current version" so the
+ * two can never drift apart.
  */
 export function restoreDefinitionPatch(
   entry: CharacterEntryLike,
@@ -478,21 +572,33 @@ export function restoreDefinitionPatch(
   const entryData = { ...((entry.data ?? {}) as Record<string, unknown>) };
   const itemData = { ...((item.data ?? {}) as Record<string, unknown>) };
   const specialization = specializationOf(entry);
+  const warnings: RestoreWarning[] = [];
 
-  // Pack definition data first, then the player's own choices back on top.
-  const data: Record<string, unknown> = { ...itemData, ...entryData };
+  // Start from what the player has, then let the CURRENT pack definition win
+  // on every field the pack owns.
+  const data: Record<string, unknown> = { ...entryData };
+  for (const field of PACK_DATA_FIELDS) {
+    const value = itemData[field];
+    if (value === undefined || value === null || value === "") delete data[field];
+    else data[field] = value;
+  }
+  // Invested points stay exactly as the player bought them.
   if (isSkillLike(entry.kind)) {
-    if (text(itemData["attribute"])) data["attribute"] = itemData["attribute"];
-    if (text(itemData["difficulty"])) data["difficulty"] = itemData["difficulty"];
-    // Invested points stay exactly as the player bought them.
     data["points"] = Number(entryData["points"] ?? entry.points ?? 0);
   }
   if (specialization) data["specialization"] = specialization;
 
   const maxLevels =
     item.max_levels === null || item.max_levels === undefined ? null : Number(item.max_levels);
-  let levels = Math.max(1, Number(entry.levels ?? 1) || 1);
-  if (maxLevels !== null && maxLevels > 0 && levels > maxLevels) levels = maxLevels;
+  const levels = Math.max(1, Number(entry.levels ?? 1) || 1);
+  if (maxLevels !== null && maxLevels > 0 && levels > maxLevels) {
+    warnings.push({
+      code: "levels_over_max",
+      message_key: "packLink.warning.levels_over_max",
+      value: levels,
+      allowed: maxLevels,
+    });
+  }
 
   const basePoints = Number(item.base_points ?? 0);
   const costPerLevel = Number(item.cost_per_level ?? 0);
@@ -500,7 +606,9 @@ export function restoreDefinitionPatch(
     ? Number(entry.points ?? 0)
     : entry.kind === "equipment"
       ? Number(entry.points ?? 0)
-      : expectedLeveledCost(basePoints, costPerLevel, levels);
+      : costPerLevel
+        ? packLeveledCost(costPerLevel, levels)
+        : basePoints;
 
   const name =
     specialization && !rawQualifier(item.name)
@@ -513,5 +621,6 @@ export function restoreDefinitionPatch(
     points,
     levels,
     data,
+    warnings,
   };
 }

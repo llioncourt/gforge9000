@@ -449,18 +449,14 @@ function CharacterPage() {
     () => allowedPacksOf(campaignQuery.data?.settings),
     [campaignQuery.data],
   );
-  const effectivePacks = useMemo(() => {
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const name of [...linkedPacks, ...campaignPacks]) {
-      const key = name.toLowerCase();
-      if (!seen.has(key)) {
-        seen.add(key);
-        out.push(name);
-      }
-    }
-    return out;
-  }, [linkedPacks, campaignPacks]);
+  // A campaign whitelist always wins: packs linked on the character cannot
+  // bring back a pack the campaign blocked, and an empty list opens the
+  // picker to everything the player can already see.
+  const effectivePacks = useMemo(
+    () => pickerPacks(linkedPacks, campaignQuery.data?.settings, !!form?.campaign_id),
+    [linkedPacks, campaignQuery.data, form?.campaign_id],
+  );
+
 
   const addFromPack = useMutation({
     mutationFn: async (entry: LibraryListRow) => {

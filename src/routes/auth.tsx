@@ -235,7 +235,7 @@ function AuthPage() {
                 <span className="h-px flex-1 bg-border" /> {t("form.or")}{" "}
                 <span className="h-px flex-1 bg-border" />
               </div>
-              <Button variant="outline" className="w-full" onClick={google}>
+              <Button variant="outline" className="w-full" onClick={google} disabled={!ready}>
                 {t("form.actions.continueWithGoogle")}
               </Button>
 

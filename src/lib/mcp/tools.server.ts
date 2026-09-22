@@ -70,6 +70,40 @@ function listReply(label: string, items: Structured[], limit: number) {
   return reply(text, { count: items.length, truncated, items });
 }
 
+/**
+ * Single place enforcing the detail response contract: one summary line, a
+ * blank line, then the complete safe object as pretty JSON — and the very same
+ * object as structured content.
+ */
+function detailReply(summary: string, item: Structured) {
+  return reply(`${summary}\n\n${JSON.stringify(item, null, 2)}`, { item });
+}
+
+function deleteReply(summary: string, id: string) {
+  const payload = { deleted: true, id };
+  return reply(`${summary}\n\n${JSON.stringify(payload, null, 2)}`, payload);
+}
+
+/** Drops keys the caller did not send; explicit `null` is kept (it clears). */
+function buildPatch<T extends Record<string, unknown>>(patch: T): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined));
+}
+
+function requirePatch(update: Record<string, unknown>): void {
+  if (Object.keys(update).length === 0) throw new Error("Nothing to update — no fields given.");
+}
+
+/** Deltas move in exact quarter steps. */
+const quarterStep = z
+  .number()
+  .refine((value) => Number.isFinite(value) && Number.isInteger(value * 4), {
+    message: "Must be a multiple of 0.25.",
+  });
+
+const intField = (min: number, max: number) => z.number().int().min(min).max(max);
+const strengthField = intField(-5, 5);
+
+
 interface CampaignAccess {
   id: string;
   name: string;

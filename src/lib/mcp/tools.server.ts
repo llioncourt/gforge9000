@@ -130,11 +130,7 @@ const intField = (min: number, max: number, label?: string) => {
   const error = label
     ? `${label} must be an integer between ${min} and ${max}`
     : `Must be an integer between ${min} and ${max}`;
-  return z
-    .number({ error })
-    .int({ error })
-    .min(min, { error })
-    .max(max, { error });
+  return z.number({ error }).int({ error }).min(min, { error }).max(max, { error });
 };
 const strengthField = intField(-5, 5, "strength");
 
@@ -155,7 +151,9 @@ const campaignSettingFields = {
   ruleset_overrides: z.record(z.string(), z.unknown()).nullable().optional(),
 } as const;
 
-const CAMPAIGN_SETTING_KEYS = Object.keys(campaignSettingFields) as (keyof typeof campaignSettingFields)[];
+const CAMPAIGN_SETTING_KEYS = Object.keys(
+  campaignSettingFields,
+) as (keyof typeof campaignSettingFields)[];
 
 /**
  * Builds the first-level settings patch sent to the atomic database helper:

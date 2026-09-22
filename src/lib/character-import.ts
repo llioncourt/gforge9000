@@ -69,7 +69,9 @@ export async function runCharacterImport(
 
   try {
     report("matching");
-    const { entries: reconciled } = await deps.reconcile(file.entries as unknown as ImportedEntry[]);
+    const { entries: reconciled } = await deps.reconcile(
+      file.entries as unknown as ImportedEntry[],
+    );
     // Imported sheets keep the order they arrived in: positions are assigned
     // 0,1,2,… after reconciliation and before anything is written.
     const entries = reconciled.map((entry, index) => ({ ...entry, sort_order: index }));

@@ -939,11 +939,7 @@ describe("delete_campaign", () => {
 
   it("deletes with an exact name confirmation and reports the counts", async () => {
     const spy: Spy = {};
-    const tools = serverWith(
-      { campaigns: campaignRow, rpc_delete_campaign: deleted },
-      GM,
-      spy,
-    );
+    const tools = serverWith({ campaigns: campaignRow, rpc_delete_campaign: deleted }, GM, spy);
     const result = await tools["delete_campaign"]!.handler({
       campaign_id: CAMPAIGN,
       confirm_name: "Nadrel",
@@ -981,11 +977,7 @@ describe("delete_campaign", () => {
 describe("campaign settings semantics", () => {
   function patchOf(input: Record<string, unknown>) {
     const spy: Spy = {};
-    const tools = serverWith(
-      { campaigns: campaignRow, rpc_update_campaign: campaignRow },
-      GM,
-      spy,
-    );
+    const tools = serverWith({ campaigns: campaignRow, rpc_update_campaign: campaignRow }, GM, spy);
     return tools["update_campaign"]!.handler({ campaign_id: CAMPAIGN, ...input }).then(
       () => (spy.rpc?.[0]?.args as Record<string, unknown>) ?? {},
     );
@@ -1199,7 +1191,10 @@ describe("numeric validation messages", () => {
       string,
       {
         inputSchema: {
-          safeParse: (v: unknown) => { success: boolean; error?: { issues: { message: string }[] } };
+          safeParse: (v: unknown) => {
+            success: boolean;
+            error?: { issues: { message: string }[] };
+          };
         };
       }
     >;
@@ -1246,9 +1241,7 @@ describe("numeric validation messages", () => {
         rel_type: "ALLY_OF",
         strength: 9,
       }),
-    ).toBe(
-      "strength must be an integer between -5 and 5",
-    );
+    ).toBe("strength must be an integer between -5 and 5");
   });
 });
 

@@ -53,6 +53,19 @@ export class ImportRollbackError extends Error {
   }
 }
 
+/** Stable order for imported entries: supplied positions first, file order otherwise. */
+function orderForImport(entries: ImportedEntry[]): ImportedEntry[] {
+  const positioned = entries.every((e) => typeof e["sort_order"] === "number");
+  if (!positioned) return entries;
+  return entries
+    .map((entry, index) => ({ entry, index }))
+    .sort(
+      (a, b) =>
+        (a.entry["sort_order"] as number) - (b.entry["sort_order"] as number) || a.index - b.index,
+    )
+    .map((row) => row.entry);
+}
+
 export async function runCharacterImport(
   file: PortableCharacter,
   deps: CharacterImportDeps,

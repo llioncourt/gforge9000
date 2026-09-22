@@ -644,13 +644,22 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         .order("name")
         .limit(max);
       if (error) fail("Loading character entries", error);
+      const returned = data?.length ?? 0;
+      const { count, error: countError } = await ctx.supabase
+        .from("character_entries")
+        .select("id", { count: "exact", head: true })
+        .eq("character_id", character_id);
+      if (countError) fail("Counting character entries", countError);
+      const total = typeof count === "number" ? count : returned;
+      const header =
+        returned < total
+          ? `Character "${access.row.name}" with ${returned} of ${total} entries (more may exist — raise entry_limit).`
+          : `Character "${access.row.name}" with ${total} entries.`;
       const item = { ...characterView(access), entries: data ?? [] };
-      return reply(
-        `Character "${access.row.name}" with ${data?.length ?? 0} entries.\n\n${JSON.stringify(item, null, 2)}`,
-        { item },
-      );
+      return reply(`${header}\n\n${JSON.stringify(item, null, 2)}`, { item });
     },
   );
+
 
   tool(
     "create_character",

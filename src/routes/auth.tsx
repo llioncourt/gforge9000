@@ -41,6 +41,8 @@ function AuthPage() {
   const { t } = useT("auth");
   const navigate = useNavigate();
   const { user, loading } = useSession();
+  const { redirect: redirectParam } = Route.useSearch();
+  const target = safeRedirectTarget(redirectParam);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -48,8 +50,8 @@ function AuthPage() {
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard", replace: true });
-  }, [loading, user, navigate]);
+    if (!loading && user) navigate({ to: target, replace: true });
+  }, [loading, user, navigate, target]);
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
@@ -60,7 +62,7 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: target, replace: true });
   }
 
   async function signUp(e: React.FormEvent) {

@@ -230,6 +230,74 @@ function requireCharacterWrite(access: CharacterAccess): void {
   }
 }
 
+function requireCharacterOwner(access: CharacterAccess): void {
+  if (!access.isOwner) {
+    throw new Error(`Only the owner of "${access.row.name}" can delete this sheet.`);
+  }
+}
+
+/** Longest parent chain we are willing to walk before refusing the move. */
+const MAX_PARENT_DEPTH = 64;
+
+function kindDef(kind: string) {
+  const found = KINDS.find((entry) => entry.kind === kind);
+  if (!found) {
+    throw new Error(
+      `Unknown entry kind "${kind}". Use list_entry_types to see the kinds this app accepts.`,
+    );
+  }
+  return found;
+}
+
+function assertStatusForKind(kind: string, status: string): void {
+  const def = kindDef(kind);
+  if (!def.statuses.includes(status)) {
+    throw new Error(
+      `Status "${status}" is not valid for ${kind}. Valid statuses: ${def.statuses.join(", ")}.`,
+    );
+  }
+}
+
+/**
+ * Rejects a parent that would create a loop. Walks the proposed parent's own
+ * ancestors with bounded plain queries — no recursive SQL, no schema changes.
+ */
+async function assertParentIsSafe(
+  ctx: McpToolContext,
+  entryId: string,
+  parentId: string,
+  campaignId: string,
+): Promise<void> {
+  if (parentId === entryId) throw new Error("An entry cannot be its own parent.");
+  const seen = new Set<string>([entryId]);
+  let cursor: string | null = parentId;
+  for (let depth = 0; depth < MAX_PARENT_DEPTH && cursor; depth += 1) {
+    const { data, error } = await ctx.supabase
+      .from("entities")
+      .select("id, campaign_id, parent_id")
+      .eq("id", cursor)
+      .maybeSingle();
+    if (error) fail("Parent lookup", error);
+    if (!data) throw new Error("Parent entry not found, or you do not have access to it.");
+    if (data.campaign_id !== campaignId) {
+      throw new Error("The parent entry must belong to the same campaign.");
+    }
+    if (seen.has(data.id) && data.id !== parentId) {
+      throw new Error("That parent would create a loop in the entry hierarchy.");
+    }
+    if (data.parent_id === entryId) {
+      throw new Error("That parent would create a loop in the entry hierarchy.");
+    }
+    if (data.parent_id && seen.has(data.parent_id)) {
+      throw new Error("That parent would create a loop in the entry hierarchy.");
+    }
+    seen.add(data.id);
+    cursor = data.parent_id;
+  }
+  if (cursor) throw new Error("The entry hierarchy is too deep to verify this move safely.");
+}
+
+
 /* ------------------------------------------------------------------ */
 /* Registration helper                                                 */
 /* ------------------------------------------------------------------ */

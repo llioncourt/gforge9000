@@ -48,10 +48,7 @@ describe("library payload split", () => {
 
   it("re-attaches details in the original list order", async () => {
     const { withLibraryDetails } = await import("@/lib/api");
-    const hydrated = await withLibraryDetails([
-      { id: "c" },
-      { id: "a" },
-    ]);
+    const hydrated = await withLibraryDetails([{ id: "c" }, { id: "a" }]);
     expect(hydrated.map((r) => r.id)).toEqual(["c", "a"]);
     expect(hydrated[0]!.data).toEqual({ attribute: "IQ" });
     expect(hydrated[1]!.data).toEqual({ attribute: "DX" });

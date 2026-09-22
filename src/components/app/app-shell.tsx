@@ -71,9 +71,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   async function signOut() {
-    await queryClient.cancelQueries();
-    queryClient.clear();
-    await supabase.auth.signOut();
+    clearDestination();
+    await auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
 

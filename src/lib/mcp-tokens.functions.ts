@@ -16,6 +16,11 @@ export interface McpTokenRow {
   last_used_at: string | null;
 }
 
+export interface McpTokenListResult {
+  tokens: McpTokenRow[];
+  unavailable: boolean;
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any -- table added after types were generated */
 
 async function sha256(value: string): Promise<string> {
@@ -27,14 +32,20 @@ async function sha256(value: string): Promise<string> {
 
 export const listMcpTokens = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<McpTokenRow[]> => {
-    const { data, error } = await (context.supabase as any)
-      .from("mcp_tokens")
-      .select("id, name, token_prefix, created_at, last_used_at")
-      .is("revoked_at", null)
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return (data ?? []) as McpTokenRow[];
+  .handler(async ({ context }): Promise<McpTokenListResult> => {
+    try {
+      const { data, error } = await (context.supabase as any)
+        .from("mcp_tokens")
+        .select("id, name, token_prefix, created_at, last_used_at")
+        .is("revoked_at", null)
+        .order("created_at", { ascending: false })
+        .abortSignal(AbortSignal.timeout(12_000));
+
+      if (error) return { tokens: [], unavailable: true };
+      return { tokens: (data ?? []) as McpTokenRow[], unavailable: false };
+    } catch {
+      return { tokens: [], unavailable: true };
+    }
   });
 
 export const createMcpToken = createServerFn({ method: "POST" })

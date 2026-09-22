@@ -41,6 +41,8 @@
     "nameLabel": "Key name",
     "createKey": "Create key",
     "empty": "No keys yet.",
+    "loadError": "Your keys couldn't be loaded right now.",
+    "retry": "Try again",
     "newKeyTitle": "Your new key",
     "newKeyDescription": "Copy it now — it is shown only once.",
     "copied": "Copied",

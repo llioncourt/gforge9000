@@ -111,7 +111,9 @@ async function getTool(server: ReturnType<typeof buildMcpServer>, name: string) 
     tools?: Record<string, RegisteredTool>;
   };
   const tools = bag._registeredTools ?? bag.tools;
-  return tools?.[name];
+  const tool = tools?.[name];
+  if (!tool) throw new Error(`Tool ${name} is not registered.`);
+  return tool;
 }
 
 describe("campaign_package MCP tool (export/import wiring)", () => {

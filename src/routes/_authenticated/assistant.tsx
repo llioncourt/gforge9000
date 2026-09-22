@@ -133,6 +133,15 @@ function AssistantPage() {
         <p className="text-muted-foreground text-sm">{t("assistant.addressHint")}</p>
       </section>
 
+      <section className="space-y-3 rounded-xl border p-4">
+        <h2 className="font-medium">{t("assistant.promptTitle")}</h2>
+        <p className="text-muted-foreground text-sm">{t("assistant.promptDescription")}</p>
+        <Button variant="outline" onClick={() => copy(buildSetupPrompt(endpoint))}>
+          <ClipboardList className="mr-2 size-4" />
+          {t("assistant.copyPrompt")}
+        </Button>
+      </section>
+
       <section className="space-y-4 rounded-xl border p-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="space-y-2">
@@ -199,6 +208,13 @@ function AssistantPage() {
             </Button>
           </div>
           <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => copy(buildSetupPrompt(endpoint, newToken ?? undefined))}
+            >
+              <ClipboardList className="mr-2 size-4" />
+              {t("assistant.copyPromptWithKey")}
+            </Button>
             <Button onClick={() => setNewToken(null)}>{tc("actions.close")}</Button>
           </DialogFooter>
         </DialogContent>

@@ -95,13 +95,10 @@ function AuthPage() {
   }
 
   async function google() {
-    // Send Google back to /auth with the pending target so the consent flow resumes.
-    const redirectUri =
-      target === "/dashboard"
-        ? window.location.origin
-        : `${window.location.origin}/auth?redirect=${encodeURIComponent(target)}`;
+    // Isolated experiment: always return to the bare origin, the pre-regression
+    // behaviour. Do not reintroduce the /auth?redirect=... return address here.
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: redirectUri,
+      redirect_uri: window.location.origin,
     });
     if (result.error) {
       toast.error(t("errors.googleSignInFailed"));

@@ -526,6 +526,7 @@ function LibraryPage() {
               </div>
             );
           })}
+          <div ref={sentinelRef} aria-hidden className="h-1 w-full" />
         </div>
       )}
 

@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 import type { CharacterEntry } from "@/rules";
 import { type PackLinkState, type PackLinkStatus, type StaleReason } from "@/lib/pack-link";

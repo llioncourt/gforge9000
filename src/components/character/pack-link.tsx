@@ -138,7 +138,7 @@ export function PackStateBadge({
     onSuccess: (outcome) => {
       invalidate();
       toast.success(t("sheet.packLink.restored", { name: entry.name }));
-      for (const warning of outcome.warnings) {
+      for (const warning of outcome.warnings ?? []) {
         toast(
           t(warning.message_key, {
             value: warning.value,

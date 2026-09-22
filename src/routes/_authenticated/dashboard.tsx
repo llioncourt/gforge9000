@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { countLibrary, createCharacter, listCampaigns, listCharacters, listRolls } from "@/lib/api";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
+import { McpConsentResume } from "@/components/app/mcp-consent-resume";
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";
 
@@ -51,6 +52,7 @@ function Dashboard() {
 
   return (
     <div>
+      <McpConsentResume />
       <PageHeader
         title={t("page.title")}
         description={t("page.description")}

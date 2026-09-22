@@ -10,6 +10,7 @@ import {
   PanelLeftClose,
   Search,
   Shield,
+  Sparkles,
   Users,
   X,
 } from "lucide-react";

@@ -787,7 +787,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "Create a campaign entry",
       description:
-        "Adds a world or story entry to a campaign. Only the campaign's Game Master can do this.",
+        "Adds a world or story entry to a campaign. Only the campaign's Game Master can do this. `kind` must be one of the kinds from list_entry_types. `status` is matched against that kind's own statuses ignoring capitalisation and stored in the app's exact spelling; leave it out to get that kind's default status.",
       inputSchema: z.object({
         campaign_id: uuid,
         kind: boundedText(40),
@@ -807,6 +807,8 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     async (input) => {
       const campaign = await loadCampaign(ctx, input.campaign_id);
       requireGm(campaign);
+      const def = kindDef(input.kind);
+      const status = input.status ? canonicalStatus(input.kind, input.status) : def.defaultStatus;
       const { data, error } = await ctx.supabase
         .from("entities")
         .insert({
@@ -816,7 +818,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           summary: input.summary ?? null,
           description: input.description ?? null,
           gm_notes: input.gm_notes ?? null,
-          ...(input.status ? { status: input.status } : {}),
+          status,
           ...(input.visibility ? { visibility: input.visibility } : {}),
           ...(input.tags ? { tags: input.tags } : {}),
           parent_id: input.parent_id ?? null,

@@ -53,6 +53,19 @@ export class ImportRollbackError extends Error {
   }
 }
 
+/** Stable order for imported entries: supplied positions first, file order otherwise. */
+function orderForImport(entries: ImportedEntry[]): ImportedEntry[] {
+  const positioned = entries.every((e) => typeof e["sort_order"] === "number");
+  if (!positioned) return entries;
+  return entries
+    .map((entry, index) => ({ entry, index }))
+    .sort(
+      (a, b) =>
+        (a.entry["sort_order"] as number) - (b.entry["sort_order"] as number) || a.index - b.index,
+    )
+    .map((row) => row.entry);
+}
+
 export async function runCharacterImport(
   file: PortableCharacter,
   deps: CharacterImportDeps,
@@ -69,12 +82,14 @@ export async function runCharacterImport(
 
   try {
     report("matching");
-    const { entries: reconciled } = await deps.reconcile(
-      file.entries as unknown as ImportedEntry[],
-    );
-    // Imported sheets keep the order they arrived in: positions are assigned
-    // 0,1,2,… after reconciliation and before anything is written.
+    // The import format documents `sort_order` as the display order, so a file
+    // that supplies it keeps that order; a file that does not keeps the order
+    // its entries were written in. Either way the stored positions end up
+    // contiguous (0,1,2,…) so later additions append predictably.
+    const ordered = orderForImport(file.entries as unknown as ImportedEntry[]);
+    const { entries: reconciled } = await deps.reconcile(ordered);
     const entries = reconciled.map((entry, index) => ({ ...entry, sort_order: index }));
+
     report("saving", 0, entries.length);
     if (existing) await deps.deleteEntriesOf(row.id);
     await deps.addEntries(row.id, entries);

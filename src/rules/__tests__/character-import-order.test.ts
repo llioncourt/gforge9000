@@ -53,3 +53,23 @@ describe("character import ordering", () => {
     expect(captured.entries?.map((e) => e["sort_order"])).toEqual([0, 1]);
   });
 });
+
+describe("character import honours a supplied order", () => {
+  it("uses the positions the file declares when it declares them all", async () => {
+    const captured: { entries?: ImportedEntry[] } = {};
+    const out = {
+      ...file,
+      entries: [
+        { kind: "skill", name: "Third", sort_order: 5 },
+        { kind: "skill", name: "First", sort_order: 1 },
+        { kind: "skill", name: "Second", sort_order: 2 },
+      ],
+    } as unknown as PortableCharacter;
+    await runCharacterImport(out, deps(captured));
+    expect(captured.entries?.map((e) => [e.name, e["sort_order"]])).toEqual([
+      ["First", 0],
+      ["Second", 1],
+      ["Third", 2],
+    ]);
+  });
+});

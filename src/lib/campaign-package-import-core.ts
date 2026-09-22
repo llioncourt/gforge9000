@@ -130,7 +130,7 @@ async function uploadFromZip(
   if (error) throw new Error(error.message);
 }
 
-export interface CampaignImportCoreResult extends CampaignImportSummary {}
+export type CampaignImportCoreResult = CampaignImportSummary;
 
 /**
  * Validates then imports a campaign package ZIP against an injected,

@@ -8,6 +8,9 @@ import { buildMcpServer } from "@/lib/mcp/tools.server";
  */
 
 type Row = Record<string, unknown>;
+type Resolve = (value: { data: unknown; error: unknown }) => unknown;
+/** The fake stands in for a Supabase client; the shapes are structural, not nominal. */
+type FakeSupabase = Parameters<typeof buildMcpServer>[0]["supabase"];
 
 function makeFakeSupabase(opts: { campaigns: Row[]; storageFiles: Map<string, Uint8Array> }) {
   const { campaigns, storageFiles } = opts;
@@ -15,7 +18,7 @@ function makeFakeSupabase(opts: { campaigns: Row[]; storageFiles: Map<string, Ui
 
   function table(name: string) {
     const state: { filters: [string, unknown][] } = { filters: [] };
-    const builder: any = {
+    const builder: Record<string, unknown> = {
       select: () => builder,
       eq: (col: string, val: unknown) => {
         state.filters.push([col, val]);
@@ -46,7 +49,7 @@ function makeFakeSupabase(opts: { campaigns: Row[]; storageFiles: Map<string, Ui
           select: () => ({
             single: async () => ({ data: withIds[0], error: null }),
           }),
-          then: (resolve: any) => resolve({ data: withIds, error: null }),
+          then: (resolve: Resolve) => resolve({ data: withIds, error: null }),
         };
       },
       update: () => ({
@@ -55,7 +58,7 @@ function makeFakeSupabase(opts: { campaigns: Row[]; storageFiles: Map<string, Ui
       delete: () => ({
         eq: async () => ({ data: null, error: null }),
       }),
-      then: (resolve: any) => resolve({ data: [], error: null }),
+      then: (resolve: Resolve) => resolve({ data: [], error: null }),
     };
     return builder;
   }
@@ -95,11 +98,19 @@ function makeFakeSupabase(opts: { campaigns: Row[]; storageFiles: Map<string, Ui
     }),
   };
 
-  return { from: table, storage, __inserted: inserted } as any;
+  return { from: table, storage, __inserted: inserted } as unknown as FakeSupabase;
 }
 
+type RegisteredTool = {
+  handler: (input: Record<string, unknown>) => Promise<unknown>;
+};
+
 async function getTool(server: ReturnType<typeof buildMcpServer>, name: string) {
-  const tools = (server as any)._registeredTools ?? (server as any).tools;
+  const bag = server as unknown as {
+    _registeredTools?: Record<string, RegisteredTool>;
+    tools?: Record<string, RegisteredTool>;
+  };
+  const tools = bag._registeredTools ?? bag.tools;
   return tools?.[name];
 }
 
@@ -110,7 +121,7 @@ describe("campaign_package MCP tool (export/import wiring)", () => {
       { id: "camp-1", name: "Not Mine", gm_id: "someone-else", settings: {} },
     ];
     const supabase = makeFakeSupabase({ campaigns, storageFiles: new Map() });
-    const server = buildMcpServer({ supabase, userId } as any);
+    const server = buildMcpServer({ supabase, userId } as unknown as Parameters<typeof buildMcpServer>[0]);
     const tool = await getTool(server, "campaign_package");
     expect(tool).toBeTruthy();
     await expect(tool.handler({ action: "export", campaign_id: "camp-1" })).rejects.toThrow(
@@ -121,7 +132,7 @@ describe("campaign_package MCP tool (export/import wiring)", () => {
   it("import rejects a staged path outside the caller's own prefix", async () => {
     const userId = "user-1";
     const supabase = makeFakeSupabase({ campaigns: [], storageFiles: new Map() });
-    const server = buildMcpServer({ supabase, userId } as any);
+    const server = buildMcpServer({ supabase, userId } as unknown as Parameters<typeof buildMcpServer>[0]);
     const tool = await getTool(server, "campaign_package");
     await expect(
       tool.handler({ action: "import", storage_path: "other-user/file.zip" }),

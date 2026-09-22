@@ -866,3 +866,433 @@ describe("get_character compact mode", () => {
     expect(fullItem.entries[0]!.notes).toBe(longNotes);
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* campaign control: get_campaign, delete_campaign, settings           */
+/* ------------------------------------------------------------------ */
+
+describe("get_campaign", () => {
+  const fullCampaign = {
+    id: CAMPAIGN,
+    name: "Nadrel",
+    description: "A drowned empire.",
+    gm_id: GM,
+    invite_code: "ABCD1234",
+    settings: { point_limit: 150, tech_level: 8 },
+  };
+
+  function campaignTools(userId: string) {
+    return serverWith(
+      {
+        campaigns: fullCampaign,
+        campaign_members: [{ user_id: USER, role: "player", joined_at: "2026-01-01" }],
+        profiles: [{ id: USER, display_name: "Ilma" }],
+        entities: { __result: [], extra: { count: 12 } },
+        entity_relationships: { __result: [], extra: { count: 3 } },
+        characters: { __result: [], extra: { count: 5 } },
+      },
+      userId,
+    );
+  }
+
+  it("returns the campaign, the caller's role, members and exact counts", async () => {
+    const result = await campaignTools(GM)["get_campaign"]!.handler({ campaign_id: CAMPAIGN });
+    const item = result.structuredContent["item"] as Record<string, unknown>;
+    expect(item["user_role"]).toBe("gm");
+    expect(item["entries_count"]).toBe(12);
+    expect(item["relationships_count"]).toBe(3);
+    expect(item["characters_count"]).toBe(5);
+    expect(item["members"]).toEqual([
+      { user_id: USER, display_name: "Ilma", role: "player", joined_at: "2026-01-01" },
+    ]);
+    expect(result.content[0]!.text).toContain('Campaign "Nadrel" — role: gm.');
+    expect(result.content[0]!.text).toContain('"point_limit": 150');
+  });
+
+  it("reports the player role for a member", async () => {
+    const result = await campaignTools(USER)["get_campaign"]!.handler({ campaign_id: CAMPAIGN });
+    expect((result.structuredContent["item"] as Record<string, unknown>)["user_role"]).toBe(
+      "player",
+    );
+  });
+
+  it("refuses a campaign the caller cannot see", async () => {
+    await expectFailure(
+      serverWith({ campaigns: null }, OUTSIDER)["get_campaign"]!.handler({
+        campaign_id: CAMPAIGN,
+      }),
+      /not found/i,
+    );
+  });
+});
+
+describe("delete_campaign", () => {
+  const deleted = {
+    deleted: true,
+    id: CAMPAIGN,
+    entries_deleted: 12,
+    relationships_deleted: 3,
+    characters_deleted: 2,
+    characters_unlinked: 4,
+  };
+
+  it("deletes with an exact name confirmation and reports the counts", async () => {
+    const spy: Spy = {};
+    const tools = serverWith(
+      { campaigns: campaignRow, rpc_delete_campaign: deleted },
+      GM,
+      spy,
+    );
+    const result = await tools["delete_campaign"]!.handler({
+      campaign_id: CAMPAIGN,
+      confirm_name: "Nadrel",
+    });
+    expect(spy.rpc?.[0]).toEqual({
+      fn: "mcp_delete_campaign",
+      args: { _campaign: CAMPAIGN, _confirm_name: "Nadrel" },
+    });
+    expect(result.structuredContent).toEqual(deleted);
+    expect(result.content[0]!.text).toContain('Deleted campaign "Nadrel" permanently.');
+    expect(result.content[0]!.text).toContain('"characters_unlinked": 4');
+  });
+
+  it("refuses a confirmation that differs in capitalisation", async () => {
+    await expectFailure(
+      serverWith({ campaigns: campaignRow }, GM)["delete_campaign"]!.handler({
+        campaign_id: CAMPAIGN,
+        confirm_name: "nadrel",
+      }),
+      /Confirmation name does not match\. Expected: "Nadrel"\./,
+    );
+  });
+
+  it("refuses anyone who is not the Game Master", async () => {
+    await expectFailure(
+      serverWith({ campaigns: campaignRow }, USER)["delete_campaign"]!.handler({
+        campaign_id: CAMPAIGN,
+        confirm_name: "Nadrel",
+      }),
+      /Only the Game Master/,
+    );
+  });
+});
+
+describe("campaign settings semantics", () => {
+  function patchOf(input: Record<string, unknown>) {
+    const spy: Spy = {};
+    const tools = serverWith(
+      { campaigns: campaignRow, rpc_update_campaign: campaignRow },
+      GM,
+      spy,
+    );
+    return tools["update_campaign"]!.handler({ campaign_id: CAMPAIGN, ...input }).then(
+      () => (spy.rpc?.[0]?.args as Record<string, unknown>) ?? {},
+    );
+  }
+
+  it("sends only the settings the caller supplied", async () => {
+    const args = await patchOf({ point_limit: 200 });
+    expect(args["_settings_patch"]).toEqual({ point_limit: 200 });
+    expect(args["_patch"]).toEqual({});
+  });
+
+  it("keeps an explicit null so the key is removed", async () => {
+    const args = await patchOf({ tech_level: null });
+    expect(args["_settings_patch"]).toEqual({ tech_level: null });
+  });
+
+  it("sends arrays and objects whole", async () => {
+    const args = await patchOf({
+      allowed_packs: ["core"],
+      ruleset_overrides: { dodgeBase: 4, nested: { keep: null } },
+    });
+    expect(args["_settings_patch"]).toEqual({
+      allowed_packs: ["core"],
+      ruleset_overrides: { dodgeBase: 4, nested: { keep: null } },
+    });
+  });
+
+  it("separates name and premise from the settings patch", async () => {
+    const args = await patchOf({ name: "Nadrel II", description: null, house_rules: "No crits" });
+    expect(args["_patch"]).toEqual({ name: "Nadrel II", description: null });
+    expect(args["_settings_patch"]).toEqual({ house_rules: "No crits" });
+  });
+
+  it("still refuses an empty patch", async () => {
+    await expectFailure(
+      serverWith({ campaigns: campaignRow }, GM)["update_campaign"]!.handler({
+        campaign_id: CAMPAIGN,
+      }),
+      /Nothing to update/,
+    );
+  });
+
+  it("creates a campaign with only the settings that were supplied", async () => {
+    const spy: Spy = {};
+    const tools = serverWith({ rpc_create_campaign: campaignRow }, GM, spy);
+    await tools["create_campaign"]!.handler({ name: "Nadrel", point_limit: 250 });
+    expect(spy.rpc?.[0]).toEqual({
+      fn: "mcp_create_campaign",
+      args: { _name: "Nadrel", _description: null, _settings_patch: { point_limit: 250 } },
+    });
+  });
+
+  it("creates a campaign with no settings patch when none were supplied", async () => {
+    const spy: Spy = {};
+    const tools = serverWith({ rpc_create_campaign: campaignRow }, GM, spy);
+    await tools["create_campaign"]!.handler({ name: "Nadrel" });
+    expect((spy.rpc?.[0]?.args as Record<string, unknown>)["_settings_patch"]).toEqual({});
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* status canonicalisation                                             */
+/* ------------------------------------------------------------------ */
+
+describe("entry status canonicalisation", () => {
+  function createTools(spy: Spy) {
+    return serverWith({ campaigns: campaignRow, entities: { id: ENTITY_ID } }, GM, spy);
+  }
+
+  const base = { campaign_id: CAMPAIGN, name: "Test" };
+
+  it("stores each kind's own default when no status is given", async () => {
+    for (const [kind, expected] of [
+      ["QUEST", "AVAILABLE"],
+      ["CHAPTER", "Planned"],
+      ["LOCATION", "Intact"],
+      ["NPC", "Alive"],
+    ] as const) {
+      const spy: Spy = {};
+      await createTools(spy)["create_entry"]!.handler({ ...base, kind });
+      expect((spy.inserted as Record<string, unknown>)["status"]).toBe(expected);
+    }
+  });
+
+  it("accepts any capitalisation and stores the app's spelling", async () => {
+    const spy: Spy = {};
+    await createTools(spy)["create_entry"]!.handler({
+      ...base,
+      kind: "LOCATION",
+      status: "intact",
+    });
+    expect((spy.inserted as Record<string, unknown>)["status"]).toBe("Intact");
+
+    const spy2: Spy = {};
+    await createTools(spy2)["create_entry"]!.handler({
+      ...base,
+      kind: "QUEST",
+      status: "Completed",
+    });
+    expect((spy2.inserted as Record<string, unknown>)["status"]).toBe("COMPLETED");
+  });
+
+  it("rejects a status the kind does not have, listing the valid ones", async () => {
+    await expectFailure(
+      createTools({})["create_entry"]!.handler({ ...base, kind: "LOCATION", status: "Ticking" }),
+      /Valid statuses: Intact, Damaged, Destroyed, Abandoned, Hidden\./,
+    );
+  });
+
+  it("canonicalises a status on update", async () => {
+    const spy: Spy = {};
+    const row = { id: ENTITY_ID, campaign_id: CAMPAIGN, kind: "LOCATION", status: "Intact" };
+    const tools = serverWith(
+      { campaigns: campaignRow, entities: [{ __result: row }, { __result: row }] },
+      GM,
+      spy,
+    );
+    await tools["update_entry"]!.handler({ entry_id: ENTITY_ID, status: "damaged" });
+    expect(spy.updated).toEqual({ status: "Damaged" });
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* exact totals on list tools                                          */
+/* ------------------------------------------------------------------ */
+
+describe("list totals", () => {
+  it("reports showing N of M with a hint only when more exist", async () => {
+    const rows = [
+      { id: CAMPAIGN, name: "Nadrel", description: null, gm_id: GM },
+      { id: ENTITY_ID, name: "Other", description: null, gm_id: GM },
+    ];
+    const tools = serverWith(
+      { campaigns: [{ __result: rows }, { __result: null, extra: { count: 7 } }] },
+      GM,
+    );
+    const result = await tools["list_campaigns"]!.handler({ limit: 2 });
+    expect(result.content[0]!.text).toContain(
+      "Showing 2 of 7 campaigns (more may exist — raise limit).",
+    );
+    expect(result.structuredContent["total"]).toBe(7);
+    expect(result.structuredContent["truncated"]).toBe(true);
+  });
+
+  it("omits the hint when everything is shown", async () => {
+    const tools = serverWith(
+      {
+        campaigns: [
+          { __result: [{ id: CAMPAIGN, name: "Nadrel", description: null, gm_id: GM }] },
+          { __result: null, extra: { count: 1 } },
+        ],
+      },
+      GM,
+    );
+    const result = await tools["list_campaigns"]!.handler({});
+    expect(result.content[0]!.text).toContain("Showing 1 of 1 campaigns.");
+    expect(result.content[0]!.text).not.toContain("raise limit");
+    expect(result.structuredContent["truncated"]).toBe(false);
+  });
+
+  it("counts entries with the same filters as the listing", async () => {
+    const tools = serverWith(
+      {
+        campaigns: campaignRow,
+        entities: [
+          { __result: [{ id: ENTITY_ID, kind: "NPC", name: "Ilma" }] },
+          { __result: null, extra: { count: 40 } },
+        ],
+      },
+      GM,
+    );
+    const result = await tools["list_entries"]!.handler({ campaign_id: CAMPAIGN, limit: 1 });
+    expect(result.structuredContent["total"]).toBe(40);
+    expect(result.content[0]!.text).toContain('Showing 1 of 40 entries in "Nadrel"');
+  });
+
+  it("counts characters with the same campaign filter", async () => {
+    const tools = serverWith(
+      {
+        characters: [
+          { __result: [{ id: CHARACTER_ID, name: "Brann", owner_id: USER }] },
+          { __result: null, extra: { count: 9 } },
+        ],
+      },
+      USER,
+    );
+    const result = await tools["list_characters"]!.handler({ campaign_id: CAMPAIGN, limit: 1 });
+    expect(result.structuredContent["total"]).toBe(9);
+  });
+});
+
+describe("list_entry_types", () => {
+  it("puts the full catalogue in the text reply as well", async () => {
+    const result = await serverWith({}, USER)["list_entry_types"]!.handler({});
+    const text = result.content[0]!.text;
+    expect(text).toContain("entry types.");
+    expect(text).toContain('"kind": "QUEST"');
+    expect(text).toContain('"default_status": "AVAILABLE"');
+    expect(text).toContain('"ABANDONED"');
+    expect(result.structuredContent["total"]).toBe(result.structuredContent["count"]);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* numeric validation messages                                         */
+/* ------------------------------------------------------------------ */
+
+describe("numeric validation messages", () => {
+  function message(tool: string, input: Record<string, unknown>) {
+    const tools = serverWith({}, USER) as unknown as Record<
+      string,
+      {
+        inputSchema: {
+          safeParse: (v: unknown) => { success: boolean; error?: { issues: { message: string }[] } };
+        };
+      }
+    >;
+    const parsed = tools[tool]!.inputSchema.safeParse(input);
+    expect(parsed.success).toBe(false);
+    return parsed.error!.issues[0]!.message;
+  }
+
+  it("names the field and its range", () => {
+    expect(message("update_character", { character_id: CAMPAIGN, status: 9 })).toBe(
+      "status must be an integer between -20 and 20",
+    );
+    expect(message("update_character", { character_id: CAMPAIGN, tech_level: 99 })).toBe(
+      "tech_level must be an integer between 0 and 20",
+    );
+    expect(message("update_character", { character_id: CAMPAIGN, st: 1.5 })).toBe(
+      "st must be an integer between 0 and 1000",
+    );
+    expect(message("update_character", { character_id: CAMPAIGN, speed_delta: 0.3 })).toBe(
+      "speed_delta must be a multiple of 0.25",
+    );
+    expect(
+      message("add_character_entry", {
+        character_id: CAMPAIGN,
+        kind: "skill",
+        name: "Stealth",
+        sort_order: -1,
+      }),
+    ).toBe("sort_order must be an integer between 0 and 1000000");
+    expect(message("list_entries", { campaign_id: CAMPAIGN, limit: 0 })).toBe(
+      "limit must be an integer between 1 and 200",
+    );
+    expect(message("update_campaign", { campaign_id: CAMPAIGN, point_limit: -1 })).toBe(
+      "point_limit must be an integer between 0 and 100000",
+    );
+  });
+
+  it("keeps the strength message exactly as documented", () => {
+    expect(message("create_relationship", { strength: 9 })).toBe(
+      "strength must be an integer between -5 and 5",
+    );
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* character campaign_id stays a Game Master decision                  */
+/* ------------------------------------------------------------------ */
+
+describe("moving a character between campaigns", () => {
+  const ownedRow = {
+    id: CHARACTER_ID,
+    name: "Brann Ashfall",
+    owner_id: USER,
+    campaign_id: CAMPAIGN,
+  };
+
+  it("surfaces the refusal when a non-GM owner tries to detach their sheet", async () => {
+    const tools = serverWith(
+      {
+        characters: [
+          { __result: ownedRow },
+          {
+            __result: null,
+            extra: { error: { message: "Only the campaign GM can move or detach this character" } },
+          },
+        ],
+        campaigns: campaignRow,
+      },
+      USER,
+    );
+    await expectFailure(
+      tools["update_character"]!.handler({ character_id: CHARACTER_ID, campaign_id: null }),
+      /Only the campaign GM can move or detach this character/,
+    );
+  });
+
+  it("surfaces the refusal when a non-GM owner tries to move it to another campaign", async () => {
+    const other = "44444444-4444-4444-8444-444444444444";
+    const tools = serverWith(
+      {
+        characters: [
+          { __result: ownedRow },
+          {
+            __result: null,
+            extra: { error: { message: "Only the campaign GM can move or detach this character" } },
+          },
+        ],
+        campaigns: { ...campaignRow, id: other },
+      },
+      USER,
+    );
+    await expectFailure(
+      tools["update_character"]!.handler({ character_id: CHARACTER_ID, campaign_id: other }),
+      /Only the campaign GM can move or detach this character/,
+    );
+  });
+});

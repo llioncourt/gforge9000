@@ -37,6 +37,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/i18n/hooks";
+import { useSession } from "@/hooks/use-session";
 
 type Player = {
   campaignId: string | null;
@@ -84,8 +85,10 @@ export function CampaignSoundtrackProvider({
     [time, setTime] = useState(0),
     [duration, setDuration] = useState(0),
     [playing, setPlaying] = useState(false),
-    [volume, setVolumeState] = useState(0.85),
-    [userId, setUserId] = useState<string | null>(null);
+    [volume, setVolumeState] = useState(0.85);
+  // The signed-in id comes from the session already held in memory; asking the
+  // auth service again added a network round-trip to every screen.
+  const userId = useSession().user?.id ?? null;
   useEffect(() => {
     let live = true;
     void scope(pathname)
@@ -99,9 +102,6 @@ export function CampaignSoundtrackProvider({
       live = false;
     };
   }, [pathname]);
-  useEffect(() => {
-    void supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
-  }, []);
   const data = useQuery({
     queryKey: ["campaign-soundtrack", campaignId],
     queryFn: () => listCampaignSoundtracks(campaignId ?? ""),

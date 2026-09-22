@@ -13,7 +13,6 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { clearDestination } from "@/lib/auth/pending-destination";
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [trayOpen, setTrayOpen] = useState(false);
   const navigate = useNavigate();
   const auth = useAuth();
-  const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { t } = useT("navigation");
   useAccountLocale();

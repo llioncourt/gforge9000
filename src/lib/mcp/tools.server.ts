@@ -312,6 +312,45 @@ async function loadRelationship(
   return { row: data, campaign };
 }
 
+/** Every character column an assistant may write, shared by create and update. */
+const characterWritableFields = {
+  concept: z.string().max(400).nullable().optional(),
+  player_name: z.string().max(120).nullable().optional(),
+  campaign_id: uuid.nullable().optional(),
+  is_npc: z.boolean().optional(),
+  point_budget: intField(0, 100000).optional(),
+  tech_level: intField(0, 20).optional(),
+  st: intField(0, 1000).optional(),
+  dx: intField(0, 1000).optional(),
+  iq: intField(0, 1000).optional(),
+  ht: intField(0, 1000).optional(),
+  hp_delta: intField(-1000, 1000).optional(),
+  will_delta: intField(-1000, 1000).optional(),
+  per_delta: intField(-1000, 1000).optional(),
+  fp_delta: intField(-1000, 1000).optional(),
+  speed_delta: quarterStep.optional(),
+  move_delta: intField(-1000, 1000).optional(),
+  current_hp: intField(-10000, 10000).nullable().optional(),
+  current_fp: intField(-10000, 10000).nullable().optional(),
+  conditions: z.array(z.string().max(80)).max(100).optional(),
+  wealth: z.string().max(60).optional(),
+  status: intField(-20, 20).optional(),
+  appearance: z.record(z.string(), z.unknown()).optional(),
+  notes: z.string().max(20000).nullable().optional(),
+  gm_notes: z.string().max(20000).nullable().optional(),
+} as const;
+
+/** Compact mode shortens long entry notes in the reply only — never in the DB. */
+const COMPACT_NOTES_LIMIT = 200;
+
+function compactEntryNotes<T extends { notes?: string | null }>(row: T): T {
+  const notes = row.notes;
+  if (typeof notes !== "string" || notes.length <= COMPACT_NOTES_LIMIT) return row;
+  return { ...row, notes: `${notes.slice(0, COMPACT_NOTES_LIMIT - 1).trimEnd()}…` };
+}
+
+
+
 
 /* ------------------------------------------------------------------ */
 /* Registration helper                                                 */

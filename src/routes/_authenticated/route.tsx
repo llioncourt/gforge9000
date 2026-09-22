@@ -11,7 +11,8 @@ export const Route = createFileRoute("/_authenticated")({
     const { data, error } = await supabase.auth.getSession();
     const user = data.session?.user ?? null;
     if (error || !user) {
-      const target = `${location.pathname}${location.search}`;
+      // `location.search` is a parsed object here — use the raw query string.
+      const target = `${location.pathname}${location.searchStr ?? ""}`;
       throw redirect({ to: "/auth", search: { redirect: target } });
     }
     return { user };

@@ -400,7 +400,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         campaign.isGm,
         GM_ONLY_ENTITY_FIELDS,
       );
-      return reply(`${row.kind} "${row.name}" in "${campaign.name}".`, { item });
+      return reply(
+        `${row.kind} "${row.name}" in "${campaign.name}".\n\n${JSON.stringify(item, null, 2)}`,
+        { item },
+      );
     },
   );
 
@@ -642,7 +645,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         .limit(max);
       if (error) fail("Loading character entries", error);
       const item = { ...characterView(access), entries: data ?? [] };
-      return reply(`Character "${access.row.name}" with ${data?.length ?? 0} entries.`, { item });
+      return reply(
+        `Character "${access.row.name}" with ${data?.length ?? 0} entries.\n\n${JSON.stringify(item, null, 2)}`,
+        { item },
+      );
     },
   );
 

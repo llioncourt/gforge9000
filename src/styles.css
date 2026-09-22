@@ -275,12 +275,6 @@
   border-radius: 9999px;
   filter: blur(90px);
   opacity: 0.6;
-  will-change: transform;
-  transform: translate3d(
-    calc(var(--px, 0) * var(--depth, 1) * 1px),
-    calc(var(--py, 0) * var(--depth, 1) * 1px),
-    0
-  );
 }
 
 .ambient-grid {
@@ -291,8 +285,6 @@
     linear-gradient(to right, oklch(1 0 0 / 2.5%) 1px, transparent 1px);
   background-size: 56px 56px;
   mask-image: radial-gradient(ellipse at 50% 0%, #000 20%, transparent 72%);
-  transform: translate3d(0, calc(var(--py, 0) * 0.35px), 0);
-  will-change: transform;
 }
 
 /* Parallax layer driven by scroll offset CSS variable. */

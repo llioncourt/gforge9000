@@ -179,7 +179,6 @@ function LibraryPage() {
     return () => window.clearTimeout(timer);
   }, [searchInput]);
 
-
   // Deep-link from global search: clear filters, scroll to the entry and flash it.
   useEffect(() => {
     const requestedId = itemParam;

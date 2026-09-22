@@ -234,12 +234,8 @@ function CampaignPage() {
     enabled: (roster.data?.length ?? 0) > 0,
   });
 
-  const library = useQuery({ queryKey: ["library"], queryFn: listLibrary });
-  const knownPacks = useMemo(() => {
-    const set = new Set<string>();
-    for (const row of library.data ?? []) if (row.pack) set.add(row.pack);
-    return [...set];
-  }, [library.data]);
+  const libraryPacks = useQuery({ queryKey: ["library-packs"], queryFn: listLibraryPackNames });
+  const knownPacks = useMemo(() => libraryPacks.data ?? [], [libraryPacks.data]);
 
   const isGm = campaign.data?.gm_id === user?.id;
   const settings = (campaign.data?.settings ?? {}) as Record<string, unknown>;

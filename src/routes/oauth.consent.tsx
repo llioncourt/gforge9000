@@ -18,7 +18,7 @@ export const Route = createFileRoute("/oauth/consent")({
   staticData: { sitemap: false },
   ssr: false,
   validateSearch: (search: Record<string, unknown>): ConsentSearch => ({
-    authorization_id: typeof search.authorization_id === "string" ? search.authorization_id : "",
+    authorization_id: typeof search["authorization_id"] === "string" ? (search["authorization_id"] as string) : "",
   }),
   head: () => ({
     meta: [
@@ -153,8 +153,8 @@ function ConsentPage() {
     );
   }
 
-  const clientName = data.client?.client_name || data.client?.client_id || t("consent.unknownApp");
-  const clientUri = data.client?.client_uri;
+  const clientName = data.client?.name || data.client?.id || t("consent.unknownApp");
+  const clientUri = data.client?.uri;
   const scopes = (data.scope ?? "").split(/\s+/).filter(Boolean);
 
   return (

@@ -477,7 +477,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       requireGm(campaign);
       const update = Object.fromEntries(
         Object.entries(patch).filter(([, value]) => value !== undefined),
-      );
+      ) as Database["public"]["Tables"]["entities"]["Update"];
       if (Object.keys(update).length === 0) throw new Error("Nothing to update — no fields given.");
       const { data, error } = await ctx.supabase
         .from("entities")

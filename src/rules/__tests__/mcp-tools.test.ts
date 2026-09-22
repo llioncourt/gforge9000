@@ -34,11 +34,11 @@ describe("assistant tool surface", () => {
     )._registeredTools;
 
     for (const name of ["list_campaigns", "list_entries", "get_entry", "get_character"]) {
-      expect(tools[name]?.annotations?.readOnlyHint).toBe(true);
+      expect(tools[name]?.annotations?.['readOnlyHint']).toBe(true);
     }
     for (const name of ["delete_entry", "delete_character_entry"]) {
-      expect(tools[name]?.annotations?.destructiveHint).toBe(true);
-      expect(tools[name]?.annotations?.readOnlyHint).toBe(false);
+      expect(tools[name]?.annotations?.['destructiveHint']).toBe(true);
+      expect(tools[name]?.annotations?.['readOnlyHint']).toBe(false);
     }
   });
 
@@ -53,7 +53,7 @@ describe("assistant tool surface", () => {
       }
     )._registeredTools;
 
-    const listEntries = tools.list_entries?.inputSchema;
+    const listEntries = tools["list_entries"]?.inputSchema;
     expect(listEntries).toBeDefined();
     expect(listEntries!.safeParse({ campaign_id: "not-a-uuid" }).success).toBe(false);
     expect(
@@ -77,12 +77,12 @@ describe("game master fields", () => {
   it("removes gm notes for players", () => {
     const out = __stripGmFields(entity, false, MCP_GM_ONLY_FIELDS.entity);
     expect(out).not.toHaveProperty("gm_notes");
-    expect(out.summary).toBe("public");
+    expect(out["summary"]).toBe("public");
   });
 
   it("keeps gm notes for the game master", () => {
     const out = __stripGmFields(entity, true, MCP_GM_ONLY_FIELDS.entity);
-    expect(out.gm_notes).toBe("secret");
+    expect(out["gm_notes"]).toBe("secret");
   });
 
   it("removes gm descriptions from relationships for players", () => {

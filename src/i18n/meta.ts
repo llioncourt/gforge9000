@@ -25,6 +25,8 @@ import enCharacters from "./locales/en/characters.json";
 import ptCharacters from "./locales/pt-BR/characters.json";
 import enCampaigns from "./locales/en/campaigns.json";
 import ptCampaigns from "./locales/pt-BR/campaigns.json";
+import enAssistant from "./locales/en/assistant.json";
+import ptAssistant from "./locales/pt-BR/assistant.json";
 import enLore from "./locales/en/lore.json";
 import ptLore from "./locales/pt-BR/lore.json";
 
@@ -32,6 +34,7 @@ type MetaBundle = Record<string, unknown>;
 
 const BUNDLES: Record<string, Record<string, MetaBundle>> = {
   marketing: { en: enMarketing as MetaBundle, "pt-BR": ptMarketing as MetaBundle },
+  assistant: { en: enAssistant as MetaBundle, "pt-BR": ptAssistant as MetaBundle },
   auth: { en: enAuth as MetaBundle, "pt-BR": ptAuth as MetaBundle },
   dashboard: { en: enDashboard as MetaBundle, "pt-BR": ptDashboard as MetaBundle },
   library: { en: enLibrary as MetaBundle, "pt-BR": ptLibrary as MetaBundle },
@@ -59,6 +62,7 @@ function lookup(bundle: MetaBundle | undefined, path: string): string | undefine
 export function metaText(
   namespace:
     | "marketing"
+    | "assistant"
     | "auth"
     | "dashboard"
     | "library"

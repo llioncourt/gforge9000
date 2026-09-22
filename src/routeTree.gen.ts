@@ -14,8 +14,12 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as DotwellKnownOauthProtectedResourceRouteImport } from './routes/[.]well-known.oauth-protected-resource'
+import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
+import { Route as OauthConsentRouteImport } from './routes/oauth.consent'
+import { Route as DotwellKnownOauthProtectedResourceSplatRouteImport } from './routes/[.]well-known.oauth-protected-resource.$'
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns.index'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
 import { Route as AuthenticatedCharactersIndexRouteImport } from './routes/_authenticated/characters.index'
@@ -23,6 +27,7 @@ import { Route as AuthenticatedCharactersIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedEntitiesIdRouteImport } from './routes/_authenticated/entities.$id'
 import { Route as AuthenticatedPacksIndexRouteImport } from './routes/_authenticated/packs.index'
 import { Route as AuthenticatedPacksPackRouteImport } from './routes/_authenticated/packs.$pack'
+import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
 import { Route as ApiPublicVersionRouteImport } from './routes/api/public/version'
 
 const IndexRoute = IndexRouteImport.update({
@@ -49,6 +54,17 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotwellKnownOauthProtectedResourceRoute =
+  DotwellKnownOauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -59,6 +75,17 @@ const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const OauthConsentRoute = OauthConsentRouteImport.update({
+  id: '/oauth/consent',
+  path: '/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotwellKnownOauthProtectedResourceSplatRoute =
+  DotwellKnownOauthProtectedResourceSplatRouteImport.update({
+    id: '/$',
+    path: '/$',
+    getParentRoute: () => DotwellKnownOauthProtectedResourceRoute,
+  } as any)
 const AuthenticatedCampaignsIndexRoute =
   AuthenticatedCampaignsIndexRouteImport.update({
     id: '/campaigns/',
@@ -98,6 +125,11 @@ const AuthenticatedPacksPackRoute = AuthenticatedPacksPackRouteImport.update({
   path: '/packs/$pack',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicMcpRoute = ApiPublicMcpRouteImport.update({
+  id: '/api/public/mcp',
+  path: '/api/public/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicVersionRoute = ApiPublicVersionRouteImport.update({
   id: '/api/public/version',
   path: '/api/public/version',
@@ -109,12 +141,17 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/oauth/consent': typeof OauthConsentRoute
+  '/.well-known/oauth-protected-resource/$': typeof DotwellKnownOauthProtectedResourceSplatRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/characters/': typeof AuthenticatedCharactersIndexRoute
@@ -125,12 +162,17 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/oauth/consent': typeof OauthConsentRoute
+  '/.well-known/oauth-protected-resource/$': typeof DotwellKnownOauthProtectedResourceSplatRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
   '/characters': typeof AuthenticatedCharactersIndexRoute
@@ -143,12 +185,17 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRouteWithChildren
+  '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
+  '/oauth/consent': typeof OauthConsentRoute
+  '/.well-known/oauth-protected-resource/$': typeof DotwellKnownOauthProtectedResourceSplatRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/_authenticated/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/_authenticated/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/_authenticated/characters/': typeof AuthenticatedCharactersIndexRoute
@@ -161,12 +208,17 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/.well-known/oauth-protected-resource'
+    | '/assistant'
     | '/dashboard'
     | '/library'
+    | '/oauth/consent'
+    | '/.well-known/oauth-protected-resource/$'
     | '/campaigns/$id'
     | '/characters/$id'
     | '/entities/$id'
     | '/packs/$pack'
+    | '/api/public/mcp'
     | '/api/public/version'
     | '/campaigns/'
     | '/characters/'
@@ -177,12 +229,17 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/.well-known/oauth-protected-resource'
+    | '/assistant'
     | '/dashboard'
     | '/library'
+    | '/oauth/consent'
+    | '/.well-known/oauth-protected-resource/$'
     | '/campaigns/$id'
     | '/characters/$id'
     | '/entities/$id'
     | '/packs/$pack'
+    | '/api/public/mcp'
     | '/api/public/version'
     | '/campaigns'
     | '/characters'
@@ -194,12 +251,17 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/.well-known/oauth-protected-resource'
+    | '/_authenticated/assistant'
     | '/_authenticated/dashboard'
     | '/_authenticated/library'
+    | '/oauth/consent'
+    | '/.well-known/oauth-protected-resource/$'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/characters/$id'
     | '/_authenticated/entities/$id'
     | '/_authenticated/packs/$pack'
+    | '/api/public/mcp'
     | '/api/public/version'
     | '/_authenticated/campaigns/'
     | '/_authenticated/characters/'
@@ -212,6 +274,9 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   LegalRoute: typeof LegalRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  DotwellKnownOauthProtectedResourceRoute: typeof DotwellKnownOauthProtectedResourceRouteWithChildren
+  OauthConsentRoute: typeof OauthConsentRoute
+  ApiPublicMcpRoute: typeof ApiPublicMcpRoute
   ApiPublicVersionRoute: typeof ApiPublicVersionRoute
 }
 
@@ -252,6 +317,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof DotwellKnownOauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/assistant': {
+      id: '/_authenticated/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AuthenticatedAssistantRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -265,6 +344,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/library'
       preLoaderRoute: typeof AuthenticatedLibraryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/oauth/consent': {
+      id: '/oauth/consent'
+      path: '/oauth/consent'
+      fullPath: '/oauth/consent'
+      preLoaderRoute: typeof OauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource/$': {
+      id: '/.well-known/oauth-protected-resource/$'
+      path: '/$'
+      fullPath: '/.well-known/oauth-protected-resource/$'
+      preLoaderRoute: typeof DotwellKnownOauthProtectedResourceSplatRouteImport
+      parentRoute: typeof DotwellKnownOauthProtectedResourceRoute
     }
     '/_authenticated/campaigns/': {
       id: '/_authenticated/campaigns/'
@@ -315,6 +408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPacksPackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/mcp': {
+      id: '/api/public/mcp'
+      path: '/api/public/mcp'
+      fullPath: '/api/public/mcp'
+      preLoaderRoute: typeof ApiPublicMcpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/version': {
       id: '/api/public/version'
       path: '/api/public/version'
@@ -326,6 +426,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
@@ -338,6 +439,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
@@ -352,12 +454,31 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface DotwellKnownOauthProtectedResourceRouteChildren {
+  DotwellKnownOauthProtectedResourceSplatRoute: typeof DotwellKnownOauthProtectedResourceSplatRoute
+}
+
+const DotwellKnownOauthProtectedResourceRouteChildren: DotwellKnownOauthProtectedResourceRouteChildren =
+  {
+    DotwellKnownOauthProtectedResourceSplatRoute:
+      DotwellKnownOauthProtectedResourceSplatRoute,
+  }
+
+const DotwellKnownOauthProtectedResourceRouteWithChildren =
+  DotwellKnownOauthProtectedResourceRoute._addFileChildren(
+    DotwellKnownOauthProtectedResourceRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   LegalRoute: LegalRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  DotwellKnownOauthProtectedResourceRoute:
+    DotwellKnownOauthProtectedResourceRouteWithChildren,
+  OauthConsentRoute: OauthConsentRoute,
+  ApiPublicMcpRoute: ApiPublicMcpRoute,
   ApiPublicVersionRoute: ApiPublicVersionRoute,
 }
 export const routeTree = rootRouteImport

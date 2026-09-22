@@ -1,0 +1,47 @@
+{
+  "meta": {
+    "title": "Assistant access — Universal Character Forge",
+    "description": "Connect an outside assistant to your campaigns and characters with your own account.",
+    "ogDescription": "Connect an outside assistant to your campaigns and characters with your own account."
+  },
+  "page": {
+    "title": "Assistant access",
+    "description": "Let an assistant you already use read and update your campaigns and character sheets."
+  },
+  "endpoint": {
+    "label": "Connection address",
+    "copy": "Copy",
+    "copied": "Copied",
+    "help": "Paste this address into the assistant you want to connect. It will ask you to sign in with your usual account and approve access."
+  },
+  "access": {
+    "title": "What an assistant can do",
+    "description": "An assistant only ever sees what you can see, and can only change what you are allowed to change.",
+    "pointOne": "Browse your campaigns, world entries and character sheets.",
+    "pointTwo": "Game Master notes stay hidden from anyone who is not the Game Master.",
+    "pointThree": "You can refuse a connection at any time on the approval screen."
+  },
+  "consent": {
+    "meta": {
+      "title": "Approve access — Universal Character Forge",
+      "description": "Review and approve an assistant's request to use your account."
+    },
+    "title": "Approve access",
+    "description": "{{app}} wants to use your account to read and update your campaigns and characters.",
+    "clientLabel": "Requesting app",
+    "websiteLabel": "Website",
+    "accountLabel": "Your account",
+    "scopesLabel": "Requested access",
+    "scopesNone": "Basic account access.",
+    "unknownApp": "An external app",
+    "approve": "Approve",
+    "deny": "Deny",
+    "redirecting": "Taking you back to the app…",
+    "invalidTitle": "This link is not valid",
+    "invalidDescription": "The request is missing or has expired. Start the connection again from the app you were using.",
+    "errorTitle": "We could not load this request",
+    "errorDescription": "The request may have expired. Try again, or start the connection again from the app you were using.",
+    "retry": "Try again",
+    "backHome": "Go home"
+  }
+}

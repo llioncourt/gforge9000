@@ -75,6 +75,38 @@ function mimeFromPath(path: string, fallback = "application/octet-stream"): stri
   return MIME_BY_EXT[ext] ?? fallback;
 }
 
+/**
+ * Detects image formats from their magic bytes rather than trusting the
+ * archive path's extension. This matters because the browser wrapper
+ * pre-converts every image entry to AVIF (matching the app's long-standing
+ * browser AVIF behaviour) while keeping the original file name, so the
+ * bytes and the path extension can legitimately disagree.
+ */
+function sniffImageMime(bytes: Uint8Array): string | null {
+  if (bytes.length >= 12) {
+    const brand = String.fromCharCode(bytes[8]!, bytes[9]!, bytes[10]!, bytes[11]!);
+    if (brand === "avif" || brand === "avis") return "image/avif";
+  }
+  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47)
+    return "image/png";
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff)
+    return "image/jpeg";
+  if (
+    bytes.length >= 12 &&
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
+  )
+    return "image/webp";
+  if (bytes.length >= 6 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) return "image/gif";
+  return null;
+}
+
 async function uploadFromZip(
   supabase: Client,
   archive: Archive,
@@ -84,7 +116,7 @@ async function uploadFromZip(
   fallbackMime = "application/octet-stream",
 ): Promise<void> {
   const bytes = bytesFromZip(archive, path);
-  const mime = mimeFromPath(path, fallbackMime);
+  const mime = sniffImageMime(bytes) ?? mimeFromPath(path, fallbackMime);
   const { error } = await supabase.storage
     .from(bucket)
     .upload(destPath, bytes, { contentType: mime, upsert: false });

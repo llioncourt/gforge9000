@@ -21,7 +21,6 @@ import { CommandPalette } from "@/components/app/command-palette";
 import { DiceTray } from "@/components/app/dice-tray";
 import { DiceOverlay } from "@/components/app/dice-overlay";
 import { CampaignSoundtrackProvider } from "@/components/campaign/campaign-soundtrack-player";
-import { AmbientBackground } from "@/components/app/ambient-background";
 import { NotificationBell } from "@/components/app/notification-bell";
 import { ProfileMenu } from "@/components/app/profile-menu";
 import { AppUpdateNotice } from "@/components/app/app-update-notice";
@@ -79,7 +78,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <CampaignSoundtrackProvider pathname={pathname}>
       <div className="relative min-h-screen">
-        <AmbientBackground />
         <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
         <DiceTray open={trayOpen} onOpenChange={setTrayOpen} />
         <DiceOverlay />

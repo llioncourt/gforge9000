@@ -60,7 +60,7 @@ import {
   createCharacter,
   duplicateCharacter,
 } from "@/lib/api";
-import { listLibrary } from "@/lib/api";
+import { listLibraryPackNames } from "@/lib/api";
 import { allowedPacksOf } from "@/lib/packs";
 import { buildSheet } from "@/rules";
 import { CampaignRules } from "@/components/campaign/campaign-rules";

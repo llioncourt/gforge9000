@@ -47,6 +47,13 @@ function AuthPage() {
   const [displayName, setDisplayName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  // Until the page is interactive, a click would submit the form natively and
+  // reload the page (losing what was typed), so the actions stay disabled.
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(true);
+  }, []);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: target, replace: true });
@@ -165,10 +172,14 @@ function AuthPage() {
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={busy}
+                    disabled={busy || !ready}
                     aria-label={t("form.actions.signIn")}
                   >
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("form.actions.signIn")}
+                    {busy || !ready ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      t("form.actions.signIn")
+                    )}
                   </Button>
                 </form>
               </TabsContent>
@@ -208,10 +219,10 @@ function AuthPage() {
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={busy}
+                    disabled={busy || !ready}
                     aria-label={t("form.actions.createAccount")}
                   >
-                    {busy ? (
+                    {busy || !ready ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       t("form.actions.createAccount")
@@ -224,7 +235,7 @@ function AuthPage() {
                 <span className="h-px flex-1 bg-border" /> {t("form.or")}{" "}
                 <span className="h-px flex-1 bg-border" />
               </div>
-              <Button variant="outline" className="w-full" onClick={google}>
+              <Button variant="outline" className="w-full" onClick={google} disabled={!ready}>
                 {t("form.actions.continueWithGoogle")}
               </Button>
 

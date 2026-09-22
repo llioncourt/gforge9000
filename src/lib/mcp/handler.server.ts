@@ -16,7 +16,7 @@ import { createMcpHandler } from "@modelcontextprotocol/server";
 import { fromSupabaseUrl, withOAuthProtectedResource, withSupabase } from "@supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { MCP_ENDPOINT_PATH } from "@/lib/mcp/config";
+import { MCP_ENDPOINT_PATH, MCP_RESOURCE_METADATA_PATH } from "@/lib/mcp/config";
 import { buildMcpServer } from "@/lib/mcp/tools.server";
 
 function authorizationServerUrl(): string {

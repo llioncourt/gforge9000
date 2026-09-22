@@ -45,12 +45,14 @@ import {
   addEntry,
   createLibraryEntry,
   deleteLibraryEntry,
+  getLibraryEntries,
   importLibraryEntries,
   listCharacters,
   listCampaigns,
   listLibrary,
   updateLibraryEntry,
-  type LibraryRow,
+  withLibraryDetails,
+  type LibraryListRow,
 } from "@/lib/api";
 import {
   download,

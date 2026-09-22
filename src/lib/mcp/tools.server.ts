@@ -706,16 +706,21 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         source_id: uuid,
         target_id: uuid,
         rel_type: boundedText(60),
-        description: z.string().max(2000).optional(),
+        description: z.string().max(2000).nullable().optional(),
+        gm_description: z.string().max(4000).nullable().optional(),
         visibility: z.enum(VISIBILITY_VALUES).optional(),
+        strength: strengthField.nullable().optional(),
+        is_current: z.boolean().optional(),
+        start_label: z.string().max(120).nullable().optional(),
+        end_label: z.string().max(120).nullable().optional(),
       }),
       outputSchema: itemOutput,
       annotations: create,
     },
-    async (input) => {
-      const campaign = await loadCampaign(ctx, input.campaign_id);
+    async ({ campaign_id, source_id, target_id, rel_type, ...optional }) => {
+      const campaign = await loadCampaign(ctx, campaign_id);
       requireGm(campaign);
-      for (const id of [input.source_id, input.target_id]) {
+      for (const id of [source_id, target_id]) {
         const { campaign: owner } = await loadEntity(ctx, id);
         if (owner.id !== campaign.id) {
           throw new Error("Both entries must belong to the same campaign.");
@@ -724,19 +729,79 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       const { data, error } = await ctx.supabase
         .from("entity_relationships")
         .insert({
-          campaign_id: input.campaign_id,
-          source_id: input.source_id,
-          target_id: input.target_id,
-          rel_type: input.rel_type,
-          description: input.description ?? null,
-          ...(input.visibility ? { visibility: input.visibility } : {}),
+          campaign_id,
+          source_id,
+          target_id,
+          rel_type,
+          ...buildPatch(optional),
         })
-        .select("id, campaign_id, source_id, target_id, rel_type, visibility")
+        .select("*")
         .single();
       if (error) fail("Creating the relationship", error);
-      return reply(`Linked the two entries as "${data.rel_type}".`, { item: data });
+      return detailReply(`Linked the two entries as "${data.rel_type}" (${data.id}).`, data);
     },
   );
+
+  tool(
+    "update_relationship",
+    {
+      title: "Update a link between entries",
+      description:
+        "Changes an existing link between two entries. Only the campaign's Game Master can do this. Fields left out stay unchanged.",
+      inputSchema: z.object({
+        relationship_id: uuid,
+        rel_type: boundedText(60).optional(),
+        description: z.string().max(2000).nullable().optional(),
+        gm_description: z.string().max(4000).nullable().optional(),
+        visibility: z.enum(VISIBILITY_VALUES).optional(),
+        strength: strengthField.nullable().optional(),
+        is_current: z.boolean().optional(),
+        start_label: z.string().max(120).nullable().optional(),
+        end_label: z.string().max(120).nullable().optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: modify,
+    },
+    async ({ relationship_id, ...patch }) => {
+      const relation = await loadRelationship(ctx, relationship_id);
+      requireGm(relation.campaign);
+      const update = buildPatch(patch);
+      requirePatch(update);
+      const { data, error } = await ctx.supabase
+        .from("entity_relationships")
+        .update(update)
+        .eq("id", relationship_id)
+        .select("*")
+        .single();
+      if (error) fail("Updating the relationship", error);
+      return detailReply(`Updated the "${data.rel_type}" link (${data.id}).`, data);
+    },
+  );
+
+  tool(
+    "delete_relationship",
+    {
+      title: "Remove a link between entries",
+      description:
+        "Permanently removes a link between two entries. Only the campaign's Game Master can do this.",
+      inputSchema: z.object({ relationship_id: uuid }),
+      outputSchema: deleteOutput,
+      annotations: destroy,
+    },
+    async ({ relationship_id }) => {
+      const relation = await loadRelationship(ctx, relationship_id);
+      requireGm(relation.campaign);
+      const { data, error } = await ctx.supabase
+        .from("entity_relationships")
+        .delete()
+        .eq("id", relationship_id)
+        .select("id");
+      if (error) fail("Deleting the relationship", error);
+      if (!data || data.length === 0) throw new Error("The link was not deleted.");
+      return deleteReply(`Removed the "${relation.row.rel_type}" link.`, relationship_id);
+    },
+  );
+
 
   /* ---------------- characters ---------------- */
 

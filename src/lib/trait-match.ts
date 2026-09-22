@@ -247,6 +247,13 @@ export function applyCatalogue(entry: ImportedEntry, target: CatalogueEntry): Im
     importedQualifier && (entry.data?.["specialization"] ?? "") === ""
       ? { specialization: importedQualifier }
       : {};
+  // An existing content-pack link is provenance the rewrite must not destroy;
+  // it is the only key of the old source that survives.
+  const previousSource =
+    entry.source && typeof entry.source === "object"
+      ? (entry.source as Record<string, unknown>)
+      : {};
+  const previousLink = previousSource["link"];
   return {
     ...entry,
     name,
@@ -260,9 +267,11 @@ export function applyCatalogue(entry: ImportedEntry, target: CatalogueEntry): Im
       type: target.source_type ?? "user",
       pack: target.pack ?? null,
       imported_as: entry.name !== name ? entry.name : undefined,
+      ...(previousLink ? { link: previousLink } : {}),
     },
   };
 }
+
 
 export interface ReconcileResult {
   entries: ImportedEntry[];

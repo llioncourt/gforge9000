@@ -836,7 +836,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "Update a campaign entry",
       description:
-        "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. Fields left out are untouched. When supplied, `data`, `aliases`, and `tags` replace the entire stored object/array rather than being merged. Read the entry first and resend any existing keys/items you want to preserve.",
+        "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. Fields left out are untouched. When supplied, `data`, `aliases`, and `tags` replace the entire stored object/array rather than being merged. Read the entry first and resend any existing keys/items you want to preserve. `status` is matched against the kind's own statuses ignoring capitalisation and stored in the app's exact spelling; if you change `kind` and the current status does not exist for the new kind, supply a valid one.",
       inputSchema: z.object({
         entry_id: uuid,
         kind: boundedText(40).optional(),

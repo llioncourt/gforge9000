@@ -33,7 +33,7 @@ function Dashboard() {
   const queryClient = useQueryClient();
   const characters = useQuery({ queryKey: ["characters"], queryFn: listCharacters });
   const campaigns = useQuery({ queryKey: ["campaigns"], queryFn: listCampaigns });
-  const library = useQuery({ queryKey: ["library"], queryFn: listLibrary });
+  const library = useQuery({ queryKey: ["library-count"], queryFn: countLibrary });
   const rolls = useQuery({ queryKey: ["rolls"], queryFn: () => listRolls(8) });
 
   const newCharacter = useMutation({

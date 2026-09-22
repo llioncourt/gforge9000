@@ -79,7 +79,7 @@ function Dashboard() {
         <StatCard
           icon={BookOpen}
           label={t("stats.libraryEntries")}
-          value={library.data?.length}
+          value={library.data}
           loading={library.isLoading}
         />
         <StatCard

@@ -70,6 +70,39 @@ function listReply(label: string, items: Structured[], limit: number) {
   return reply(text, { count: items.length, truncated, items });
 }
 
+/**
+ * Single place enforcing the detail response contract: one summary line, a
+ * blank line, then the complete safe object as pretty JSON — and the very same
+ * object as structured content.
+ */
+function detailReply(summary: string, item: Structured) {
+  return reply(`${summary}\n\n${JSON.stringify(item, null, 2)}`, { item });
+}
+
+function deleteReply(summary: string, id: string) {
+  const payload = { deleted: true, id };
+  return reply(`${summary}\n\n${JSON.stringify(payload, null, 2)}`, payload);
+}
+
+/** Drops keys the caller did not send; explicit `null` is kept (it clears). */
+function buildPatch<T extends Record<string, unknown>>(patch: T): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(patch).filter(([, value]) => value !== undefined));
+}
+
+function requirePatch(update: Record<string, unknown>): void {
+  if (Object.keys(update).length === 0) throw new Error("Nothing to update — no fields given.");
+}
+
+/** Deltas move in exact quarter steps. */
+const quarterStep = z
+  .number()
+  .refine((value) => Number.isFinite(value) && Number.isInteger(value * 4), {
+    message: "Must be a multiple of 0.25.",
+  });
+
+const intField = (min: number, max: number) => z.number().int().min(min).max(max);
+const strengthField = intField(-5, 5);
+
 interface CampaignAccess {
   id: string;
   name: string;
@@ -196,6 +229,127 @@ function requireCharacterWrite(access: CharacterAccess): void {
   }
 }
 
+function requireCharacterOwner(access: CharacterAccess): void {
+  if (!access.isOwner) {
+    throw new Error(`Only the owner of "${access.row.name}" can delete this sheet.`);
+  }
+}
+
+/** Longest parent chain we are willing to walk before refusing the move. */
+const MAX_PARENT_DEPTH = 64;
+
+function kindDef(kind: string) {
+  const found = KINDS.find((entry) => entry.kind === kind);
+  if (!found) {
+    throw new Error(
+      `Unknown entry kind "${kind}". Use list_entry_types to see the kinds this app accepts.`,
+    );
+  }
+  return found;
+}
+
+function assertStatusForKind(kind: string, status: string): void {
+  const def = kindDef(kind);
+  if (!def.statuses.includes(status)) {
+    throw new Error(
+      `Status "${status}" is not valid for ${kind}. Valid statuses: ${def.statuses.join(", ")}.`,
+    );
+  }
+}
+
+/**
+ * Rejects a parent that would create a loop. Walks the proposed parent's own
+ * ancestors with bounded plain queries — no recursive SQL, no schema changes.
+ */
+async function assertParentIsSafe(
+  ctx: McpToolContext,
+  entryId: string,
+  parentId: string,
+  campaignId: string,
+): Promise<void> {
+  if (parentId === entryId) throw new Error("An entry cannot be its own parent.");
+  const seen = new Set<string>([entryId]);
+  let cursor: string | null = parentId;
+  for (let depth = 0; depth < MAX_PARENT_DEPTH && cursor; depth += 1) {
+    const currentId: string = cursor;
+    const { data, error } = await ctx.supabase
+      .from("entities")
+      .select("id, campaign_id, parent_id")
+      .eq("id", currentId)
+      .maybeSingle();
+
+    if (error) fail("Parent lookup", error);
+    if (!data) throw new Error("Parent entry not found, or you do not have access to it.");
+    if (data.campaign_id !== campaignId) {
+      throw new Error("The parent entry must belong to the same campaign.");
+    }
+    if (seen.has(data.id) && data.id !== parentId) {
+      throw new Error("That parent would create a loop in the entry hierarchy.");
+    }
+    if (data.parent_id === entryId) {
+      throw new Error("That parent would create a loop in the entry hierarchy.");
+    }
+    if (data.parent_id && seen.has(data.parent_id)) {
+      throw new Error("That parent would create a loop in the entry hierarchy.");
+    }
+    seen.add(data.id);
+    cursor = data.parent_id;
+  }
+  if (cursor) throw new Error("The entry hierarchy is too deep to verify this move safely.");
+}
+
+async function loadRelationship(
+  ctx: McpToolContext,
+  relationshipId: string,
+): Promise<{ row: RelationshipRow; campaign: CampaignAccess }> {
+  const { data, error } = await ctx.supabase
+    .from("entity_relationships")
+    .select("*")
+    .eq("id", relationshipId)
+    .maybeSingle();
+  if (error) fail("Relationship lookup", error);
+  if (!data) throw new Error("Link not found, or you do not have access to it.");
+  const campaign = await loadCampaign(ctx, data.campaign_id);
+  return { row: data, campaign };
+}
+
+/** Every character column an assistant may write, shared by create and update. */
+const characterWritableFields = {
+  concept: z.string().max(400).nullable().optional(),
+  player_name: z.string().max(120).nullable().optional(),
+  campaign_id: uuid.nullable().optional(),
+  is_npc: z.boolean().optional(),
+  point_budget: intField(0, 100000).optional(),
+  tech_level: intField(0, 20).optional(),
+  st: intField(0, 1000).optional(),
+  dx: intField(0, 1000).optional(),
+  iq: intField(0, 1000).optional(),
+  ht: intField(0, 1000).optional(),
+  hp_delta: intField(-1000, 1000).optional(),
+  will_delta: intField(-1000, 1000).optional(),
+  per_delta: intField(-1000, 1000).optional(),
+  fp_delta: intField(-1000, 1000).optional(),
+  speed_delta: quarterStep.optional(),
+  move_delta: intField(-1000, 1000).optional(),
+  current_hp: intField(-10000, 10000).nullable().optional(),
+  current_fp: intField(-10000, 10000).nullable().optional(),
+  conditions: z.array(z.string().max(80)).max(100).optional(),
+  wealth: z.string().max(60).optional(),
+  status: intField(-20, 20).optional(),
+  appearance: z.record(z.string(), z.unknown()).optional(),
+  notes: z.string().max(20000).nullable().optional(),
+  gm_notes: z.string().max(20000).nullable().optional(),
+} as const;
+
+/** Compact mode shortens long entry notes in the reply only — never in the DB. */
+const COMPACT_NOTES_LIMIT = 200;
+
+function compactEntryNotes<T extends { notes?: string | null }>(row: T): T {
+  const notes = row.notes;
+  if (typeof notes !== "string" || notes.length <= COMPACT_NOTES_LIMIT) return row;
+  return { ...row, notes: `${notes.slice(0, COMPACT_NOTES_LIMIT - 1).trimEnd()}…` };
+}
+
 /* ------------------------------------------------------------------ */
 /* Registration helper                                                 */
 /* ------------------------------------------------------------------ */
@@ -313,10 +467,40 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       const { data, error } = await ctx.supabase
         .from("campaigns")
         .insert({ name, description: description ?? null, gm_id: ctx.userId })
-        .select("id, name, description, created_at")
+        .select("*")
         .single();
       if (error) fail("Creating the campaign", error);
-      return reply(`Created campaign "${data.name}" (${data.id}).`, { item: data });
+      return detailReply(`Created campaign "${data.name}" (${data.id}).`, data);
+    },
+  );
+
+  tool(
+    "update_campaign",
+    {
+      title: "Update a campaign",
+      description:
+        "Changes the name or description of a campaign. Only the campaign's Game Master can edit it. Fields left out stay unchanged.",
+      inputSchema: z.object({
+        campaign_id: uuid,
+        name: boundedText(120).optional(),
+        description: z.string().max(4000).nullable().optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: modify,
+    },
+    async ({ campaign_id, ...patch }) => {
+      const campaign = await loadCampaign(ctx, campaign_id);
+      requireGm(campaign);
+      const update = buildPatch(patch);
+      requirePatch(update);
+      const { data, error } = await ctx.supabase
+        .from("campaigns")
+        .update(update as Database["public"]["Tables"]["campaigns"]["Update"])
+        .eq("id", campaign_id)
+        .select("*")
+        .single();
+      if (error) fail("Updating the campaign", error);
+      return detailReply(`Updated campaign "${data.name}" (${data.id}).`, data);
     },
   );
 
@@ -447,10 +631,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           parent_id: input.parent_id ?? null,
           ...(input.data ? { data: input.data as Json } : {}),
         })
-        .select("id, campaign_id, kind, name, status, visibility, summary")
+        .select("*")
         .single();
       if (error) fail("Creating the entry", error);
-      return reply(`Created ${data.kind} "${data.name}" (${data.id}).`, { item: data });
+      return detailReply(`Created ${data.kind} "${data.name}" (${data.id}).`, data);
     },
   );
 
@@ -459,35 +643,49 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "Update a campaign entry",
       description:
-        "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. Fields left out are untouched.",
+        "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. Fields left out are untouched; `data` and `aliases` fully replace the stored value when supplied.",
       inputSchema: z.object({
         entry_id: uuid,
+        kind: boundedText(40).optional(),
         name: boundedText(200).optional(),
-        summary: z.string().max(2000).optional(),
-        description: z.string().max(20000).optional(),
-        gm_notes: z.string().max(20000).optional(),
+        summary: z.string().max(2000).nullable().optional(),
+        player_description: z.string().max(20000).nullable().optional(),
+        description: z.string().max(20000).nullable().optional(),
+        gm_notes: z.string().max(20000).nullable().optional(),
         status: z.string().max(60).optional(),
         visibility: z.enum(VISIBILITY_VALUES).optional(),
         tags: z.array(z.string().max(60)).max(30).optional(),
+        aliases: z.array(z.string().max(120)).max(50).optional(),
+        parent_id: uuid.nullable().optional(),
+        data: z.record(z.string(), z.unknown()).optional(),
       }),
       outputSchema: itemOutput,
       annotations: modify,
     },
     async ({ entry_id, ...patch }) => {
-      const { campaign } = await loadEntity(ctx, entry_id);
+      const { row, campaign } = await loadEntity(ctx, entry_id);
       requireGm(campaign);
-      const update = Object.fromEntries(
-        Object.entries(patch).filter(([, value]) => value !== undefined),
-      ) as Database["public"]["Tables"]["entities"]["Update"];
-      if (Object.keys(update).length === 0) throw new Error("Nothing to update — no fields given.");
+
+      const effectiveKind = patch.kind ?? row.kind;
+      if (patch.kind !== undefined) kindDef(patch.kind);
+      if (patch.status !== undefined || patch.kind !== undefined) {
+        const effectiveStatus = patch.status ?? row.status;
+        if (effectiveStatus) assertStatusForKind(effectiveKind, effectiveStatus);
+      }
+      if (patch.parent_id) {
+        await assertParentIsSafe(ctx, entry_id, patch.parent_id, row.campaign_id);
+      }
+
+      const update = buildPatch(patch) as Database["public"]["Tables"]["entities"]["Update"];
+      requirePatch(update);
       const { data, error } = await ctx.supabase
         .from("entities")
         .update(update)
         .eq("id", entry_id)
-        .select("id, campaign_id, kind, name, status, visibility, summary")
+        .select("*")
         .single();
       if (error) fail("Updating the entry", error);
-      return reply(`Updated ${data.kind} "${data.name}".`, { item: data });
+      return detailReply(`Updated ${data.kind} "${data.name}" (${data.id}).`, data);
     },
   );
 
@@ -511,7 +709,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         .select("id");
       if (error) fail("Deleting the entry", error);
       if (!data || data.length === 0) throw new Error("The entry was not deleted.");
-      return reply(`Deleted ${row.kind} "${row.name}".`, { deleted: true, id: entry_id });
+      return deleteReply(`Deleted ${row.kind} "${row.name}".`, entry_id);
     },
   );
 
@@ -558,16 +756,21 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         source_id: uuid,
         target_id: uuid,
         rel_type: boundedText(60),
-        description: z.string().max(2000).optional(),
+        description: z.string().max(2000).nullable().optional(),
+        gm_description: z.string().max(4000).nullable().optional(),
         visibility: z.enum(VISIBILITY_VALUES).optional(),
+        strength: strengthField.nullable().optional(),
+        is_current: z.boolean().optional(),
+        start_label: z.string().max(120).nullable().optional(),
+        end_label: z.string().max(120).nullable().optional(),
       }),
       outputSchema: itemOutput,
       annotations: create,
     },
-    async (input) => {
-      const campaign = await loadCampaign(ctx, input.campaign_id);
+    async ({ campaign_id, source_id, target_id, rel_type, ...optional }) => {
+      const campaign = await loadCampaign(ctx, campaign_id);
       requireGm(campaign);
-      for (const id of [input.source_id, input.target_id]) {
+      for (const id of [source_id, target_id]) {
         const { campaign: owner } = await loadEntity(ctx, id);
         if (owner.id !== campaign.id) {
           throw new Error("Both entries must belong to the same campaign.");
@@ -576,17 +779,76 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       const { data, error } = await ctx.supabase
         .from("entity_relationships")
         .insert({
-          campaign_id: input.campaign_id,
-          source_id: input.source_id,
-          target_id: input.target_id,
-          rel_type: input.rel_type,
-          description: input.description ?? null,
-          ...(input.visibility ? { visibility: input.visibility } : {}),
+          campaign_id,
+          source_id,
+          target_id,
+          rel_type,
+          ...buildPatch(optional),
         })
-        .select("id, campaign_id, source_id, target_id, rel_type, visibility")
+        .select("*")
         .single();
       if (error) fail("Creating the relationship", error);
-      return reply(`Linked the two entries as "${data.rel_type}".`, { item: data });
+      return detailReply(`Linked the two entries as "${data.rel_type}" (${data.id}).`, data);
+    },
+  );
+
+  tool(
+    "update_relationship",
+    {
+      title: "Update a link between entries",
+      description:
+        "Changes an existing link between two entries. Only the campaign's Game Master can do this. Fields left out stay unchanged.",
+      inputSchema: z.object({
+        relationship_id: uuid,
+        rel_type: boundedText(60).optional(),
+        description: z.string().max(2000).nullable().optional(),
+        gm_description: z.string().max(4000).nullable().optional(),
+        visibility: z.enum(VISIBILITY_VALUES).optional(),
+        strength: strengthField.nullable().optional(),
+        is_current: z.boolean().optional(),
+        start_label: z.string().max(120).nullable().optional(),
+        end_label: z.string().max(120).nullable().optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: modify,
+    },
+    async ({ relationship_id, ...patch }) => {
+      const relation = await loadRelationship(ctx, relationship_id);
+      requireGm(relation.campaign);
+      const update = buildPatch(patch);
+      requirePatch(update);
+      const { data, error } = await ctx.supabase
+        .from("entity_relationships")
+        .update(update as Database["public"]["Tables"]["entity_relationships"]["Update"])
+        .eq("id", relationship_id)
+        .select("*")
+        .single();
+      if (error) fail("Updating the relationship", error);
+      return detailReply(`Updated the "${data.rel_type}" link (${data.id}).`, data);
+    },
+  );
+
+  tool(
+    "delete_relationship",
+    {
+      title: "Remove a link between entries",
+      description:
+        "Permanently removes a link between two entries. Only the campaign's Game Master can do this.",
+      inputSchema: z.object({ relationship_id: uuid }),
+      outputSchema: deleteOutput,
+      annotations: destroy,
+    },
+    async ({ relationship_id }) => {
+      const relation = await loadRelationship(ctx, relationship_id);
+      requireGm(relation.campaign);
+      const { data, error } = await ctx.supabase
+        .from("entity_relationships")
+        .delete()
+        .eq("id", relationship_id)
+        .select("id");
+      if (error) fail("Deleting the relationship", error);
+      if (!data || data.length === 0) throw new Error("The link was not deleted.");
+      return deleteReply(`Removed the "${relation.row.rel_type}" link.`, relationship_id);
     },
   );
 
@@ -628,11 +890,15 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       title: "Get a character sheet",
       description:
         "Reads one character sheet with its entries (traits, skills, equipment). Game Master notes are only included for the sheet's owner or their campaign's Game Master.",
-      inputSchema: z.object({ character_id: uuid, entry_limit: limitField }),
+      inputSchema: z.object({
+        character_id: uuid,
+        entry_limit: limitField,
+        compact: z.boolean().optional(),
+      }),
       outputSchema: itemOutput,
       annotations: read,
     },
-    async ({ character_id, entry_limit }) => {
+    async ({ character_id, entry_limit, compact }) => {
       const access = await loadCharacter(ctx, character_id);
       const max = entry_limit ?? MCP_MAX_LIMIT;
       const { data, error } = await ctx.supabase
@@ -644,19 +910,21 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         .order("name")
         .limit(max);
       if (error) fail("Loading character entries", error);
-      const returned = data?.length ?? 0;
+      const rows = data ?? [];
+      const returned = rows.length;
       const { count, error: countError } = await ctx.supabase
         .from("character_entries")
         .select("id", { count: "exact", head: true })
         .eq("character_id", character_id);
       if (countError) fail("Counting character entries", countError);
       const total = typeof count === "number" ? count : returned;
+      const entries = compact === true ? rows.map(compactEntryNotes) : rows;
       const header =
         returned < total
-          ? `Character "${access.row.name}" with ${returned} of ${total} entries (more may exist — raise entry_limit).`
-          : `Character "${access.row.name}" with ${total} entries.`;
-      const item = { ...characterView(access), entries: data ?? [] };
-      return reply(`${header}\n\n${JSON.stringify(item, null, 2)}`, { item });
+          ? `Character "${access.row.name}" — showing ${returned} of ${total} entries (more may exist — raise entry_limit).`
+          : `Character "${access.row.name}" — showing ${returned} of ${total} entries.`;
+      const item = { ...characterView(access), entries };
+      return detailReply(header, item);
     },
   );
 
@@ -664,35 +932,82 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     "create_character",
     {
       title: "Create a character",
-      description: "Creates a new character sheet owned by the signed-in account.",
-      inputSchema: z.object({
-        name: boundedText(120),
-        concept: z.string().max(400).optional(),
-        campaign_id: uuid.optional(),
-        is_npc: z.boolean().optional(),
-        point_budget: z.number().int().min(0).max(100000).optional(),
-        tech_level: z.number().int().min(0).max(20).optional(),
-      }),
+      description:
+        "Creates a new character sheet owned by the signed-in account. Fields left out keep their normal defaults.",
+      inputSchema: z.object({ name: boundedText(120), ...characterWritableFields }),
       outputSchema: itemOutput,
       annotations: create,
     },
-    async (input) => {
-      if (input.campaign_id) await loadCampaign(ctx, input.campaign_id);
+    async ({ name, ...rest }) => {
+      if (rest.campaign_id) await loadCampaign(ctx, rest.campaign_id);
       const { data, error } = await ctx.supabase
         .from("characters")
         .insert({
-          name: input.name,
-          concept: input.concept ?? null,
-          campaign_id: input.campaign_id ?? null,
+          name,
           owner_id: ctx.userId,
-          ...(input.is_npc === undefined ? {} : { is_npc: input.is_npc }),
-          ...(input.point_budget === undefined ? {} : { point_budget: input.point_budget }),
-          ...(input.tech_level === undefined ? {} : { tech_level: input.tech_level }),
+          ...(buildPatch(rest) as Database["public"]["Tables"]["characters"]["Insert"]),
         })
-        .select("id, name, concept, campaign_id, point_budget, tech_level")
+        .select("*")
         .single();
       if (error) fail("Creating the character", error);
-      return reply(`Created character "${data.name}" (${data.id}).`, { item: data });
+      return detailReply(
+        `Created character "${data.name}" (${data.id}).`,
+        characterView({ row: data, isOwner: true, isGm: false }),
+      );
+    },
+  );
+
+  tool(
+    "update_character",
+    {
+      title: "Update a character",
+      description:
+        "Changes fields on an existing character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged.",
+      inputSchema: z.object({ character_id: uuid, ...characterWritableFields }),
+      outputSchema: itemOutput,
+      annotations: modify,
+    },
+    async ({ character_id, ...patch }) => {
+      const access = await loadCharacter(ctx, character_id);
+      requireCharacterWrite(access);
+      const update = buildPatch(patch);
+      requirePatch(update);
+      if (patch.campaign_id) await loadCampaign(ctx, patch.campaign_id);
+      const { data, error } = await ctx.supabase
+        .from("characters")
+        .update(update as Database["public"]["Tables"]["characters"]["Update"])
+        .eq("id", character_id)
+        .select("*")
+        .single();
+      if (error) fail("Updating the character", error);
+      return detailReply(
+        `Updated character "${data.name}" (${data.id}).`,
+        characterView({ ...access, row: data }),
+      );
+    },
+  );
+
+  tool(
+    "delete_character",
+    {
+      title: "Delete a character",
+      description:
+        "Permanently removes a character sheet and everything on it. Only the sheet's owner can delete it — not the campaign's Game Master.",
+      inputSchema: z.object({ character_id: uuid }),
+      outputSchema: deleteOutput,
+      annotations: destroy,
+    },
+    async ({ character_id }) => {
+      const access = await loadCharacter(ctx, character_id);
+      requireCharacterOwner(access);
+      const { data, error } = await ctx.supabase
+        .from("characters")
+        .delete()
+        .eq("id", character_id)
+        .select("id");
+      if (error) fail("Deleting the character", error);
+      if (!data || data.length === 0) throw new Error("The character was not deleted.");
+      return deleteReply(`Deleted character "${access.row.name}".`, character_id);
     },
   );
 
@@ -701,15 +1016,16 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "Add an entry to a character",
       description:
-        "Adds one trait, skill, technique or piece of equipment to a character sheet. Only the sheet's owner or their campaign's Game Master can do this.",
+        "Adds one trait, skill, technique or piece of equipment to a character sheet. Only the sheet's owner or their campaign's Game Master can do this. Without `sort_order` the entry is appended at the end.",
       inputSchema: z.object({
         character_id: uuid,
         kind: boundedText(40),
         name: boundedText(200),
-        category: z.string().max(120).optional(),
-        points: z.number().int().min(-10000).max(10000).optional(),
-        levels: z.number().int().min(0).max(1000).optional(),
-        notes: z.string().max(4000).optional(),
+        category: z.string().max(120).nullable().optional(),
+        points: intField(-10000, 10000).optional(),
+        levels: intField(0, 1000).optional(),
+        notes: z.string().max(4000).nullable().optional(),
+        sort_order: intField(0, 1000000).optional(),
       }),
       outputSchema: itemOutput,
       annotations: create,
@@ -717,16 +1033,19 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     async (input) => {
       const access = await loadCharacter(ctx, input.character_id);
       requireCharacterWrite(access);
-      const { data: last, error: lastError } = await ctx.supabase
-        .from("character_entries")
-        .select("sort_order")
-        .eq("character_id", input.character_id)
-        .order("sort_order", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (lastError) fail("Reading the current entry order", lastError);
-      const currentMax = typeof last?.sort_order === "number" ? last.sort_order : null;
-      const sortOrder = currentMax === null ? 0 : currentMax + 1;
+      let sortOrder = input.sort_order;
+      if (sortOrder === undefined) {
+        const { data: last, error: lastError } = await ctx.supabase
+          .from("character_entries")
+          .select("sort_order")
+          .eq("character_id", input.character_id)
+          .order("sort_order", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (lastError) fail("Reading the current entry order", lastError);
+        const currentMax = typeof last?.sort_order === "number" ? last.sort_order : null;
+        sortOrder = currentMax === null ? 0 : currentMax + 1;
+      }
       const { data, error } = await ctx.supabase
         .from("character_entries")
         .insert({
@@ -739,12 +1058,57 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           ...(input.points === undefined ? {} : { points: input.points }),
           ...(input.levels === undefined ? {} : { levels: input.levels }),
         })
-        .select("id, character_id, kind, name, category, points, levels, sort_order")
+        .select("*")
         .single();
       if (error) fail("Adding the entry", error);
-      return reply(`Added "${data.name}" to "${access.row.name}" (entry_id: ${data.id}).`, {
-        item: data,
-      });
+      return detailReply(
+        `Added "${data.name}" to "${access.row.name}" (entry_id: ${data.id}).`,
+        data,
+      );
+    },
+  );
+
+  tool(
+    "update_character_entry",
+    {
+      title: "Update an entry on a character",
+      description:
+        "Changes one trait, skill, technique or piece of equipment on a character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged.",
+      inputSchema: z.object({
+        entry_id: uuid,
+        kind: boundedText(40).optional(),
+        name: boundedText(200).optional(),
+        category: z.string().max(120).nullable().optional(),
+        points: intField(-10000, 10000).optional(),
+        levels: intField(0, 1000).optional(),
+        notes: z.string().max(4000).nullable().optional(),
+        sort_order: intField(0, 1000000).optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: modify,
+    },
+    async ({ entry_id, ...patch }) => {
+      const { data: found, error: lookupError } = await ctx.supabase
+        .from("character_entries")
+        .select("id, name, character_id")
+        .eq("id", entry_id)
+        .maybeSingle();
+      if (lookupError) fail("Entry lookup", lookupError);
+      if (!found) throw new Error("Entry not found, or you do not have access to it.");
+
+      const access = await loadCharacter(ctx, found.character_id);
+      requireCharacterWrite(access);
+
+      const update = buildPatch(patch);
+      requirePatch(update);
+      const { data, error } = await ctx.supabase
+        .from("character_entries")
+        .update(update as Database["public"]["Tables"]["character_entries"]["Update"])
+        .eq("id", entry_id)
+        .select("*")
+        .single();
+      if (error) fail("Updating the entry", error);
+      return detailReply(`Updated "${data.name}" on "${access.row.name}" (${data.id}).`, data);
     },
   );
 
@@ -777,10 +1141,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         .select("id");
       if (error) fail("Deleting the entry", error);
       if (!data || data.length === 0) throw new Error("The entry was not deleted.");
-      return reply(`Removed "${found.name}" from "${access.row.name}".`, {
-        deleted: true,
-        id: entry_id,
-      });
+      return deleteReply(`Removed "${found.name}" from "${access.row.name}".`, entry_id);
     },
   );
 
@@ -789,20 +1150,31 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
 
 /** Names of every tool this server exposes, in registration order. */
 export const MCP_TOOL_NAMES = [
+  // campaigns
   "list_campaigns",
   "create_campaign",
+  "update_campaign",
+  // entries
   "list_entry_types",
   "list_entries",
   "get_entry",
   "create_entry",
   "update_entry",
   "delete_entry",
+  // relationships
   "list_relationships",
   "create_relationship",
+  "update_relationship",
+  "delete_relationship",
+  // characters
   "list_characters",
   "get_character",
   "create_character",
+  "update_character",
+  "delete_character",
+  // character entries
   "add_character_entry",
+  "update_character_entry",
   "delete_character_entry",
 ] as const;
 

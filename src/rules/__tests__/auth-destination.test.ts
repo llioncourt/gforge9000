@@ -1,5 +1,15 @@
-// @vitest-environment jsdom
 import { describe, expect, it, beforeEach } from "vitest";
+
+// Minimal per-tab storage stub: these helpers only ever touch sessionStorage.
+const store = new Map<string, string>();
+(globalThis as unknown as { window: unknown }).window = {
+  sessionStorage: {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+  },
+};
+
 import {
   DEFAULT_DESTINATION,
   consumeDestination,

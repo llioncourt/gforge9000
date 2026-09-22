@@ -69,6 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     authDiagnostics.providerMounts += 1;
+    // Diagnostics handle: lets a smoke check prove the counters stay bounded.
+    (window as unknown as { __authDiag?: typeof authDiagnostics }).__authDiag = authDiagnostics;
 
     // 1. One subscription for the whole application.
     authDiagnostics.listenerRegistrations += 1;

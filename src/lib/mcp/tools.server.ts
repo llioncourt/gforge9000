@@ -913,7 +913,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "List entry relationships",
       description:
-        "Lists the links between entries in one campaign. Game Master descriptions are removed for players.",
+        "Lists the links between entries in one campaign. Game Master descriptions are removed for players. The reply reports how many links were returned out of the exact total.",
       inputSchema: z.object({ campaign_id: uuid, limit: limitField }),
       outputSchema: listOutput,
       annotations: read,
@@ -934,7 +934,17 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
           GM_ONLY_RELATIONSHIP_FIELDS,
         ),
       );
-      return listReply(`relationships in "${campaign.name}"`, items, max);
+      const { count, error: countError } = await safeRpc(ctx.supabase)(
+        "list_relationships_safe",
+        { _campaign: campaign_id },
+        { count: "exact", head: true },
+      );
+      if (countError) fail("Counting relationships", countError);
+      return listReply(
+        `relationships in "${campaign.name}"`,
+        items,
+        typeof count === "number" ? count : items.length,
+      );
     },
   );
 

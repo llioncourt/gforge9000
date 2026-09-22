@@ -318,13 +318,19 @@ function kindDef(kind: string) {
   return found;
 }
 
-function assertStatusForKind(kind: string, status: string): void {
+/**
+ * Matches a status against the kind's own catalogue, ignoring case, and gives
+ * back the exact spelling the app uses for that kind.
+ */
+function canonicalStatus(kind: string, status: string): string {
   const def = kindDef(kind);
-  if (!def.statuses.includes(status)) {
+  const match = def.statuses.find((value) => value.toLowerCase() === status.toLowerCase());
+  if (!match) {
     throw new Error(
       `Status "${status}" is not valid for ${kind}. Valid statuses: ${def.statuses.join(", ")}.`,
     );
   }
+  return match;
 }
 
 /**

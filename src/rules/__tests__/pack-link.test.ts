@@ -206,13 +206,20 @@ describe("pack link: specialization", () => {
 });
 
 describe("pack link: matching", () => {
-  it("matches a base item and keeps the typed specialization", () => {
-    const result = matchPackCandidates(
-      { kind: "skill", name: "Survival (Jungle)" },
-      [candidate()],
-    );
+  it("matches a specialization-capable base item and keeps the typed specialization", () => {
+    const result = matchPackCandidates({ kind: "skill", name: "Survival (Jungle)" }, [
+      candidate({ specialization_required: true }),
+    ]);
     expect(result.status).toBe("unique");
     expect(result.specialization).toBe("Jungle");
+  });
+
+  it("never attaches a specialization to a plain generic item", () => {
+    // The pack says nothing about specializations, so "Survival (Jungle)" is
+    // not the same thing as the generic "Survival": report no match.
+    const result = matchPackCandidates({ kind: "skill", name: "Survival (Jungle)" }, [candidate()]);
+    expect(result.status).toBe("none");
+    expect(result.item).toBeNull();
   });
 
   it("prefers the exact specialization over the base item", () => {
@@ -271,8 +278,25 @@ describe("pack link: restoring", () => {
     expect(patch.points).toBe(6);
   });
 
-  it("clamps levels above the pack maximum", () => {
-    expect(restoreDefinitionPatch(entry({ levels: 12 }), item()).levels).toBe(5);
+  it("keeps levels above the pack maximum and warns instead of clamping", () => {
+    const patch = restoreDefinitionPatch(entry({ levels: 12 }), item());
+    expect(patch.levels).toBe(12);
+    expect(patch.warnings.map((w) => w.code)).toContain("levels_over_max");
+  });
+
+  it("refreshes pack-defined mechanics and drops an outdated copy on the sheet", () => {
+    const patch = restoreDefinitionPatch(
+      entry({
+        kind: "skill",
+        name: "Stealth",
+        data: { defaults: "DX-5", difficulty: "E", attribute: "IQ" },
+      }),
+      item({ kind: "skill", name: "Stealth", data: { difficulty: "A", attribute: "DX" } }),
+    );
+    expect(patch.data["difficulty"]).toBe("A");
+    expect(patch.data["attribute"]).toBe("DX");
+    // The pack no longer defines defaults, so the stale sheet copy goes away.
+    expect(patch.data["defaults"]).toBeUndefined();
   });
 });
 
@@ -353,5 +377,20 @@ describe("character validation", () => {
     });
     expect(result.points.over_budget).toBe(true);
     expect(result.findings.some((f) => f.type === "point_budget")).toBe(true);
+  });
+});
+
+describe("pack link: leveled pricing (pack-link contract)", () => {
+  // A per-level pack row prices EVERY level, including the first: most real
+  // rows carry base_points = 0 with cost_per_level = 5.
+  it("prices two levels of a 5/level trait at 10", () => {
+    expect(packLeveledCost(5, 2)).toBe(10);
+    const perLevel = item({ base_points: 0, cost_per_level: 5, max_levels: 10 });
+    expect(leveledPricing(entry({ levels: 2, points: 5 }), perLevel)).toMatchObject({
+      expected: 10,
+      actual: 5,
+      consistent: false,
+    });
+    expect(leveledPricing(entry({ levels: 2, points: 10 }), perLevel)?.consistent).toBe(true);
   });
 });

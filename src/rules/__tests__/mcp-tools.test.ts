@@ -79,7 +79,6 @@ describe("assistant tool surface", () => {
     for (const name of domains) expect(MCP_TOOL_NAMES).toContain(name);
   });
 
-
   it("marks read tools read-only and delete tools destructive", () => {
     const server = buildMcpServer(fakeContext());
     const tools = (

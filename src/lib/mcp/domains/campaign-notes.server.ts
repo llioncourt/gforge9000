@@ -45,9 +45,7 @@ const input = z.discriminatedUnion("action", [
       limit: limitField,
     })
     .describe("List notes in a campaign, optionally filtered by kind."),
-  z
-    .object({ action: z.literal("get"), note_id: uuid })
-    .describe("Get one note by id."),
+  z.object({ action: z.literal("get"), note_id: uuid }).describe("Get one note by id."),
   z
     .object({
       action: z.literal("create"),
@@ -102,7 +100,10 @@ export function registerCampaignNotes(tool: ToolRegistrar, ctx: McpToolContext):
     actionRouter<z.infer<typeof input>>({
       list: async (i) => {
         await loadCampaign(ctx, i.campaign_id);
-        let query = ctx.supabase.from("campaign_notes").select("*").eq("campaign_id", i.campaign_id);
+        let query = ctx.supabase
+          .from("campaign_notes")
+          .select("*")
+          .eq("campaign_id", i.campaign_id);
         if (i.kind) query = query.eq("kind", i.kind);
         const { data, error } = await query
           .order("created_at", { ascending: false })

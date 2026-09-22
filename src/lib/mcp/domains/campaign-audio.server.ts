@@ -101,7 +101,9 @@ const trackFields = {
   title: z.string().min(1).max(200),
   position: intField(0, 9999, "position"),
   composer: z.string().max(200).nullable().optional(),
-  duration_seconds: intField(0, 60 * 60 * 12, "duration_seconds").nullable().optional(),
+  duration_seconds: intField(0, 60 * 60 * 12, "duration_seconds")
+    .nullable()
+    .optional(),
   lyrics: z.string().max(20000).nullable().optional(),
 };
 
@@ -135,17 +137,23 @@ const input = z.discriminatedUnion("action", [
       game_slug: albumFields.game_slug,
       status: albumFields.status,
     })
-    .describe("Update a soundtrack album's fields, optionally replacing its cover. GM only, changes data."),
+    .describe(
+      "Update a soundtrack album's fields, optionally replacing its cover. GM only, changes data.",
+    ),
   z
     .object({ action: z.literal("delete_album"), album_id: uuid })
-    .describe("Delete a soundtrack album, its tracks, and their stored files. GM only, deletes data."),
+    .describe(
+      "Delete a soundtrack album, its tracks, and their stored files. GM only, deletes data.",
+    ),
   z
     .object({
       action: z.literal("set_album_visibility"),
       album_id: uuid,
       visible_to_players: z.boolean(),
     })
-    .describe("Show or hide a soundtrack album (and its tracks) from players. GM only, changes data."),
+    .describe(
+      "Show or hide a soundtrack album (and its tracks) from players. GM only, changes data.",
+    ),
   z
     .object({
       action: z.literal("add_track"),
@@ -199,7 +207,11 @@ const input = z.discriminatedUnion("action", [
       "Get a short-lived signed target to upload an album cover image to. GM only, changes data.",
     ),
   z
-    .object({ action: z.literal("upload_cover_from_url"), campaign_id: uuid, url: z.string().url() })
+    .object({
+      action: z.literal("upload_cover_from_url"),
+      campaign_id: uuid,
+      url: z.string().url(),
+    })
     .describe(
       "Fetch a cover image from a public https URL and store it, returning its storage path for " +
         "create_album/update_album. GM only, changes data.",
@@ -224,8 +236,9 @@ const input = z.discriminatedUnion("action", [
       mime_type: z.string().min(1).max(100),
       byte_size: intField(1, CAMPAIGN_SOUNDTRACK_TRACK_MAX_BYTES, "byte_size"),
     })
-    .describe("Get a short-lived signed target to upload a track's audio file to. GM only, changes data.")
-    ,
+    .describe(
+      "Get a short-lived signed target to upload a track's audio file to. GM only, changes data.",
+    ),
   z
     .object({
       action: z.literal("upload_track_from_url"),
@@ -299,7 +312,9 @@ const input = z.discriminatedUnion("action", [
     .describe("Get a short-lived signed URL to play a sound effect."),
   z
     .object({ action: z.literal("trigger_sound_fx"), campaign_id: uuid, effect_id: uuid })
-    .describe("Fire a one-shot sound effect event for everyone in the campaign. GM only, changes data."),
+    .describe(
+      "Fire a one-shot sound effect event for everyone in the campaign. GM only, changes data.",
+    ),
   z
     .object({
       action: z.literal("prepare_effect_upload"),
@@ -515,7 +530,8 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
           patch["cover_path"] = i.cover_storage_path;
           staleCover = album.cover_path;
         }
-        if (Object.keys(patch).length === 0) throw new Error("Nothing to update — no fields given.");
+        if (Object.keys(patch).length === 0)
+          throw new Error("Nothing to update — no fields given.");
         const { data, error } = await ctx.supabase
           .from("campaign_soundtrack_albums")
           .update(dbPayload<TablesUpdate<"campaign_soundtrack_albums">>(patch))
@@ -523,7 +539,8 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
           .select("*")
           .single();
         if (error) fail("Updating album", error);
-        if (staleCover) await removeStoredObject(ctx.supabase, CAMPAIGN_SOUNDTRACK_BUCKET, staleCover);
+        if (staleCover)
+          await removeStoredObject(ctx.supabase, CAMPAIGN_SOUNDTRACK_BUCKET, staleCover);
         return detailReply(`Album "${album["title"]}" updated.`, data);
       },
 
@@ -602,7 +619,8 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
         if (i.composer !== undefined) patch["composer"] = i.composer;
         if (i.duration_seconds !== undefined) patch["duration_seconds"] = i.duration_seconds;
         if (i.lyrics !== undefined) patch["lyrics"] = i.lyrics;
-        if (Object.keys(patch).length === 0) throw new Error("Nothing to update — no fields given.");
+        if (Object.keys(patch).length === 0)
+          throw new Error("Nothing to update — no fields given.");
         const { data, error } = await ctx.supabase
           .from("campaign_soundtrack_tracks")
           .update(dbPayload<TablesUpdate<"campaign_soundtrack_tracks">>(patch))
@@ -629,7 +647,11 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
       get_track_url: async (i) => {
         const track = await loadTrack(ctx, i.track_id);
         await requireMember(ctx, track.campaign_id);
-        const url = await signedReadUrl(ctx.supabase, CAMPAIGN_SOUNDTRACK_BUCKET, track.storage_path);
+        const url = await signedReadUrl(
+          ctx.supabase,
+          CAMPAIGN_SOUNDTRACK_BUCKET,
+          track.storage_path,
+        );
         return detailReply(`Signed link for "${track["title"]}".`, { track_id: i.track_id, url });
       },
 
@@ -657,7 +679,8 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
       prepare_cover_upload: async (i) => {
         const campaign = await loadCampaign(ctx, i.campaign_id);
         requireGmFor(campaign, "upload an album cover");
-        if (i.byte_size > CAMPAIGN_COVER_MAX_BYTES) throw new Error("That cover image is too large.");
+        if (i.byte_size > CAMPAIGN_COVER_MAX_BYTES)
+          throw new Error("That cover image is too large.");
         if (!CAMPAIGN_COVER_MIME_TYPES.includes(i.mime_type.toLowerCase() as never)) {
           throw new Error("Use an AVIF, WebP, JPEG, or PNG image.");
         }
@@ -862,7 +885,10 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
         const effect = await loadEffect(ctx, i.effect_id);
         const campaign = await loadCampaign(ctx, effect.campaign_id);
         requireGmFor(campaign, "delete a sound effect");
-        const { error } = await ctx.supabase.from("campaign_sound_fx").delete().eq("id", i.effect_id);
+        const { error } = await ctx.supabase
+          .from("campaign_sound_fx")
+          .delete()
+          .eq("id", i.effect_id);
         if (error) fail("Deleting sound effect", error);
         await removeStoredObject(ctx.supabase, CAMPAIGN_SOUND_FX_BUCKET, effect.storage_path);
         return deleteReply(`Sound effect "${effect["title"]}" deleted.`, i.effect_id);
@@ -892,7 +918,8 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
             ctx.supabase.from("campaign_sound_fx").update({ sort_order: index }).eq("id", id),
           ),
         );
-        for (const result of results) if (result.error) fail("Reordering sound effects", result.error);
+        for (const result of results)
+          if (result.error) fail("Reordering sound effects", result.error);
         return detailReply(`Reordered ${i.ordered_ids.length} sound effects.`, {
           campaign_id: i.campaign_id,
           ordered_ids: i.ordered_ids,
@@ -921,8 +948,15 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
       get_sound_fx_url: async (i) => {
         const effect = await loadEffect(ctx, i.effect_id);
         await requireMember(ctx, effect.campaign_id);
-        const url = await signedReadUrl(ctx.supabase, CAMPAIGN_SOUND_FX_BUCKET, effect.storage_path);
-        return detailReply(`Signed link for "${effect["title"]}".`, { effect_id: i.effect_id, url });
+        const url = await signedReadUrl(
+          ctx.supabase,
+          CAMPAIGN_SOUND_FX_BUCKET,
+          effect.storage_path,
+        );
+        return detailReply(`Signed link for "${effect["title"]}".`, {
+          effect_id: i.effect_id,
+          url,
+        });
       },
 
       trigger_sound_fx: async (i) => {
@@ -950,7 +984,8 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
       prepare_effect_upload: async (i) => {
         const campaign = await loadCampaign(ctx, i.campaign_id);
         requireGmFor(campaign, "upload a sound effect");
-        if (i.byte_size > CAMPAIGN_SOUND_FX_MAX_BYTES) throw new Error("That sound effect is too large.");
+        if (i.byte_size > CAMPAIGN_SOUND_FX_MAX_BYTES)
+          throw new Error("That sound effect is too large.");
         if (!SOUND_FX_MIME_TYPES.includes(i.mime_type.toLowerCase() as never)) {
           throw new Error("Use an MP3, OGG, Opus, M4A, WAV, or WebM audio file.");
         }

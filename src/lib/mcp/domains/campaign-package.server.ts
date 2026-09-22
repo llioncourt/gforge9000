@@ -82,7 +82,9 @@ const input = z.discriminatedUnion("action", [
       action: z.literal("upload_import_from_url"),
       url: z.string().max(2000),
     })
-    .describe("Download a campaign package ZIP from a public https URL into the caller's own storage prefix."),
+    .describe(
+      "Download a campaign package ZIP from a public https URL into the caller's own storage prefix.",
+    ),
   z
     .object({
       action: z.literal("upload_import_base64"),
@@ -139,7 +141,8 @@ async function validateStagedPackage(
     allowedMime: PACKAGE_MIME,
   });
   const { data, error } = await ctx.supabase.storage.from(BUCKET).download(stored.path);
-  if (error || !data) throw new Error(`Could not read the staged package: ${error?.message ?? "unknown"}`);
+  if (error || !data)
+    throw new Error(`Could not read the staged package: ${error?.message ?? "unknown"}`);
   const archive = unzipSync(new Uint8Array(await data.arrayBuffer())) as Record<string, Uint8Array>;
   const manifestBytes = archive["campaign.json"];
   if (!manifestBytes) throw new Error("The package must contain campaign.json at its root.");
@@ -202,7 +205,12 @@ export function registerCampaignPackage(tool: ToolRegistrar, ctx: McpToolContext
         const path = storagePathFor(ctx.userId, i.file_name);
         const prepared = await prepareSignedUpload(ctx.supabase, BUCKET, path);
         return {
-          content: [{ type: "text" as const, text: `Upload target prepared.\n\n${JSON.stringify(prepared, null, 2)}` }],
+          content: [
+            {
+              type: "text" as const,
+              text: `Upload target prepared.\n\n${JSON.stringify(prepared, null, 2)}`,
+            },
+          ],
           structuredContent: { item: { ...prepared } },
         };
       },
@@ -250,7 +258,9 @@ export function registerCampaignPackage(tool: ToolRegistrar, ctx: McpToolContext
           ? `Package "${report.campaign_name}" is valid.`
           : `Package "${report.campaign_name}" has problems: ${[...report.problems, ...report.missing_files.map((f) => `missing file "${f}"`)].join("; ")}`;
         return {
-          content: [{ type: "text" as const, text: `${summary}\n\n${JSON.stringify(report, null, 2)}` }],
+          content: [
+            { type: "text" as const, text: `${summary}\n\n${JSON.stringify(report, null, 2)}` },
+          ],
           structuredContent: { item: report as unknown as Record<string, unknown> },
         };
       },

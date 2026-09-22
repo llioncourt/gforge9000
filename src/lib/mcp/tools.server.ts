@@ -1190,7 +1190,6 @@ export const MCP_TOOL_NAMES = [
   ...DOMAIN_TOOL_NAMES,
 ] as const;
 
-
 /** Exported for tests: the fields that must never reach a non-GM caller. */
 export const MCP_GM_ONLY_FIELDS = {
   entity: GM_ONLY_ENTITY_FIELDS,

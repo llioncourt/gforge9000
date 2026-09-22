@@ -206,14 +206,7 @@ export function registerSessionChronicles(tool: ToolRegistrar, ctx: McpToolConte
       create: async (i) => {
         const campaign = await loadCampaign(ctx, i.campaign_id);
         requireGmFor(campaign, "create session chronicles");
-        const {
-          action: _action,
-          campaign_id: _cid,
-          title,
-          in_world_date,
-          materials,
-          ...rest
-        } = i;
+        const { action: _action, campaign_id: _cid, title, in_world_date, materials, ...rest } = i;
         const patch = buildPatch({
           ...rest,
           in_world_date: in_world_date as Json | null | undefined,
@@ -304,8 +297,15 @@ export function registerSessionChronicles(tool: ToolRegistrar, ctx: McpToolConte
           .maybeSingle();
         if (maxError) fail("Reading current sequence", maxError);
         const nextSequence = (maxRow?.sequence_no ?? -1) + 1;
-        const { action: _action, chronicle_id: _cid, item_type, summary, source_refs, data, ...rest } =
-          i;
+        const {
+          action: _action,
+          chronicle_id: _cid,
+          item_type,
+          summary,
+          source_refs,
+          data,
+          ...rest
+        } = i;
         const patch = buildPatch({
           ...rest,
           source_refs: source_refs as Json | undefined,

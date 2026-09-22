@@ -31,13 +31,15 @@ const input = z.discriminatedUnion("action", [
     .object({ action: z.literal("list_entry_revisions"), entry_id: uuid, limit: limitField })
     .describe("List an entry's saved revisions, newest first, without their full snapshots."),
   z
-    .object({ action: z.literal("snapshot_entry"), entry_id: uuid, label: z.string().max(200).optional() })
+    .object({
+      action: z.literal("snapshot_entry"),
+      entry_id: uuid,
+      label: z.string().max(200).optional(),
+    })
     .describe("Save the entry's current content as a new revision."),
   z
     .object({ action: z.literal("restore_entry_revision"), revision_id: uuid })
-    .describe(
-      "Restore an entry to a saved revision. This overwrites the entry's current content.",
-    ),
+    .describe("Restore an entry to a saved revision. This overwrites the entry's current content."),
   z
     .object({
       action: z.literal("list_character_versions"),
@@ -54,9 +56,7 @@ const input = z.discriminatedUnion("action", [
     .describe("Save the character's current sheet and entries as a new version."),
   z
     .object({ action: z.literal("restore_character_version"), version_id: uuid })
-    .describe(
-      "Restore a character to a saved version. This replaces the sheet's current items.",
-    ),
+    .describe("Restore a character to a saved version. This replaces the sheet's current items."),
 ]);
 
 type Input = z.infer<typeof input>;

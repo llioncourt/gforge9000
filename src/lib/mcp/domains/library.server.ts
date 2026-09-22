@@ -59,7 +59,10 @@ const LIBRARY_VISIBILITIES = ["private", "campaign", "public"] as const;
 const DEFAULT_PACK_NAME = "My Content";
 
 const numField = (min: number, max: number, label: string) =>
-  z.number({ error: `${label} must be a number between ${min} and ${max}` }).min(min).max(max);
+  z
+    .number({ error: `${label} must be a number between ${min} and ${max}` })
+    .min(min)
+    .max(max);
 
 type LibraryEntryRow = Database["public"]["Tables"]["library_entries"]["Row"];
 type ContentPackRow = Database["public"]["Tables"]["content_packs"]["Row"];
@@ -125,7 +128,12 @@ const input = z.discriminatedUnion("action", [
         "yet. Changes data.",
     ),
   z
-    .object({ action: z.literal("update"), entry_id: uuid, name: boundedText(200).optional(), ...entryWriteFields })
+    .object({
+      action: z.literal("update"),
+      entry_id: uuid,
+      name: boundedText(200).optional(),
+      ...entryWriteFields,
+    })
     .describe(
       "Update a library entry's fields. Omitted fields are unchanged. Only the entry's owner may " +
         "update it, even if the caller can see it. Changes data.",
@@ -138,7 +146,9 @@ const input = z.discriminatedUnion("action", [
     ),
   z
     .object({ action: z.literal("list_packs"), limit: limitField })
-    .describe("List content packs visible to the caller (own packs, public packs, or packs shared with the caller)."),
+    .describe(
+      "List content packs visible to the caller (own packs, public packs, or packs shared with the caller).",
+    ),
   z
     .object({ action: z.literal("get_pack"), pack_id: uuid })
     .describe("Read one content pack's metadata."),
@@ -165,7 +175,11 @@ const input = z.discriminatedUnion("action", [
         "Deletes data.",
     ),
   z
-    .object({ action: z.literal("set_entry_pack"), entry_id: uuid, pack: z.string().max(120).nullable() })
+    .object({
+      action: z.literal("set_entry_pack"),
+      entry_id: uuid,
+      pack: z.string().max(120).nullable(),
+    })
     .describe(
       "Move a library entry into a pack, or out of any pack when pack is null. Only the entry's " +
         "owner may do this. Changes data.",
@@ -174,7 +188,9 @@ const input = z.discriminatedUnion("action", [
     .object({
       action: z.literal("import_entries"),
       entries: z
-        .array(z.object({ kind: z.enum(LIBRARY_KINDS), name: boundedText(200), ...entryWriteFields }))
+        .array(
+          z.object({ kind: z.enum(LIBRARY_KINDS), name: boundedText(200), ...entryWriteFields }),
+        )
         .min(1)
         .max(200),
     })
@@ -255,7 +271,9 @@ async function deletePackContents(ctx: McpToolContext, name: string): Promise<vo
     if (entriesError) fail("Listing character entries", entriesError);
     const affected = (entries ?? []).filter((entry) => {
       const source = (entry.source ?? {}) as Record<string, unknown>;
-      return typeof source["pack"] === "string" && source["pack"].toLowerCase() === name.toLowerCase();
+      return (
+        typeof source["pack"] === "string" && source["pack"].toLowerCase() === name.toLowerCase()
+      );
     });
     for (let i = 0; i < affected.length; i += 200) {
       const chunk = affected.slice(i, i + 200).map((entry) => entry.id);
@@ -360,29 +378,34 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
         await ensureContentPack(ctx, pack);
         const { data, error } = await ctx.supabase
           .from("library_entries")
-          .insert(dbPayload<TablesInsert<"library_entries">>({
-            kind: i.kind,
-            name: i.name,
-            category: i.category ?? null,
-            summary: i.summary ?? null,
-            base_points: i.base_points,
-            cost_per_level: i.cost_per_level,
-            max_levels: i.max_levels ?? null,
-            data: i.data as Database["public"]["Tables"]["library_entries"]["Insert"]["data"],
-            tags: i.tags ?? [],
-            pack,
-            source_label: i.source_label,
-            source_edition: i.source_edition ?? null,
-            source_page: i.source_page ?? null,
-            source_type: i.source_type,
-            visibility: i.visibility,
-            campaign_id: i.campaign_id ?? null,
-            owner_id: ctx.userId,
-          }))
+          .insert(
+            dbPayload<TablesInsert<"library_entries">>({
+              kind: i.kind,
+              name: i.name,
+              category: i.category ?? null,
+              summary: i.summary ?? null,
+              base_points: i.base_points,
+              cost_per_level: i.cost_per_level,
+              max_levels: i.max_levels ?? null,
+              data: i.data as Database["public"]["Tables"]["library_entries"]["Insert"]["data"],
+              tags: i.tags ?? [],
+              pack,
+              source_label: i.source_label,
+              source_edition: i.source_edition ?? null,
+              source_page: i.source_page ?? null,
+              source_type: i.source_type,
+              visibility: i.visibility,
+              campaign_id: i.campaign_id ?? null,
+              owner_id: ctx.userId,
+            }),
+          )
           .select("*")
           .single();
         if (error) fail("Creating library entry", error);
-        return detailReply(`Created library entry "${(data as LibraryEntryRow).name}".`, toStructured(data as LibraryEntryRow));
+        return detailReply(
+          `Created library entry "${(data as LibraryEntryRow).name}".`,
+          toStructured(data as LibraryEntryRow),
+        );
       },
 
       update: async (i) => {
@@ -413,7 +436,10 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
           .select("*")
           .single();
         if (error) fail("Updating library entry", error);
-        return detailReply(`Updated library entry "${(data as LibraryEntryRow).name}".`, toStructured(data as LibraryEntryRow));
+        return detailReply(
+          `Updated library entry "${(data as LibraryEntryRow).name}".`,
+          toStructured(data as LibraryEntryRow),
+        );
       },
 
       delete: async (i) => {
@@ -448,19 +474,24 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
       create_pack: async (i) => {
         const { data, error } = await ctx.supabase
           .from("content_packs")
-          .insert(dbPayload<TablesInsert<"content_packs">>({
-            name: i.name,
-            description: i.description ?? null,
-            source_label: i.source_label,
-            source_edition: i.source_edition ?? null,
-            source_type: i.source_type,
-            visibility: i.visibility,
-            owner_id: ctx.userId,
-          }))
+          .insert(
+            dbPayload<TablesInsert<"content_packs">>({
+              name: i.name,
+              description: i.description ?? null,
+              source_label: i.source_label,
+              source_edition: i.source_edition ?? null,
+              source_type: i.source_type,
+              visibility: i.visibility,
+              owner_id: ctx.userId,
+            }),
+          )
           .select("*")
           .single();
         if (error) fail("Creating content pack", error);
-        return detailReply(`Created content pack "${(data as ContentPackRow).name}".`, toStructured(data as ContentPackRow));
+        return detailReply(
+          `Created content pack "${(data as ContentPackRow).name}".`,
+          toStructured(data as ContentPackRow),
+        );
       },
 
       update_pack: async (i) => {
@@ -481,7 +512,10 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
           .select("*")
           .single();
         if (error) fail("Updating content pack", error);
-        return detailReply(`Updated content pack "${(data as ContentPackRow).name}".`, toStructured(data as ContentPackRow));
+        return detailReply(
+          `Updated content pack "${(data as ContentPackRow).name}".`,
+          toStructured(data as ContentPackRow),
+        );
       },
 
       rename_pack: async (i) => {
@@ -545,25 +579,27 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
         const { data, error } = await ctx.supabase
           .from("library_entries")
           .insert(
-            withPacks.map((entry) => dbPayload<TablesInsert<"library_entries">>({
-              kind: entry.kind,
-              name: entry.name,
-              category: entry.category ?? null,
-              summary: entry.summary ?? null,
-              base_points: entry.base_points,
-              cost_per_level: entry.cost_per_level,
-              max_levels: entry.max_levels ?? null,
-              data: entry.data as Database["public"]["Tables"]["library_entries"]["Insert"]["data"],
-              tags: entry.tags ?? [],
-              pack: entry.pack,
-              source_label: entry.source_label,
-              source_edition: entry.source_edition ?? null,
-              source_page: entry.source_page ?? null,
-              source_type: entry.source_type,
-              visibility: entry.visibility,
-              campaign_id: entry.campaign_id ?? null,
-              owner_id: ctx.userId,
-            })),
+            withPacks.map((entry) =>
+              dbPayload<TablesInsert<"library_entries">>({
+                kind: entry.kind,
+                name: entry.name,
+                category: entry.category ?? null,
+                summary: entry.summary ?? null,
+                base_points: entry.base_points,
+                cost_per_level: entry.cost_per_level,
+                max_levels: entry.max_levels ?? null,
+                data: entry.data as Database["public"]["Tables"]["library_entries"]["Insert"]["data"],
+                tags: entry.tags ?? [],
+                pack: entry.pack,
+                source_label: entry.source_label,
+                source_edition: entry.source_edition ?? null,
+                source_page: entry.source_page ?? null,
+                source_type: entry.source_type,
+                visibility: entry.visibility,
+                campaign_id: entry.campaign_id ?? null,
+                owner_id: ctx.userId,
+              }),
+            ),
           )
           .select("*");
         if (error) fail("Importing library entries", error);

@@ -132,7 +132,8 @@ export async function fetchRemoteFile(
     throw new Error(`The file could not be downloaded (${response?.status ?? "no response"}).`);
   }
 
-  const mime = (response.headers.get("content-type") ?? "").split(";")[0]?.trim().toLowerCase() ?? "";
+  const mime =
+    (response.headers.get("content-type") ?? "").split(";")[0]?.trim().toLowerCase() ?? "";
   assertMime(mime, options.allowedMime);
 
   const declared = Number(response.headers.get("content-length") ?? "0");
@@ -155,10 +156,12 @@ export function decodeBase64File(
   options: { maxBytes: number; allowedMime: readonly string[] },
 ): FetchedFile {
   assertMime(mime, options.allowedMime);
-  const payload = data.includes(",") && data.startsWith("data:") ? data.slice(data.indexOf(",") + 1) : data;
+  const payload =
+    data.includes(",") && data.startsWith("data:") ? data.slice(data.indexOf(",") + 1) : data;
   const cap = Math.min(options.maxBytes, MAX_BASE64_BYTES);
   // 4 base64 characters carry 3 bytes; refuse before allocating.
-  if (payload.length / 4 * 3 > cap + 8) throw new Error("That file is too large to send directly.");
+  if ((payload.length / 4) * 3 > cap + 8)
+    throw new Error("That file is too large to send directly.");
 
   let binary: string;
   try {
@@ -194,7 +197,8 @@ export async function prepareSignedUpload(
   path: string,
 ): Promise<PreparedUpload> {
   const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path);
-  if (error || !data) throw new Error(`Could not prepare the upload: ${error?.message ?? "unknown"}`);
+  if (error || !data)
+    throw new Error(`Could not prepare the upload: ${error?.message ?? "unknown"}`);
   return {
     bucket,
     path,
@@ -235,7 +239,9 @@ export async function verifyStoredObject(
   const folder = slash === -1 ? "" : path.slice(0, slash);
   const file = slash === -1 ? path : path.slice(slash + 1);
 
-  const { data, error } = await supabase.storage.from(bucket).list(folder, { search: file, limit: 100 });
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .list(folder, { search: file, limit: 100 });
   if (error) throw new Error(`The stored file could not be checked: ${error.message}`);
   const match = (data ?? []).find((item) => item.name === file);
   if (!match) throw new Error("No file was found at that location. Upload it first.");
@@ -271,6 +277,12 @@ export async function removeStoredObject(
 /** Random, collision-free object name that keeps the original extension. */
 export function storagePathFor(prefix: string, fileName: string): string {
   const dot = fileName.lastIndexOf(".");
-  const ext = dot > 0 ? fileName.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, "") : "bin";
+  const ext =
+    dot > 0
+      ? fileName
+          .slice(dot + 1)
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "")
+      : "bin";
   return `${prefix}/${crypto.randomUUID()}.${ext || "bin"}`;
 }

@@ -203,10 +203,7 @@ export function requireGmFor(campaign: CampaignAccess, action: string): void {
 }
 
 /** True when the caller is a member (player or GM) of the campaign. */
-export async function isCampaignMember(
-  ctx: McpToolContext,
-  campaignId: string,
-): Promise<boolean> {
+export async function isCampaignMember(ctx: McpToolContext, campaignId: string): Promise<boolean> {
   const { data, error } = await ctx.supabase
     .from("campaign_members")
     .select("user_id")
@@ -400,9 +397,9 @@ export function tagAction(action: string, result: ToolResult): ToolResult {
  * caller supplies a zod discriminated union so each action keeps a strict
  * schema while the assistant still sees one discoverable tool per domain.
  */
-export function actionRouter<T extends { action: string }>(
-  handlers: { [K in T["action"]]: (input: Extract<T, { action: K }>) => Promise<ToolResult> },
-): (input: T) => Promise<ToolResult> {
+export function actionRouter<T extends { action: string }>(handlers: {
+  [K in T["action"]]: (input: Extract<T, { action: K }>) => Promise<ToolResult>;
+}): (input: T) => Promise<ToolResult> {
   return async (input: T) => {
     const handler = (handlers as unknown as Record<string, (value: T) => Promise<ToolResult>>)[
       input.action

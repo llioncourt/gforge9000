@@ -367,6 +367,23 @@ export function compareDefinition(entry: CharacterEntryLike, item: PackItemLike)
     if (packDiff && packDiff !== entryDiff) {
       out.push({ field: "difficulty", pack: packDiff, character: entryDiff });
     }
+    const packDefaults = text(itemData["defaults"]);
+    const entryDefaults = text(entryData["defaults"]);
+    if (packDefaults && packDefaults !== entryDefaults) {
+      out.push({ field: "defaults", pack: packDefaults, character: entryDefaults });
+    }
+    if (item.kind === "technique") {
+      const packPenalty = numberOrNull(itemData["defaultPenalty"]);
+      const entryPenalty = numberOrNull(entryData["defaultPenalty"]);
+      if (packPenalty !== null && packPenalty !== entryPenalty) {
+        out.push({ field: "defaultPenalty", pack: packPenalty, character: entryPenalty });
+      }
+      const packBase = text(itemData["baseSkill"]);
+      const entryBase = text(entryData["baseSkill"]);
+      if (packBase && packBase !== entryBase) {
+        out.push({ field: "baseSkill", pack: packBase, character: entryBase });
+      }
+    }
     // Invested points are progression for skill-like entries: never compared.
     return out;
   }

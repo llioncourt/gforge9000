@@ -53,7 +53,24 @@ function isBlockedIpv6(host: string): boolean {
   const value = host.replace(/^\[|\]$/g, "").toLowerCase();
   if (value === "::" || value === "::1") return true;
   if (value.startsWith("fe80") || value.startsWith("fc") || value.startsWith("fd")) return true;
-  if (value.startsWith("::ffff:")) return isBlockedIpv4(value.slice(7));
+  if (value.startsWith("::ffff:")) {
+    const mapped = value.slice(7);
+    // Dotted form ("::ffff:10.0.0.1") is checked directly; the URL parser
+    // usually normalizes IPv4-mapped addresses to two hex groups instead
+    // ("::ffff:a9fe:a9fe"), so decode that form back to dotted decimal too.
+    if (mapped.includes(".")) return isBlockedIpv4(mapped);
+    const hexGroups = mapped.split(":");
+    if (hexGroups.length === 2 && hexGroups.every((group) => /^[0-9a-f]{1,4}$/.test(group))) {
+      const bytes = hexGroups.flatMap((group) => {
+        const padded = group.padStart(4, "0");
+        return [parseInt(padded.slice(0, 2), 16), parseInt(padded.slice(2, 4), 16)];
+      });
+      return isBlockedIpv4(bytes.join("."));
+    }
+    // Unrecognized ::ffff: form — refuse rather than risk letting a private
+    // address through unchecked.
+    return true;
+  }
   return false;
 }
 

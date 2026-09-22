@@ -415,12 +415,43 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       const { data, error } = await ctx.supabase
         .from("campaigns")
         .insert({ name, description: description ?? null, gm_id: ctx.userId })
-        .select("id, name, description, created_at")
+        .select("*")
         .single();
       if (error) fail("Creating the campaign", error);
-      return reply(`Created campaign "${data.name}" (${data.id}).`, { item: data });
+      return detailReply(`Created campaign "${data.name}" (${data.id}).`, data);
     },
   );
+
+  tool(
+    "update_campaign",
+    {
+      title: "Update a campaign",
+      description:
+        "Changes the name or description of a campaign. Only the campaign's Game Master can edit it. Fields left out stay unchanged.",
+      inputSchema: z.object({
+        campaign_id: uuid,
+        name: boundedText(120).optional(),
+        description: z.string().max(4000).nullable().optional(),
+      }),
+      outputSchema: itemOutput,
+      annotations: modify,
+    },
+    async ({ campaign_id, ...patch }) => {
+      const campaign = await loadCampaign(ctx, campaign_id);
+      requireGm(campaign);
+      const update = buildPatch(patch);
+      requirePatch(update);
+      const { data, error } = await ctx.supabase
+        .from("campaigns")
+        .update(update)
+        .eq("id", campaign_id)
+        .select("*")
+        .single();
+      if (error) fail("Updating the campaign", error);
+      return detailReply(`Updated campaign "${data.name}" (${data.id}).`, data);
+    },
+  );
+
 
   /* ---------------- entry types ---------------- */
 

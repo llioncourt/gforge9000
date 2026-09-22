@@ -26,7 +26,7 @@ function authorizationServerUrl(): string {
 }
 
 const protectedHandler = withSupabase<Database>({ auth: "user" }, async (request, ctx) => {
-  const userId = ctx.userClaims?.sub ?? ctx.jwtClaims?.sub;
+  const userId = ctx.userClaims?.id ?? ctx.jwtClaims?.sub;
   if (!userId) return new Response("Unauthorized", { status: 401 });
 
   const handler = createMcpHandler(() =>

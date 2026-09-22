@@ -184,7 +184,7 @@ async function loadCharacter(ctx: McpToolContext, characterId: string): Promise<
 function characterView(access: CharacterAccess): Structured {
   const { gm_notes, ...rest } = access.row;
   const out: Structured = { ...rest };
-  if (access.isOwner || access.isGm) out.gm_notes = gm_notes;
+  if (access.isOwner || access.isGm) out["gm_notes"] = gm_notes;
   return out;
 }
 

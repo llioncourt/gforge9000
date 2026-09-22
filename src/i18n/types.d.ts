@@ -15,6 +15,7 @@ import type battle from "./locales/en/battle.json";
 import type dice from "./locales/en/dice.json";
 import type marketing from "./locales/en/marketing.json";
 import type adaptation from "./locales/en/adaptation.json";
+import type assistant from "./locales/en/assistant.json";
 
 /**
  * English is the source of truth for key typing: `t("actions.save")` is
@@ -41,6 +42,7 @@ declare module "i18next" {
       dice: typeof dice;
       marketing: typeof marketing;
       adaptation: typeof adaptation;
+      assistant: typeof assistant;
     };
   }
 }

@@ -1062,7 +1062,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     {
       title: "List characters",
       description:
-        "Lists the character sheets the signed-in account can see, optionally limited to one campaign.",
+        "Lists the character sheets the signed-in account can see, optionally limited to one campaign. The reply reports how many sheets were returned out of the exact total matching the same filter.",
       inputSchema: z.object({ campaign_id: uuid.optional(), limit: limitField }),
       outputSchema: listOutput,
       annotations: read,
@@ -1083,7 +1083,11 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         ...row,
         is_owner: row.owner_id === ctx.userId,
       }));
-      return listReply("characters", items, max);
+      let countQuery = ctx.supabase.from("characters").select("id", { count: "exact", head: true });
+      if (campaign_id) countQuery = countQuery.eq("campaign_id", campaign_id);
+      const { count, error: countError } = await countQuery;
+      if (countError) fail("Counting characters", countError);
+      return listReply("characters", items, typeof count === "number" ? count : items.length);
     },
   );
 

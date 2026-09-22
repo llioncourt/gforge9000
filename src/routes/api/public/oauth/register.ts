@@ -7,11 +7,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { randomUUID } from "node:crypto";
-import {
-  OAUTH_CORS_HEADERS,
-  jsonResponse,
-  oauthError,
-} from "@/lib/mcp/oauth.server";
+import { OAUTH_CORS_HEADERS, jsonResponse, oauthError } from "@/lib/mcp/oauth.server";
 
 const MAX_REDIRECT_URIS = 10;
 
@@ -50,7 +46,9 @@ export const Route = createFileRoute("/api/public/oauth/register")({
         const redirectUris = rawUris as string[];
 
         const clientName =
-          typeof body["client_name"] === "string" ? (body["client_name"] as string).slice(0, 120) : null;
+          typeof body["client_name"] === "string"
+            ? (body["client_name"] as string).slice(0, 120)
+            : null;
         const clientId = randomUUID();
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

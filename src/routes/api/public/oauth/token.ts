@@ -28,7 +28,10 @@ async function handleAuthorizationCode(form: URLSearchParams): Promise<Response>
   const redirectUri = form.get("redirect_uri");
   const verifier = form.get("code_verifier");
   if (!code || !clientId || !redirectUri || !verifier) {
-    return oauthError("invalid_request", "code, client_id, redirect_uri and code_verifier are required.");
+    return oauthError(
+      "invalid_request",
+      "code, client_id, redirect_uri and code_verifier are required.",
+    );
   }
 
   const db = await adminDb();
@@ -38,7 +41,8 @@ async function handleAuthorizationCode(form: URLSearchParams): Promise<Response>
     .eq("code", code)
     .maybeSingle();
 
-  if (!row || row.used_at) return oauthError("invalid_grant", "This code is invalid or was already used.");
+  if (!row || row.used_at)
+    return oauthError("invalid_grant", "This code is invalid or was already used.");
   if (new Date(row.expires_at as string).getTime() <= Date.now()) {
     return oauthError("invalid_grant", "This code has expired. Please sign in again.");
   }
@@ -77,7 +81,10 @@ async function handleRefreshToken(form: URLSearchParams): Promise<Response> {
   }
 
   // Rotate: revoke the old pair, issue a new one.
-  await db.from("mcp_oauth_tokens").update({ revoked_at: new Date().toISOString() }).eq("id", row.id);
+  await db
+    .from("mcp_oauth_tokens")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("id", row.id);
   return jsonResponse(await issueTokenPair(row.user_id as string, clientId));
 }
 
@@ -91,7 +98,10 @@ export const Route = createFileRoute("/api/public/oauth/token")({
         try {
           if (grantType === "authorization_code") return await handleAuthorizationCode(form);
           if (grantType === "refresh_token") return await handleRefreshToken(form);
-          return oauthError("unsupported_grant_type", "Supported grants: authorization_code, refresh_token.");
+          return oauthError(
+            "unsupported_grant_type",
+            "Supported grants: authorization_code, refresh_token.",
+          );
         } catch {
           return oauthError("server_error", "Could not issue a token. Please try again.", 500);
         }

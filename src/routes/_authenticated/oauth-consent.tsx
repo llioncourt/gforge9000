@@ -28,7 +28,10 @@ export const Route = createFileRoute("/_authenticated/oauth-consent")({
       { title: metaText("settings", "assistant.consentMetaTitle") },
       { name: "description", content: metaText("settings", "assistant.consentMetaDescription") },
       { property: "og:title", content: metaText("settings", "assistant.consentMetaTitle") },
-      { property: "og:description", content: metaText("settings", "assistant.consentMetaDescription") },
+      {
+        property: "og:description",
+        content: metaText("settings", "assistant.consentMetaDescription"),
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -90,7 +93,9 @@ function OAuthConsentPage() {
         ) : (
           <>
             <h1 className="text-xl font-semibold">
-              {t("assistant.consentTitle", { client: clientName ?? t("assistant.consentUnknownClient") })}
+              {t("assistant.consentTitle", {
+                client: clientName ?? t("assistant.consentUnknownClient"),
+              })}
             </h1>
             <p className="text-muted-foreground text-sm">{t("assistant.consentDescription")}</p>
             <div className="flex justify-center gap-3">

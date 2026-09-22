@@ -86,7 +86,13 @@ export async function resolveBearerUser(token: string): Promise<string | null> {
 export async function issueTokenPair(
   userId: string,
   clientId: string,
-): Promise<{ access_token: string; token_type: "Bearer"; expires_in: number; refresh_token: string; scope: string }> {
+): Promise<{
+  access_token: string;
+  token_type: "Bearer";
+  expires_in: number;
+  refresh_token: string;
+  scope: string;
+}> {
   const db = await adminDb();
   const accessToken = generateToken(ACCESS_TOKEN_PREFIX);
   const refreshToken = generateToken(REFRESH_TOKEN_PREFIX);

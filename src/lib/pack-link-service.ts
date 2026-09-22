@@ -250,14 +250,17 @@ export async function buildLink(
 export interface LinkOutcome {
   entry: EntryRowLike;
   status: PackLinkStatus;
+  /** Things the player should be told about; never applied silently. */
+  warnings?: RestoreWarning[];
 }
 
 async function statusOf(
   client: PackClient,
   entry: EntryRowLike,
   campaignSettings: unknown,
+  callerUserId?: string | null | undefined,
 ): Promise<PackLinkStatus> {
-  const statuses = await deriveStatuses(client, [entry], campaignSettings);
+  const statuses = await deriveStatuses(client, [entry], campaignSettings, callerUserId);
   return statuses.get(entry.id) ?? { state: "custom", link: null };
 }
 

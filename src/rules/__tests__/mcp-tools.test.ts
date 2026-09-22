@@ -114,7 +114,7 @@ interface RegisteredTool {
 }
 
 /** Chainable thenable standing in for a supabase-js query builder. */
-function query(data: unknown) {
+function query(data: unknown, extra: Record<string, unknown> = {}, spy?: Spy) {
   const self: Record<string, unknown> = {};
   for (const method of [
     "select",
@@ -122,7 +122,6 @@ function query(data: unknown) {
     "order",
     "limit",
     "ilike",
-    "insert",
     "update",
     "delete",
     "single",
@@ -130,10 +129,16 @@ function query(data: unknown) {
   ]) {
     self[method] = () => self;
   }
+  self["insert"] = (payload: unknown) => {
+    if (spy) spy.inserted = payload;
+    return self;
+  };
   self["then"] = (resolve: (value: unknown) => unknown) =>
-    Promise.resolve({ data, error: null }).then(resolve);
+    Promise.resolve({ data, error: null, ...extra }).then(resolve);
   return self;
 }
+
+type Spy = { inserted?: unknown };
 
 const USER = "00000000-0000-0000-0000-000000000001";
 const GM = "00000000-0000-0000-0000-0000000000ff";
@@ -141,15 +146,37 @@ const CAMPAIGN = "11111111-1111-4111-8111-111111111111";
 const ENTITY_ID = "22222222-2222-4222-8222-222222222222";
 const CHARACTER_ID = "33333333-3333-4333-8333-333333333333";
 
-function serverWith(tables: Record<string, unknown>, userId: string) {
+type TableResult = unknown | { __result: unknown; extra?: Record<string, unknown> };
+
+function serverWith(
+  tables: Record<string, TableResult | TableResult[]>,
+  userId: string,
+  spy?: Spy,
+) {
+  const queues: Record<string, TableResult[]> = {};
+  for (const [table, value] of Object.entries(tables)) {
+    if (Array.isArray(value) && value.some((v) => v && typeof v === "object" && "__result" in v)) {
+      queues[table] = value as TableResult[];
+    }
+  }
+  const resolve = (table: string) => {
+    const queued = queues[table];
+    const raw = queued && queued.length > 0 ? queued.shift() : tables[table];
+    if (raw && typeof raw === "object" && "__result" in raw) {
+      const wrapped = raw as { __result: unknown; extra?: Record<string, unknown> };
+      return query(wrapped.__result, wrapped.extra ?? {}, spy);
+    }
+    return query(raw, {}, spy);
+  };
   const supabase = {
-    rpc: () => query(tables["entities"]),
-    from: (table: string) => query(tables[table]),
+    rpc: () => resolve("entities"),
+    from: (table: string) => resolve(table),
   };
   const server = buildMcpServer({ supabase: supabase as never, userId });
   return (server as unknown as { _registeredTools: Record<string, RegisteredTool> })
     ._registeredTools;
 }
+
 
 const campaignRow = { id: CAMPAIGN, name: "Nadrel", gm_id: GM };
 

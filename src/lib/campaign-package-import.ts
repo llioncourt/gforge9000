@@ -7,7 +7,7 @@
  * converting images to AVIF with the browser canvas/WASM encoder before
  * upload.
  */
-import { unzipSync } from "fflate";
+import { unzipSync, zipSync } from "fflate";
 import { supabase } from "@/integrations/supabase/client";
 import { convertToAvif, isImageFile } from "@/lib/image-avif";
 import {
@@ -66,7 +66,6 @@ export async function importCampaignPackage(
   const withAvif = await convertImagesToAvif(archive);
 
   // Re-zip so the shared core (which unzips its input) sees the AVIF bytes.
-  const { zipSync } = await import("fflate");
   const rezipped = zipSync(withAvif, { level: 0 });
 
   return importCampaignPackageCore(supabase, user.id, rezipped, onProgress);

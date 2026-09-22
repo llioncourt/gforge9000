@@ -302,7 +302,7 @@ export async function linkEntry(
     patch["data"] = data;
   }
   const updated = await updateEntryRow(client, entry.id, patch);
-  return outcomeOf(client, updated, campaignSettings);
+  return { entry: updated, status: await statusOf(client, updated, campaignSettings) };
 }
 
 /** Removes ONLY `source.link`; every sheet value and provenance key survives. */
@@ -314,7 +314,7 @@ export async function unlinkEntry(
   const updated = await updateEntryRow(client, entry.id, {
     source: withoutPackLink(entry.source),
   });
-  return outcomeOf(client, updated, campaignSettings);
+  return { entry: updated, status: await statusOf(client, updated, campaignSettings) };
 }
 
 /**

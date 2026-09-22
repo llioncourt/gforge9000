@@ -863,7 +863,7 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
       if (patch.kind !== undefined) kindDef(patch.kind);
       if (patch.status !== undefined || patch.kind !== undefined) {
         const effectiveStatus = patch.status ?? row.status;
-        if (effectiveStatus) assertStatusForKind(effectiveKind, effectiveStatus);
+        if (effectiveStatus) patch.status = canonicalStatus(effectiveKind, effectiveStatus);
       }
       if (patch.parent_id) {
         await assertParentIsSafe(ctx, entry_id, patch.parent_id, row.campaign_id);

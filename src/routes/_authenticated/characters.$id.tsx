@@ -115,6 +115,8 @@ import {
   isCustomEntry,
 } from "@/components/character/pack-content";
 import { getLibraryEntries, type LibraryListRow } from "@/lib/api";
+import { buildLink, loadPackItem } from "@/lib/pack-link-service";
+import { invalidatePackLinkQueries } from "@/components/character/pack-link";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
 import { ModelPanel } from "@/components/character/model-panel";
 import { parseModelTransform } from "@/lib/model3d";
@@ -385,7 +387,7 @@ function CharacterPage() {
       return d.id ? updateEntry(d.id, payload) : addEntry(payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entries", id] });
+      invalidatePackLinkQueries(queryClient, id);
       setDialogOpen(false);
       toast.success(t("sheet.entrySaved"));
     },
@@ -394,7 +396,7 @@ function CharacterPage() {
 
   const removeEntry = useMutation({
     mutationFn: deleteEntry,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["entries", id] }),
+    onSuccess: () => invalidatePackLinkQueries(queryClient, id),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -463,14 +465,21 @@ function CharacterPage() {
     mutationFn: async (entry: LibraryListRow) => {
       // The picker list omits the detail blob; fetch it for this entry only.
       const [full] = await getLibraryEntries([entry.id]);
-      const draftRow = libraryEntryToCharacterDraft({
-        ...entry,
-        data: (full?.data ?? {}) as Record<string, unknown>,
-      });
+      // Picking from the library always records where the entry came from
+      // (PL-001); free-text/custom entries are never linked this way.
+      const item = entry.pack ? await loadPackItem(supabase, entry.id) : null;
+      const link = item?.pack_id ? await buildLink(item, "ui_picker") : null;
+      const draftRow = libraryEntryToCharacterDraft(
+        {
+          ...entry,
+          data: (full?.data ?? {}) as Record<string, unknown>,
+        },
+        link,
+      );
       return addEntry({ ...draftRow, character_id: id } as never);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["entries", id] });
+      invalidatePackLinkQueries(queryClient, id);
       toast.success(t("sheet.addedFromPack"));
     },
     onError: (e: Error) => toast.error(e.message),
@@ -894,10 +903,7 @@ function CharacterPage() {
               entries={entries}
               statuses={packStatuses.data}
               campaignSettings={campaignSettings}
-              onDone={() => {
-                void queryClient.invalidateQueries({ queryKey: ["entries", id] });
-                void queryClient.invalidateQueries({ queryKey: ["pack-link-status"] });
-              }}
+              onDone={() => invalidatePackLinkQueries(queryClient, id)}
             />
             <div className="panel overflow-hidden">
               <Table>

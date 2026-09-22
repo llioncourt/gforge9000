@@ -1,10 +1,11 @@
 import type React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Calculator, Dices, Layers, ScrollText, Shield, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSession } from "@/hooks/use-session";
+import { useAuth } from "@/lib/auth/auth-provider";
+import { consumeDestination, DEFAULT_DESTINATION } from "@/lib/auth/pending-destination";
 import { useParallax } from "@/hooks/use-parallax";
 import { AmbientBackground } from "@/components/app/ambient-background";
 import { useT } from "@/i18n/hooks";
@@ -51,12 +52,18 @@ const FEATURE_KEYS = [
 
 function Landing() {
   const { t } = useT("marketing");
-  const { user, loading } = useSession();
+  const { status } = useAuth();
   const navigate = useNavigate();
+  const moved = useRef(false);
 
+  // The sign-in provider always returns to this page. A signed-in visitor is
+  // sent on exactly once: to the destination recorded before sign-in started,
+  // or to the dashboard.
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard", replace: true });
-  }, [loading, user, navigate]);
+    if (status !== "signed-in" || moved.current) return;
+    moved.current = true;
+    navigate({ to: consumeDestination() ?? DEFAULT_DESTINATION, replace: true });
+  }, [status, navigate]);
 
   const heroRef = useParallax<HTMLElement>();
 

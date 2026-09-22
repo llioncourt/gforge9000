@@ -39,6 +39,7 @@ import { getProfile, setProfilePreferences, upsertProfile, wipeAllMyData } from 
 import { lovable } from "@/integrations/lovable/index";
 import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { useSession } from "@/hooks/use-session";
+import { rememberDestination } from "@/lib/auth/pending-destination";
 import { useT } from "@/i18n/hooks";
 
 const THEME_KEY = "ucf:light-theme";
@@ -82,8 +83,9 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
     setVerifying(true);
     sessionStorage.setItem(WIPE_INTENT_KEY, String(Date.now()));
     try {
+      rememberDestination("/dashboard");
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/dashboard`,
+        redirect_uri: window.location.origin,
       });
       if ("redirected" in result && result.redirected) return;
       if (result.error) throw result.error;

@@ -15,7 +15,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { DiceProvider } from "@/components/app/dice-context";
 import { PwaRegister } from "@/components/app/pwa-register";
-import { supabase } from "@/integrations/supabase/client";
+import { AuthProvider } from "@/lib/auth/auth-provider";
 import { I18nProvider } from "@/i18n/provider";
 import { detectLocale } from "@/i18n/detect";
 import { localeDirection } from "@/i18n/config";
@@ -158,28 +158,20 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
-
-  useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
-    });
-    return () => sub.subscription.unsubscribe();
-  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <I18nProvider initialLocale={detectLocale()}>
-        <TooltipProvider delayDuration={200}>
-          <DiceProvider>
-            <PwaRegister />
-            <Outlet />
-            <Toaster position="top-right" richColors />
-          </DiceProvider>
-        </TooltipProvider>
-      </I18nProvider>
+      <AuthProvider>
+        <I18nProvider initialLocale={detectLocale()}>
+          <TooltipProvider delayDuration={200}>
+            <DiceProvider>
+              <PwaRegister />
+              <Outlet />
+              <Toaster position="top-right" richColors />
+            </DiceProvider>
+          </TooltipProvider>
+        </I18nProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

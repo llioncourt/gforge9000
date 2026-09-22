@@ -258,7 +258,13 @@ export function validateCharacter(input: ValidationInput): CharacterValidation {
       message: `Disadvantages total ${points.disadvantages}, beyond the campaign limit of ${campaignLimits.disadvantage_limit}.`,
     });
   }
-  if (campaignLimits.quirk_limit !== null && points.quirks > campaignLimits.quirk_limit) {
+  // Quirks are worth negative points, and campaigns normally write the limit
+  // the same way (-5). Magnitudes are compared so both a negative limit and a
+  // legacy positive one mean "at most five quirk points".
+  if (
+    campaignLimits.quirk_limit !== null &&
+    Math.abs(points.quirks) > Math.abs(campaignLimits.quirk_limit)
+  ) {
     findings.push({
       type: "quirk_limit",
       value: points.quirks,
@@ -266,6 +272,7 @@ export function validateCharacter(input: ValidationInput): CharacterValidation {
       message: `Quirks total ${points.quirks}, beyond the campaign limit of ${campaignLimits.quirk_limit}.`,
     });
   }
+
   if (
     campaignLimits.tech_level !== null &&
     input.character.tech_level > campaignLimits.tech_level

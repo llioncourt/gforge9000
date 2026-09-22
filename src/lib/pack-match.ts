@@ -276,22 +276,30 @@ export interface CandidateScope {
   limit?: number | undefined;
 }
 
+/** How many rows are pulled under RLS before an in-app text filter runs. */
+const SEARCH_POOL = 2000;
+
 /**
  * Pack items the caller may actually use.
  *
  * With a campaign the search is restricted to packs the campaign allows
  * (empty allow list = every accessible pack); without one, everything the
  * caller can see is searchable. RLS does the rest — nothing here can widen it.
+ *
+ * The free-text filter is applied in the app, not in SQL: the database has no
+ * accent-insensitive comparison available here, so "sobrevivencia" would never
+ * match "Sobrevivência". A bounded pool is read and ranked with the shared
+ * accent-folding search helpers instead.
  */
 export async function loadPackCandidates(
   client: PackClient,
   scope: CandidateScope = {},
 ): Promise<PackCandidate[]> {
   const packIndex = await loadPackIndex(client);
+  const limit = scope.limit ?? 1000;
   let query = client.from("library_entries").select(CANDIDATE_COLUMNS).order("name");
   if (scope.kind) query = query.eq("kind", scope.kind);
-  if (scope.search) query = query.ilike("name", `%${scope.search}%`);
-  const { data, error } = await query.limit(scope.limit ?? 1000);
+  const { data, error } = await query.limit(scope.search ? Math.max(limit, SEARCH_POOL) : limit);
   if (error) throw new Error(error.message);
 
   const allowed = allowedPacksOf(scope.campaignSettings);
@@ -301,8 +309,15 @@ export async function loadPackCandidates(
     candidates = candidates.filter((candidate) => isPackAllowed(candidate.pack, allowed));
   }
   if (scope.packId) candidates = candidates.filter((c) => c.pack_id === scope.packId);
+  if (scope.search) {
+    candidates = rankSearch(scope.search, candidates, (c) => ({
+      name: c.name,
+      fields: [c.category, c.specialization, c.pack],
+    })).slice(0, limit);
+  }
   return candidates;
 }
+
 
 /** Full match flow: load what the caller may use, then match deterministically. */
 export async function findPackMatch(

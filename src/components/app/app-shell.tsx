@@ -35,6 +35,7 @@ const NAV = [
   { to: "/campaigns", labelKey: "links.campaigns", icon: Users },
   { to: "/library", labelKey: "links.library", icon: BookOpen },
   { to: "/packs", labelKey: "links.packs", icon: Boxes },
+  { to: "/assistant", labelKey: "links.assistant", icon: Sparkles },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {

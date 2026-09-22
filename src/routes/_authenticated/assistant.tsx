@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Copy, KeyRound, Plus, Trash2 } from "lucide-react";
+import { ClipboardList, Copy, KeyRound, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/app/page-header";
@@ -36,6 +36,32 @@ import {
 } from "@/lib/mcp-tokens.functions";
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";
+
+function buildSetupPrompt(endpoint: string, key?: string): string {
+  const keyLine = key ? key : "<paste your key here — create one on the Assistant access page>";
+  return [
+    "Connect me to my GURPS Forge Companion campaigns through its MCP endpoint.",
+    "",
+    `Endpoint: POST ${endpoint}`,
+    `Authorization header: Bearer ${keyLine}`,
+    "Protocol: JSON-RPC 2.0 MCP (streamable HTTP, single POST endpoint).",
+    "",
+    "Start with the `initialize` method, then `tools/list`, then call tools with `tools/call`.",
+    "",
+    "What you can do:",
+    "- list_campaigns / create_campaign — see and create my campaigns.",
+    "- list_entry_types — learn the fields each entry kind (character, location, faction, item, session, event, …) accepts before creating one.",
+    "- list_entries / get_entry — read world entries; create_entry / update_entry / delete_entry — change them (game master only).",
+    "- list_relationships / create_relationship — link entries (allies, enemies, members, …).",
+    "- list_characters / get_character — read character sheets; create_character / add_character_entry / delete_character_entry — build and edit sheets (game master only).",
+    "",
+    "Rules:",
+    "- Always call list_campaigns first and confirm which campaign I mean before writing anything.",
+    "- Writes work only in campaigns I run as game master; reading works in campaigns I play in too.",
+    "- Use list_entry_types before create_entry so entries match the app's structure.",
+    "- New entries default to visible only to the game master until I reveal them to players.",
+  ].join("\n");
+}
 
 export const Route = createFileRoute("/_authenticated/assistant")({
   staticData: { sitemap: false },

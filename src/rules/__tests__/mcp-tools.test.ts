@@ -127,6 +127,7 @@ function query(data: unknown, extra: Record<string, unknown> = {}, spy?: Spy) {
     "delete",
     "single",
     "maybeSingle",
+    "in",
   ]) {
     self[method] = () => self;
   }
@@ -1208,7 +1209,7 @@ describe("numeric validation messages", () => {
   }
 
   it("names the field and its range", () => {
-    expect(message("update_character", { character_id: CAMPAIGN, status: 9 })).toBe(
+    expect(message("update_character", { character_id: CAMPAIGN, status: 99 })).toBe(
       "status must be an integer between -20 and 20",
     );
     expect(message("update_character", { character_id: CAMPAIGN, tech_level: 99 })).toBe(
@@ -1237,7 +1238,15 @@ describe("numeric validation messages", () => {
   });
 
   it("keeps the strength message exactly as documented", () => {
-    expect(message("create_relationship", { strength: 9 })).toBe(
+    expect(
+      message("create_relationship", {
+        campaign_id: CAMPAIGN,
+        source_id: ENTITY_ID,
+        target_id: CHARACTER_ID,
+        rel_type: "ALLY_OF",
+        strength: 9,
+      }),
+    ).toBe(
       "strength must be an integer between -5 and 5",
     );
   });

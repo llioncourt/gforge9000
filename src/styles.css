@@ -169,52 +169,35 @@
 }
 
 @utility grid-noise {
-  background-image:
-    linear-gradient(to bottom, oklch(1 0 0 / 3%) 1px, transparent 1px),
-    linear-gradient(to right, oklch(1 0 0 / 3%) 1px, transparent 1px);
-  background-size: 44px 44px;
+  background-image: none;
 }
 
 /* ---------------------------------------------------------------------------
- * Modern surface layer: glassmorphism, ambient parallax, motion.
- * All effects degrade gracefully and respect prefers-reduced-motion.
+ * Flat surface layer. Decorative effects (blur, aurora field, parallax,
+ * hover lift, entrance animation) were intentionally removed; these utilities
+ * stay as plain opaque surfaces so existing markup keeps working.
  * ------------------------------------------------------------------------ */
 
 @utility glass {
-  background: color-mix(in oklab, var(--color-card) 62%, transparent);
-  border: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(18px) saturate(150%);
-  box-shadow:
-    0 1px 0 0 oklch(1 0 0 / 6%) inset,
-    0 20px 45px -30px oklch(0 0 0 / 85%);
 }
 
 @utility glass-soft {
-  background: color-mix(in oklab, var(--color-card) 40%, transparent);
-  border: 1px solid color-mix(in oklab, var(--color-border) 60%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
 }
 
 @utility glass-bar {
-  background: color-mix(in oklab, var(--color-background) 72%, transparent);
-  backdrop-filter: blur(20px) saturate(160%);
+  background: var(--color-background);
 }
 
-/* Elevated interactive surface — subtle lift + ring on hover. */
 @utility hover-lift {
-  transition:
-    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 220ms ease;
-  will-change: transform;
+  transition: border-color 150ms ease;
 
   &:hover {
-    transform: translateY(-2px);
     border-color: color-mix(in oklab, var(--color-primary) 35%, var(--color-border));
-    box-shadow:
-      0 1px 0 0 oklch(1 0 0 / 7%) inset,
-      0 24px 50px -28px oklch(0 0 0 / 90%);
   }
 }
 
@@ -237,81 +220,15 @@
 }
 
 @utility rise-in {
-  animation: rise-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: none;
 }
 
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translate3d(0, 10px, 0);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* The panel utility now reads as frosted glass everywhere it is already used. */
 @utility panel {
-  background: color-mix(in oklab, var(--color-card) 72%, transparent);
-  border: 1px solid color-mix(in oklab, var(--color-border) 85%, transparent);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(16px) saturate(145%);
-  box-shadow: var(--shadow-panel);
 }
 
-/* Ambient aurora field rendered once by <AmbientBackground/>. */
-.ambient-field {
-  position: fixed;
-  inset: -20vh -10vw;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-  contain: strict;
-}
-
-.ambient-blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(90px);
-  opacity: 0.6;
-}
-
-.ambient-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to bottom, oklch(1 0 0 / 2.5%) 1px, transparent 1px),
-    linear-gradient(to right, oklch(1 0 0 / 2.5%) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse at 50% 0%, #000 20%, transparent 72%);
-}
-
-/* Parallax layer driven by scroll offset CSS variable. */
-.parallax-layer {
-  transform: translate3d(0, calc(var(--scroll, 0) * var(--speed, 0.15) * -1px), 0);
-  will-change: transform;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ambient-blob,
-  .ambient-grid,
-  .parallax-layer {
-    transform: none !important;
-  }
-
-  .rise-in {
-    animation: none !important;
-  }
-}
-
-/* Touch devices: drop expensive blur-heavy compositing on the ambient field. */
-@media (hover: none) and (pointer: coarse) {
-  .ambient-blob {
-    filter: blur(60px);
-    opacity: 0.35;
-  }
-}
 
 /* Dedicated print sheet (hidden on screen). */
 .print-sheet {

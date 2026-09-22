@@ -2,11 +2,13 @@
  * Model Context Protocol endpoint (JSON-RPC 2.0 over HTTP).
  *
  * Public route: it authenticates the caller itself with a personal access key
- * (`Authorization: Bearer ucf_...`) instead of a site session. Every tool call
- * runs as the user that owns the key and re-checks campaign access.
+ * (`Authorization: Bearer ucf_...`) or an OAuth access token (`mcpo_...`,
+ * issued via the sign-in flow under /api/public/oauth/*) instead of a site
+ * session. Every tool call runs as the user that owns the credential and
+ * re-checks campaign access.
  */
 import { createFileRoute } from "@tanstack/react-router";
-import { createHash } from "node:crypto";
+import { resolveBearerUser } from "@/lib/mcp/oauth.server";
 
 const JSON_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
@@ -28,29 +30,23 @@ function rpcResult(id: unknown, result: unknown) {
   });
 }
 
-function rpcError(id: unknown, code: number, message: string, status = 200) {
+function rpcError(
+  id: unknown,
+  code: number,
+  message: string,
+  status = 200,
+  extraHeaders: Record<string, string> = {},
+) {
   return new Response(JSON.stringify({ jsonrpc: "2.0", id, error: { code, message } }), {
     status,
-    headers: JSON_HEADERS,
+    headers: { ...JSON_HEADERS, ...extraHeaders },
   });
 }
 
 async function resolveUser(request: Request): Promise<string | null> {
   const header = request.headers.get("authorization") ?? "";
   const token = header.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : "";
-  if (!token) return null;
-  const hash = createHash("sha256").update(token).digest("hex");
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table added after types were generated
-  const db = supabaseAdmin as any;
-  const { data, error } = await db
-    .from("mcp_tokens")
-    .select("id, user_id, revoked_at")
-    .eq("token_hash", hash)
-    .maybeSingle();
-  if (error || !data || data.revoked_at) return null;
-  await db.from("mcp_tokens").update({ last_used_at: new Date().toISOString() }).eq("id", data.id);
-  return data.user_id as string;
+  return resolveBearerUser(token);
 }
 
 async function handle(request: Request): Promise<Response> {

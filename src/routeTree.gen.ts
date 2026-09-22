@@ -17,6 +17,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
+import { Route as AuthenticatedOauthConsentRouteImport } from './routes/_authenticated/oauth-consent'
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns.index'
 import { Route as AuthenticatedCampaignsIdRouteImport } from './routes/_authenticated/campaigns.$id'
 import { Route as AuthenticatedCharactersIndexRouteImport } from './routes/_authenticated/characters.index'
@@ -69,6 +70,12 @@ const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedOauthConsentRoute =
+  AuthenticatedOauthConsentRouteImport.update({
+    id: '/oauth-consent',
+    path: '/oauth-consent',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCampaignsIndexRoute =
   AuthenticatedCampaignsIndexRouteImport.update({
     id: '/campaigns/',
@@ -142,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/assistant': typeof AuthenticatedAssistantRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/oauth-consent': typeof AuthenticatedOauthConsentRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
@@ -163,6 +171,7 @@ export interface FileRoutesByTo {
   '/assistant': typeof AuthenticatedAssistantRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/oauth-consent': typeof AuthenticatedOauthConsentRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
@@ -186,6 +195,7 @@ export interface FileRoutesById {
   '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
+  '/_authenticated/oauth-consent': typeof AuthenticatedOauthConsentRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/_authenticated/entities/$id': typeof AuthenticatedEntitiesIdRoute
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/dashboard'
     | '/library'
+    | '/oauth-consent'
     | '/campaigns/$id'
     | '/characters/$id'
     | '/entities/$id'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/assistant'
     | '/dashboard'
     | '/library'
+    | '/oauth-consent'
     | '/campaigns/$id'
     | '/characters/$id'
     | '/entities/$id'
@@ -252,6 +264,7 @@ export interface FileRouteTypes {
     | '/_authenticated/assistant'
     | '/_authenticated/dashboard'
     | '/_authenticated/library'
+    | '/_authenticated/oauth-consent'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/characters/$id'
     | '/_authenticated/entities/$id'
@@ -335,6 +348,13 @@ declare module '@tanstack/react-router' {
       path: '/library'
       fullPath: '/library'
       preLoaderRoute: typeof AuthenticatedLibraryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/oauth-consent': {
+      id: '/_authenticated/oauth-consent'
+      path: '/oauth-consent'
+      fullPath: '/oauth-consent'
+      preLoaderRoute: typeof AuthenticatedOauthConsentRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/campaigns/': {
@@ -428,6 +448,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
+  AuthenticatedOauthConsentRoute: typeof AuthenticatedOauthConsentRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
   AuthenticatedCharactersIdRoute: typeof AuthenticatedCharactersIdRoute
   AuthenticatedEntitiesIdRoute: typeof AuthenticatedEntitiesIdRoute
@@ -441,6 +462,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
+  AuthenticatedOauthConsentRoute: AuthenticatedOauthConsentRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
   AuthenticatedCharactersIdRoute: AuthenticatedCharactersIdRoute,
   AuthenticatedEntitiesIdRoute: AuthenticatedEntitiesIdRoute,

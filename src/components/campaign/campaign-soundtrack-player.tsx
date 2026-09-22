@@ -37,6 +37,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/i18n/hooks";
+import { useSession } from "@/hooks/use-session";
 
 type Player = {
   campaignId: string | null;

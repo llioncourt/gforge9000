@@ -1359,8 +1359,10 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
 export const MCP_TOOL_NAMES = [
   // campaigns
   "list_campaigns",
+  "get_campaign",
   "create_campaign",
   "update_campaign",
+  "delete_campaign",
   // entries
   "list_entry_types",
   "list_entries",

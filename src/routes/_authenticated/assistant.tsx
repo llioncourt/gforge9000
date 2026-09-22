@@ -37,6 +37,7 @@ import {
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";
 
+/** Ready-to-paste instructions that teach an assistant how to connect. */
 function buildSetupPrompt(endpoint: string, key?: string): string {
   const keyLine = key ? key : "<paste your key here — create one on the Assistant access page>";
   return [

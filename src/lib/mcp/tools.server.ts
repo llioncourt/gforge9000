@@ -660,7 +660,6 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
     },
   );
 
-
   tool(
     "create_character",
     {
@@ -747,7 +746,6 @@ export function buildMcpServer(ctx: McpToolContext): McpServer {
         item: data,
       });
     },
-
   );
 
   tool(

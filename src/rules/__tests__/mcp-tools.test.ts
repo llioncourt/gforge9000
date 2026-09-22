@@ -177,7 +177,6 @@ function serverWith(
     ._registeredTools;
 }
 
-
 const campaignRow = { id: CAMPAIGN, name: "Nadrel", gm_id: GM };
 
 const entityRow = {

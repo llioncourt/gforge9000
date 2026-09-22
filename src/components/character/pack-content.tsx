@@ -153,10 +153,16 @@ export function PackPickerDialog({
         <DialogHeader>
           <DialogTitle>{t("sheet.pack.pickerTitle")}</DialogTitle>
           <DialogDescription>
-            {packs.length === 0
-              ? t("sheet.pack.noPacksLinked")
-              : t("sheet.pack.showingKinds", { kinds: kinds.join(", "), packs: packs.join(", ") })}
+            {packs === null
+              ? t("sheet.pack.showingAllKinds", { kinds: kinds.join(", ") })
+              : packs.length === 0
+                ? t("sheet.pack.noPacksLinked")
+                : t("sheet.pack.showingKinds", {
+                    kinds: kinds.join(", "),
+                    packs: packs.join(", "),
+                  })}
           </DialogDescription>
+
         </DialogHeader>
 
         <div className="relative">

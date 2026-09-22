@@ -13,8 +13,18 @@ import { useT } from "@/i18n/hooks";
 import { metaLocale, metaText } from "@/i18n/meta";
 import { Trans } from "react-i18next";
 
+// Only same-origin paths are allowed as post-login redirect targets.
+function safeRedirectTarget(value: unknown): string {
+  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
+    ? value
+    : "/dashboard";
+}
+
 export const Route = createFileRoute("/auth")({
   staticData: { sitemap: false },
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
   head: () => ({
     meta: [
       { title: metaText("auth", "meta.title") },

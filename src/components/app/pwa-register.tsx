@@ -1,36 +1,37 @@
 import { useEffect } from "react";
 
-import { isServiceWorkerAllowed } from "@/lib/pwa";
-
 /**
- * Registers the offline service worker on real deployments only.
- * In dev/preview it unregisters any worker and clears its caches so a stale
- * app shell can never be served there.
+ * TEMPORARY — PRODUCTION INCIDENT ISOLATION.
+ *
+ * Service-worker registration is intentionally disabled everywhere (localhost,
+ * preview and production) so that PWA/CacheStorage state can be ruled out as a
+ * cause of the published routing failure. This component now only performs a
+ * one-time, idempotent cleanup: it unregisters every service worker for this
+ * origin and deletes every CacheStorage entry.
+ *
+ * It never reloads the page, never loops, and never touches localStorage,
+ * sessionStorage, cookies, auth or any backend data.
+ *
+ * REVERT after diagnosis: restore the `isServiceWorkerAllowed` guarded
+ * registration of `/sw.js` (see `@/lib/pwa`, which is kept for that purpose).
  */
 export function PwaRegister() {
   useEffect(() => {
-    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+    if (typeof window === "undefined") return;
 
-    const allowed = isServiceWorkerAllowed(window.location.hostname, import.meta.env.DEV);
-
-    if (!allowed) {
-      void navigator.serviceWorker.getRegistrations().then((regs) => {
-        regs.forEach((reg) => void reg.unregister());
-      });
-      if ("caches" in window) {
-        void caches.keys().then((keys) => keys.forEach((k) => void caches.delete(k)));
-      }
-      return;
+    if ("serviceWorker" in navigator) {
+      void navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) => Promise.all(regs.map((reg) => reg.unregister().catch(() => false))))
+        .catch(() => undefined);
     }
 
-    const register = () => {
-      void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
-        /* offline support is optional; ignore registration failures */
-      });
-    };
-
-    if (document.readyState === "complete") register();
-    else window.addEventListener("load", register, { once: true });
+    if ("caches" in window) {
+      void caches
+        .keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key).catch(() => false))))
+        .catch(() => undefined);
+    }
   }, []);
 
   return null;

@@ -30,5 +30,23 @@
   "language": {
     "title": "Language",
     "description": "Choose the interface language."
+  },
+  "assistant": {
+    "metaTitle": "Assistant access — Universal Character Forge",
+    "metaDescription": "Create and revoke keys that let an outside assistant work in your campaigns.",
+    "title": "Assistant access",
+    "description": "Give Claude a key so it can read your campaigns and add entries for you. It acts as you: game master work only in campaigns you run.",
+    "addressTitle": "Address",
+    "addressHint": "Paste this address and your key into Claude when adding a new connection.",
+    "nameLabel": "Key name",
+    "createKey": "Create key",
+    "empty": "No keys yet.",
+    "newKeyTitle": "Your new key",
+    "newKeyDescription": "Copy it now — it is shown only once.",
+    "copied": "Copied",
+    "revoke": "Revoke",
+    "revoked": "Key revoked",
+    "revokeTitle": "Revoke this key?",
+    "revokeDescription": "Anything using this key stops working right away. You can create a new one at any time."
   }
 }

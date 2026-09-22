@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedCampaignsIndexRouteImport } from './routes/_authenticated/campaigns.index'
@@ -23,6 +24,7 @@ import { Route as AuthenticatedCharactersIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedEntitiesIdRouteImport } from './routes/_authenticated/entities.$id'
 import { Route as AuthenticatedPacksIndexRouteImport } from './routes/_authenticated/packs.index'
 import { Route as AuthenticatedPacksPackRouteImport } from './routes/_authenticated/packs.$pack'
+import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
 import { Route as ApiPublicVersionRouteImport } from './routes/api/public/version'
 
 const IndexRoute = IndexRouteImport.update({
@@ -48,6 +50,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
@@ -98,6 +105,11 @@ const AuthenticatedPacksPackRoute = AuthenticatedPacksPackRouteImport.update({
   path: '/packs/$pack',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicMcpRoute = ApiPublicMcpRouteImport.update({
+  id: '/api/public/mcp',
+  path: '/api/public/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicVersionRoute = ApiPublicVersionRouteImport.update({
   id: '/api/public/version',
   path: '/api/public/version',
@@ -109,12 +121,14 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/characters/': typeof AuthenticatedCharactersIndexRoute
@@ -125,12 +139,14 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/campaigns': typeof AuthenticatedCampaignsIndexRoute
   '/characters': typeof AuthenticatedCharactersIndexRoute
@@ -143,12 +159,14 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/legal': typeof LegalRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/campaigns/$id': typeof AuthenticatedCampaignsIdRoute
   '/_authenticated/characters/$id': typeof AuthenticatedCharactersIdRoute
   '/_authenticated/entities/$id': typeof AuthenticatedEntitiesIdRoute
   '/_authenticated/packs/$pack': typeof AuthenticatedPacksPackRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/version': typeof ApiPublicVersionRoute
   '/_authenticated/campaigns/': typeof AuthenticatedCampaignsIndexRoute
   '/_authenticated/characters/': typeof AuthenticatedCharactersIndexRoute
@@ -161,12 +179,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/assistant'
     | '/dashboard'
     | '/library'
     | '/campaigns/$id'
     | '/characters/$id'
     | '/entities/$id'
     | '/packs/$pack'
+    | '/api/public/mcp'
     | '/api/public/version'
     | '/campaigns/'
     | '/characters/'
@@ -177,12 +197,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/assistant'
     | '/dashboard'
     | '/library'
     | '/campaigns/$id'
     | '/characters/$id'
     | '/entities/$id'
     | '/packs/$pack'
+    | '/api/public/mcp'
     | '/api/public/version'
     | '/campaigns'
     | '/characters'
@@ -194,12 +216,14 @@ export interface FileRouteTypes {
     | '/auth'
     | '/legal'
     | '/sitemap.xml'
+    | '/_authenticated/assistant'
     | '/_authenticated/dashboard'
     | '/_authenticated/library'
     | '/_authenticated/campaigns/$id'
     | '/_authenticated/characters/$id'
     | '/_authenticated/entities/$id'
     | '/_authenticated/packs/$pack'
+    | '/api/public/mcp'
     | '/api/public/version'
     | '/_authenticated/campaigns/'
     | '/_authenticated/characters/'
@@ -212,6 +236,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   LegalRoute: typeof LegalRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiPublicMcpRoute: typeof ApiPublicMcpRoute
   ApiPublicVersionRoute: typeof ApiPublicVersionRoute
 }
 
@@ -251,6 +276,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/assistant': {
+      id: '/_authenticated/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AuthenticatedAssistantRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
@@ -315,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPacksPackRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/mcp': {
+      id: '/api/public/mcp'
+      path: '/api/public/mcp'
+      fullPath: '/api/public/mcp'
+      preLoaderRoute: typeof ApiPublicMcpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/version': {
       id: '/api/public/version'
       path: '/api/public/version'
@@ -326,6 +365,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedCampaignsIdRoute: typeof AuthenticatedCampaignsIdRoute
@@ -338,6 +378,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedCampaignsIdRoute: AuthenticatedCampaignsIdRoute,
@@ -358,6 +399,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   LegalRoute: LegalRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiPublicMcpRoute: ApiPublicMcpRoute,
   ApiPublicVersionRoute: ApiPublicVersionRoute,
 }
 export const routeTree = rootRouteImport

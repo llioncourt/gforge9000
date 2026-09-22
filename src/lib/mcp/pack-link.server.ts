@@ -118,14 +118,23 @@ export function definitionFill(
   kind: string,
   specialization: string,
 ): { category?: string | null; points?: number; levels?: number; data?: Record<string, unknown> } {
-  const out: { category?: string | null; points?: number; levels?: number; data?: Record<string, unknown> } = {};
+  const out: {
+    category?: string | null;
+    points?: number;
+    levels?: number;
+    data?: Record<string, unknown>;
+  } = {};
   if (supplied.category === undefined && item.category) out.category = item.category;
 
   const levels = supplied.levels ?? 1;
   if (supplied.points === undefined) {
     out.points = isSkillLike(kind)
       ? Number(item.base_points ?? 0)
-      : expectedLeveledCost(Number(item.base_points ?? 0), Number(item.cost_per_level ?? 0), levels);
+      : expectedLeveledCost(
+          Number(item.base_points ?? 0),
+          Number(item.cost_per_level ?? 0),
+          levels,
+        );
   }
 
   const data: Record<string, unknown> = {};

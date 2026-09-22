@@ -25,11 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/i18n/hooks";
 import type { CharacterEntry } from "@/rules";
-import {
-  type PackLinkState,
-  type PackLinkStatus,
-  type StaleReason,
-} from "@/lib/pack-link";
+import { type PackLinkState, type PackLinkStatus, type StaleReason } from "@/lib/pack-link";
 import { findPackMatch, loadPackCandidates, type PackCandidate } from "@/lib/pack-match";
 import {
   deriveStatuses,
@@ -357,10 +353,7 @@ export function BulkLinkDialog({
           ) : null}
         </ul>
         <DialogFooter>
-          <Button
-            disabled={matched === 0 || apply.isPending}
-            onClick={() => apply.mutate()}
-          >
+          <Button disabled={matched === 0 || apply.isPending} onClick={() => apply.mutate()}>
             {t("sheet.packLink.bulk.confirm", { count: matched })}
           </Button>
         </DialogFooter>

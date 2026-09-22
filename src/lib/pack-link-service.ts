@@ -33,7 +33,8 @@ export interface EntryRowLike extends CharacterEntryLike {
   character_id?: string | undefined;
 }
 
-const ENTRY_COLUMNS = "id,character_id,kind,name,category,points,levels,data,notes,source,sort_order";
+const ENTRY_COLUMNS =
+  "id,character_id,kind,name,category,points,levels,data,notes,source,sort_order";
 
 const CANDIDATE_COLUMNS =
   "id,owner_id,kind,name,category,base_points,cost_per_level,max_levels,pack,data";

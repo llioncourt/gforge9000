@@ -105,7 +105,11 @@ function narrowByCategory(rows: PackCandidate[], category?: string | null): Pack
   return narrowed.length > 0 ? narrowed : rows;
 }
 
-function decide(rows: PackCandidate[], parsed: ParsedSearchName, category?: string | null): PackMatchResult {
+function decide(
+  rows: PackCandidate[],
+  parsed: ParsedSearchName,
+  category?: string | null,
+): PackMatchResult {
   if (rows.length === 0) {
     return { status: "none", item: null, candidates: [], specialization: parsed.rawQualifier };
   }
@@ -191,7 +195,9 @@ interface LibraryCandidateRow {
 }
 
 /** owner + pack name -> pack id, so a link can carry a stable pack identity. */
-export async function loadPackIndex(client: PackClient): Promise<Map<string, { id: string; name: string }>> {
+export async function loadPackIndex(
+  client: PackClient,
+): Promise<Map<string, { id: string; name: string }>> {
   const { data, error } = await client.from("content_packs").select("id,owner_id,name");
   if (error) throw new Error(error.message);
   const index = new Map<string, { id: string; name: string }>();
@@ -217,7 +223,8 @@ export function toCandidate(
     category: row.category,
     base_points: Number(row.base_points ?? 0),
     cost_per_level: Number(row.cost_per_level ?? 0),
-    max_levels: row.max_levels === null || row.max_levels === undefined ? null : Number(row.max_levels),
+    max_levels:
+      row.max_levels === null || row.max_levels === undefined ? null : Number(row.max_levels),
     difficulty: str(data["difficulty"]),
     attribute: str(data["attribute"]),
     defaults: str(data["defaults"]),

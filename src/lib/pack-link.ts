@@ -204,7 +204,10 @@ export function specializationOf(entry: {
 
 /** The bare name with any parenthetical qualifier removed, original casing. */
 export function baseNameOf(name: string): string {
-  return name.replace(/\(.*?\)/g, " ").replace(/\s+/g, " ").trim();
+  return name
+    .replace(/\(.*?\)/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /* ------------------------------------------------------------------ */
@@ -313,7 +316,8 @@ export function compareDefinition(entry: CharacterEntryLike, item: PackItemLike)
 
   if (entry.kind === "equipment") return out;
 
-  const maxLevels = item.max_levels === null || item.max_levels === undefined ? null : Number(item.max_levels);
+  const maxLevels =
+    item.max_levels === null || item.max_levels === undefined ? null : Number(item.max_levels);
   if (maxLevels !== null && maxLevels > 0 && Number(entry.levels ?? 1) > maxLevels) {
     out.push({ field: "max_levels", pack: maxLevels, character: Number(entry.levels ?? 1) });
   }
@@ -389,7 +393,8 @@ export function derivePackLinkState(
   if (!link) return { state: "custom", link: null };
 
   if (!resolution || !resolution.item) {
-    const reason: StaleReason = resolution?.missingReason === "removed" ? "removed" : "inaccessible";
+    const reason: StaleReason =
+      resolution?.missingReason === "removed" ? "removed" : "inaccessible";
     return {
       state: "stale",
       link,
@@ -497,9 +502,10 @@ export function restoreDefinitionPatch(
       ? Number(entry.points ?? 0)
       : expectedLeveledCost(basePoints, costPerLevel, levels);
 
-  const name = specialization && !rawQualifier(item.name)
-    ? `${baseNameOf(item.name)} (${specialization})`
-    : item.name;
+  const name =
+    specialization && !rawQualifier(item.name)
+      ? `${baseNameOf(item.name)} (${specialization})`
+      : item.name;
 
   return {
     name,

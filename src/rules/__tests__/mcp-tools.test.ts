@@ -1352,3 +1352,58 @@ describe("moving a character between campaigns", () => {
     );
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* optional pack linking                                               */
+/* ------------------------------------------------------------------ */
+
+describe("pack linking contracts", () => {
+  const UUID = "11111111-1111-4111-8111-111111111111";
+
+  function schemas() {
+    const server = buildMcpServer(fakeContext());
+    return (
+      server as unknown as {
+        _registeredTools: Record<
+          string,
+          {
+            description?: string;
+            inputSchema?: { safeParse: (value: unknown) => { success: boolean } };
+          }
+        >;
+      }
+    )._registeredTools;
+  }
+
+  it("accepts a direct pack item or a name match when adding an entry", () => {
+    const schema = schemas()["add_character_entry"]?.inputSchema;
+    const base = { character_id: UUID, kind: "skill", name: "Stealth" };
+    expect(schema!.safeParse({ ...base, pack_entry_id: UUID }).success).toBe(true);
+    expect(schema!.safeParse({ ...base, match_pack: true }).success).toBe(true);
+    expect(schema!.safeParse(base).success).toBe(true);
+  });
+
+  it("accepts detaching or re-pointing an existing entry", () => {
+    const schema = schemas()["update_character_entry"]?.inputSchema;
+    expect(schema!.safeParse({ entry_id: UUID, unlink: true }).success).toBe(true);
+    expect(schema!.safeParse({ entry_id: UUID, pack_entry_id: UUID }).success).toBe(true);
+    expect(schema!.safeParse({ entry_id: UUID, match_pack: true }).success).toBe(true);
+  });
+
+  it("offers pack search inside the single library tool", () => {
+    const tools = schemas();
+    expect(tools["library"]).toBeDefined();
+    expect(tools["library"]?.inputSchema!.safeParse({ action: "search_pack_entries", name: "Stealth" }).success).toBe(true);
+    expect(tools["library"]?.inputSchema!.safeParse({ action: "list_packs" }).success).toBe(true);
+    expect(tools["library"]?.description).toContain("search_pack_entries");
+  });
+
+  it("offers character validation inside the character runtime tool", () => {
+    const schema = schemas()["character_runtime"]?.inputSchema;
+    expect(schema!.safeParse({ action: "validate", character_id: UUID }).success).toBe(true);
+  });
+
+  it("does not add any new tool", () => {
+    expect(MCP_TOOL_NAMES).toHaveLength(39);
+  });
+});

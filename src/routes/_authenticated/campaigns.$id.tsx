@@ -71,6 +71,7 @@ import { useT } from "@/i18n/hooks";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
 
+import { CampaignPackSummary } from "@/components/character/pack-link";
 import { CampaignIntroExperience } from "@/components/campaign/intro-panel";
 import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
 import {
@@ -542,6 +543,7 @@ function CampaignPage() {
         </TabsContent>
 
         <TabsContent value="roster" className="mt-6 space-y-6">
+          {isGm ? <CampaignPackSummary campaignId={id} /> : null}
           {roster.isLoading ? (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {[0, 1, 2].map((i) => (

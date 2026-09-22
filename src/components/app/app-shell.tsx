@@ -14,7 +14,8 @@ import {
   X,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth/auth-provider";
+import { clearDestination } from "@/lib/auth/pending-destination";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "@/components/app/command-palette";
@@ -43,6 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [trayOpen, setTrayOpen] = useState(false);
   const navigate = useNavigate();
+  const auth = useAuth();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { t } = useT("navigation");

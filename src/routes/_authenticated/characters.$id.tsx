@@ -450,10 +450,12 @@ function CharacterPage() {
   }, [linkedPacks, campaignPacks]);
 
   const addFromPack = useMutation({
-    mutationFn: async (entry: LibraryRow) => {
+    mutationFn: async (entry: LibraryListRow) => {
+      // The picker list omits the detail blob; fetch it for this entry only.
+      const [full] = await getLibraryEntries([entry.id]);
       const draftRow = libraryEntryToCharacterDraft({
         ...entry,
-        data: (entry.data ?? {}) as Record<string, unknown>,
+        data: (full?.data ?? {}) as Record<string, unknown>,
       });
       return addEntry({ ...draftRow, character_id: id } as never);
     },

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ClipboardList, Copy, KeyRound, Plus, Trash2 } from "lucide-react";
+import { ClipboardList, Copy, KeyRound, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/app/page-header";
@@ -94,7 +94,11 @@ function AssistantPage() {
   const [newToken, setNewToken] = useState<string | null>(null);
   const [pendingRevoke, setPendingRevoke] = useState<McpTokenRow | null>(null);
 
-  const tokens = useQuery({ queryKey: ["mcp-tokens"], queryFn: () => load({}) });
+  const tokens = useQuery({
+    queryKey: ["mcp-tokens"],
+    queryFn: () => load({}),
+    retry: false,
+  });
 
   const endpoint = typeof window === "undefined" ? "" : `${window.location.origin}/api/public/mcp`;
 
@@ -169,11 +173,19 @@ function AssistantPage() {
             <Skeleton className="h-14 w-full rounded-lg" />
             <Skeleton className="h-14 w-full rounded-lg" />
           </div>
-        ) : (tokens.data ?? []).length === 0 ? (
+        ) : tokens.data?.unavailable || tokens.isError ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
+            <p className="text-muted-foreground text-sm">{t("assistant.loadError")}</p>
+            <Button variant="outline" size="sm" onClick={() => tokens.refetch()}>
+              <RefreshCw className="mr-2 size-4" />
+              {t("assistant.retry")}
+            </Button>
+          </div>
+        ) : (tokens.data?.tokens ?? []).length === 0 ? (
           <p className="text-muted-foreground text-sm">{t("assistant.empty")}</p>
         ) : (
           <ul className="space-y-2">
-            {(tokens.data ?? []).map((token) => (
+            {(tokens.data?.tokens ?? []).map((token) => (
               <li
                 key={token.id}
                 className="flex items-center justify-between gap-3 rounded-lg border p-3"

@@ -41,6 +41,8 @@
     "nameLabel": "Nome da chave",
     "createKey": "Criar chave",
     "empty": "Nenhuma chave ainda.",
+    "loadError": "Não foi possível carregar suas chaves agora.",
+    "retry": "Tentar novamente",
     "newKeyTitle": "Sua nova chave",
     "newKeyDescription": "Copie agora — ela aparece só uma vez.",
     "copied": "Copiado",

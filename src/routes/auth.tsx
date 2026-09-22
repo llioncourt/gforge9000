@@ -13,8 +13,17 @@ import { useT } from "@/i18n/hooks";
 import { metaLocale, metaText } from "@/i18n/meta";
 import { Trans } from "react-i18next";
 
+// Only same-origin paths are allowed as post-login redirect targets.
+function safeRedirectTarget(value: unknown): string {
+  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
+    ? value
+    : "/dashboard";
+}
+
 export const Route = createFileRoute("/auth")({
   staticData: { sitemap: false },
+  validateSearch: (search: Record<string, unknown>) =>
+    typeof search["redirect"] === "string" ? { redirect: search["redirect"] } : {},
   head: () => ({
     meta: [
       { title: metaText("auth", "meta.title") },
@@ -31,6 +40,8 @@ function AuthPage() {
   const { t } = useT("auth");
   const navigate = useNavigate();
   const { user, loading } = useSession();
+  const { redirect: redirectParam } = Route.useSearch();
+  const target = safeRedirectTarget(redirectParam);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -38,8 +49,8 @@ function AuthPage() {
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard", replace: true });
-  }, [loading, user, navigate]);
+    if (!loading && user) navigate({ to: target, replace: true });
+  }, [loading, user, navigate, target]);
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
@@ -50,7 +61,7 @@ function AuthPage() {
       toast.error(error.message);
       return;
     }
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: target, replace: true });
   }
 
   async function signUp(e: React.FormEvent) {
@@ -73,19 +84,24 @@ function AuthPage() {
       setSent(true);
       return;
     }
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: target, replace: true });
   }
 
   async function google() {
+    // Send Google back to /auth with the pending target so the consent flow resumes.
+    const redirectUri =
+      target === "/dashboard"
+        ? window.location.origin
+        : `${window.location.origin}/auth?redirect=${encodeURIComponent(target)}`;
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: redirectUri,
     });
     if (result.error) {
       toast.error(t("errors.googleSignInFailed"));
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: target, replace: true });
   }
 
   return (

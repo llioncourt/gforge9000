@@ -3,15 +3,14 @@ import { useEffect, useState } from "react";
 import { Dices, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
-import { getAuthRedirectUri } from "@/lib/auth-redirect";
 import { logAuthEvent } from "@/lib/auth-diagnostics";
+import { readOAuthReturnError, signInWithGoogle } from "@/lib/browser-auth";
 import { metaLocale, metaText } from "@/i18n/meta";
 import { Trans } from "react-i18next";
 
@@ -40,8 +39,24 @@ function AuthPage() {
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard", replace: true });
+    if (!loading && user) {
+      logAuthEvent("oauth:session-hydrated", { hasSession: true });
+      navigate({ to: "/dashboard", replace: true });
+    }
   }, [loading, user, navigate]);
+
+  // A provider return (success or failure) lands back on this same page
+  // (the canonical origin, see `getAuthRedirectUri`). A completed session is
+  // handled by the effect above once it hydrates. A failed/expired callback
+  // must surface as a visible error instead of silently looping back here.
+  useEffect(() => {
+    const message = readOAuthReturnError(window.location);
+    if (!message) return;
+    logAuthEvent("oauth:return-error", { shown: true });
+    toast.error(message);
+    // Clear the error params so refreshing /auth doesn't re-show the toast.
+    window.history.replaceState(null, "", window.location.pathname);
+  }, []);
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
@@ -83,21 +98,14 @@ function AuthPage() {
 
   async function google() {
     logAuthEvent("login:click", { method: "google" });
-    logAuthEvent("oauth:start", { provider: "google" });
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: getAuthRedirectUri(),
-    });
-    if (result.error) {
+    const { error } = await signInWithGoogle("login");
+    if (error) {
       logAuthEvent("login:result", { method: "google", ok: false });
       toast.error(t("errors.googleSignInFailed"));
       return;
     }
-    if (result.redirected) {
-      logAuthEvent("oauth:redirected", { provider: "google" });
-      return;
-    }
-    logAuthEvent("login:result", { method: "google", ok: true });
-    navigate({ to: "/dashboard", replace: true });
+    // Success means a full-page redirect to Google was initiated; this
+    // component unmounts. The dashboard decision happens on return, above.
   }
 
   return (

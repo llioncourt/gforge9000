@@ -25,7 +25,11 @@ import {
   type Structured,
   type ToolRegistrar,
 } from "@/lib/mcp/kit.server";
-import { campaignSettingFields, campaignSettingsPatch, SETTINGS_DOC } from "@/lib/mcp/domains/shared.server";
+import {
+  campaignSettingFields,
+  campaignSettingsPatch,
+  SETTINGS_DOC,
+} from "@/lib/mcp/domains/shared.server";
 
 const deleteCampaignOutput = z.object({
   deleted: z.boolean(),

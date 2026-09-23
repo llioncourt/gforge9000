@@ -542,7 +542,6 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
         // The total is the real number of matches, so a caller can tell an
         // empty result from a capped one and ambiguity is never hidden.
         return listReply("pack items", items, scan.matched);
-
       },
 
       get_pack: async (i) => {

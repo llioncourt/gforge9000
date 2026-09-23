@@ -40,7 +40,6 @@ function query(data: unknown, extra: Record<string, unknown> = {}, spy?: Spy) {
     "maybeSingle",
     "in",
   ]) {
-
     self[method] = () => self;
   }
   self["update"] = (payload: unknown) => {

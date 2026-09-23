@@ -465,6 +465,114 @@ async function loadEffect(ctx: McpToolContext, effectId: string): Promise<Effect
 }
 
 /* ------------------------------------------------------------------ */
+/* Shared playback state (anchor + derived position)                    */
+/* ------------------------------------------------------------------ */
+
+export interface SoundtrackStateRow {
+  campaign_id: string;
+  album_id: string | null;
+  track_id: string | null;
+  is_playing: boolean;
+  anchor_position_seconds: number;
+  anchored_at: string;
+  loop_one: boolean;
+  [key: string]: unknown;
+}
+
+async function loadPlayback(
+  ctx: McpToolContext,
+  campaignId: string,
+): Promise<SoundtrackStateRow | null> {
+  const { data, error } = await ctx.supabase
+    .from("campaign_soundtrack_state")
+    .select("*")
+    .eq("campaign_id", campaignId)
+    .maybeSingle();
+  if (error) fail("Reading playback state", error);
+  return (data as SoundtrackStateRow | null) ?? null;
+}
+
+async function trackDuration(ctx: McpToolContext, trackId: string | null): Promise<number | null> {
+  if (!trackId) return null;
+  const { data, error } = await ctx.supabase
+    .from("campaign_soundtrack_tracks")
+    .select("duration_seconds")
+    .eq("id", trackId)
+    .maybeSingle();
+  if (error) fail("Reading track duration", error);
+  const value = data?.duration_seconds;
+  return typeof value === "number" ? value : null;
+}
+
+/** Writes a new anchor, keeping the legacy columns in step for older clients. */
+async function writePlayback(
+  ctx: McpToolContext,
+  campaignId: string,
+  next: {
+    album_id: string | null;
+    track_id: string | null;
+    is_playing: boolean;
+    position_seconds: number;
+    loop_one: boolean;
+  },
+): Promise<SoundtrackStateRow> {
+  const now = new Date().toISOString();
+  const position = Math.max(0, next.position_seconds);
+  const { data, error } = await anyDb(ctx.supabase)
+    .from("campaign_soundtrack_state")
+    .upsert({
+      campaign_id: campaignId,
+      album_id: next.album_id,
+      track_id: next.track_id,
+      is_playing: next.is_playing,
+      position_seconds: Math.round(position),
+      anchor_position_seconds: position,
+      anchored_at: now,
+      loop_one: next.loop_one,
+      changed_at: now,
+      changed_by: ctx.userId,
+    })
+    .select("*")
+    .single();
+  if (error) fail("Setting playback state", error);
+  return data as SoundtrackStateRow;
+}
+
+/** The row as callers should see it: live position, never the raw anchor alone. */
+async function playbackView(
+  ctx: McpToolContext,
+  row: SoundtrackStateRow | null,
+): Promise<Structured> {
+  if (!row) {
+    return {
+      track_id: null,
+      album_id: null,
+      is_playing: false,
+      position_seconds: 0,
+      duration_seconds: null,
+      loop_one: false,
+    };
+  }
+  const duration = await trackDuration(ctx, row.track_id);
+  return {
+    ...row,
+    position_seconds: derivePlaybackPosition(row, duration),
+    duration_seconds: duration,
+  };
+}
+
+/** Freezes the live position into the anchor so pause/seek keep the exact point. */
+function currentPosition(row: SoundtrackStateRow | null, duration: number | null): number {
+  return derivePlaybackPosition(row, duration);
+}
+
+async function requirePlaybackGm(ctx: McpToolContext, campaignId: string) {
+  const campaign = await loadCampaign(ctx, campaignId);
+  requireGmFor(campaign, "control soundtrack playback");
+  return campaign;
+}
+
+/* ------------------------------------------------------------------ */
 /* Registration                                                        */
 /* ------------------------------------------------------------------ */
 

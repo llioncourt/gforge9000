@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { decideProtectedAccess } from "@/lib/auth-guard";
 
 /**
  * Regression tests for the browser login / re-login flow (P0-01).
@@ -58,16 +59,14 @@ function createFakeAuthClient() {
   };
 }
 
-/** Simulates the `_authenticated` route's `beforeLoad` guard logic: local
- * session first, network `getUser()` fallback only when no local session. */
+/** Calls the real shared guard (`decideProtectedAccess`) against the fake
+ * Supabase auth client, so these tests exercise the exact same logic that
+ * `_authenticated/route.tsx` uses in production. */
 async function runProtectedGuard(auth: ReturnType<typeof createFakeAuthClient>) {
-  const { data: sessionData } = await auth.getSession();
-  if (sessionData.session) {
-    return { outcome: "allow" as const, source: "local-session" as const };
-  }
-  const { data, error } = await auth.getUser();
-  if (error || !data.user) return { outcome: "redirect" as const };
-  return { outcome: "allow" as const, source: "getUser" as const };
+  return decideProtectedAccess({
+    getSession: () => auth.getSession(),
+    getUser: () => auth.getUser(),
+  });
 }
 
 describe("auth session regressions", () => {

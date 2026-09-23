@@ -15,6 +15,11 @@
  */
 
 import { investedPoints } from "@/rules/skill-points";
+import {
+  TRAIT_POINTS_SEMANTICS_KEY,
+  toTotalSemantics,
+  usesLeveledPoints,
+} from "@/rules/trait-cost";
 import { normalizeText } from "@/lib/text-normalize";
 import { normaliseName, rawQualifier } from "@/lib/trait-match";
 
@@ -679,6 +684,12 @@ export function restoreDefinitionPatch(
   // resurrected, and written back to BOTH representations.
   if (isSkillLike(entry.kind)) {
     data["points"] = investedPoints(entry);
+  }
+  // A restore writes the CANONICAL TOTAL cost below, so the row is stamped as
+  // total-semantics storage and the engine must not multiply it by levels
+  // again. See src/rules/trait-cost.ts.
+  if (usesLeveledPoints(entry.kind)) {
+    data[TRAIT_POINTS_SEMANTICS_KEY] = "total";
   }
   if (specialization) data["specialization"] = specialization;
 

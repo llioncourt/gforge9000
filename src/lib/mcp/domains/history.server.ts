@@ -93,6 +93,9 @@ export function registerHistory(tool: ToolRegistrar, ctx: McpToolContext): void 
     },
     actionRouter<Input>({
       list_entry_revisions: async (i) => {
+        // Saved revisions carry the entry's full GM text, so they are GM-only.
+        const { campaign } = await loadEntity(ctx, i.entry_id);
+        requireGmFor(campaign, "read saved versions of an entry");
         const { data, error } = await ctx.supabase
           .from("entity_revisions")
           .select("id, label, created_at, created_by")

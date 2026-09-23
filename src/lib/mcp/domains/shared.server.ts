@@ -11,7 +11,9 @@ import { CAMPAIGN_SETTING_RANGES, HOUSE_RULES_MAX_LENGTH } from "@/lib/campaign-
 import {
   fail,
   intField,
+  loadCampaign,
   quarterStep,
+  safeRpc,
   stripGmFields,
   uuid,
   type CampaignAccess,
@@ -127,7 +129,6 @@ export async function loadEntity(
   ctx: McpToolContext,
   entryId: string,
 ): Promise<{ row: EntityRow; campaign: CampaignAccess }> {
-  const { loadCampaign, safeRpc } = await import("@/lib/mcp/kit.server");
   const { data, error } = await safeRpc(ctx.supabase)("list_entities_safe")
     .eq("id", entryId)
     .maybeSingle();
@@ -213,7 +214,6 @@ export async function loadRelationship(
   ctx: McpToolContext,
   relationshipId: string,
 ): Promise<{ row: RelationshipRow; campaign: CampaignAccess }> {
-  const { loadCampaign } = await import("@/lib/mcp/kit.server");
   const { data, error } = await ctx.supabase
     .from("entity_relationships")
     .select("*")

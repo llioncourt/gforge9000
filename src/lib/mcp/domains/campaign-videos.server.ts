@@ -23,6 +23,8 @@ import {
   uuid,
 } from "@/lib/mcp/kit.server";
 import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.server";
+import { anyDb } from "@/lib/mcp/kit.server";
+import { derivePlaybackPosition } from "@/lib/playback-anchor";
 import type { Database } from "@/integrations/supabase/types";
 import {
   CAMPAIGN_INTRO_BUCKET,
@@ -45,6 +47,12 @@ const THUMB_MIME = ["image/jpeg", "image/png", "image/webp"] as const;
 const THUMB_MAX_BYTES = 5 * 1024 * 1024;
 
 const videoType = z.enum(CAMPAIGN_VIDEO_TYPES);
+
+/** Playback positions are fractional seconds, capped at 12 hours. */
+const playbackSeconds = z
+  .number()
+  .min(0, "position_seconds must be a number between 0 and 43200")
+  .max(60 * 60 * 12, "position_seconds must be a number between 0 and 43200");
 
 const input = z.discriminatedUnion("action", [
   z
@@ -151,7 +159,100 @@ const input = z.discriminatedUnion("action", [
     .describe(
       "Set a video's thumbnail from exactly one source: storage_path (after prepare_thumb_upload), a public https url, or base64 data with mime_type. The previous thumbnail file is removed. GM only. Changes data.",
     ),
+  z
+    .object({
+      action: z.literal("play"),
+      video_id: uuid,
+      position_seconds: playbackSeconds.optional(),
+      loop_one: z.boolean().optional(),
+    })
+    .describe(
+      "Start the video for everyone in the campaign from position_seconds (default 0). GM only. Changes data.",
+    ),
+  z
+    .object({ action: z.literal("pause"), campaign_id: uuid })
+    .describe(
+      "Pause where the video is right now: the derived position is frozen into the anchor. GM only. Changes data.",
+    ),
+  z
+    .object({ action: z.literal("resume"), campaign_id: uuid })
+    .describe("Resume the video from the exact paused point. GM only. Changes data."),
+  z
+    .object({ action: z.literal("seek"), campaign_id: uuid, position_seconds: playbackSeconds })
+    .describe("Jump the video to a position, keeping playing/paused as it is. GM only. Changes data."),
+  z
+    .object({ action: z.literal("stop"), campaign_id: uuid })
+    .describe("Stop the video and reset its position to zero. GM only. Changes data."),
+  z
+    .object({ action: z.literal("get_playback"), campaign_id: uuid })
+    .describe(
+      "Read the campaign's shared video playback state with position_seconds already derived from the anchor. Read-only.",
+    ),
 ]);
+
+interface VideoPlaybackRow {
+  campaign_id: string;
+  video_id: string | null;
+  is_playing: boolean;
+  anchor_position_seconds: number;
+  anchored_at: string;
+  loop_one: boolean;
+  [key: string]: unknown;
+}
+
+async function loadVideoPlayback(
+  ctx: McpToolContext,
+  campaignId: string,
+): Promise<VideoPlaybackRow | null> {
+  const { data, error } = await anyDb(ctx.supabase)
+    .from("campaign_video_playback")
+    .select("*")
+    .eq("campaign_id", campaignId)
+    .maybeSingle();
+  if (error) fail("Reading video playback state", error);
+  return (data as VideoPlaybackRow | null) ?? null;
+}
+
+async function writeVideoPlayback(
+  ctx: McpToolContext,
+  campaignId: string,
+  next: {
+    video_id: string | null;
+    is_playing: boolean;
+    position_seconds: number;
+    loop_one: boolean;
+  },
+): Promise<VideoPlaybackRow> {
+  const now = new Date().toISOString();
+  const { data, error } = await anyDb(ctx.supabase)
+    .from("campaign_video_playback")
+    .upsert({
+      campaign_id: campaignId,
+      video_id: next.video_id,
+      is_playing: next.is_playing,
+      anchor_position_seconds: Math.max(0, next.position_seconds),
+      anchored_at: now,
+      loop_one: next.loop_one,
+      changed_by: ctx.userId,
+    })
+    .select("*")
+    .single();
+  if (error) fail("Setting video playback state", error);
+  return data as VideoPlaybackRow;
+}
+
+function videoPlaybackView(row: VideoPlaybackRow | null): Structured {
+  if (!row) {
+    return { video_id: null, is_playing: false, position_seconds: 0, loop_one: false };
+  }
+  return { ...row, position_seconds: derivePlaybackPosition(row) };
+}
+
+async function requireVideoPlaybackGm(ctx: McpToolContext, campaignId: string) {
+  const campaign = await loadCampaign(ctx, campaignId);
+  requireGmFor(campaign, "control video playback");
+  return campaign;
+}
 
 interface VideoRow {
   id: string;
@@ -266,8 +367,11 @@ export function registerCampaignVideos(tool: ToolRegistrar, ctx: McpToolContext)
         "only, changes data), upload_from_url (disabled for security reasons, use " +
         "prepare_upload/finalize_upload or upload_base64 instead), upload_base64 (create the video from inline base64 bytes, small clips " +
         "only, GM only, changes data), prepare_thumb_upload and set_thumb (replace the thumbnail " +
-        "image, GM only, changes data). A campaign has at most one intro video; adding a new intro " +
-        "replaces the old one.",
+        "image, GM only, changes data), play/pause/resume/seek/stop (GM only, shared playback for " +
+        "everyone watching the campaign screen; pause freezes the exact current point and resume " +
+        "continues from it, changes data) and get_playback (read the shared state with " +
+        "position_seconds already derived from the anchor). A campaign has at most one intro " +
+        "video; adding a new intro replaces the old one.",
       inputSchema: input,
       outputSchema: domainOutput,
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },

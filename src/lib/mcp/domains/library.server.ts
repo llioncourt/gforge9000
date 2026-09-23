@@ -540,8 +540,25 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
         const withVersion = await withVersions(scan.candidates);
         const items = withVersion.map((candidate) => candidateView(candidate));
         // The total is the real number of matches, so a caller can tell an
-        // empty result from a capped one and ambiguity is never hidden.
-        return listReply("pack items", items, scan.matched);
+        // empty result from a capped one and ambiguity is never hidden. When
+        // the underlying scan hit MAX_SCAN_ROWS, `scan.matched` is only a
+        // partial count — it is reported as such rather than as an exact total.
+        const base = listReply("pack items", items, scan.matched);
+        if (!scan.truncated) return base;
+        const truncationNote =
+          `Search incomplete: scanned ${scan.scanned} rows and hit the scan limit ` +
+          `(${MAX_SCAN_ROWS}); results may be missing. Narrow the search with ` +
+          `pack_id/kind or a more specific query.`;
+        return {
+          content: [{ type: "text" as const, text: `${truncationNote}\n\n${base.content[0]!.text}` }],
+          structuredContent: {
+            ...base.structuredContent,
+            search_truncated: true,
+            scanned_rows: scan.scanned,
+            scan_limit: MAX_SCAN_ROWS,
+            matched_so_far: scan.matched,
+          },
+        };
       },
 
       get_pack: async (i) => {

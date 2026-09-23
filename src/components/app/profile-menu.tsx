@@ -80,27 +80,6 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
     if (wipeOpen) void refreshVerified();
   }, [wipeOpen, refreshVerified]);
 
-  async function confirmWithGoogle() {
-    setVerifying(true);
-    // Store the pending "resume the wipe dialog" intent separately from the
-    // OAuth redirect itself: the redirect always goes to the canonical site
-    // origin (never a per-route callback path), and this sessionStorage flag
-    // is what lets us reopen the wipe confirmation once the session from the
-    // full-page redirect has been hydrated back on the app.
-    sessionStorage.setItem(WIPE_INTENT_KEY, String(Date.now()));
-    try {
-      const { error } = await initiateGoogleReauth();
-      if (error) throw error;
-      // Success means a full-page redirect was initiated; this component
-      // unmounts. The dialog reopens via WIPE_INTENT_KEY on return.
-    } catch (e) {
-      sessionStorage.removeItem(WIPE_INTENT_KEY);
-      toast.error(e instanceof Error ? e.message : ts("toasts.identityFailed"));
-    } finally {
-      setVerifying(false);
-    }
-  }
-
   const wipe = useMutation({
     mutationFn: wipeAllMyData,
     onSuccess: () => {
@@ -349,7 +328,7 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
           <AlertDialogHeader>
             <AlertDialogTitle>{ts("wipeDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {ts("wipeDialog.description", { email: user?.email })}
+              {ts("wipeDialog.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -367,10 +346,9 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
                 {ts("wipeDialog.deleteEverything")}
               </AlertDialogAction>
             ) : (
-              <Button onClick={confirmWithGoogle} disabled={verifying}>
-                {verifying ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                {ts("wipeDialog.confirmWithGoogle")}
-              </Button>
+              <p className="flex-1 text-sm text-muted-foreground">
+                {ts("wipeDialog.recentSignInRequired")}
+              </p>
             )}
           </AlertDialogFooter>
         </AlertDialogContent>

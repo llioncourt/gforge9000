@@ -75,18 +75,6 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
     return ok;
   }, []);
 
-  // A full-page Google redirect returns here: reopen the dialog. Whether the
-  // destructive button unlocks is decided by the token, not by this flag.
-  useEffect(() => {
-    const raw = sessionStorage.getItem(WIPE_INTENT_KEY);
-    if (!raw) return;
-    sessionStorage.removeItem(WIPE_INTENT_KEY);
-    if (Date.now() - Number(raw) > WIPE_INTENT_TTL) return;
-    setOpen(true);
-    setWipeOpen(true);
-    void refreshVerified();
-  }, [refreshVerified]);
-
   // Opening the dialog always re-evaluates the token.
   useEffect(() => {
     if (wipeOpen) void refreshVerified();

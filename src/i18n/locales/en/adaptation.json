@@ -55,17 +55,26 @@
       "timeline": "Timeline",
       "canon": "Canon review",
       "assets": "Assets",
-      "narrative": "Narrative",
+      "narrative": "Narrative direction",
       "comic": "Comic",
       "movie": "Movie",
       "validation": "Validation",
-      "generate": "Generate"
+      "generate": "Generate",
+      "book_narrative": "Book — Narrative",
+      "adventure_module": "Book — Adventure Module"
     },
     "failuresTitle": "Some steps didn't complete",
     "retryStage": "Retry this stage",
     "targetsLabel": "Producing:",
     "targetComic": "Comic",
-    "targetMovie": "Movie"
+    "targetMovie": "Movie",
+    "targets": {
+      "comic": "Comic",
+      "movie": "Movie",
+      "book_narrative": "Book — Narrative",
+      "adventure_module": "Book — Adventure Module"
+    },
+    "noTargets": "No format selected"
   },
   "source": {
     "title": "Choose your source material",
@@ -78,7 +87,26 @@
     },
     "targetsLabel": "What should this adaptation produce?",
     "targetComic": "Comic book",
-    "targetMovie": "Movie / animation package"
+    "targetMovie": "Movie / animation package",
+    "targetsHint": "Pick any combination. They all share the same reconstruction.",
+    "targets": {
+      "comic": {
+        "label": "Comic",
+        "description": "An issue laid out in pages and panels."
+      },
+      "movie": {
+        "label": "Movie",
+        "description": "A whole film broken into scenes and shots."
+      },
+      "book_narrative": {
+        "label": "Book — Narrative",
+        "description": "A novel that tells the chosen story as literature, not as a session report."
+      },
+      "adventure_module": {
+        "label": "Book — Adventure Module",
+        "description": "A complete GURPS adventure a Game Master can run, with alternative paths."
+      }
+    }
   },
   "scope": {
     "title": "Scope and spoiler policy",
@@ -232,8 +260,8 @@
     }
   },
   "narrative": {
-    "title": "Narrative settings",
-    "description": "Shape the overall voice of the adaptation before generating comic or movie projections.",
+    "title": "Narrative direction",
+    "description": "Shared voice for every format you selected: tone, point of view and audience.",
     "toneLabel": "Tone",
     "tonePlaceholder": "e.g. Grim, hopeful, comedic",
     "povLabel": "Point of view",
@@ -284,7 +312,10 @@
       "missingVisuals": "{{count}} entry(ies) have no visual reference.",
       "unresolvedAssets": "{{count}} asset(s) are still unresolved or ambiguous.",
       "noComicConfig": "Comic settings are incomplete.",
-      "noMovieConfig": "Movie settings are incomplete."
+      "noMovieConfig": "Movie settings are incomplete.",
+      "noBookConfig": "Book — Narrative needs a title.",
+      "noModuleConfig": "Book — Adventure Module needs a title and a valid player range.",
+      "noTargets": "Choose at least one format."
     },
     "actions": {
       "fix": "Fix",
@@ -317,6 +348,28 @@
     "exporting": "Preparing export…",
     "toasts": {
       "exported": "Bundle ready."
+    },
+    "targets": {
+      "comic": {
+        "title": "Comic projection",
+        "description": "Only what RX Comics needs to build the issue.",
+        "button": "Export comic bundle"
+      },
+      "movie": {
+        "title": "Movie projection",
+        "description": "Only what MovieSmith needs to build the movie.",
+        "button": "Export movie bundle"
+      },
+      "book_narrative": {
+        "title": "Narrative book",
+        "description": "Front matter and ordered chapters, plus a readable draft.",
+        "button": "Export book"
+      },
+      "adventure_module": {
+        "title": "Adventure module",
+        "description": "Acts, encounters, clues, paths and GURPS stats, plus a readable draft.",
+        "button": "Export module"
+      }
     }
   },
   "chronicle": {
@@ -380,5 +433,45 @@
       "reconstructed": "Draft findings ready for review.",
       "itemUpdated": "Item updated."
     }
+  },
+  "bookNarrative": {
+    "title": "Book — Narrative",
+    "description": "How the novel is framed and how long it should be.",
+    "titleLabel": "Title",
+    "subtitleLabel": "Subtitle (optional)",
+    "languageLabel": "Language",
+    "lengthLabel": "Length",
+    "lengths": {
+      "auto": "Automatic (recommended)",
+      "short_story": "Short story",
+      "novella": "Novella",
+      "novel": "Novel"
+    },
+    "lengthHint": "Automatic looks at the selected material and picks a fitting structure.",
+    "chapterTargetLabel": "Approximate chapters",
+    "wordTargetLabel": "Approximate words",
+    "targetsHint": "Leave empty to let the structure decide.",
+    "canonNote": "What happened in the campaign stays true. Scenes may be condensed or reordered and missing dialogue rebuilt, and anything added is marked as written for the book."
+  },
+  "adventureModule": {
+    "title": "Book — Adventure Module",
+    "description": "A complete GURPS module another Game Master can run.",
+    "titleLabel": "Title",
+    "subtitleLabel": "Subtitle (optional)",
+    "languageLabel": "Language",
+    "systemLabel": "System",
+    "systemValue": "GURPS 4th Edition — complete module",
+    "playersMinLabel": "Minimum players",
+    "playersMaxLabel": "Maximum players",
+    "pointsLabel": "Starting character points",
+    "techLevelLabel": "Tech level",
+    "branchingLabel": "Alternative paths per encounter",
+    "branchings": {
+      "light": "Few",
+      "standard": "Standard",
+      "rich": "Many"
+    },
+    "statBlocksLabel": "Include GURPS stats for characters with a sheet",
+    "canonNote": "How your players solved things becomes one option among several, never the only answer. Secrets, clues and what players can be shown are kept apart, and anything added for play is marked as new."
   }
 }

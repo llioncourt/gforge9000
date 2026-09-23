@@ -12,6 +12,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { allowedPacksOf, isPackAllowed } from "@/lib/packs";
 import {
   derivePackLinkState,
+  fillMissingDefinition,
   packVersionOf,
   readPackLink,
   restoreDefinitionPatch,

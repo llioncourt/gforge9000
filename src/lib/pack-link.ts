@@ -772,7 +772,10 @@ function isEmptyValue(value: unknown): boolean {
  *
  * ONE implementation, used by the sheet UI and by the assistant (MCP).
  */
-export function fillMissingDefinition(entry: CharacterEntryLike, item: PackItemLike): LinkFillPatch {
+export function fillMissingDefinition(
+  entry: CharacterEntryLike,
+  item: PackItemLike,
+): LinkFillPatch {
   const entryData = { ...((entry.data ?? {}) as Record<string, unknown>) };
   const itemData = (item.data ?? {}) as Record<string, unknown>;
   const filled: string[] = [];

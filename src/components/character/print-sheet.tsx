@@ -121,21 +121,13 @@ export function PrintSheet({
         <PrintTable
           title={t("sheet.print.advantagesTitle")}
           head={[t("sheet.print.headTrait"), t("sheet.print.headLv"), t("sheet.print.headPts")]}
-          rows={traits.map((e) => [
-            e.name,
-            String(e.levels),
-            String(traitBaseCost(e)),
-          ])}
+          rows={traits.map((e) => [e.name, String(e.levels), String(traitBaseCost(e))])}
           emptyLabel={noValue}
         />
         <PrintTable
           title={t("sheet.print.disadvantagesTitle")}
           head={[t("sheet.print.headTrait"), t("sheet.print.headLv"), t("sheet.print.headPts")]}
-          rows={drawbacks.map((e) => [
-            e.name,
-            String(e.levels),
-            String(traitBaseCost(e)),
-          ])}
+          rows={drawbacks.map((e) => [e.name, String(e.levels), String(traitBaseCost(e))])}
           emptyLabel={noValue}
         />
       </section>

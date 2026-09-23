@@ -92,7 +92,7 @@ function Landing() {
                 {t("hero.eyebrow")}
               </div>
 
-              <h1 className="font-display text-5xl font-bold leading-[0.92] sm:text-7xl lg:text-8xl xl:text-9xl">
+              <h1 className="font-display text-5xl font-bold leading-[0.92] sm:text-7xl lg:text-8xl">
                 <span className="block">Universal</span>
                 <span className="block text-muted-foreground">Character</span>
                 <span className="block text-primary">Forge.</span>

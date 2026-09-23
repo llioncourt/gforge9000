@@ -78,7 +78,7 @@ function Landing() {
             {t("nav.legal")}
           </Link>
           <Button asChild size="sm">
-            <Link to="/auth">{t("nav.signIn")}</Link>
+            <a href="/auth">{t("nav.signIn")}</a>
           </Button>
         </div>
       </header>
@@ -104,7 +104,7 @@ function Landing() {
           </p>
           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Button asChild size="lg">
-              <Link to="/auth">{t("hero.startBuilding")}</Link>
+              <a href="/auth">{t("hero.startBuilding")}</a>
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link to="/legal">{t("hero.contentPolicy")}</Link>

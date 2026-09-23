@@ -318,6 +318,7 @@ export function reconcileEntries(
   entries: ImportedEntry[],
   index: CatalogueIndex,
   aiMatches: Map<string, CatalogueEntry> = new Map(),
+  options: ReconcileOptions = {},
 ): ReconcileResult {
   let matched = 0;
   let unmatched = 0;
@@ -329,7 +330,7 @@ export function reconcileEntries(
       return entry;
     }
     matched += 1;
-    return applyCatalogue(entry, target);
+    return applyCatalogue(entry, target, options);
   });
   return { entries: out, matched, unmatched };
 }

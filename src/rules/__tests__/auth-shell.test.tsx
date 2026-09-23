@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { DiceProvider, useDice } from "@/components/app/dice-context";
+import { I18nProvider } from "@/i18n/provider";
 import { createAuthInvalidationHandler, isAuthShellPath } from "@/lib/app-runtime";
 import { runAuthRequest } from "@/lib/auth-submit";
 import {

@@ -43,6 +43,44 @@ import {
   type EntityRow,
 } from "@/lib/mcp/domains/shared.server";
 
+const listEntryTypesInput = z.object({});
+const listEntriesInput = z.object({
+  campaign_id: uuid,
+  kind: z.string().max(40).optional(),
+  search: z.string().max(200).optional(),
+  limit: limitField,
+});
+const getEntryInput = z.object({ entry_id: uuid });
+const createEntryInput = z.object({
+  campaign_id: uuid,
+  kind: boundedText(40),
+  name: boundedText(200),
+  summary: z.string().max(2000).optional(),
+  description: z.string().max(20000).optional(),
+  gm_notes: z.string().max(20000).optional(),
+  status: z.string().max(60).optional(),
+  visibility: z.enum(VISIBILITY_VALUES).optional(),
+  tags: z.array(z.string().max(60)).max(30).optional(),
+  parent_id: uuid.optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
+});
+const updateEntryInput = z.object({
+  entry_id: uuid,
+  kind: boundedText(40).optional(),
+  name: boundedText(200).optional(),
+  summary: z.string().max(2000).nullable().optional(),
+  player_description: z.string().max(20000).nullable().optional(),
+  description: z.string().max(20000).nullable().optional(),
+  gm_notes: z.string().max(20000).nullable().optional(),
+  status: z.string().max(60).optional(),
+  visibility: z.enum(VISIBILITY_VALUES).optional(),
+  tags: z.array(z.string().max(60)).max(30).optional(),
+  aliases: z.array(z.string().max(120)).max(50).optional(),
+  parent_id: uuid.nullable().optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
+});
+const deleteEntryInput = z.object({ entry_id: uuid });
+
 export function registerEntries(tool: ToolRegistrar, ctx: McpToolContext): void {
   tool(
     "list_entry_types",
@@ -50,7 +88,7 @@ export function registerEntries(tool: ToolRegistrar, ctx: McpToolContext): void 
       title: "List entry types",
       description:
         "Lists every kind of world or story entry a campaign can hold, with the exact statuses each kind accepts and its default status. The full list is included in the reply text as well as in the structured result. Use the returned `kind` value with the entry tools.",
-      inputSchema: z.object({}),
+      inputSchema: listEntryTypesInput,
       outputSchema: listOutput,
       annotations: READ,
     },
@@ -74,12 +112,7 @@ export function registerEntries(tool: ToolRegistrar, ctx: McpToolContext): void 
       title: "List campaign entries",
       description:
         "Lists the world and story entries of one campaign that the signed-in account is allowed to see. Game Master notes are removed for players. The reply reports how many entries were returned out of the exact total matching the same filters.",
-      inputSchema: z.object({
-        campaign_id: uuid,
-        kind: z.string().max(40).optional(),
-        search: z.string().max(200).optional(),
-        limit: limitField,
-      }),
+      inputSchema: listEntriesInput,
       outputSchema: listOutput,
       annotations: READ,
     },
@@ -122,7 +155,7 @@ export function registerEntries(tool: ToolRegistrar, ctx: McpToolContext): void 
       title: "Get a campaign entry",
       description:
         "Reads one world or story entry in full. Game Master notes and GM-only fields are removed for players.",
-      inputSchema: z.object({ entry_id: uuid }),
+      inputSchema: getEntryInput,
       outputSchema: itemOutput,
       annotations: READ,
     },
@@ -146,19 +179,7 @@ export function registerEntries(tool: ToolRegistrar, ctx: McpToolContext): void 
       title: "Create a campaign entry",
       description:
         "Adds a world or story entry to a campaign. Only the campaign's Game Master can do this. `kind` must be one of the kinds from list_entry_types. `status` is matched against that kind's own statuses ignoring capitalisation and stored in the app's exact spelling; leave it out to get that kind's default status.",
-      inputSchema: z.object({
-        campaign_id: uuid,
-        kind: boundedText(40),
-        name: boundedText(200),
-        summary: z.string().max(2000).optional(),
-        description: z.string().max(20000).optional(),
-        gm_notes: z.string().max(20000).optional(),
-        status: z.string().max(60).optional(),
-        visibility: z.enum(VISIBILITY_VALUES).optional(),
-        tags: z.array(z.string().max(60)).max(30).optional(),
-        parent_id: uuid.optional(),
-        data: z.record(z.string(), z.unknown()).optional(),
-      }),
+      inputSchema: createEntryInput,
       outputSchema: itemOutput,
       annotations: CREATE,
     },
@@ -195,21 +216,7 @@ export function registerEntries(tool: ToolRegistrar, ctx: McpToolContext): void 
       title: "Update a campaign entry",
       description:
         "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. Fields left out are untouched. When supplied, `data`, `aliases`, and `tags` replace the entire stored object/array rather than being merged. Read the entry first and resend any existing keys/items you want to preserve. `status` is matched against the kind's own statuses ignoring capitalisation and stored in the app's exact spelling; if you change `kind` and the current status does not exist for the new kind, supply a valid one.",
-      inputSchema: z.object({
-        entry_id: uuid,
-        kind: boundedText(40).optional(),
-        name: boundedText(200).optional(),
-        summary: z.string().max(2000).nullable().optional(),
-        player_description: z.string().max(20000).nullable().optional(),
-        description: z.string().max(20000).nullable().optional(),
-        gm_notes: z.string().max(20000).nullable().optional(),
-        status: z.string().max(60).optional(),
-        visibility: z.enum(VISIBILITY_VALUES).optional(),
-        tags: z.array(z.string().max(60)).max(30).optional(),
-        aliases: z.array(z.string().max(120)).max(50).optional(),
-        parent_id: uuid.nullable().optional(),
-        data: z.record(z.string(), z.unknown()).optional(),
-      }),
+      inputSchema: updateEntryInput,
       outputSchema: itemOutput,
       annotations: MODIFY,
     },
@@ -246,7 +253,7 @@ export function registerEntries(tool: ToolRegistrar, ctx: McpToolContext): void 
       title: "Delete a campaign entry",
       description:
         "Permanently removes a world or story entry. Only the campaign's Game Master can do this.",
-      inputSchema: z.object({ entry_id: uuid }),
+      inputSchema: deleteEntryInput,
       outputSchema: deleteOutput,
       annotations: DESTROY,
     },

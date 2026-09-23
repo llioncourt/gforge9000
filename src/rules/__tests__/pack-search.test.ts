@@ -312,7 +312,6 @@ describe("a scan that hits the row cap reports truncation instead of a false emp
     const complete = await loadPackCandidatesDetailed(client, {
       search: "Not In The Library At All",
       limit: 25,
-      maxScanRows: 1000,
     });
     expect(complete.matched).toBe(0);
     expect(complete.truncated).toBe(false);

@@ -33,6 +33,16 @@ import {
 } from "@/lib/mcp/kit.server";
 import { characterWritableFields, compactEntryNotes } from "@/lib/mcp/domains/shared.server";
 
+const listCharactersInput = z.object({ campaign_id: uuid.optional(), limit: limitField });
+const getCharacterInput = z.object({
+  character_id: uuid,
+  entry_limit: limitField,
+  compact: z.boolean().optional(),
+});
+const createCharacterInput = z.object({ name: boundedText(120), ...characterWritableFields });
+const updateCharacterInput = z.object({ character_id: uuid, ...characterWritableFields });
+const deleteCharacterInput = z.object({ character_id: uuid });
+
 export function registerCharacters(tool: ToolRegistrar, ctx: McpToolContext): void {
   tool(
     "list_characters",
@@ -40,7 +50,7 @@ export function registerCharacters(tool: ToolRegistrar, ctx: McpToolContext): vo
       title: "List characters",
       description:
         "Lists the character sheets the signed-in account can see, optionally limited to one campaign. The reply reports how many sheets were returned out of the exact total matching the same filter.",
-      inputSchema: z.object({ campaign_id: uuid.optional(), limit: limitField }),
+      inputSchema: listCharactersInput,
       outputSchema: listOutput,
       annotations: READ,
     },
@@ -74,11 +84,7 @@ export function registerCharacters(tool: ToolRegistrar, ctx: McpToolContext): vo
       title: "Get a character sheet",
       description:
         "Reads one character sheet with its entries (traits, skills, equipment). Game Master notes are only included for the sheet's owner or their campaign's Game Master.",
-      inputSchema: z.object({
-        character_id: uuid,
-        entry_limit: limitField,
-        compact: z.boolean().optional(),
-      }),
+      inputSchema: getCharacterInput,
       outputSchema: itemOutput,
       annotations: READ,
     },
@@ -118,7 +124,7 @@ export function registerCharacters(tool: ToolRegistrar, ctx: McpToolContext): vo
       title: "Create a character",
       description:
         "Creates a new character sheet owned by the signed-in account. Fields left out keep their normal defaults.",
-      inputSchema: z.object({ name: boundedText(120), ...characterWritableFields }),
+      inputSchema: createCharacterInput,
       outputSchema: itemOutput,
       annotations: CREATE,
     },
@@ -147,7 +153,7 @@ export function registerCharacters(tool: ToolRegistrar, ctx: McpToolContext): vo
       title: "Update a character",
       description:
         "Changes fields on an existing character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged. When supplied, `appearance` and `conditions` replace the entire stored object/array rather than being merged. Read the character first and resend any existing keys/items you want to preserve. `campaign_id` is restricted: once a sheet belongs to a campaign, only that campaign's Game Master can move it to another campaign or detach it — the owner cannot. A sheet that belongs to no campaign can be attached by its owner wherever they are allowed to.",
-      inputSchema: z.object({ character_id: uuid, ...characterWritableFields }),
+      inputSchema: updateCharacterInput,
       outputSchema: itemOutput,
       annotations: MODIFY,
     },
@@ -177,7 +183,7 @@ export function registerCharacters(tool: ToolRegistrar, ctx: McpToolContext): vo
       title: "Delete a character",
       description:
         "Permanently removes a character sheet and everything on it. Only the sheet's owner can delete it — not the campaign's Game Master.",
-      inputSchema: z.object({ character_id: uuid }),
+      inputSchema: deleteCharacterInput,
       outputSchema: deleteOutput,
       annotations: DESTROY,
     },

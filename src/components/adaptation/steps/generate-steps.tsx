@@ -87,8 +87,13 @@ function useProblems(projectId: string, project: StepProps["project"]) {
       problems.push({ key: "noMovieConfig", count: 0, step: "movie" });
     for (const key of targetConfigProblems(project))
       if (!problems.some((problem) => problem.key === key))
-        problems.push({ key, count: 0, step: key === "noBookConfig" ? "book_narrative" : "adventure_module" });
-    if (!selectedTargets(project).length) problems.push({ key: "noTargets", count: 0, step: "source" });
+        problems.push({
+          key,
+          count: 0,
+          step: key === "noBookConfig" ? "book_narrative" : "adventure_module",
+        });
+    if (!selectedTargets(project).length)
+      problems.push({ key: "noTargets", count: 0, step: "source" });
   }
   return { loading, problems };
 }

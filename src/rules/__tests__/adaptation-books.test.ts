@@ -102,7 +102,19 @@ function input(count = 7): BookProjectionInput {
     direction: { tone: "grim", pov: "third", audience: "adult" },
     playerCharacterIds: ["hero"],
     statBlocks: {
-      villain: { st: 12, dx: 11, iq: 13, ht: 10, hp: 12, will: 14, per: 13, fp: 10, basic_speed: 5.25, basic_move: 5, dodge: 8 },
+      villain: {
+        st: 12,
+        dx: 11,
+        iq: 13,
+        ht: 10,
+        hp: 12,
+        will: 14,
+        per: 13,
+        fp: 10,
+        basic_speed: 5.25,
+        basic_move: 5,
+        dodge: 8,
+      },
     },
   };
 }
@@ -135,7 +147,11 @@ describe("book target validation", () => {
   });
   it("flags missing titles and bad player ranges", () => {
     expect(
-      targetConfigProblems({ target_book_narrative: true, target_adventure_module: true, creative_settings: {} }),
+      targetConfigProblems({
+        target_book_narrative: true,
+        target_adventure_module: true,
+        creative_settings: {},
+      }),
     ).toEqual(["noBookConfig", "noModuleConfig"]);
     expect(
       targetConfigProblems({
@@ -173,11 +189,16 @@ describe("book structure", () => {
 });
 
 describe("book narrative projection", () => {
-  const book = buildBookNarrativeProjection(input(), { ...DEFAULT_BOOK_NARRATIVE, title: "The Book" });
+  const book = buildBookNarrativeProjection(input(), {
+    ...DEFAULT_BOOK_NARRATIVE,
+    title: "The Book",
+  });
 
   it("is valid and deterministic", () => {
     expect(bookNarrativeProjectionSchema.parse(book)).toBeTruthy();
-    expect(buildBookNarrativeProjection(input(), { ...DEFAULT_BOOK_NARRATIVE, title: "The Book" })).toEqual(book);
+    expect(
+      buildBookNarrativeProjection(input(), { ...DEFAULT_BOOK_NARRATIVE, title: "The Book" }),
+    ).toEqual(book);
   });
   it("covers every scene once, in order, in chapters", () => {
     const keys = book.target_projection.chapters.flatMap((c) => c.scene_keys);
@@ -196,7 +217,10 @@ describe("book narrative projection", () => {
 });
 
 describe("adventure module projection", () => {
-  const module = buildAdventureModuleProjection(input(), { ...DEFAULT_ADVENTURE_MODULE, title: "The Module" });
+  const module = buildAdventureModuleProjection(input(), {
+    ...DEFAULT_ADVENTURE_MODULE,
+    title: "The Module",
+  });
   const p = module.target_projection;
 
   it("is valid GURPS complete module", () => {

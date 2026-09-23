@@ -105,7 +105,10 @@ export function activeWizardSteps(project: TargetFlags): WizardStep[] {
  * (its target was deselected) lands on the next active step after it, so the
  * user keeps their place instead of being thrown back to the start.
  */
-export function resolveWizardStep(stored: string | null | undefined, project: TargetFlags): WizardStep {
+export function resolveWizardStep(
+  stored: string | null | undefined,
+  project: TargetFlags,
+): WizardStep {
   const active = activeWizardSteps(project);
   const position = WIZARD_STEPS.indexOf(stored as WizardStep);
   if (position < 0) return active[0]!;

@@ -452,8 +452,9 @@ export async function buildAdaptationBundle(
     ...((project.creative_settings as { story_bible?: Partial<StoryBible> })?.story_bible ?? {}),
   };
 
-  const { statBlocks, playerCharacterIds } =
-    project.target_adventure_module ? await loadStatBlocks(entities) : { statBlocks: {}, playerCharacterIds: [] };
+  const { statBlocks, playerCharacterIds } = project.target_adventure_module
+    ? await loadStatBlocks(entities)
+    : { statBlocks: {}, playerCharacterIds: [] };
 
   const manifest = assembleManifest({
     statBlocks,

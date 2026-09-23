@@ -137,7 +137,11 @@ function sceneWords(scene: AdaptationScene) {
  * shift by one to land on a change of location, so chapters break where the
  * story naturally moves on.
  */
-export function partition<T>(items: T[], k: number, breakBefore: (index: number) => boolean): T[][] {
+export function partition<T>(
+  items: T[],
+  k: number,
+  breakBefore: (index: number) => boolean,
+): T[][] {
   const n = items.length;
   const count = Math.max(1, Math.min(k, n));
   const cuts: number[] = [];
@@ -184,14 +188,16 @@ export function resolveBookStructure(
     form = "novel";
     reasons.push("many_scenes");
   }
-  const byForm = form === "short_story" ? 1 : form === "novella" ? Math.ceil(n / 2) : Math.ceil(n / 3);
+  const byForm =
+    form === "short_story" ? 1 : form === "novella" ? Math.ceil(n / 2) : Math.ceil(n / 3);
   let chapters = byForm;
   if (config.chapter_target && config.chapter_target > 0) {
     chapters = config.chapter_target;
     reasons.push("chapter_target");
   }
   chapters = Math.max(1, Math.min(chapters, Math.max(1, n)));
-  if (config.chapter_target && chapters < config.chapter_target) reasons.push("capped_by_scene_count");
+  if (config.chapter_target && chapters < config.chapter_target)
+    reasons.push("capped_by_scene_count");
   const wordTarget =
     config.word_target && config.word_target > 0
       ? config.word_target
@@ -226,7 +232,8 @@ export function buildBookNarrativeProjection(
 
   const chapters = groups.map((group, chapterIndex) => {
     const chapterNo = chapterIndex + 1;
-    const sections: BookNarrativeProjection["target_projection"]["chapters"][number]["sections"] = [];
+    const sections: BookNarrativeProjection["target_projection"]["chapters"][number]["sections"] =
+      [];
     group.forEach((scene, sceneIndex) => {
       const previous = sceneIndex > 0 ? group[sceneIndex - 1]! : null;
       if (previous && previous.location_entity_id !== scene.location_entity_id) {
@@ -270,7 +277,8 @@ export function buildBookNarrativeProjection(
         appearances.set(name, (appearances.get(name) ?? new Set()).add(chapterNo));
       }
 
-      const paragraphs: BookNarrativeProjection["target_projection"]["chapters"][number]["sections"][number]["paragraphs"] = [];
+      const paragraphs: BookNarrativeProjection["target_projection"]["chapters"][number]["sections"][number]["paragraphs"] =
+        [];
       const narration = scene.narration.slice().sort((a, b) => a.order - b.order);
       const beats = scene.story_beats.slice().sort((a, b) => a.order - b.order);
       const dialogue = scene.dialogue.slice().sort((a, b) => a.order - b.order);
@@ -279,13 +287,16 @@ export function buildBookNarrativeProjection(
       }
       const rounds = Math.max(narration.length, beats.length, 1);
       for (let i = 0; i < rounds; i++) {
-        if (narration[i]) paragraphs.push(para("narration", narration[i]!.text, scene.provenance_type));
+        if (narration[i])
+          paragraphs.push(para("narration", narration[i]!.text, scene.provenance_type));
         if (beats[i]) paragraphs.push(para("action", beats[i]!.description, scene.provenance_type));
         const lines = dialogue.filter((_, index) => index % rounds === i);
         for (const line of lines) {
           // A line with no literal record behind it is a reconstruction, never a quote.
-          const provenance = scene.provenance_type === "ai_inference" ? "ai_inference" : scene.provenance_type;
-          if (provenance === "ai_inference" || provenance === "adaptation_created") reconstructedLines++;
+          const provenance =
+            scene.provenance_type === "ai_inference" ? "ai_inference" : scene.provenance_type;
+          if (provenance === "ai_inference" || provenance === "adaptation_created")
+            reconstructedLines++;
           paragraphs.push({
             kind: "dialogue",
             text: line.line,
@@ -315,12 +326,17 @@ export function buildBookNarrativeProjection(
     const castCount = new Map<string, number>();
     for (const scene of group)
       for (const id of scene.cast_entity_ids) castCount.set(id, (castCount.get(id) ?? 0) + 1);
-    const lead = [...castCount.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0];
+    const lead = [...castCount.entries()].sort(
+      (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+    )[0];
     return {
       chapter_no: chapterNo,
       key: `chapter:${stableHash(group.map((s) => s.stable_key).join("|")).slice(0, 16)}`,
       title: group.length === 1 ? group[0]!.title : `${group[0]!.title} — ${group.at(-1)!.title}`,
-      summary: group.map((scene) => scene.synopsis).filter(Boolean).join(" "),
+      summary: group
+        .map((scene) => scene.synopsis)
+        .filter(Boolean)
+        .join(" "),
       pov_character: lead ? nameOf(input.cast, lead[0]) : null,
       scene_keys: group.map((scene) => scene.stable_key),
       word_target:
@@ -428,7 +444,8 @@ export function buildAdventureModuleProjection(
   const pcIds = new Set(input.playerCharacterIds ?? []);
 
   // Acts: roughly three to five movements, broken on location changes.
-  const actCount = scenes.length <= 3 ? 1 : scenes.length <= 8 ? 3 : Math.min(5, Math.ceil(scenes.length / 3));
+  const actCount =
+    scenes.length <= 3 ? 1 : scenes.length <= 8 ? 3 : Math.min(5, Math.ceil(scenes.length / 3));
   const actGroups = partition(
     scenes,
     actCount,
@@ -439,7 +456,9 @@ export function buildAdventureModuleProjection(
   );
   const encounterKey = (scene: AdaptationScene) => `encounter:${scene.stable_key}`;
   const actOf = new Map<string, number>();
-  actGroups.forEach((group, index) => group.forEach((scene) => actOf.set(scene.stable_key, index + 1)));
+  actGroups.forEach((group, index) =>
+    group.forEach((scene) => actOf.set(scene.stable_key, index + 1)),
+  );
 
   // Clues and revelations from facts: GM truth vs what characters can find vs what players can be shown.
   const subjectScenes = (subject: string | null | undefined) =>
@@ -459,7 +478,9 @@ export function buildAdventureModuleProjection(
   for (const fact of visible) {
     const found = subjectScenes(fact.subject_entity_id).map(encounterKey);
     const points = truths
-      .filter((truth) => truth.subject_entity_id && truth.subject_entity_id === fact.subject_entity_id)
+      .filter(
+        (truth) => truth.subject_entity_id && truth.subject_entity_id === fact.subject_entity_id,
+      )
       .map((truth) => `revelation:${truth.stable_key}`);
     clues.push({
       key: `clue:${fact.stable_key}`,
@@ -469,7 +490,10 @@ export function buildAdventureModuleProjection(
       points_to: points,
       found_in: found,
       reveal_conditions: found.length ? found.map((key) => `explore:${key}`) : ["gm_discretion"],
-      if_missed: found.length > 1 ? `also_available_in:${found.slice(1).join(",")}` : "gm_offers_alternative_source",
+      if_missed:
+        found.length > 1
+          ? `also_available_in:${found.slice(1).join(",")}`
+          : "gm_offers_alternative_source",
       revealed_in_original: fact.knowledge_state?.revealed ?? !fact.gm_only,
       provenance_type: fact.provenance_type,
       source_refs: fact.source_refs,
@@ -527,7 +551,8 @@ export function buildAdventureModuleProjection(
       .filter(
         (asset) =>
           (asset.role === "map" || asset.role === "reference") &&
-          (asset.entity_id === scene.location_entity_id || scene.prop_entity_ids.includes(asset.entity_id ?? "")),
+          (asset.entity_id === scene.location_entity_id ||
+            scene.prop_entity_ids.includes(asset.entity_id ?? "")),
       )
       .map((asset) => asset.asset_key);
     return {
@@ -546,10 +571,28 @@ export function buildAdventureModuleProjection(
       clue_keys: clueKeys,
       routes,
       outcomes: [
-        { condition: "success" as const, consequence: next[0] ? `advance:${next[0]}` : "resolution", provenance_type: "adaptation_created" as const },
-        { condition: "partial" as const, consequence: next[0] ? `advance_with_complication:${next[0]}` : "resolution_with_cost", provenance_type: "adaptation_created" as const },
-        { condition: "failure" as const, consequence: clueKeys.length ? `clues_move_elsewhere:${clueKeys.length}` : "situation_escalates", provenance_type: "adaptation_created" as const },
-        { condition: "skipped" as const, consequence: skip[0] ? `continue:${skip[0]}` : "resolution", provenance_type: "adaptation_created" as const },
+        {
+          condition: "success" as const,
+          consequence: next[0] ? `advance:${next[0]}` : "resolution",
+          provenance_type: "adaptation_created" as const,
+        },
+        {
+          condition: "partial" as const,
+          consequence: next[0] ? `advance_with_complication:${next[0]}` : "resolution_with_cost",
+          provenance_type: "adaptation_created" as const,
+        },
+        {
+          condition: "failure" as const,
+          consequence: clueKeys.length
+            ? `clues_move_elsewhere:${clueKeys.length}`
+            : "situation_escalates",
+          provenance_type: "adaptation_created" as const,
+        },
+        {
+          condition: "skipped" as const,
+          consequence: skip[0] ? `continue:${skip[0]}` : "resolution",
+          provenance_type: "adaptation_created" as const,
+        },
       ],
       hazards: [],
       handout_asset_keys: [...new Set(handouts)],
@@ -560,18 +603,21 @@ export function buildAdventureModuleProjection(
 
   const encounterKeysFor = (id: string | null | undefined) =>
     scenes
-      .filter((scene) => scene.cast_entity_ids.includes(id ?? "") || scene.location_entity_id === id)
+      .filter(
+        (scene) => scene.cast_entity_ids.includes(id ?? "") || scene.location_entity_id === id,
+      )
       .map(encounterKey);
 
   const npcs = input.cast.map((record) => {
     const id = record.entity_id ?? null;
-    const role: "antagonist" | "ally" | "neutral" | "player_character" = id && pcIds.has(id)
-      ? "player_character"
-      : record.traits.some((trait) => /antag|villain|enemy|vil[aã]o|inimig/i.test(trait))
-        ? "antagonist"
-        : record.traits.some((trait) => /ally|aliad|friend|amig/i.test(trait))
-          ? "ally"
-          : "neutral";
+    const role: "antagonist" | "ally" | "neutral" | "player_character" =
+      id && pcIds.has(id)
+        ? "player_character"
+        : record.traits.some((trait) => /antag|villain|enemy|vil[aã]o|inimig/i.test(trait))
+          ? "antagonist"
+          : record.traits.some((trait) => /ally|aliad|friend|amig/i.test(trait))
+            ? "ally"
+            : "neutral";
     const block = id && config.include_stat_blocks ? input.statBlocks?.[id] : undefined;
     return {
       key: record.key,
@@ -581,7 +627,11 @@ export function buildAdventureModuleProjection(
       player_description: record.gm_only ? "" : record.visual_description,
       gm_notes: record.biography,
       gurps: block
-        ? { ...block, point_total: block.point_total ?? null, source_character_id: block.source_character_id ?? null }
+        ? {
+            ...block,
+            point_total: block.point_total ?? null,
+            source_character_id: block.source_character_id ?? null,
+          }
         : null,
       encounter_keys: encounterKeysFor(id),
       asset_keys: record.asset_keys,
@@ -612,7 +662,10 @@ export function buildAdventureModuleProjection(
         starting_points: config.starting_points ?? null,
         tech_level: config.tech_level ?? null,
       },
-      introduction: { gm_summary: input.storyBible.synopsis, player_pitch: input.storyBible.logline },
+      introduction: {
+        gm_summary: input.storyBible.synopsis,
+        player_pitch: input.storyBible.logline,
+      },
       overview: {
         premise: input.storyBible.logline,
         themes: input.storyBible.themes,
@@ -621,8 +674,13 @@ export function buildAdventureModuleProjection(
         encounter_count: encounters.length,
       },
       background: {
-        gm_truth: [input.storyBible.timeline_summary, ...truths.map((t) => t.statement)].filter(Boolean).join("\n\n"),
-        common_knowledge: [input.storyBible.setting, ...visible.filter((f) => !f.gm_only).map((f) => f.statement)]
+        gm_truth: [input.storyBible.timeline_summary, ...truths.map((t) => t.statement)]
+          .filter(Boolean)
+          .join("\n\n"),
+        common_knowledge: [
+          input.storyBible.setting,
+          ...visible.filter((f) => !f.gm_only).map((f) => f.statement),
+        ]
           .filter(Boolean)
           .join("\n\n"),
       },
@@ -656,7 +714,10 @@ export function buildAdventureModuleProjection(
       acts: actGroups.map((group, index) => ({
         act_no: index + 1,
         title: group[0]!.title,
-        summary: group.map((scene) => scene.synopsis).filter(Boolean).join(" "),
+        summary: group
+          .map((scene) => scene.synopsis)
+          .filter(Boolean)
+          .join(" "),
         encounter_keys: group.map(encounterKey),
       })),
       encounters,
@@ -664,7 +725,9 @@ export function buildAdventureModuleProjection(
       revelations: truths.map((truth) => ({
         key: `revelation:${truth.stable_key}`,
         statement: truth.statement,
-        clue_keys: clues.filter((clue) => clue.points_to.includes(`revelation:${truth.stable_key}`)).map((c) => c.key),
+        clue_keys: clues
+          .filter((clue) => clue.points_to.includes(`revelation:${truth.stable_key}`))
+          .map((c) => c.key),
         revealed_in_original: truth.knowledge_state?.revealed ?? false,
         source_refs: truth.source_refs,
       })),

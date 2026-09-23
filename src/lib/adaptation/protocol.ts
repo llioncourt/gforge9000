@@ -459,7 +459,13 @@ export const bookNarrativeProjectionSchema = z
 
 /* ------------------------------------------------------- adventure module */
 
-export const MODULE_APPROACHES = ["social", "stealth", "force", "investigation", "evasion"] as const;
+export const MODULE_APPROACHES = [
+  "social",
+  "stealth",
+  "force",
+  "investigation",
+  "evasion",
+] as const;
 
 const gurpsStatBlockSchema = z
   .object({
@@ -917,9 +923,12 @@ export function validateAdaptationManifest(manifest: AdaptationManifest): string
     const clueKeys = new Set(module.clues.map((c) => c.key));
     for (const encounter of module.encounters) {
       if (!sceneKeys.has(encounter.scene_key))
-        problems.push(`Encounter "${encounter.key}" references unknown scene "${encounter.scene_key}".`);
+        problems.push(
+          `Encounter "${encounter.key}" references unknown scene "${encounter.scene_key}".`,
+        );
       for (const key of encounter.clue_keys)
-        if (!clueKeys.has(key)) problems.push(`Encounter "${encounter.key}" uses unknown clue "${key}".`);
+        if (!clueKeys.has(key))
+          problems.push(`Encounter "${encounter.key}" uses unknown clue "${key}".`);
       for (const route of encounter.routes)
         for (const next of route.leads_to)
           if (!encounterKeys.has(next))
@@ -929,7 +938,8 @@ export function validateAdaptationManifest(manifest: AdaptationManifest): string
     }
     for (const act of module.acts)
       for (const key of act.encounter_keys)
-        if (!encounterKeys.has(key)) problems.push(`Act ${act.act_no} lists unknown encounter "${key}".`);
+        if (!encounterKeys.has(key))
+          problems.push(`Act ${act.act_no} lists unknown encounter "${key}".`);
     for (const handout of module.handouts)
       if (!assetKeys.has(handout.asset_key))
         problems.push(`Handout references unknown asset "${handout.asset_key}".`);

@@ -10,6 +10,7 @@ import {
   assertLinkFlags,
   candidateView,
   definitionFill,
+  fillMissingDefinition,
   resolveTarget,
   settingsForCharacter,
   sourceWithLink,

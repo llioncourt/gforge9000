@@ -124,7 +124,7 @@ export function PrintSheet({
           rows={traits.map((e) => [
             e.name,
             String(e.levels),
-            String(e.points * Math.max(1, e.levels)),
+            String(traitBaseCost(e)),
           ])}
           emptyLabel={noValue}
         />
@@ -134,7 +134,7 @@ export function PrintSheet({
           rows={drawbacks.map((e) => [
             e.name,
             String(e.levels),
-            String(e.points * Math.max(1, e.levels)),
+            String(traitBaseCost(e)),
           ])}
           emptyLabel={noValue}
         />

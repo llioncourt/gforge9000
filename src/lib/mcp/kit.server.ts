@@ -90,17 +90,25 @@ export function reply(text: string, structuredContent: Structured) {
  * the complete safe list as pretty JSON. `total` is an exact count taken with
  * the very same visibility and filters as the listed rows.
  */
-export function listReply(label: string, items: Structured[], total: number) {
+export function listReply(
+  label: string,
+  items: Structured[],
+  total: number,
+  /** Optional extra top-level fields (additive; e.g. a campaign's playback block). */
+  extra?: Structured,
+) {
   const count = items.length;
   const truncated = count < total;
   const summary = `Showing ${count} of ${total} ${label}${
     truncated ? " (more may exist — raise limit)" : ""
   }.`;
-  return reply(`${summary}\n\n${JSON.stringify(items, null, 2)}`, {
+  const body = extra ? { items, ...extra } : items;
+  return reply(`${summary}\n\n${JSON.stringify(body, null, 2)}`, {
     count,
     total,
     truncated,
     items,
+    ...(extra ?? {}),
   });
 }
 

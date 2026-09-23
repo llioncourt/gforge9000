@@ -22,7 +22,6 @@ import { useT } from "@/i18n/hooks";
 import { isAuthShellPath } from "@/lib/app-runtime";
 import { resolveDiagFlags, diagTrace } from "@/lib/diag-modes";
 
-
 function NotFoundComponent() {
   const { t } = useT("errors");
   return (
@@ -204,4 +203,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-

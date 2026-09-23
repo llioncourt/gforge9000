@@ -13,9 +13,7 @@
 export const AUTH_REQUEST_TIMEOUT_MS = 20_000;
 
 export type AuthRequestResult<T> =
-  | { status: "ok"; data: T }
-  | { status: "timeout" }
-  | { status: "thrown"; message: string | null };
+  { status: "ok"; data: T } | { status: "timeout" } | { status: "thrown"; message: string | null };
 
 export interface RunAuthRequestOptions {
   timeoutMs?: number;

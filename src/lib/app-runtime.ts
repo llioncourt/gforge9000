@@ -40,9 +40,7 @@ export interface AuthInvalidationHandler {
 
 const HANDLED_EVENTS = new Set(["SIGNED_IN", "SIGNED_OUT", "USER_UPDATED"]);
 
-export function createAuthInvalidationHandler(
-  deps: AuthInvalidationDeps,
-): AuthInvalidationHandler {
+export function createAuthInvalidationHandler(deps: AuthInvalidationDeps): AuthInvalidationHandler {
   let pending: unknown = null;
   let disposed = false;
   let lastSignedInKey: string | null = null;

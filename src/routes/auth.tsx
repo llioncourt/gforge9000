@@ -48,9 +48,9 @@ function AuthPage() {
   }, []);
 
   const submit = useCallback(
-    async <T,>(
-      request: () => Promise<{ data: T; error: { message: string } | null }>,
-      onSuccess: (data: T) => void,
+    async <R extends { error: { message: string } | null }>(
+      request: () => Promise<R>,
+      onSuccess: (response: R) => void,
     ) => {
       if (inFlight.current) return;
       inFlight.current = true;
@@ -78,7 +78,7 @@ function AuthPage() {
         return;
       }
       logAuthEvent("auth:submit", { ok: true });
-      onSuccess(result.data.data);
+      onSuccess(result.data);
     },
     [t],
   );
@@ -104,8 +104,8 @@ function AuthPage() {
             data: { display_name: displayName || email.split("@")[0] },
           },
         }),
-      (data) => {
-        if (!data.session) {
+      (response) => {
+        if (!response.data.session) {
           setSent(true);
           return;
         }
@@ -113,7 +113,6 @@ function AuthPage() {
       },
     );
   }
-
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">

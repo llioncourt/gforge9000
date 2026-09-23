@@ -2,10 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import {
-  createAuthInvalidationHandler,
-  isAuthShellPath,
-} from "@/lib/app-runtime";
+import { createAuthInvalidationHandler, isAuthShellPath } from "@/lib/app-runtime";
 import { runAuthRequest } from "@/lib/auth-submit";
 import {
   isObsoleteCacheKey,

@@ -1085,11 +1085,6 @@ function HouseRules({
   const [houseRules, setHouseRules] = useState(String(settings["house_rules"] ?? ""));
   const [packs, setPacks] = useState<string[]>(allowedPacksOf(settings));
   const [newPack, setNewPack] = useState("");
-  const queryClient = useQueryClient();
-  const coverPath =
-    typeof settings[CAMPAIGN_COVER_SETTING] === "string"
-      ? String(settings[CAMPAIGN_COVER_SETTING])
-      : null;
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   useEffect(
     () => () => {

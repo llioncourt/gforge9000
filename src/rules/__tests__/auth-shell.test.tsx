@@ -2,8 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { I18nextProvider } from "react-i18next";
 import { DiceProvider, useDice } from "@/components/app/dice-context";
-import { I18nProvider } from "@/i18n/provider";
+import { createI18nInstance } from "@/i18n";
 import { createAuthInvalidationHandler, isAuthShellPath } from "@/lib/app-runtime";
 import { runAuthRequest } from "@/lib/auth-submit";
 import {

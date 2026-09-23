@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isSkillLikeKind } from "@/rules";
 import type { CharacterEntry, CharacterRecord, CharacterSheet } from "@/rules";
 import { withPackLink, type PackLink } from "@/lib/pack-link";
 
@@ -330,6 +331,7 @@ export function libraryEntryToCharacterDraft(
   if (entry.kind === "skill" || entry.kind === "technique" || entry.kind === "spell") {
     data["attribute"] = data["attribute"] ?? "DX";
     data["difficulty"] = data["difficulty"] ?? "A";
+    // Both representations start out equal — never create a divergent draft.
     data["points"] = Number(data["points"] ?? 1);
   }
   if (entry.kind === "equipment") {
@@ -347,7 +349,11 @@ export function libraryEntryToCharacterDraft(
     kind: entry.kind,
     name: entry.name,
     category: entry.category,
-    points: entry.kind === "equipment" ? 0 : Number(entry.base_points ?? 0),
+    points: isSkillLikeKind(entry.kind)
+      ? Number(data["points"] ?? 1)
+      : entry.kind === "equipment"
+        ? 0
+        : Number(entry.base_points ?? 0),
     levels: 1,
     notes: entry.summary,
     data,

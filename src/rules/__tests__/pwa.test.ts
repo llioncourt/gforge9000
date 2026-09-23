@@ -48,3 +48,20 @@ describe("background push (disabled release)", () => {
     expect(readySpy).not.toHaveBeenCalled();
   });
 });
+
+describe("public/sw.js (tombstone worker)", () => {
+  it("contains no caching/push/fetch handlers and does self-unregister", async () => {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const swPath = path.resolve(process.cwd(), "public/sw.js");
+    const src = fs.readFileSync(swPath, "utf-8");
+
+    expect(src).not.toContain('addEventListener("fetch"');
+    expect(src).not.toContain('"push"');
+    expect(src).not.toContain('"notificationclick"');
+    expect(src).not.toContain("caches.match");
+
+    expect(src).toContain("skipWaiting");
+    expect(src).toContain("registration.unregister");
+  });
+});

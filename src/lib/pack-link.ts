@@ -14,6 +14,7 @@
  * from, not a game rule. No calculation in `src/rules` depends on it.
  */
 
+import { investedPoints } from "@/rules/skill-points";
 import { normalizeText } from "@/lib/text-normalize";
 import { normaliseName, rawQualifier } from "@/lib/trait-match";
 
@@ -673,9 +674,11 @@ export function restoreDefinitionPatch(
       else data[field] = value;
     }
   }
-  // Invested points stay exactly as the player bought them.
+  // Invested points stay exactly as the player bought them — resolved once
+  // through the shared helper so a stale `data.points` shadow is never
+  // resurrected, and written back to BOTH representations.
   if (isSkillLike(entry.kind)) {
-    data["points"] = Number(entryData["points"] ?? entry.points ?? 0);
+    data["points"] = investedPoints(entry);
   }
   if (specialization) data["specialization"] = specialization;
 
@@ -694,7 +697,7 @@ export function restoreDefinitionPatch(
   const basePoints = Number(item.base_points ?? 0);
   const costPerLevel = Number(item.cost_per_level ?? 0);
   const points = isSkillLike(entry.kind)
-    ? Number(entry.points ?? 0)
+    ? investedPoints(entry)
     : entry.kind === "equipment"
       ? Number(entry.points ?? 0)
       : costPerLevel

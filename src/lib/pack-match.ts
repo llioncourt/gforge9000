@@ -282,6 +282,12 @@ export interface CandidateScope {
    * only shows the first page of names does not.
    */
   exhaustive?: boolean | undefined;
+  /**
+   * Overrides `MAX_SCAN_ROWS` for this call. Tests use this to exercise
+   * truncation without generating tens of thousands of fixture rows; callers
+   * outside tests should leave it unset.
+   */
+  maxScanRows?: number | undefined;
 }
 
 /**
@@ -335,13 +341,14 @@ export async function loadPackCandidatesDetailed(
     ? ([...packIndex.values()].find((p) => p.id === scope.packId)?.name ?? null)
     : null;
   const needsFullScan = Boolean(scope.search) || scope.exhaustive === true;
+  const maxScanRows = scope.maxScanRows ?? MAX_SCAN_ROWS;
 
   const candidates: PackCandidate[] = [];
   let scanned = 0;
   let truncated = false;
 
   for (let offset = 0; ; offset += PAGE_SIZE) {
-    if (offset >= MAX_SCAN_ROWS) {
+    if (offset >= maxScanRows) {
       truncated = true;
       break;
     }

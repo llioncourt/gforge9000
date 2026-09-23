@@ -40,6 +40,21 @@ const deleteCampaignOutput = z.object({
   characters_unlinked: z.number().int(),
 });
 
+const listCampaignsInput = z.object({ limit: limitField });
+const getCampaignInput = z.object({ campaign_id: uuid });
+const createCampaignInput = z.object({
+  name: boundedText(120),
+  description: z.string().max(4000).nullable().optional(),
+  ...campaignSettingFields,
+});
+const updateCampaignInput = z.object({
+  campaign_id: uuid,
+  name: boundedText(120).optional(),
+  description: z.string().max(4000).nullable().optional(),
+  ...campaignSettingFields,
+});
+const deleteCampaignInput = z.object({ campaign_id: uuid, confirm_name: z.string().max(200) });
+
 export function registerCampaigns(tool: ToolRegistrar, ctx: McpToolContext): void {
   tool(
     "list_campaigns",
@@ -47,7 +62,7 @@ export function registerCampaigns(tool: ToolRegistrar, ctx: McpToolContext): voi
       title: "List campaigns",
       description:
         "Lists the campaigns the signed-in account can see: the ones they run as Game Master and the ones they have joined as a player. The reply reports how many were returned out of the exact total.",
-      inputSchema: z.object({ limit: limitField }),
+      inputSchema: listCampaignsInput,
       outputSchema: listOutput,
       annotations: READ,
     },
@@ -81,7 +96,7 @@ export function registerCampaigns(tool: ToolRegistrar, ctx: McpToolContext): voi
       title: "Get a campaign",
       description:
         "Reads one campaign in full: its name, premise, settings, the caller's role in it, its members, and exact counts of its entries, links and character sheets. What is returned follows the campaign's own permissions — the campaign must be one the signed-in account can see.",
-      inputSchema: z.object({ campaign_id: uuid }),
+      inputSchema: getCampaignInput,
       outputSchema: itemOutput,
       annotations: READ,
     },
@@ -145,11 +160,7 @@ export function registerCampaigns(tool: ToolRegistrar, ctx: McpToolContext): voi
     {
       title: "Create a campaign",
       description: `Creates a new campaign owned by the signed-in account, who becomes its Game Master. ${SETTINGS_DOC}`,
-      inputSchema: z.object({
-        name: boundedText(120),
-        description: z.string().max(4000).nullable().optional(),
-        ...campaignSettingFields,
-      }),
+      inputSchema: createCampaignInput,
       outputSchema: itemOutput,
       annotations: CREATE,
     },
@@ -170,12 +181,7 @@ export function registerCampaigns(tool: ToolRegistrar, ctx: McpToolContext): voi
     {
       title: "Update a campaign",
       description: `Changes the name, premise or settings of a campaign. Only the campaign's Game Master can edit it. Fields left out stay unchanged. ${SETTINGS_DOC}`,
-      inputSchema: z.object({
-        campaign_id: uuid,
-        name: boundedText(120).optional(),
-        description: z.string().max(4000).nullable().optional(),
-        ...campaignSettingFields,
-      }),
+      inputSchema: updateCampaignInput,
       outputSchema: itemOutput,
       annotations: MODIFY,
     },
@@ -202,7 +208,7 @@ export function registerCampaigns(tool: ToolRegistrar, ctx: McpToolContext): voi
       title: "Delete a campaign",
       description:
         "Permanently deletes a campaign and everything that belongs to it — entries, links, notes, maps, sessions, media and members. This cannot be undone. Only the campaign's Game Master can do it, and `confirm_name` must repeat the campaign's current name exactly, including capitalisation. Character sheets owned by the Game Master are deleted with the campaign; sheets owned by other players are kept and simply detached from it.",
-      inputSchema: z.object({ campaign_id: uuid, confirm_name: z.string().max(200) }),
+      inputSchema: deleteCampaignInput,
       outputSchema: deleteCampaignOutput,
       annotations: DESTROY,
     },

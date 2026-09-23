@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { investedPoints, isSkillLikeKind, syncInvestedPoints } from "@/rules";
 import type { CharacterEntry, EntryKind, TraitModifier, WeaponMode } from "@/rules";
 import { useT } from "@/i18n/hooks";
 
@@ -51,7 +52,9 @@ export function emptyDraft(kind: EntryKind): EntryDraft {
     data: {},
     source: { label: "User created", edition: "", page: "", type: "user" },
   };
-  if (kind === "skill" || kind === "technique" || kind === "spell") {
+  if (isSkillLikeKind(kind)) {
+    // Invested points live in BOTH places and must start out equal.
+    base.points = 1;
     base.data = {
       attribute: "DX",
       difficulty: "A",
@@ -85,10 +88,11 @@ export function toDraft(entry: CharacterEntry): EntryDraft {
     kind: entry.kind,
     name: entry.name,
     category: entry.category ?? "",
-    points: entry.points,
+    ...(isSkillLikeKind(entry.kind)
+      ? syncInvestedPoints(entry)
+      : { points: entry.points, data: { ...(entry.data as Record<string, unknown>) } }),
     levels: entry.levels,
     notes: entry.notes ?? "",
-    data: { ...(entry.data as Record<string, unknown>) },
     source: {
       ...((entry.source ?? {}) as Record<string, unknown>),
       label: s["label"] ?? "User created",
@@ -232,8 +236,11 @@ export function EntryDialog({
               <Row label={t("sheet.entryDialog.points")}>
                 <Input
                   type="number"
-                  value={Number(local.data["points"] ?? 1)}
-                  onChange={(e) => setData({ points: Number(e.target.value) })}
+                  value={investedPoints(local)}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    set({ points: value, data: { ...local.data, points: value } });
+                  }}
                 />
               </Row>
               <Row label={t("sheet.entryDialog.otherBonus")}>

@@ -78,6 +78,7 @@ import {
   type CharacterEntry,
   type EntryKind,
   type WeaponMode,
+  investedPoints,
 } from "@/rules";
 import {
   BulkLinkDialog,
@@ -960,7 +961,7 @@ function CharacterPage() {
                           </TableCell>
                           <TableCell className="text-right font-mono">{level.label}</TableCell>
                           <TableCell className="text-right font-mono">
-                            {Number(entry.data["points"] ?? 0)}
+                            {investedPoints(entry)}
                           </TableCell>
                           <TableCell className="text-right font-mono font-semibold">
                             {level.effective ?? "—"}

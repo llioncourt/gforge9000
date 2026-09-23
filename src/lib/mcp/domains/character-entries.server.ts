@@ -5,6 +5,7 @@
  */
 import { z } from "zod/v4";
 import type { Database } from "@/integrations/supabase/types";
+import { investedPoints, isSkillLikeKind } from "@/rules/skill-points";
 import {
   assertLinkFlags,
   candidateView,
@@ -37,6 +38,33 @@ import {
   type ToolRegistrar,
 } from "@/lib/mcp/kit.server";
 
+const addCharacterEntryInput = z.object({
+  character_id: uuid,
+  kind: boundedText(40),
+  name: boundedText(200),
+  category: z.string().max(120).nullable().optional(),
+  points: intField(-10000, 10000, "points").optional(),
+  levels: intField(0, 1000, "levels").optional(),
+  notes: z.string().max(4000).nullable().optional(),
+  sort_order: intField(0, 1000000, "sort_order").optional(),
+  pack_entry_id: uuid.optional(),
+  match_pack: z.boolean().optional(),
+});
+const updateCharacterEntryInput = z.object({
+  entry_id: uuid,
+  kind: boundedText(40).optional(),
+  name: boundedText(200).optional(),
+  category: z.string().max(120).nullable().optional(),
+  points: intField(-10000, 10000, "points").optional(),
+  levels: intField(0, 1000, "levels").optional(),
+  notes: z.string().max(4000).nullable().optional(),
+  sort_order: intField(0, 1000000, "sort_order").optional(),
+  pack_entry_id: uuid.optional(),
+  match_pack: z.boolean().optional(),
+  unlink: z.boolean().optional(),
+});
+const deleteCharacterEntryInput = z.object({ entry_id: uuid });
+
 export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContext): void {
   tool(
     "add_character_entry",
@@ -44,18 +72,7 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
       title: "Add an entry to a character",
       description:
         "Adds one trait, skill, technique or piece of equipment to a character sheet. Only the sheet's owner or their campaign's Game Master can do this. Without `sort_order` the entry is appended at the end. Optionally the new entry can be linked to a content-pack item: pass `pack_entry_id` to link a specific item, or `match_pack: true` to look one up by name among the packs the caller may use (and, for a sheet in a campaign, that the campaign allows). `pack_entry_id` and `match_pack` are mutually exclusive. A link fills in mechanical fields you left out but never overwrites values you supplied; an ambiguous name match writes nothing and returns the candidates instead; no match simply creates a normal custom entry.",
-      inputSchema: z.object({
-        character_id: uuid,
-        kind: boundedText(40),
-        name: boundedText(200),
-        category: z.string().max(120).nullable().optional(),
-        points: intField(-10000, 10000, "points").optional(),
-        levels: intField(0, 1000, "levels").optional(),
-        notes: z.string().max(4000).nullable().optional(),
-        sort_order: intField(0, 1000000, "sort_order").optional(),
-        pack_entry_id: uuid.optional(),
-        match_pack: z.boolean().optional(),
-      }),
+      inputSchema: addCharacterEntryInput,
       outputSchema: itemOutput,
       annotations: CREATE,
     },
@@ -116,6 +133,16 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
         ...(input.levels === undefined ? {} : { levels: input.levels }),
         ...linkFields,
       };
+      // Skill-like entries carry invested points in BOTH `points` and
+      // `data.points`; a new row must never be created with the two diverging.
+      if (isSkillLikeKind(input.kind)) {
+        const data = (payload["data"] as Record<string, unknown> | undefined) ?? {};
+        const value =
+          input.points ??
+          investedPoints({ kind: input.kind, points: payload["points"] as number, data });
+        payload["points"] = value;
+        payload["data"] = { ...data, points: value };
+      }
       const { data, error } = await ctx.supabase
         .from("character_entries")
         .insert(payload as Database["public"]["Tables"]["character_entries"]["Insert"])
@@ -139,19 +166,7 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
       title: "Update an entry on a character",
       description:
         "Changes one trait, skill, technique or piece of equipment on a character sheet. Only the sheet's owner or their campaign's Game Master can edit it. Fields left out stay unchanged. Pack linking is optional and separate from the sheet values: `pack_entry_id` links this entry to a specific pack item, `match_pack: true` tries to find one by name, and `unlink: true` removes the link while keeping every value and all other provenance. The three are mutually exclusive. Linking never rewrites existing sheet values, and a name match that finds nothing leaves an existing link in place.",
-      inputSchema: z.object({
-        entry_id: uuid,
-        kind: boundedText(40).optional(),
-        name: boundedText(200).optional(),
-        category: z.string().max(120).nullable().optional(),
-        points: intField(-10000, 10000, "points").optional(),
-        levels: intField(0, 1000, "levels").optional(),
-        notes: z.string().max(4000).nullable().optional(),
-        sort_order: intField(0, 1000000, "sort_order").optional(),
-        pack_entry_id: uuid.optional(),
-        match_pack: z.boolean().optional(),
-        unlink: z.boolean().optional(),
-      }),
+      inputSchema: updateCharacterEntryInput,
       outputSchema: itemOutput,
       annotations: MODIFY,
     },
@@ -159,7 +174,7 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
       assertLinkFlags({ pack_entry_id, match_pack, unlink });
       const { data: found, error: lookupError } = await ctx.supabase
         .from("character_entries")
-        .select("id, name, kind, category, character_id, source")
+        .select("id, name, kind, category, character_id, source, points, data")
         .eq("id", entry_id)
         .maybeSingle();
       if (lookupError) fail("Entry lookup", lookupError);
@@ -203,6 +218,25 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
         }
       }
 
+      // Skill-like entries: an explicit `points` write is authoritative and is
+      // mirrored into `data.points`, preserving every other data key. Any
+      // other touch on such an entry normalises the two representations to the
+      // current EFFECTIVE value (legacy untouched rows are left alone).
+      const effectiveKind = (update["kind"] as string | undefined) ?? found.kind;
+      if (isSkillLikeKind(effectiveKind) && Object.keys(update).length > 0) {
+        const currentData = (found.data as Record<string, unknown> | null) ?? {};
+        const value =
+          patch.points ??
+          investedPoints({
+            kind: effectiveKind,
+            points: found.points,
+            data: currentData,
+            source: found.source,
+          });
+        update["points"] = value;
+        update["data"] = { ...currentData, ...((update["data"] as object) ?? {}), points: value };
+      }
+
       if (Object.keys(update).length === 0) {
         const current = (await ctx.supabase
           .from("character_entries")
@@ -237,7 +271,7 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
       title: "Remove an entry from a character",
       description:
         "Permanently removes one entry from a character sheet. Only the sheet's owner or their campaign's Game Master can do this.",
-      inputSchema: z.object({ entry_id: uuid }),
+      inputSchema: deleteCharacterEntryInput,
       outputSchema: deleteOutput,
       annotations: DESTROY,
     },

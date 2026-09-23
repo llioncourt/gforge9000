@@ -18,7 +18,7 @@
   },
   "wipeDialog": {
     "title": "Erase everything in your account?",
-    "description": "Characters, campaigns, notes, library entries, packs and roll history are deleted permanently. Confirm with your Google sign-in ({{email}}) to continue.",
+    "description": "Characters, campaigns, notes, library entries, packs and roll history are deleted permanently. Sign in again with Google ({{email}}) to continue.",
     "confirmWithGoogle": "Confirm with Google",
     "deleteEverything": "Delete everything"
   },

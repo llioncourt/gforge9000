@@ -270,3 +270,49 @@ describe("visible rows and searchable rows agree", () => {
     expect(first.matched).toBe(2);
   });
 });
+
+/* ------------------------------------------------------------------ */
+/* P0-04: scan truncation is reported, never silently swallowed         */
+/* ------------------------------------------------------------------ */
+
+describe("a scan that hits the row cap reports truncation instead of a false empty result", () => {
+  // Just over one server page (1000 rows) so the loop must start a second
+  // page — where an injected `maxScanRows` cap (well below 50000) can stop
+  // it before the alphabetically-last target is ever read.
+  const filler = Array.from({ length: 1005 }, (_, index) =>
+    entry(`filler-${index}`, `Aaa ${String(index).padStart(4, "0")}`),
+  );
+  const target = entry("target", "Zzyzx Skill");
+  const rows = [...filler, target];
+
+  it("marks the scan truncated and keeps the match count partial when the cap is hit", async () => {
+    const { client } = fakeClient({ library_entries: rows, content_packs: packs });
+    const scan = await loadPackCandidatesDetailed(client, {
+      search: "Zzyzx",
+      limit: 25,
+      maxScanRows: 1000,
+    });
+    expect(scan.truncated).toBe(true);
+    expect(scan.candidates).toEqual([]);
+    expect(scan.matched).toBe(0);
+  });
+
+  it("distinguishes 'no match, search complete' from 'no match, search incomplete'", async () => {
+    const { client } = fakeClient({ library_entries: rows, content_packs: packs });
+
+    const incomplete = await loadPackCandidatesDetailed(client, {
+      search: "Zzyzx",
+      limit: 25,
+      maxScanRows: 1000,
+    });
+    expect(incomplete.matched).toBe(0);
+    expect(incomplete.truncated).toBe(true);
+
+    const complete = await loadPackCandidatesDetailed(client, {
+      search: "Not In The Library At All",
+      limit: 25,
+    });
+    expect(complete.matched).toBe(0);
+    expect(complete.truncated).toBe(false);
+  });
+});

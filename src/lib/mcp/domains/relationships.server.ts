@@ -38,6 +38,33 @@ import {
   type RelationshipRow,
 } from "@/lib/mcp/domains/shared.server";
 
+const listRelationshipsInput = z.object({ campaign_id: uuid, limit: limitField });
+const createRelationshipInput = z.object({
+  campaign_id: uuid,
+  source_id: uuid,
+  target_id: uuid,
+  rel_type: boundedText(60),
+  description: z.string().max(2000).nullable().optional(),
+  gm_description: z.string().max(4000).nullable().optional(),
+  visibility: z.enum(VISIBILITY_VALUES).optional(),
+  strength: strengthField.nullable().optional(),
+  is_current: z.boolean().optional(),
+  start_label: z.string().max(120).nullable().optional(),
+  end_label: z.string().max(120).nullable().optional(),
+});
+const updateRelationshipInput = z.object({
+  relationship_id: uuid,
+  rel_type: boundedText(60).optional(),
+  description: z.string().max(2000).nullable().optional(),
+  gm_description: z.string().max(4000).nullable().optional(),
+  visibility: z.enum(VISIBILITY_VALUES).optional(),
+  strength: strengthField.nullable().optional(),
+  is_current: z.boolean().optional(),
+  start_label: z.string().max(120).nullable().optional(),
+  end_label: z.string().max(120).nullable().optional(),
+});
+const deleteRelationshipInput = z.object({ relationship_id: uuid });
+
 export function registerRelationships(tool: ToolRegistrar, ctx: McpToolContext): void {
   tool(
     "list_relationships",
@@ -45,7 +72,7 @@ export function registerRelationships(tool: ToolRegistrar, ctx: McpToolContext):
       title: "List entry relationships",
       description:
         "Lists the links between entries in one campaign. Game Master descriptions are removed for players. The reply reports how many links were returned out of the exact total.",
-      inputSchema: z.object({ campaign_id: uuid, limit: limitField }),
+      inputSchema: listRelationshipsInput,
       outputSchema: listOutput,
       annotations: READ,
     },
@@ -85,19 +112,7 @@ export function registerRelationships(tool: ToolRegistrar, ctx: McpToolContext):
       title: "Link two entries",
       description:
         "Creates a link between two entries of the same campaign. Only the campaign's Game Master can do this.",
-      inputSchema: z.object({
-        campaign_id: uuid,
-        source_id: uuid,
-        target_id: uuid,
-        rel_type: boundedText(60),
-        description: z.string().max(2000).nullable().optional(),
-        gm_description: z.string().max(4000).nullable().optional(),
-        visibility: z.enum(VISIBILITY_VALUES).optional(),
-        strength: strengthField.nullable().optional(),
-        is_current: z.boolean().optional(),
-        start_label: z.string().max(120).nullable().optional(),
-        end_label: z.string().max(120).nullable().optional(),
-      }),
+      inputSchema: createRelationshipInput,
       outputSchema: itemOutput,
       annotations: CREATE,
     },
@@ -132,17 +147,7 @@ export function registerRelationships(tool: ToolRegistrar, ctx: McpToolContext):
       title: "Update a link between entries",
       description:
         "Changes an existing link between two entries. Only the campaign's Game Master can do this. Fields left out stay unchanged.",
-      inputSchema: z.object({
-        relationship_id: uuid,
-        rel_type: boundedText(60).optional(),
-        description: z.string().max(2000).nullable().optional(),
-        gm_description: z.string().max(4000).nullable().optional(),
-        visibility: z.enum(VISIBILITY_VALUES).optional(),
-        strength: strengthField.nullable().optional(),
-        is_current: z.boolean().optional(),
-        start_label: z.string().max(120).nullable().optional(),
-        end_label: z.string().max(120).nullable().optional(),
-      }),
+      inputSchema: updateRelationshipInput,
       outputSchema: itemOutput,
       annotations: MODIFY,
     },
@@ -168,7 +173,7 @@ export function registerRelationships(tool: ToolRegistrar, ctx: McpToolContext):
       title: "Remove a link between entries",
       description:
         "Permanently removes a link between two entries. Only the campaign's Game Master can do this.",
-      inputSchema: z.object({ relationship_id: uuid }),
+      inputSchema: deleteRelationshipInput,
       outputSchema: deleteOutput,
       annotations: DESTROY,
     },

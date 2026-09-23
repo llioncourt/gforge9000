@@ -1,4 +1,5 @@
 import { defaultRuleset, type Ruleset } from "./ruleset";
+import { investedPoints } from "./skill-points";
 import type { CharacterEntry, ControllingAttribute, Difficulty } from "./types";
 import type { DerivedStats } from "./attributes";
 
@@ -109,7 +110,7 @@ export function skillLevel(
 ): SkillLevel {
   const attr = (entry.data.attribute as ControllingAttribute) ?? "DX";
   const difficulty = (entry.data.difficulty as Difficulty) ?? "A";
-  const points = Number(entry.data.points ?? entry.points ?? 0);
+  const points = investedPoints(entry);
   const bonus = Number(entry.data.bonus ?? 0);
   const rel = relativeLevel(points, difficulty, rules);
   const defaults = parseDefaults(entry.data.defaults as string | undefined);
@@ -219,7 +220,7 @@ export function techniqueLevel(
   rules: Ruleset = defaultRuleset,
 ): TechniqueLevel {
   const difficulty = (entry.data.difficulty as Difficulty) ?? "A";
-  const points = Number(entry.data.points ?? entry.points ?? 0);
+  const points = investedPoints(entry);
   const declared = entry.data["defaultPenalty"];
   const penaltyUnknown =
     declared === undefined || declared === null || !Number.isFinite(Number(declared));

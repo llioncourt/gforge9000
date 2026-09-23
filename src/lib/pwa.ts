@@ -9,11 +9,18 @@
  * which now only unregisters existing workers and clears caches) and this
  * flag is the single source of truth every other module must consult.
  *
- * To re-enable for a future release: flip `PWA_ENABLED` to `true`, restore a
- * guarded `navigator.serviceWorker.register("/sw.js")` call in
+ * `public/sw.js` currently ships as a pure TOMBSTONE worker: it has no
+ * fetch/push/notificationclick handlers and no cache reads — on
+ * install/activate it only clears CacheStorage, claims clients, and
+ * unregisters itself. The previous full caching + push worker source is
+ * preserved, dormant, at `public/sw-full.js.disabled` (not served, not
+ * registered by anything).
+ *
+ * To re-enable for a future release: flip `PWA_ENABLED` to `true`, restore
+ * `public/sw.js` from `public/sw-full.js.disabled`, implement the guarded
+ * `navigator.serviceWorker.register("/sw.js")` branch already stubbed in
  * `pwa-register.tsx`, and update `src/rules/__tests__/pwa.test.ts` and
- * `src/lib/push.ts` accordingly. `public/sw.js` is kept in the repo, dormant,
- * for that purpose.
+ * `src/lib/push.ts` accordingly.
  */
 export const PWA_ENABLED = false;
 

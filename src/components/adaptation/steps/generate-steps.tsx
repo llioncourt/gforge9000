@@ -24,7 +24,14 @@ import {
 } from "@/lib/adaptation/api";
 import { acceptableSelection, splitForReview } from "@/lib/adaptation/review";
 import { exportAdaptationBundle, exportProjectionBundle } from "@/lib/adaptation/bundle";
-import type { WizardStep } from "@/lib/adaptation/types";
+import {
+  ADAPTATION_TARGETS,
+  TARGET_COLUMN,
+  selectedTargets,
+  type AdaptationTarget,
+  type WizardStep,
+} from "@/lib/adaptation/types";
+import { targetConfigProblems } from "@/lib/adaptation/validation";
 import type { StepProps } from "@/components/adaptation/adaptation-wizard";
 
 interface Problem {
@@ -78,6 +85,10 @@ function useProblems(projectId: string, project: StepProps["project"]) {
       problems.push({ key: "noComicConfig", count: 0, step: "comic" });
     if (project.target_movie && !project.creative_settings?.movie?.title)
       problems.push({ key: "noMovieConfig", count: 0, step: "movie" });
+    for (const key of targetConfigProblems(project))
+      if (!problems.some((problem) => problem.key === key))
+        problems.push({ key, count: 0, step: key === "noBookConfig" ? "book_narrative" : "adventure_module" });
+    if (!selectedTargets(project).length) problems.push({ key: "noTargets", count: 0, step: "source" });
   }
   return { loading, problems };
 }
@@ -257,7 +268,7 @@ export function GenerateStep({ project, patch, goTo }: StepProps) {
     URL.revokeObjectURL(url);
   };
 
-  const run = async (kind: "bundle" | "comic" | "movie") => {
+  const run = async (kind: "bundle" | AdaptationTarget) => {
     setRunning(kind);
     setProgress(0);
     try {
@@ -295,7 +306,7 @@ export function GenerateStep({ project, patch, goTo }: StepProps) {
         </section>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <article className="space-y-2 rounded-lg border p-3">
           <h5 className="text-sm font-semibold">{t("generate.bundleTitle")}</h5>
           <p className="text-xs text-muted-foreground">{t("generate.bundleDescription")}</p>
@@ -304,29 +315,21 @@ export function GenerateStep({ project, patch, goTo }: StepProps) {
           </Button>
         </article>
 
-        <article className="space-y-2 rounded-lg border p-3">
-          <h5 className="text-sm font-semibold">{t("generate.comicTitle")}</h5>
-          <p className="text-xs text-muted-foreground">{t("generate.comicDescription")}</p>
-          <Button
-            size="sm"
-            disabled={!!running || !project.target_comic}
-            onClick={() => void run("comic")}
-          >
-            <Download className="mr-1 h-4 w-4" /> {t("generate.comicButton")}
-          </Button>
-        </article>
-
-        <article className="space-y-2 rounded-lg border p-3">
-          <h5 className="text-sm font-semibold">{t("generate.movieTitle")}</h5>
-          <p className="text-xs text-muted-foreground">{t("generate.movieDescription")}</p>
-          <Button
-            size="sm"
-            disabled={!!running || !project.target_movie}
-            onClick={() => void run("movie")}
-          >
-            <Download className="mr-1 h-4 w-4" /> {t("generate.movieButton")}
-          </Button>
-        </article>
+        {ADAPTATION_TARGETS.map((target) => (
+          <article key={target} className="space-y-2 rounded-lg border p-3">
+            <h5 className="text-sm font-semibold">{t(`generate.targets.${target}.title`)}</h5>
+            <p className="text-xs text-muted-foreground">
+              {t(`generate.targets.${target}.description`)}
+            </p>
+            <Button
+              size="sm"
+              disabled={!!running || project[TARGET_COLUMN[target]] !== true}
+              onClick={() => void run(target)}
+            >
+              <Download className="mr-1 h-4 w-4" /> {t(`generate.targets.${target}.button`)}
+            </Button>
+          </article>
+        ))}
       </div>
 
       <Dialog open={!!running}>

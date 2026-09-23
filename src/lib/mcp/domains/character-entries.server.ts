@@ -10,6 +10,7 @@ import {
   assertLinkFlags,
   candidateView,
   definitionFill,
+  fillMissingDefinition,
   resolveTarget,
   settingsForCharacter,
   sourceWithLink,
@@ -174,7 +175,7 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
       assertLinkFlags({ pack_entry_id, match_pack, unlink });
       const { data: found, error: lookupError } = await ctx.supabase
         .from("character_entries")
-        .select("id, name, kind, category, character_id, source, points, data")
+        .select("id, name, kind, category, character_id, source, points, levels, data, notes")
         .eq("id", entry_id)
         .maybeSingle();
       if (lookupError) fail("Entry lookup", lookupError);
@@ -212,6 +213,31 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
         if (target.item && target.method) {
           const { source } = await sourceWithLink(found.source, target.item, target.method);
           update["source"] = source;
+          // Same shared helper the sheet UI uses: fill the definition fields
+          // this entry is MISSING (a blank attribute/difficulty is not a
+          // customisation) without ever overwriting a value already there.
+          const fill = fillMissingDefinition(
+            {
+              kind: found.kind,
+              name: found.name,
+              category: found.category,
+              points: Number(found.points ?? 0),
+              levels: Number(found.levels ?? 1),
+              data: (found.data as Record<string, unknown> | null) ?? {},
+              notes: found.notes,
+              source: found.source,
+            },
+            target.item,
+          );
+          if (fill.changed) {
+            update["data"] = { ...fill.data, ...((update["data"] as object) ?? {}) };
+            if (fill.category !== undefined && update["category"] === undefined) {
+              update["category"] = fill.category;
+            }
+            if (fill.points !== undefined && update["points"] === undefined) {
+              update["points"] = fill.points;
+            }
+          }
         } else {
           // No match: an existing link is never silently removed.
           ambiguousNote = " No matching pack item was found; any existing link was kept.";

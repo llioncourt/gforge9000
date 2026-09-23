@@ -3,6 +3,7 @@ import { basicDamage, type BasicDamage } from "./damage";
 import { computeEncumbrance, drByLocation, type EncumbranceResult } from "./equipment";
 import { skillLevel } from "./skills";
 import { investedPoints, isSkillLikeKind } from "./skill-points";
+import { traitBaseCost } from "./trait-cost";
 import { fpState, hpState, type HealthState } from "./health";
 import { defaultRuleset, type Ruleset } from "./ruleset";
 import type { CharacterEntry, CharacterRecord, EntryKind, TraitModifier } from "./types";
@@ -56,7 +57,10 @@ export function entryCost(entry: CharacterEntry, rules: Ruleset = defaultRuleset
     return investedPoints(entry);
   }
   if (entry.kind === "equipment") return 0;
-  const base = Number(entry.points ?? 0) * Math.max(1, Number(entry.levels ?? 1));
+  // Shared leveled-trait resolver: legacy unmarked rows keep per-level
+  // storage (points * levels); rows normalised to total semantics are used
+  // as-is. See src/rules/trait-cost.ts.
+  const base = traitBaseCost(entry);
   return modifiers.length ? modifiedCost(base, modifiers, rules) : base;
 }
 

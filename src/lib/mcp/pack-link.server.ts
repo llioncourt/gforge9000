@@ -17,6 +17,7 @@ import {
   type EntryRowLike,
 } from "@/lib/pack-link-service";
 import {
+  fillMissingDefinition,
   packLeveledCost,
   isSkillLike,
   withPackLink,
@@ -25,6 +26,9 @@ import {
   type PackLinkMethod,
   type PackLinkStatus,
 } from "@/lib/pack-link";
+import { TRAIT_POINTS_SEMANTICS_KEY, usesLeveledPoints } from "@/rules/trait-cost";
+
+export { fillMissingDefinition };
 
 export interface LinkFlags {
   pack_entry_id?: string | undefined;
@@ -146,6 +150,9 @@ export function definitionFill(
     if (supplied.points !== undefined) data["points"] = supplied.points;
   }
   if (specialization) data["specialization"] = specialization;
+  // A new pack-linked leveled trait is created with canonical TOTAL-cost
+  // storage, so the engine never multiplies it by levels a second time.
+  if (usesLeveledPoints(kind)) data[TRAIT_POINTS_SEMANTICS_KEY] = "total";
   if (Object.keys(data).length) out.data = data;
   return out;
 }

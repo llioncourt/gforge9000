@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isSkillLikeKind } from "@/rules";
+import { isSkillLikeKind, TRAIT_POINTS_SEMANTICS_KEY, usesLeveledPoints } from "@/rules";
 import type { CharacterEntry, CharacterRecord, CharacterSheet } from "@/rules";
 import { withPackLink, type PackLink } from "@/lib/pack-link";
 
@@ -256,17 +256,37 @@ export function parsePortableLibrary(raw: string): PortableLibrary {
     throw new Error("Unrecognised file. Expected a Universal Character Forge library export.");
   }
   if (!Array.isArray(parsed.entries)) throw new Error("Library export has no entries array.");
-  const entries = parsed.entries.map((entry, index) => {
-    if (!entry || typeof entry !== "object")
-      throw new Error(`Entry ${index + 1} is not an object.`);
+  // Every rejected row is collected with its position and (when readable) its
+  // name, then reported together — never dropped silently. A single throw on
+  // the first bad row would hide every other invalid row behind it and could
+  // read as "the file only had N entries" instead of "M rows were rejected".
+  const rejected: string[] = [];
+  const entries: PortableLibraryEntry[] = [];
+  parsed.entries.forEach((entry, index) => {
+    const position = index + 1;
+    if (!entry || typeof entry !== "object") {
+      rejected.push(`row ${position}: not an object`);
+      return;
+    }
+    const rawName = (entry as unknown as Record<string, unknown>)["name"];
+    const label =
+      typeof rawName === "string" && rawName !== "" ? `"${rawName}"` : `row ${position}`;
     if (typeof entry.name !== "string" || entry.name.trim() === "") {
-      throw new Error(`Entry ${index + 1} is missing a name.`);
+      rejected.push(`row ${position}: missing a name`);
+      return;
     }
     if (typeof entry.kind !== "string" || entry.kind.trim() === "") {
-      throw new Error(`Entry "${entry.name}" is missing a kind.`);
+      rejected.push(`${label}: missing a kind`);
+      return;
     }
-    return toPortableLibrary([entry as unknown as Record<string, unknown>]).entries[0]!;
+    entries.push(toPortableLibrary([entry as unknown as Record<string, unknown>]).entries[0]!);
   });
+  if (rejected.length > 0) {
+    throw new Error(
+      `Library export has ${rejected.length} invalid ${rejected.length === 1 ? "entry" : "entries"}: ` +
+        rejected.join("; "),
+    );
+  }
   return { format: parsed.format, version: 1, exported_at: parsed.exported_at ?? "", entries };
 }
 
@@ -337,6 +357,11 @@ export function libraryEntryToCharacterDraft(
   if (entry.kind === "equipment") {
     data["quantity"] = Number(data["quantity"] ?? 1);
     data["carried"] = data["carried"] ?? true;
+  }
+  // A leveled trait added from a pack stores its cost as the TOTAL, so the
+  // rules engine never multiplies it by levels again (src/rules/trait-cost.ts).
+  if (link && usesLeveledPoints(entry.kind)) {
+    data[TRAIT_POINTS_SEMANTICS_KEY] = "total";
   }
   const baseSource: Record<string, unknown> = {
     label: entry.source_label,

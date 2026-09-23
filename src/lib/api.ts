@@ -575,6 +575,16 @@ export async function updateLibraryEntry(id: string, patch: TablesUpdate<"librar
   );
 }
 
+/** PostgREST caps a single insert/select round trip at its server row limit
+ * (1000 in this project). Importing more rows than that in one request would
+ * still write every row but the trailing `.select()` would come back capped,
+ * so a caller reading the returned array would believe only 1000 imported.
+ * Insert in bounded batches instead, and never accept the returned length on
+ * faith: it is checked against the batch's own input length so a short batch
+ * throws immediately, naming exactly which batch came back short, rather
+ * than silently reporting a partial import as a full success. */
+const IMPORT_BATCH_SIZE = 400;
+
 export async function importLibraryEntries(
   rows: Omit<TablesInsert<"library_entries">, "owner_id">[],
 ) {
@@ -585,17 +595,26 @@ export async function importLibraryEntries(
     pack: (r.pack ?? "").trim() || DEFAULT_PACK_NAME,
   }));
   for (const name of new Set(withPacks.map((r) => r.pack))) await ensureContentPack(name);
-  return unwrap(
-    await supabase
-      .from("library_entries")
-      .insert(
-        withPacks.map((r) => ({
-          ...r,
-          owner_id: auth.user!.id,
-        })) as TablesInsert<"library_entries">[],
-      )
-      .select(),
-  );
+
+  const inserted: LibraryRow[] = [];
+  for (let start = 0; start < withPacks.length; start += IMPORT_BATCH_SIZE) {
+    const batch = withPacks.slice(start, start + IMPORT_BATCH_SIZE).map((r) => ({
+      ...r,
+      owner_id: auth.user!.id,
+    })) as TablesInsert<"library_entries">[];
+    const batchResult = unwrap(await supabase.from("library_entries").insert(batch).select());
+    if (batchResult.length !== batch.length) {
+      const batchNumber = Math.floor(start / IMPORT_BATCH_SIZE) + 1;
+      throw new Error(
+        `Library import batch ${batchNumber} (rows ${start + 1}-${start + batch.length}) ` +
+          `returned ${batchResult.length} of ${batch.length} inserted rows — refusing to report ` +
+          "a partial import as complete. Retry the import; if this keeps happening, report the " +
+          "batch number above.",
+      );
+    }
+    inserted.push(...batchResult);
+  }
+  return inserted;
 }
 
 /* ---------- content packs ---------- */

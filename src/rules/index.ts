@@ -5,6 +5,7 @@ export * from "./damage";
 export * from "./defenses";
 export * from "./health";
 export * from "./skill-points";
+export * from "./trait-cost";
 export * from "./skills";
 export * from "./equipment";
 export * from "./weapons";

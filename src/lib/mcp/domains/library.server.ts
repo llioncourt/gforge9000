@@ -493,17 +493,28 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
         // Keyed by owner_id + normalized pack name so two owners with a
         // same-named pack never contaminate each other's counts. RLS still
         // decides which library_entries rows are visible in the first place.
-        const { data: entryRows, error: entriesError } = await ctx.supabase
-          .from("library_entries")
-          .select("owner_id,pack")
-          .limit(10000);
-        if (entriesError) fail("Counting pack entries", entriesError);
+        //
+        // PostgREST caps any single response at its configured max rows
+        // (1000 in this project), so a pack with more visible entries than
+        // that would silently under-count if read in one request. Page
+        // through every visible row instead, and never infer completeness
+        // from a single unpaged response: only a short page ends the loop.
         const counts = new Map<string, number>();
-        for (const row of entryRows ?? []) {
-          const packName = (row.pack ?? "").trim().toLowerCase();
-          if (!packName) continue;
-          const key = `${row.owner_id}::${packName}`;
-          counts.set(key, (counts.get(key) ?? 0) + 1);
+        const ENTRY_PAGE_SIZE = 1000;
+        for (let from = 0; ; from += ENTRY_PAGE_SIZE) {
+          const { data: entryRows, error: entriesError } = await ctx.supabase
+            .from("library_entries")
+            .select("owner_id,pack")
+            .order("id", { ascending: true })
+            .range(from, from + ENTRY_PAGE_SIZE - 1);
+          if (entriesError) fail("Counting pack entries", entriesError);
+          for (const row of entryRows ?? []) {
+            const packName = (row.pack ?? "").trim().toLowerCase();
+            if (!packName) continue;
+            const key = `${row.owner_id}::${packName}`;
+            counts.set(key, (counts.get(key) ?? 0) + 1);
+          }
+          if (!entryRows || entryRows.length < ENTRY_PAGE_SIZE) break;
         }
 
         let allowed: string[] | null = null;

@@ -699,6 +699,20 @@ function EntityPage() {
           </div>
           {isGm ? (
             <div className="space-y-2">
+              <Label htmlFor="entity-description">
+                {t("entityPage.fields.fullDescription")}
+              </Label>
+              <Textarea
+                id="entity-description"
+                rows={6}
+                value={form.description ?? ""}
+                onChange={(event) => patch({ description: event.target.value })}
+                onBlur={() => commit({ description: form.description })}
+              />
+            </div>
+          ) : null}
+          {isGm ? (
+            <div className="space-y-2">
               <Label htmlFor="entity-gm">{t("entityPage.fields.gmNotes")}</Label>
               <Textarea
                 id="entity-gm"

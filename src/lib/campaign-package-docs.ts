@@ -157,6 +157,7 @@ dropping content.
   "settings": {
     "point_limit": 150,
     "disadvantage_limit": -50,           // zero or negative
+    "quirk_limit": -5,                   // optional; usually negative
     "tech_level": 9,
     "house_rules": "Free text shown on the House rules panel.",
     "allowed_sources": ["user"]          // content packs enabled for the table

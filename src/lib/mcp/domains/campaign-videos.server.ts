@@ -625,6 +625,78 @@ export function registerCampaignVideos(tool: ToolRegistrar, ctx: McpToolContext)
           toStructured(data as VideoRow),
         );
       },
+
+      play: async (i) => {
+        const video = await loadVideo(ctx, i.video_id);
+        await requireVideoPlaybackGm(ctx, video.campaign_id);
+        const current = await loadVideoPlayback(ctx, video.campaign_id);
+        const row = await writeVideoPlayback(ctx, video.campaign_id, {
+          video_id: video.id,
+          is_playing: true,
+          position_seconds: i.position_seconds ?? 0,
+          loop_one: i.loop_one ?? current?.loop_one ?? false,
+        });
+        return detailReply(`Playing "${video.title}" for the campaign.`, videoPlaybackView(row));
+      },
+
+      pause: async (i) => {
+        await requireVideoPlaybackGm(ctx, i.campaign_id);
+        const current = await loadVideoPlayback(ctx, i.campaign_id);
+        if (!current?.video_id) throw new Error("No video is playing in this campaign.");
+        const row = await writeVideoPlayback(ctx, i.campaign_id, {
+          video_id: current.video_id,
+          is_playing: false,
+          position_seconds: derivePlaybackPosition(current),
+          loop_one: current.loop_one,
+        });
+        return detailReply("Video paused.", videoPlaybackView(row));
+      },
+
+      resume: async (i) => {
+        await requireVideoPlaybackGm(ctx, i.campaign_id);
+        const current = await loadVideoPlayback(ctx, i.campaign_id);
+        if (!current?.video_id) throw new Error("There is no video to resume.");
+        const row = await writeVideoPlayback(ctx, i.campaign_id, {
+          video_id: current.video_id,
+          is_playing: true,
+          position_seconds: Math.max(0, Number(current.anchor_position_seconds) || 0),
+          loop_one: current.loop_one,
+        });
+        return detailReply("Video resumed.", videoPlaybackView(row));
+      },
+
+      seek: async (i) => {
+        await requireVideoPlaybackGm(ctx, i.campaign_id);
+        const current = await loadVideoPlayback(ctx, i.campaign_id);
+        if (!current?.video_id) throw new Error("There is no video to seek.");
+        const row = await writeVideoPlayback(ctx, i.campaign_id, {
+          video_id: current.video_id,
+          is_playing: current.is_playing,
+          position_seconds: i.position_seconds,
+          loop_one: current.loop_one,
+        });
+        return detailReply("Video position set.", videoPlaybackView(row));
+      },
+
+      stop: async (i) => {
+        await requireVideoPlaybackGm(ctx, i.campaign_id);
+        const current = await loadVideoPlayback(ctx, i.campaign_id);
+        const row = await writeVideoPlayback(ctx, i.campaign_id, {
+          video_id: current?.video_id ?? null,
+          is_playing: false,
+          position_seconds: 0,
+          loop_one: current?.loop_one ?? false,
+        });
+        return detailReply("Video stopped.", videoPlaybackView(row));
+      },
+
+      get_playback: async (i) => {
+        await requireMember(ctx, i.campaign_id);
+        return detailReply(
+          "Current video playback state.",
+          videoPlaybackView(await loadVideoPlayback(ctx, i.campaign_id)),
+        );
+      },
     }),
   );
 }

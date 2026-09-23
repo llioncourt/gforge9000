@@ -1,3 +1,10 @@
+# HISTORICAL SNAPSHOT — NOT CURRENT TRUTH
+**Date:** 2026-09-17
+**Status:** Archived. Test counts and findings in this document are stale and reflect a past state of the project.
+For current architecture and status, see [README.md](../../README.md).
+
+---
+
 # GURPS Forge Companion — Technical Assessment
 
 **Assessment date:** 2026-09-17

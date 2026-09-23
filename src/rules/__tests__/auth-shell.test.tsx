@@ -45,10 +45,17 @@ describe("auth shell boundary", () => {
     expect(mounted).toEqual(["runtime", "page"]);
   });
 
-  it("keeps useDice available on /auth (DiceProvider is mounted on every route)", () => {
+  it("keeps useDice available on /auth (DiceProvider is mounted on every route)", async () => {
     // Regression for the production freeze: during a transition toward /auth
     // the outgoing authenticated tree still renders and calls useDice while
     // authShell has already flipped. DiceProvider must wrap both branches.
+    const i18n = createI18nInstance("en");
+    await new Promise<void>((resolve) => {
+      if (i18n.isInitialized) resolve();
+      else i18n.on("initialized", () => resolve());
+    });
+    await i18n.loadNamespaces("dice");
+
     function OutgoingPage() {
       const dice = useDice();
       expect(dice).toBeDefined();
@@ -58,12 +65,22 @@ describe("auth shell boundary", () => {
     expect(() =>
       renderToStaticMarkup(
         createElement(
-          I18nProvider,
-          { initialLocale: "en" },
+          I18nextProvider,
+          { i18n },
           createElement(DiceProvider, null, createElement(OutgoingPage)),
         ),
       ),
     ).not.toThrow();
+  });
+
+  it("documents the failure mode: useDice without DiceProvider throws", () => {
+    function Bare() {
+      useDice();
+      return createElement("main", null, "bare");
+    }
+    expect(() => renderToStaticMarkup(createElement(Bare))).toThrow(
+      /useDice must be used inside DiceProvider/,
+    );
   });
 });
 

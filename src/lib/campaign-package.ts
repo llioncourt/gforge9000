@@ -52,6 +52,8 @@ const settingsSchema = z
   .object({
     point_limit: z.number().int().min(0).max(100000).optional(),
     disadvantage_limit: z.number().int().min(-100000).max(0).optional(),
+    /** Optional since v1; older packages simply omit it. */
+    quirk_limit: z.number().int().min(-100000).max(100000).optional(),
     tech_level: z.number().int().min(0).max(20).optional(),
     house_rules: text(20000).optional(),
     allowed_sources: z.array(text(80)).max(50).optional(),

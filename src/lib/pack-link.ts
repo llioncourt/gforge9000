@@ -657,13 +657,20 @@ export function restoreDefinitionPatch(
     if (value === undefined || value === null || value === "") delete data[field];
     else data[field] = value;
   }
-  // Gear: the pack owns the mechanical stats; quantity and carried are the
-  // character's own state and are never touched.
+  // Gear: the pack owns the mechanical stats, so they are synchronised to the
+  // CURRENT definition — a stat the pack no longer defines is removed rather
+  // than left behind, where it would keep affecting the engine unseen.
+  // quantity, carried and notes are the character's own state and stay.
   if (entry.kind === "equipment") {
     for (const field of EQUIPMENT_DEFINITION_FIELDS) {
       const value = itemData[field];
-      if (value === undefined || value === null || value === "") continue;
-      data[field] = value;
+      const empty =
+        value === undefined ||
+        value === null ||
+        value === "" ||
+        (Array.isArray(value) && value.length === 0);
+      if (empty) delete data[field];
+      else data[field] = value;
     }
   }
   // Invested points stay exactly as the player bought them.

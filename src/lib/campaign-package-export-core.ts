@@ -287,6 +287,8 @@ export async function buildCampaignPackageZipCore(
     settings.point_limit = rawSettings["point_limit"];
   if (typeof rawSettings["disadvantage_limit"] === "number")
     settings.disadvantage_limit = rawSettings["disadvantage_limit"];
+  if (typeof rawSettings["quirk_limit"] === "number")
+    settings.quirk_limit = rawSettings["quirk_limit"];
   if (typeof rawSettings["tech_level"] === "number")
     settings.tech_level = rawSettings["tech_level"];
   if (typeof rawSettings["house_rules"] === "string")

@@ -21,6 +21,7 @@ import {
   reconcileEntries,
   type CatalogueEntry,
   type ImportedEntry,
+  type ReconcileOptions,
   type ReconcileResult,
 } from "@/lib/trait-match";
 
@@ -58,6 +59,7 @@ export async function reconcileEntriesWithClient(
   client: SupabaseClient<Database>,
   entries: ImportedEntry[],
   allowedPacks: string[] = [],
+  options: ReconcileOptions = {},
 ): Promise<ReconcileResult> {
   if (entries.length === 0) return { entries, matched: 0, unmatched: 0 };
   let rows: CatalogueEntry[];
@@ -68,5 +70,5 @@ export async function reconcileEntriesWithClient(
   }
   const catalogue = buildCatalogue(rows, allowedPacks);
   if (catalogue.length === 0) return { entries, matched: 0, unmatched: entries.length };
-  return reconcileEntries(entries, catalogueIndex(catalogue));
+  return reconcileEntries(entries, catalogueIndex(catalogue), new Map(), options);
 }

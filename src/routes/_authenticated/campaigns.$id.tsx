@@ -1043,7 +1043,6 @@ function CampaignPage() {
 
         <TabsContent value="rules" className="mt-6">
           <HouseRules
-            campaignId={id}
             settings={settings}
             disabled={!isGm}
             knownPacks={knownPacks}

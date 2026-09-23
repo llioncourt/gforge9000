@@ -360,6 +360,11 @@ export function libraryEntryToCharacterDraft(
     data["quantity"] = Number(data["quantity"] ?? 1);
     data["carried"] = data["carried"] ?? true;
   }
+  // A leveled trait added from a pack stores its cost as the TOTAL, so the
+  // rules engine never multiplies it by levels again (src/rules/trait-cost.ts).
+  if (link && usesLeveledPoints(entry.kind)) {
+    data[TRAIT_POINTS_SEMANTICS_KEY] = "total";
+  }
   const baseSource: Record<string, unknown> = {
     label: entry.source_label,
     edition: entry.source_edition ?? "",

@@ -6,6 +6,14 @@ describe("public sign-in navigation", () => {
     const source = readFileSync("src/routes/auth.tsx", "utf8");
 
     expect(source).not.toContain("useSession");
-    expect(source).not.toMatch(/useEffect\([\s\S]*navigate\(\{ to: "\/dashboard"/);
+
+    // No effect on the sign-in page may navigate; navigation only happens as a
+    // result of an explicit successful sign-in/sign-up submit.
+    const effectBodies = [...source.matchAll(/useEffect\(\(\) => \{([\s\S]*?)\n {2}\}, \[/g)].map(
+      (match) => match[1],
+    );
+    for (const body of effectBodies) {
+      expect(body).not.toContain("navigate(");
+    }
   });
 });

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Dices, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useT } from "@/i18n/hooks";
 import { logAuthEvent } from "@/lib/auth-diagnostics";
+import { runAuthRequest } from "@/lib/auth-submit";
 import { metaLocale, metaText } from "@/i18n/meta";
 import { Trans } from "react-i18next";
 
@@ -35,42 +36,82 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
 
+  // Guards against double submits and against late completions updating the
+  // form (or navigating) after the page is gone.
+  const inFlight = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  const submit = useCallback(
+    async <R extends { error: { message: string } | null }>(
+      request: () => Promise<R>,
+      onSuccess: (response: R) => void,
+    ) => {
+      if (inFlight.current) return;
+      inFlight.current = true;
+      setBusy(true);
+
+      const result = await runAuthRequest(request);
+
+      inFlight.current = false;
+      if (!mounted.current) return;
+      setBusy(false);
+
+      if (result.status === "timeout") {
+        logAuthEvent("auth:submit", { ok: false, reason: "timeout" });
+        toast.error(t("errors.timeout"));
+        return;
+      }
+      if (result.status === "thrown") {
+        logAuthEvent("auth:submit", { ok: false, reason: "thrown" });
+        toast.error(t("errors.unexpected"));
+        return;
+      }
+      if (result.data.error) {
+        logAuthEvent("auth:submit", { ok: false, reason: "rejected" });
+        toast.error(result.data.error.message);
+        return;
+      }
+      logAuthEvent("auth:submit", { ok: true });
+      onSuccess(result.data);
+    },
+    [t],
+  );
+
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
     logAuthEvent("login:click", { method: "password" });
-    setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
-    if (error) {
-      logAuthEvent("login:result", { method: "password", ok: false });
-      toast.error(error.message);
-      return;
-    }
-    logAuthEvent("login:result", { method: "password", ok: true });
-    navigate({ to: "/dashboard", replace: true });
+    await submit(
+      () => supabase.auth.signInWithPassword({ email, password }),
+      () => navigate({ to: "/dashboard", replace: true }),
+    );
   }
 
   async function signUp(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { display_name: displayName || email.split("@")[0] },
+    await submit(
+      () =>
+        supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { display_name: displayName || email.split("@")[0] },
+          },
+        }),
+      (response) => {
+        if (!response.data.session) {
+          setSent(true);
+          return;
+        }
+        navigate({ to: "/dashboard", replace: true });
       },
-    });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    if (!data.session) {
-      setSent(true);
-      return;
-    }
-    navigate({ to: "/dashboard", replace: true });
+    );
   }
 
   return (

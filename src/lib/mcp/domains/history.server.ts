@@ -107,6 +107,8 @@ export function registerHistory(tool: ToolRegistrar, ctx: McpToolContext): void 
         return listReply("entry revisions", items, items.length);
       },
       snapshot_entry: async (i) => {
+        const { campaign } = await loadEntity(ctx, i.entry_id);
+        requireGmFor(campaign, "save a version of an entry");
         const { data: entry, error: entryError } = await ctx.supabase
           .from("entities")
           .select("*")

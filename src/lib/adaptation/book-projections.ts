@@ -94,7 +94,12 @@ export interface BookProjectionInput {
   props: BibleRecord[];
   storyBible: StoryBible;
   direction: NarrativeDirection;
-  assets?: { asset_key: string; role: string; entity_id?: string | null; entity_name?: string | null }[];
+  assets?: {
+    asset_key: string;
+    role: string;
+    entity_id?: string | null | undefined;
+    entity_name?: string | null | undefined;
+  }[];
   /** GURPS stat blocks keyed by entity id, already derived by the rules engine. */
   statBlocks?: Record<string, StatBlockInput>;
   /** Entities the campaign marks as player characters. */

@@ -46,8 +46,8 @@ describe("MCP schema-cache hoisting (SCHEMACACHE)", () => {
     // the exact same reference, proving the WeakMap-keyed cache in
     // `withJson` was hit rather than re-running z.toJSONSchema.
     for (const name of Object.keys(first)) {
-      expect(second[name].input).toBe(first[name].input);
-      expect(second[name].output).toBe(first[name].output);
+      expect(second[name]?.input).toBe(first[name]?.input);
+      expect(second[name]?.output).toBe(first[name]?.output);
     }
   });
 

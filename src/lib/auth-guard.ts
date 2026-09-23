@@ -10,7 +10,7 @@
 
 import { logAuthEvent } from "@/lib/auth-diagnostics";
 
-export type ProtectedAccessUser = { id: string; [key: string]: unknown };
+export type ProtectedAccessUser = { id: string };
 
 export type ProtectedAccessDecision =
   | { outcome: "allow"; source: "local-session" | "getUser"; user: ProtectedAccessUser }

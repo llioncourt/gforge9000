@@ -117,7 +117,7 @@ describe("auth session regressions", () => {
 
     const guard = await runProtectedGuard(auth);
     expect(guard.outcome).toBe("allow");
-    expect(guard.source).toBe("local-session");
+    expect(guard.outcome === "allow" && guard.source).toBe("local-session");
   });
 
   it("redirects to /auth when there is no local session and getUser() has none either", async () => {
@@ -135,7 +135,7 @@ describe("auth session regressions", () => {
 
     const guard = await runProtectedGuard(auth);
     expect(guard.outcome).toBe("allow");
-    expect(guard.source).toBe("getUser");
+    expect(guard.outcome === "allow" && guard.source).toBe("getUser");
 
     getSessionSpy.mockRestore();
     auth.getUser = originalGetUser;

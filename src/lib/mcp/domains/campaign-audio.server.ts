@@ -194,7 +194,49 @@ const input = z.discriminatedUnion("action", [
       position_seconds: intField(0, 60 * 60 * 12, "position_seconds"),
       loop_one: z.boolean(),
     })
-    .describe("Set the campaign's shared soundtrack playback state. GM only, changes data."),
+    .describe(
+      "Legacy: set the campaign's shared soundtrack playback state in one call. Still supported, " +
+        "and it now also writes the anchor (anchor_position_seconds/anchored_at) used to derive " +
+        "the live position. Prefer play/pause/resume/seek/stop/set_loop. GM only, changes data.",
+    ),
+  z
+    .object({
+      action: z.literal("play"),
+      campaign_id: uuid,
+      track_id: uuid,
+      position_seconds: secondsField.optional(),
+      loop_one: z.boolean().optional(),
+    })
+    .describe(
+      "Start a track from position_seconds (default 0). GM only, changes data.",
+    ),
+  z
+    .object({ action: z.literal("pause"), campaign_id: uuid })
+    .describe(
+      "Pause where the track is right now: the derived position is frozen into the anchor. GM only, changes data.",
+    ),
+  z
+    .object({ action: z.literal("resume"), campaign_id: uuid })
+    .describe("Resume from the exact paused point. GM only, changes data."),
+  z
+    .object({
+      action: z.literal("seek"),
+      campaign_id: uuid,
+      position_seconds: secondsField,
+    })
+    .describe("Jump to a position, keeping playing/paused as it is. GM only, changes data."),
+  z
+    .object({ action: z.literal("stop"), campaign_id: uuid })
+    .describe("Stop playback and reset the position to zero. GM only, changes data."),
+  z
+    .object({ action: z.literal("set_loop"), campaign_id: uuid, loop_one: z.boolean() })
+    .describe("Turn repeat-one on or off without disturbing playback. GM only, changes data."),
+  z
+    .object({ action: z.literal("get_playback"), campaign_id: uuid })
+    .describe(
+      "Read the shared soundtrack playback state with position_seconds already derived from the " +
+        "anchor, plus the track's duration_seconds. Read-only.",
+    ),
   z
     .object({
       action: z.literal("prepare_cover_upload"),

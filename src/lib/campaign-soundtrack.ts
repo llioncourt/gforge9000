@@ -5,7 +5,11 @@ import type { CampaignSoundtrackManifest } from "@/lib/campaign-soundtrack-pack"
 export const CAMPAIGN_SOUNDTRACK_BUCKET = "campaign-soundtracks";
 export type SoundtrackAlbum = Tables<"campaign_soundtrack_albums">;
 export type SoundtrackTrack = Tables<"campaign_soundtrack_tracks">;
-export type SoundtrackState = Tables<"campaign_soundtrack_state">;
+/* The anchor columns are newer than the generated types. */
+export type SoundtrackState = Tables<"campaign_soundtrack_state"> & {
+  anchor_position_seconds: number;
+  anchored_at: string;
+};
 
 function fail(error: { message: string } | null) {
   if (error) throw new Error(error.message);
@@ -35,7 +39,7 @@ export async function listCampaignSoundtracks(campaignId: string) {
   return {
     albums: albumsResult.data ?? [],
     tracks: tracksResult.data ?? [],
-    state: stateResult.data ?? null,
+    state: (stateResult.data as SoundtrackState | null) ?? null,
   };
 }
 
@@ -145,14 +149,19 @@ export async function setCampaignSoundtrackState(input: {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
+  const position = Math.max(0, input.positionSeconds);
+  const now = new Date().toISOString();
   const result = await supabase.from("campaign_soundtrack_state").upsert({
     campaign_id: input.campaignId,
     album_id: input.albumId,
     track_id: input.trackId,
     is_playing: input.isPlaying,
-    position_seconds: Math.max(0, input.positionSeconds),
+    // Legacy columns stay in step; the anchor pair is what drives derivation.
+    position_seconds: Math.round(position),
+    anchor_position_seconds: position,
+    anchored_at: now,
     loop_one: input.loopOne,
-    changed_at: new Date().toISOString(),
+    changed_at: now,
     changed_by: user.id,
   });
   fail(result.error);

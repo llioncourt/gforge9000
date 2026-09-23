@@ -845,6 +845,8 @@ export type Database = {
       campaign_soundtrack_state: {
         Row: {
           album_id: string | null
+          anchor_position_seconds: number
+          anchored_at: string
           campaign_id: string
           changed_at: string
           changed_by: string
@@ -856,6 +858,8 @@ export type Database = {
         }
         Insert: {
           album_id?: string | null
+          anchor_position_seconds?: number
+          anchored_at?: string
           campaign_id: string
           changed_at?: string
           changed_by?: string
@@ -867,6 +871,8 @@ export type Database = {
         }
         Update: {
           album_id?: string | null
+          anchor_position_seconds?: number
+          anchored_at?: string
           campaign_id?: string
           changed_at?: string
           changed_by?: string
@@ -962,6 +968,57 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_video_playback: {
+        Row: {
+          anchor_position_seconds: number
+          anchored_at: string
+          campaign_id: string
+          changed_by: string
+          created_at: string
+          is_playing: boolean
+          loop_one: boolean
+          updated_at: string
+          video_id: string | null
+        }
+        Insert: {
+          anchor_position_seconds?: number
+          anchored_at?: string
+          campaign_id: string
+          changed_by: string
+          created_at?: string
+          is_playing?: boolean
+          loop_one?: boolean
+          updated_at?: string
+          video_id?: string | null
+        }
+        Update: {
+          anchor_position_seconds?: number
+          anchored_at?: string
+          campaign_id?: string
+          changed_by?: string
+          created_at?: string
+          is_playing?: boolean
+          loop_one?: boolean
+          updated_at?: string
+          video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_video_playback_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: true
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_video_playback_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_videos"
             referencedColumns: ["id"]
           },
         ]

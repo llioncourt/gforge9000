@@ -73,6 +73,7 @@ import { VisibilityBadge } from "@/components/lore/visibility-badge";
 
 import { CampaignPackSummary } from "@/components/character/pack-link";
 import { CampaignIntroExperience } from "@/components/campaign/intro-panel";
+import { CampaignVideoStage } from "@/components/campaign/campaign-video-stage";
 import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
 import {
   CAMPAIGN_COVER_SETTING,
@@ -505,6 +506,8 @@ function CampaignPage() {
       </Dialog>
 
       <CampaignIntroExperience campaignId={id} isGm={isGm} display="gate" />
+
+      <CampaignVideoStage campaignId={id} isGm={isGm} />
 
       <Tabs
         value={tabParam ?? "roster"}

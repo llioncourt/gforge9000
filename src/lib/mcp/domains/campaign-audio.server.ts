@@ -28,7 +28,9 @@ import {
   requireGmFor,
   uuid,
   dbPayload,
+  anyDb,
 } from "@/lib/mcp/kit.server";
+import { derivePlaybackPosition } from "@/lib/playback-anchor";
 import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.server";
 import {
   decodeBase64File,
@@ -106,6 +108,12 @@ const trackFields = {
     .optional(),
   lyrics: z.string().max(20000).nullable().optional(),
 };
+
+/** Positions are fractional seconds, unlike the whole-second metadata fields. */
+const secondsField = z
+  .number()
+  .min(0, "position_seconds must be a number between 0 and 43200")
+  .max(60 * 60 * 12, "position_seconds must be a number between 0 and 43200");
 
 const input = z.discriminatedUnion("action", [
   z
@@ -194,7 +202,47 @@ const input = z.discriminatedUnion("action", [
       position_seconds: intField(0, 60 * 60 * 12, "position_seconds"),
       loop_one: z.boolean(),
     })
-    .describe("Set the campaign's shared soundtrack playback state. GM only, changes data."),
+    .describe(
+      "Legacy: set the campaign's shared soundtrack playback state in one call. Still supported, " +
+        "and it now also writes the anchor (anchor_position_seconds/anchored_at) used to derive " +
+        "the live position. Prefer play/pause/resume/seek/stop/set_loop. GM only, changes data.",
+    ),
+  z
+    .object({
+      action: z.literal("play"),
+      campaign_id: uuid,
+      track_id: uuid,
+      position_seconds: secondsField.optional(),
+      loop_one: z.boolean().optional(),
+    })
+    .describe("Start a track from position_seconds (default 0). GM only, changes data."),
+  z
+    .object({ action: z.literal("pause"), campaign_id: uuid })
+    .describe(
+      "Pause where the track is right now: the derived position is frozen into the anchor. GM only, changes data.",
+    ),
+  z
+    .object({ action: z.literal("resume"), campaign_id: uuid })
+    .describe("Resume from the exact paused point. GM only, changes data."),
+  z
+    .object({
+      action: z.literal("seek"),
+      campaign_id: uuid,
+      position_seconds: secondsField,
+    })
+    .describe("Jump to a position, keeping playing/paused as it is. GM only, changes data."),
+  z
+    .object({ action: z.literal("stop"), campaign_id: uuid })
+    .describe("Stop playback and reset the position to zero. GM only, changes data."),
+  z
+    .object({ action: z.literal("set_loop"), campaign_id: uuid, loop_one: z.boolean() })
+    .describe("Turn repeat-one on or off without disturbing playback. GM only, changes data."),
+  z
+    .object({ action: z.literal("get_playback"), campaign_id: uuid })
+    .describe(
+      "Read the shared soundtrack playback state with position_seconds already derived from the " +
+        "anchor, plus the track's duration_seconds. Read-only.",
+    ),
   z
     .object({
       action: z.literal("prepare_cover_upload"),
@@ -417,6 +465,114 @@ async function loadEffect(ctx: McpToolContext, effectId: string): Promise<Effect
 }
 
 /* ------------------------------------------------------------------ */
+/* Shared playback state (anchor + derived position)                    */
+/* ------------------------------------------------------------------ */
+
+export interface SoundtrackStateRow {
+  campaign_id: string;
+  album_id: string | null;
+  track_id: string | null;
+  is_playing: boolean;
+  anchor_position_seconds: number;
+  anchored_at: string;
+  loop_one: boolean;
+  [key: string]: unknown;
+}
+
+async function loadPlayback(
+  ctx: McpToolContext,
+  campaignId: string,
+): Promise<SoundtrackStateRow | null> {
+  const { data, error } = await ctx.supabase
+    .from("campaign_soundtrack_state")
+    .select("*")
+    .eq("campaign_id", campaignId)
+    .maybeSingle();
+  if (error) fail("Reading playback state", error);
+  return (data as SoundtrackStateRow | null) ?? null;
+}
+
+async function trackDuration(ctx: McpToolContext, trackId: string | null): Promise<number | null> {
+  if (!trackId) return null;
+  const { data, error } = await ctx.supabase
+    .from("campaign_soundtrack_tracks")
+    .select("duration_seconds")
+    .eq("id", trackId)
+    .maybeSingle();
+  if (error) fail("Reading track duration", error);
+  const value = data?.duration_seconds;
+  return typeof value === "number" ? value : null;
+}
+
+/** Writes a new anchor, keeping the legacy columns in step for older clients. */
+async function writePlayback(
+  ctx: McpToolContext,
+  campaignId: string,
+  next: {
+    album_id: string | null;
+    track_id: string | null;
+    is_playing: boolean;
+    position_seconds: number;
+    loop_one: boolean;
+  },
+): Promise<SoundtrackStateRow> {
+  const now = new Date().toISOString();
+  const position = Math.max(0, next.position_seconds);
+  const { data, error } = await anyDb(ctx.supabase)
+    .from("campaign_soundtrack_state")
+    .upsert({
+      campaign_id: campaignId,
+      album_id: next.album_id,
+      track_id: next.track_id,
+      is_playing: next.is_playing,
+      position_seconds: Math.round(position),
+      anchor_position_seconds: position,
+      anchored_at: now,
+      loop_one: next.loop_one,
+      changed_at: now,
+      changed_by: ctx.userId,
+    })
+    .select("*")
+    .single();
+  if (error) fail("Setting playback state", error);
+  return data as SoundtrackStateRow;
+}
+
+/** The row as callers should see it: live position, never the raw anchor alone. */
+async function playbackView(
+  ctx: McpToolContext,
+  row: SoundtrackStateRow | null,
+): Promise<Structured> {
+  if (!row) {
+    return {
+      track_id: null,
+      album_id: null,
+      is_playing: false,
+      position_seconds: 0,
+      duration_seconds: null,
+      loop_one: false,
+    };
+  }
+  const duration = await trackDuration(ctx, row.track_id);
+  return {
+    ...row,
+    position_seconds: derivePlaybackPosition(row, duration),
+    duration_seconds: duration,
+  };
+}
+
+/** Freezes the live position into the anchor so pause/seek keep the exact point. */
+function currentPosition(row: SoundtrackStateRow | null, duration: number | null): number {
+  return derivePlaybackPosition(row, duration);
+}
+
+async function requirePlaybackGm(ctx: McpToolContext, campaignId: string) {
+  const campaign = await loadCampaign(ctx, campaignId);
+  requireGmFor(campaign, "control soundtrack playback");
+  return campaign;
+}
+
+/* ------------------------------------------------------------------ */
 /* Registration                                                        */
 /* ------------------------------------------------------------------ */
 
@@ -427,11 +583,14 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
       title: "Campaign audio",
       description:
         "Manage a campaign's soundtrack albums/tracks and one-shot sound effects. Actions: list " +
-        "(read albums with their tracks), create_album/update_album/delete_album (GM only, " +
+        "(read albums with their tracks, plus the campaign's current playback block), create_album/update_album/delete_album (GM only, " +
         "delete_album removes stored files, changes/deletes data), set_album_visibility (GM only, " +
         "changes data), add_track/update_track/delete_track (GM only, delete_track removes the " +
-        "stored file, changes/deletes data), get_track_url (short-lived signed URL), set_playback " +
-        "(GM only, changes data), prepare_cover_upload/upload_cover_base64 " +
+        "stored file, changes/deletes data), get_track_url (short-lived signed URL), play/pause/resume/seek/stop/" +
+        "set_loop (GM only, shared playback control; pause freezes the exact current point and " +
+        "resume continues from it, changes data), get_playback (read the shared state with " +
+        "position_seconds already derived from the anchor plus the track's duration_seconds), " +
+        "set_playback (legacy one-call form, still supported, GM only, changes data), prepare_cover_upload/upload_cover_base64 " +
         "(GM only, stage a cover image for create_album/update_album, changes data; " +
         "upload_cover_from_url is disabled for security reasons), " +
         "prepare_track_upload/upload_track_base64 (GM only, stage or add " +
@@ -477,7 +636,8 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
           .select("id", { count: "exact", head: true })
           .eq("campaign_id", i.campaign_id);
         if (error) fail("Counting albums", error);
-        return listReply("soundtrack albums", items, count ?? items.length);
+        const playback = await playbackView(ctx, await loadPlayback(ctx, i.campaign_id));
+        return listReply("soundtrack albums", items, count ?? items.length, { playback });
       },
 
       create_album: async (i) => {
@@ -657,24 +817,116 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
       },
 
       set_playback: async (i) => {
-        const campaign = await loadCampaign(ctx, i.campaign_id);
-        requireGmFor(campaign, "control soundtrack playback");
-        const { data, error } = await ctx.supabase
-          .from("campaign_soundtrack_state")
-          .upsert({
-            campaign_id: i.campaign_id,
-            album_id: i.album_id ?? null,
-            track_id: i.track_id ?? null,
-            is_playing: i.is_playing,
-            position_seconds: Math.max(0, i.position_seconds),
-            loop_one: i.loop_one,
-            changed_at: new Date().toISOString(),
-            changed_by: ctx.userId,
-          })
-          .select("*")
-          .single();
-        if (error) fail("Setting playback state", error);
-        return detailReply(`Playback state updated for "${campaign.name}".`, data);
+        const campaign = await requirePlaybackGm(ctx, i.campaign_id);
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: i.album_id ?? null,
+          track_id: i.track_id ?? null,
+          is_playing: i.is_playing,
+          position_seconds: i.position_seconds,
+          loop_one: i.loop_one,
+        });
+        return detailReply(
+          `Playback state updated for "${campaign.name}".`,
+          await playbackView(ctx, row),
+        );
+      },
+
+      play: async (i) => {
+        const campaign = await requirePlaybackGm(ctx, i.campaign_id);
+        const track = await loadTrack(ctx, i.track_id);
+        if (track.campaign_id !== i.campaign_id)
+          throw new Error("That track belongs to another campaign.");
+        const current = await loadPlayback(ctx, i.campaign_id);
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: track.album_id,
+          track_id: track.id,
+          is_playing: true,
+          position_seconds: i.position_seconds ?? 0,
+          loop_one: i.loop_one ?? current?.loop_one ?? false,
+        });
+        return detailReply(
+          `Playing "${String(track["title"] ?? "track")}" in "${campaign.name}".`,
+          await playbackView(ctx, row),
+        );
+      },
+
+      pause: async (i) => {
+        await requirePlaybackGm(ctx, i.campaign_id);
+        const current = await loadPlayback(ctx, i.campaign_id);
+        if (!current?.track_id) throw new Error("Nothing is playing in this campaign.");
+        const duration = await trackDuration(ctx, current.track_id);
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: current.album_id,
+          track_id: current.track_id,
+          is_playing: false,
+          position_seconds: currentPosition(current, duration),
+          loop_one: current.loop_one,
+        });
+        return detailReply("Playback paused.", await playbackView(ctx, row));
+      },
+
+      resume: async (i) => {
+        await requirePlaybackGm(ctx, i.campaign_id);
+        const current = await loadPlayback(ctx, i.campaign_id);
+        if (!current?.track_id) throw new Error("There is no track to resume.");
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: current.album_id,
+          track_id: current.track_id,
+          is_playing: true,
+          position_seconds: Math.max(0, Number(current.anchor_position_seconds) || 0),
+          loop_one: current.loop_one,
+        });
+        return detailReply("Playback resumed.", await playbackView(ctx, row));
+      },
+
+      seek: async (i) => {
+        await requirePlaybackGm(ctx, i.campaign_id);
+        const current = await loadPlayback(ctx, i.campaign_id);
+        if (!current?.track_id) throw new Error("There is no track to seek.");
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: current.album_id,
+          track_id: current.track_id,
+          is_playing: current.is_playing,
+          position_seconds: i.position_seconds,
+          loop_one: current.loop_one,
+        });
+        return detailReply("Playback position set.", await playbackView(ctx, row));
+      },
+
+      stop: async (i) => {
+        await requirePlaybackGm(ctx, i.campaign_id);
+        const current = await loadPlayback(ctx, i.campaign_id);
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: current?.album_id ?? null,
+          track_id: current?.track_id ?? null,
+          is_playing: false,
+          position_seconds: 0,
+          loop_one: current?.loop_one ?? false,
+        });
+        return detailReply("Playback stopped.", await playbackView(ctx, row));
+      },
+
+      set_loop: async (i) => {
+        await requirePlaybackGm(ctx, i.campaign_id);
+        const current = await loadPlayback(ctx, i.campaign_id);
+        const duration = await trackDuration(ctx, current?.track_id ?? null);
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: current?.album_id ?? null,
+          track_id: current?.track_id ?? null,
+          is_playing: current?.is_playing ?? false,
+          position_seconds: currentPosition(current, duration),
+          loop_one: i.loop_one,
+        });
+        return detailReply(
+          i.loop_one ? "Repeat-one turned on." : "Repeat-one turned off.",
+          await playbackView(ctx, row),
+        );
+      },
+
+      get_playback: async (i) => {
+        await requireMember(ctx, i.campaign_id);
+        const view = await playbackView(ctx, await loadPlayback(ctx, i.campaign_id));
+        return detailReply("Current soundtrack playback state.", view);
       },
 
       prepare_cover_upload: async (i) => {

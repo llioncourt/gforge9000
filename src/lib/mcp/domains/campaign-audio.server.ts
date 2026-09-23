@@ -107,6 +107,12 @@ const trackFields = {
   lyrics: z.string().max(20000).nullable().optional(),
 };
 
+/** Positions are fractional seconds, unlike the whole-second metadata fields. */
+const secondsField = z
+  .number()
+  .min(0, "position_seconds must be a number between 0 and 43200")
+  .max(60 * 60 * 12, "position_seconds must be a number between 0 and 43200");
+
 const input = z.discriminatedUnion("action", [
   z
     .object({ action: z.literal("list"), campaign_id: uuid, limit: limitField })

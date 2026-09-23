@@ -12,6 +12,7 @@ import type {
 import type { ChangeSet, ScannedSource } from "@/lib/adaptation/diff";
 import type { ScanSnapshot } from "@/lib/adaptation/scanner";
 import type { ComicConfig, MovieConfig } from "@/lib/adaptation/projections";
+import type { AdventureModuleConfig, BookNarrativeConfig } from "@/lib/adaptation/book-projections";
 
 /** Data access for the Campaign Adaptation Studio. Every table is GM-only by RLS. */
 
@@ -62,6 +63,9 @@ function dedupeByKey<T extends { stable_key?: string }>(rows: T[]): T[] {
 export interface CreativeSettings {
   comic?: Partial<ComicConfig>;
   movie?: Partial<MovieConfig>;
+  book_narrative?: Partial<BookNarrativeConfig>;
+  adventure_module?: Partial<AdventureModuleConfig>;
+  /** Shared narrative direction for every target — not the book target itself. */
   narrative?: {
     tone?: string;
     pov?: string;
@@ -80,6 +84,8 @@ export interface AdaptationProject {
   spoiler_policy: SpoilerPolicy;
   target_comic: boolean;
   target_movie: boolean;
+  target_book_narrative: boolean;
+  target_adventure_module: boolean;
   source_scope: Record<string, unknown>;
   creative_settings: CreativeSettings;
   wizard_step: WizardStep;
@@ -204,6 +210,8 @@ export async function createAdaptation(input: {
   spoiler_policy?: SpoilerPolicy;
   target_comic?: boolean;
   target_movie?: boolean;
+  target_book_narrative?: boolean;
+  target_adventure_module?: boolean;
 }): Promise<AdaptationProject> {
   const { data: auth } = await supabase.auth.getUser();
   const created_by = auth.user?.id;

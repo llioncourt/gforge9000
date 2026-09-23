@@ -28,6 +28,18 @@ import {
   type StoryBible,
 } from "@/lib/adaptation/protocol";
 import { buildComicProjection, buildMovieProjection } from "@/lib/adaptation/projections";
+import {
+  buildAdventureModuleProjection,
+  buildBookNarrativeProjection,
+  DEFAULT_ADVENTURE_MODULE,
+  DEFAULT_BOOK_NARRATIVE,
+  type StatBlockInput,
+} from "@/lib/adaptation/book-projections";
+import { deriveStats } from "@/rules/attributes";
+import { characterPoints } from "@/rules/points";
+import type { CharacterRecord } from "@/rules/types";
+import type { AdaptationTarget } from "@/lib/adaptation/types";
+import { renderAdventureModuleMarkdown, renderBookMarkdown } from "@/lib/adaptation/book-render";
 import { buildAdaptationReadme } from "@/lib/adaptation/bundle-docs";
 
 /**
@@ -142,6 +154,8 @@ export function assembleManifest(args: {
     label: string;
   }[];
   snapshotHash: string;
+  statBlocks?: Record<string, StatBlockInput>;
+  playerCharacterIds?: string[];
 }): AdaptationManifest {
   const {
     project,
@@ -185,6 +199,37 @@ export function assembleManifest(args: {
       })
     : null;
 
+  const bookInput = {
+    scenes,
+    facts,
+    cast,
+    locations,
+    props,
+    storyBible,
+    direction: creative.narrative ?? {},
+    assets,
+    statBlocks: args.statBlocks ?? {},
+    playerCharacterIds: args.playerCharacterIds ?? [],
+  };
+
+  const book_narrative = project.target_book_narrative
+    ? buildBookNarrativeProjection(bookInput, {
+        ...DEFAULT_BOOK_NARRATIVE,
+        ...stripNullish(creative.book_narrative ?? {}),
+        title: creative.book_narrative?.title || project.name,
+      })
+    : null;
+
+  const adventure_module = project.target_adventure_module
+    ? buildAdventureModuleProjection(bookInput, {
+        ...DEFAULT_ADVENTURE_MODULE,
+        ...stripNullish(creative.adventure_module ?? {}),
+        game_system: "gurps_4e",
+        adaptation_level: "complete_module",
+        title: creative.adventure_module?.title || project.name,
+      })
+    : null;
+
   const manifest = {
     format: ADAPTATION_FORMAT,
     version: ADAPTATION_VERSION,
@@ -220,7 +265,7 @@ export function assembleManifest(args: {
     wardrobe,
     scenes,
     assets,
-    targets: { comic, movie },
+    targets: { comic, movie, book_narrative, adventure_module },
     sync: {
       sources,
       scene_hashes: Object.fromEntries(
@@ -229,12 +274,80 @@ export function assembleManifest(args: {
       target_mapping_hints: {
         comic: comic ? { manifest_kind: "rx-comics-v2-manifest", manifest_version: "1.0" } : null,
         movie: movie ? { format: "moviesmith.movie.v1", scene_pack: "moviesmith.pack.v2" } : null,
+        book_narrative: book_narrative
+          ? {
+              format: "awd.book.narrative.v1",
+              chapter_scenes: Object.fromEntries(
+                book_narrative.target_projection.chapters.map((c) => [c.key, c.scene_keys]),
+              ),
+            }
+          : null,
+        adventure_module: adventure_module
+          ? {
+              format: "awd.adventure-module.gurps.v1",
+              encounter_scenes: Object.fromEntries(
+                adventure_module.target_projection.encounters.map((e) => [e.key, e.scene_key]),
+              ),
+            }
+          : null,
       },
       snapshot_hash: snapshotHash,
     },
   };
 
   return adaptationManifestSchema.parse(manifest);
+}
+
+function stripNullish<T extends object>(value: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(value).filter(([, v]) => v !== null && v !== undefined && v !== ""),
+  ) as Partial<T>;
+}
+
+/** GURPS stat blocks for entities linked to a character sheet, derived by the rules engine. */
+async function loadStatBlocks(
+  entities: { id: string; kind: string; character_id: string | null }[],
+): Promise<{ statBlocks: Record<string, StatBlockInput>; playerCharacterIds: string[] }> {
+  const linked = entities.filter((entity) => entity.character_id);
+  const playerCharacterIds = entities.filter((e) => e.kind.toUpperCase() === "PC").map((e) => e.id);
+  if (!linked.length) return { statBlocks: {}, playerCharacterIds };
+  const { data } = await supabase
+    .from("characters")
+    .select("*")
+    .in(
+      "id",
+      linked.map((entity) => entity.character_id!),
+    );
+  const statBlocks: Record<string, StatBlockInput> = {};
+  for (const entity of linked) {
+    const row = (data ?? []).find((c) => c.id === entity.character_id);
+    if (!row) continue;
+    if (!row.is_npc) playerCharacterIds.push(entity.id);
+    const record = row as unknown as CharacterRecord;
+    const stats = deriveStats(record);
+    let total: number | null = null;
+    try {
+      total = characterPoints(record, []).total;
+    } catch {
+      total = null;
+    }
+    statBlocks[entity.id] = {
+      st: stats.st,
+      dx: stats.dx,
+      iq: stats.iq,
+      ht: stats.ht,
+      hp: stats.hp,
+      will: stats.will,
+      per: stats.per,
+      fp: stats.fp,
+      basic_speed: stats.basicSpeed,
+      basic_move: stats.basicMove,
+      dodge: stats.dodge,
+      point_total: total,
+      source_character_id: row.id,
+    };
+  }
+  return { statBlocks, playerCharacterIds: [...new Set(playerCharacterIds)] };
 }
 
 const DEFAULT_BIBLE: StoryBible = {
@@ -346,7 +459,12 @@ export async function buildAdaptationBundle(
     ...((project.creative_settings as { story_bible?: Partial<StoryBible> })?.story_bible ?? {}),
   };
 
+  const { statBlocks, playerCharacterIds } =
+    project.target_adventure_module ? await loadStatBlocks(entities) : { statBlocks: {}, playerCharacterIds: [] };
+
   const manifest = assembleManifest({
+    statBlocks,
+    playerCharacterIds,
     project,
     campaign: { id: campaign.id, name: campaign.name },
     facts: facts.map((fact) => ({
@@ -437,7 +555,7 @@ export async function exportAdaptationBundle(
 /** Exports only one target projection, for handing straight to RX or MovieSmith. */
 export async function exportProjectionBundle(
   project: AdaptationProject,
-  target: "comic" | "movie",
+  target: AdaptationTarget,
   onProgress?: ExportProgress,
 ): Promise<{ bytes: Uint8Array; fileName: string }> {
   const built = await buildAdaptationBundle(project, onProgress);
@@ -449,6 +567,13 @@ export async function exportProjectionBundle(
     [`${target}.json`]: new TextEncoder().encode(JSON.stringify(projection, null, 2)),
     "assets.json": new TextEncoder().encode(JSON.stringify(built.manifest.assets, null, 2)),
   };
+  // Books also ship a readable draft next to the structured projection.
+  const book = built.manifest.targets.book_narrative;
+  const adventure = built.manifest.targets.adventure_module;
+  if (target === "book_narrative" && book)
+    files["book.md"] = new TextEncoder().encode(renderBookMarkdown(book));
+  if (target === "adventure_module" && adventure)
+    files["module.md"] = new TextEncoder().encode(renderAdventureModuleMarkdown(adventure));
   for (const [path, bytes] of Object.entries(built.files)) {
     if (used.has(path)) files[path] = bytes;
   }

@@ -6,10 +6,13 @@ export function CampaignCoverBg({
   path,
   previewUrl,
   className,
+  positionY,
 }: {
   path: string | null | undefined;
   previewUrl?: string | null;
   className?: string;
+  /** Vertical framing: 0 = top, 50 = center, 100 = bottom. Defaults to top. */
+  positionY?: number;
 }) {
   const cover = useQuery({
     queryKey: ["campaign-cover", path ?? "none"],
@@ -27,7 +30,12 @@ export function CampaignCoverBg({
         alt=""
         loading="lazy"
         decoding="async"
-        className="h-full w-full object-cover object-top"
+        className={cn("h-full w-full object-cover", positionY === undefined && "object-top")}
+        style={
+          positionY === undefined
+            ? undefined
+            : { objectPosition: `50% ${Math.min(100, Math.max(0, positionY))}%` }
+        }
       />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/25" />
     </div>

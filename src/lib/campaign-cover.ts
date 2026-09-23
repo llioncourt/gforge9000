@@ -4,6 +4,15 @@ import { isImageFile, toAvifIfImage } from "@/lib/image-avif";
 
 export const CAMPAIGN_COVER_SETTING = "cover_path";
 
+/** Vertical framing of the cover crop: 0 = top, 50 = center, 100 = bottom. */
+export const CAMPAIGN_COVER_POSITION_SETTING = "cover_position_y";
+
+export function coverPositionFromSettings(settings: Record<string, unknown>): number {
+  const raw = Number(settings[CAMPAIGN_COVER_POSITION_SETTING]);
+  if (!Number.isFinite(raw)) return 0;
+  return Math.min(100, Math.max(0, Math.round(raw)));
+}
+
 export function validateCampaignCover(file: File): string | null {
   if (!isImageFile(file)) return "Choose an image file.";
   if (file.size === 0) return "That file is empty.";

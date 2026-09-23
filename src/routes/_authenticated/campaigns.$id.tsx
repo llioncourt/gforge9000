@@ -1085,57 +1085,6 @@ function HouseRules({
   const [houseRules, setHouseRules] = useState(String(settings["house_rules"] ?? ""));
   const [packs, setPacks] = useState<string[]>(allowedPacksOf(settings));
   const [newPack, setNewPack] = useState("");
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
-  useEffect(
-    () => () => {
-      if (coverPreview) URL.revokeObjectURL(coverPreview);
-    },
-    [coverPreview],
-  );
-  const cover = useMutation({
-    mutationFn: async (file: File) => {
-      const nextPath = await uploadCampaignCover(campaignId, file);
-      try {
-        await updateCampaign(campaignId, {
-          settings: { ...settings, [CAMPAIGN_COVER_SETTING]: nextPath } as never,
-        });
-      } catch (error) {
-        await removeCampaignCoverFile(nextPath).catch(() => undefined);
-        throw error;
-      }
-      if (coverPath && coverPath !== nextPath) {
-        await removeCampaignCoverFile(coverPath).catch(() => undefined);
-      }
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] }),
-        queryClient.invalidateQueries({ queryKey: ["campaigns"] }),
-      ]);
-      setCoverPreview(null);
-      toast.success(t("houseRules.cover.updated"));
-    },
-    onError: (error: Error) => {
-      setCoverPreview(null);
-      toast.error(error.message);
-    },
-  });
-  const removeCover = useMutation({
-    mutationFn: async () => {
-      await updateCampaign(campaignId, {
-        settings: { ...settings, [CAMPAIGN_COVER_SETTING]: null } as never,
-      });
-      if (coverPath) await removeCampaignCoverFile(coverPath).catch(() => undefined);
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["campaign", campaignId] }),
-        queryClient.invalidateQueries({ queryKey: ["campaigns"] }),
-      ]);
-      toast.success(t("houseRules.cover.removed"));
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
   const packOptions = useMemo(
     () => Array.from(new Set([...knownPacks, ...packs])).sort((a, b) => a.localeCompare(b)),
     [knownPacks, packs],

@@ -635,7 +635,8 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
           .select("id", { count: "exact", head: true })
           .eq("campaign_id", i.campaign_id);
         if (error) fail("Counting albums", error);
-        return listReply("soundtrack albums", items, count ?? items.length);
+        const playback = await playbackView(ctx, await loadPlayback(ctx, i.campaign_id));
+        return listReply("soundtrack albums", items, count ?? items.length, { playback });
       },
 
       create_album: async (i) => {

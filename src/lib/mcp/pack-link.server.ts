@@ -17,6 +17,7 @@ import {
   type EntryRowLike,
 } from "@/lib/pack-link-service";
 import {
+  fillMissingDefinition,
   packLeveledCost,
   isSkillLike,
   withPackLink,
@@ -25,6 +26,9 @@ import {
   type PackLinkMethod,
   type PackLinkStatus,
 } from "@/lib/pack-link";
+import { TRAIT_POINTS_SEMANTICS_KEY, usesLeveledPoints } from "@/rules/trait-cost";
+
+export { fillMissingDefinition };
 
 export interface LinkFlags {
   pack_entry_id?: string | undefined;

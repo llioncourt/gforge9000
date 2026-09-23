@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 import { logAuthEvent } from "@/lib/auth-diagnostics";
-import { readOAuthReturnError } from "@/lib/browser-auth";
 import { metaLocale, metaText } from "@/i18n/meta";
 import { Trans } from "react-i18next";
 
@@ -44,19 +43,6 @@ function AuthPage() {
       navigate({ to: "/dashboard", replace: true });
     }
   }, [loading, user, navigate]);
-
-  // A provider return (success or failure) lands back on this same page
-  // (the canonical origin, see `getAuthRedirectUri`). A completed session is
-  // handled by the effect above once it hydrates. A failed/expired callback
-  // must surface as a visible error instead of silently looping back here.
-  useEffect(() => {
-    const message = readOAuthReturnError(window.location);
-    if (!message) return;
-    logAuthEvent("oauth:return-error", { shown: true });
-    toast.error(message);
-    // Clear the error params so refreshing /auth doesn't re-show the toast.
-    window.history.replaceState(null, "", window.location.pathname);
-  }, []);
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();

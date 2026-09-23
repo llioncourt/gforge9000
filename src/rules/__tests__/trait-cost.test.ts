@@ -3,6 +3,8 @@ import { computePoints } from "@/rules/points";
 import type { CharacterRecord } from "@/rules/types";
 import {
   TRAIT_POINTS_SEMANTICS_KEY,
+  perLevelPoints,
+  storedPointsForPerLevel,
   toTotalSemantics,
   traitBaseCost,
   traitPointsSemantics,

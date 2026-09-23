@@ -89,8 +89,12 @@ export const SETTINGS_DOC =
 
 /* ---------------- GM-only fields ---------------- */
 
-/** GM-only columns that must never reach a non-GM caller. */
-export const GM_ONLY_ENTITY_FIELDS = ["gm_notes"] as const;
+/**
+ * GM-only columns that must never reach a non-GM caller.
+ * `summary` and `player_description` are the player-visible texts; the full
+ * `description` is GM canon, like `gm_notes`.
+ */
+export const GM_ONLY_ENTITY_FIELDS = ["description", "gm_notes"] as const;
 export const GM_ONLY_RELATIONSHIP_FIELDS = ["gm_description"] as const;
 
 /** Exported for tests: the fields that must never reach a non-GM caller. */

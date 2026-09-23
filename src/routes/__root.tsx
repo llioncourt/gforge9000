@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -13,15 +14,14 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { DiceProvider } from "@/components/app/dice-context";
-import { PwaRegister } from "@/components/app/pwa-register";
-import { supabase } from "@/integrations/supabase/client";
+import { AppRuntime } from "@/components/app/app-runtime";
 import { I18nProvider } from "@/i18n/provider";
 import { detectLocale } from "@/i18n/detect";
 import { localeDirection } from "@/i18n/config";
 import { useT } from "@/i18n/hooks";
-import { logAuthEvent } from "@/lib/auth-diagnostics";
-import { readDiagFlags, diagTrace } from "@/lib/diag-modes";
+import { isAuthShellPath } from "@/lib/app-runtime";
+import { resolveDiagFlags, diagTrace } from "@/lib/diag-modes";
+
 
 function NotFoundComponent() {
   const { t } = useT("errors");

@@ -7,6 +7,7 @@ import {
   Film,
   Grid3X3,
   History,
+  Image,
   Library as LibraryIcon,
   ListTree,
   NotebookPen,
@@ -105,7 +106,10 @@ export function buildCampaignNavGroups(opts: {
     },
   ];
 
-  const standalone: CampaignNavItem[] = [{ value: "media", label: t("tabs.media"), icon: Film }];
+  const standalone: CampaignNavItem[] = [
+    { value: "media", label: t("tabs.media"), icon: Film },
+    { value: "cover", label: t("tabs.cover"), icon: Image },
+  ];
 
   return { groups, standalone };
 }

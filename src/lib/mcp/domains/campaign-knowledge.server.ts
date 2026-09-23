@@ -126,10 +126,12 @@ export function registerCampaignKnowledge(tool: ToolRegistrar, ctx: McpToolConte
         const nameByEntity = new Map<string, string>();
         const nameByUser = new Map<string, string>();
         if (entityIds.length > 0) {
-          const { data: entities, error: entityError } = await ctx.supabase
-            .from("entities")
-            .select("id, name")
-            .in("id", entityIds);
+          // Filtered read: direct table reads are GM-only, and this branch also
+          // serves players looking at their own grants.
+          const { data: entities, error: entityError } = await safeRpc(ctx.supabase)(
+            "list_entities_safe",
+            { _campaign: i.campaign_id },
+          ).in("id", entityIds);
           if (entityError) fail("Entry lookup", entityError);
           for (const entity of entities ?? []) nameByEntity.set(entity.id, entity.name);
         }

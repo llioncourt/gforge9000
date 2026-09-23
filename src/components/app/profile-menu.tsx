@@ -41,8 +41,15 @@ import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 import { getAuthRedirectUri } from "@/lib/auth-redirect";
 import { logAuthEvent } from "@/lib/auth-diagnostics";
+import { hasRecentAuth } from "@/lib/reauth";
+import { supabase } from "@/integrations/supabase/client";
 
 const THEME_KEY = "ucf:light-theme";
+/**
+ * Remembers that the erase dialog should REOPEN after a full-page sign-in
+ * redirect. It is a UI hint only and grants no permission — the confirm step
+ * is unlocked by the signed session token (see `@/lib/reauth`).
+ */
 const WIPE_INTENT_KEY = "ucf:wipe-intent";
 const WIPE_INTENT_TTL = 5 * 60 * 1000;
 
@@ -68,16 +75,33 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
   const [verified, setVerified] = useState(false);
   const [verifying, setVerifying] = useState(false);
 
-  // A full-page Google redirect returns here: restore the pending wipe intent.
+  /**
+   * Re-reads the CURRENT session token and decides whether it proves a recent
+   * enough sign-in. Never trusts client storage for this.
+   */
+  const refreshVerified = React.useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    const ok = hasRecentAuth(data.session?.access_token ?? null);
+    setVerified(ok);
+    return ok;
+  }, []);
+
+  // A full-page Google redirect returns here: reopen the dialog. Whether the
+  // destructive button unlocks is decided by the token, not by this flag.
   useEffect(() => {
     const raw = sessionStorage.getItem(WIPE_INTENT_KEY);
     if (!raw) return;
     sessionStorage.removeItem(WIPE_INTENT_KEY);
     if (Date.now() - Number(raw) > WIPE_INTENT_TTL) return;
-    setVerified(true);
     setOpen(true);
     setWipeOpen(true);
-  }, []);
+    void refreshVerified();
+  }, [refreshVerified]);
+
+  // Opening the dialog always re-evaluates the token.
+  useEffect(() => {
+    if (wipeOpen) void refreshVerified();
+  }, [wipeOpen, refreshVerified]);
 
   async function confirmWithGoogle() {
     setVerifying(true);
@@ -98,7 +122,8 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
       }
       if (result.error) throw result.error;
       sessionStorage.removeItem(WIPE_INTENT_KEY);
-      setVerified(true);
+      const ok = await refreshVerified();
+      if (!ok) throw new Error(ts("toasts.identityFailed"));
       toast.success(ts("toasts.identityConfirmed"));
     } catch (e) {
       sessionStorage.removeItem(WIPE_INTENT_KEY);

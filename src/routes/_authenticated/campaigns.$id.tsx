@@ -1182,13 +1182,11 @@ function CampaignCover({
 }
 
 function HouseRules({
-  campaignId,
   settings,
   disabled,
   knownPacks,
   onSave,
 }: {
-  campaignId: string;
   settings: Record<string, unknown>;
   disabled: boolean;
   knownPacks: string[];

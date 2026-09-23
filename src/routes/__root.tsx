@@ -21,6 +21,7 @@ import { detectLocale } from "@/i18n/detect";
 import { localeDirection } from "@/i18n/config";
 import { useT } from "@/i18n/hooks";
 import { logAuthEvent } from "@/lib/auth-diagnostics";
+import { readDiagFlags, diagTrace } from "@/lib/diag-modes";
 
 function NotFoundComponent() {
   const { t } = useT("errors");
@@ -161,22 +162,34 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
 
+  // Temporary `/auth` freeze diagnostics — see `@/lib/diag-modes`.
+  const diag = readDiagFlags();
+
   useEffect(() => {
+    diagTrace(diag.trace, "root mounted");
+  }, [diag.trace]);
+
+  useEffect(() => {
+    if (diag.skipRootAuthListener) return;
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      diagTrace(diag.trace, `auth event: ${event}`);
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       logAuthEvent("router:invalidate", { event });
+      diagTrace(diag.trace, "router.invalidate start");
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      diagTrace(diag.trace, "router.invalidate end");
     });
+    diagTrace(diag.trace, "auth listener subscribed");
     return () => sub.subscription.unsubscribe();
-  }, [router, queryClient]);
+  }, [router, queryClient, diag.skipRootAuthListener, diag.trace]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider initialLocale={detectLocale()}>
         <TooltipProvider delayDuration={200}>
           <DiceProvider>
-            <PwaRegister />
+            <PwaRegister skipCleanup={diag.skipPwaCleanup} trace={diag.trace} />
             <Outlet />
             <Toaster position="top-right" richColors />
           </DiceProvider>

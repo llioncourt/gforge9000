@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { PWA_ENABLED } from "@/lib/pwa";
+import { diagTrace } from "@/lib/diag-modes";
 
 /**
  * PWA registration is disabled for this release — see `PWA_ENABLED` in
@@ -22,11 +23,20 @@ import { PWA_ENABLED } from "@/lib/pwa";
  * `public/sw.js` from `public/sw-full.js.disabled`, and implement the
  * `isServiceWorkerAllowed`-guarded registration branch below.
  */
-export function PwaRegister() {
+export function PwaRegister({
+  skipCleanup = false,
+  trace = false,
+}: {
+  /** Temporary `/auth` freeze diagnostics — see `@/lib/diag-modes`. */
+  skipCleanup?: boolean;
+  trace?: boolean;
+} = {}) {
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (skipCleanup) return;
 
     if (!PWA_ENABLED) {
+      diagTrace(trace, "pwa cleanup start");
       if ("serviceWorker" in navigator) {
         void navigator.serviceWorker
           .getRegistrations()
@@ -40,6 +50,7 @@ export function PwaRegister() {
           .then((keys) => Promise.all(keys.map((key) => caches.delete(key).catch(() => false))))
           .catch(() => undefined);
       }
+      diagTrace(trace, "pwa cleanup end");
       return;
     }
 
@@ -48,7 +59,7 @@ export function PwaRegister() {
     //   if ("serviceWorker" in navigator && isServiceWorkerAllowed(location.hostname, import.meta.env.DEV)) {
     //     void navigator.serviceWorker.register("/sw.js");
     //   }
-  }, []);
+  }, [skipCleanup, trace]);
 
   return null;
 }

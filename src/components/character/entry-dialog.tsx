@@ -21,7 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { investedPoints, isSkillLikeKind, syncInvestedPoints } from "@/rules";
+import {
+  investedPoints,
+  isSkillLikeKind,
+  perLevelPoints,
+  storedPointsForPerLevel,
+  syncInvestedPoints,
+} from "@/rules";
 import type { CharacterEntry, EntryKind, TraitModifier, WeaponMode } from "@/rules";
 import { useT } from "@/i18n/hooks";
 
@@ -416,8 +422,10 @@ export function EntryDialog({
                 <Row label={t("sheet.entryDialog.pointsPerLevel")}>
                   <Input
                     type="number"
-                    value={local.points}
-                    onChange={(e) => set({ points: Number(e.target.value) })}
+                    value={perLevelPoints(local)}
+                    onChange={(e) =>
+                      set({ points: storedPointsForPerLevel(local, Number(e.target.value)) })
+                    }
                   />
                 </Row>
                 <Row label={t("sheet.entryDialog.levels")}>
@@ -425,7 +433,17 @@ export function EntryDialog({
                     type="number"
                     min={1}
                     value={local.levels}
-                    onChange={(e) => set({ levels: Number(e.target.value) })}
+                    onChange={(e) => {
+                      const lv = Number(e.target.value);
+                      set({
+                        levels: lv,
+                        points: storedPointsForPerLevel(
+                          { ...local, levels: lv },
+                          perLevelPoints(local),
+                          lv,
+                        ),
+                      });
+                    }}
                   />
                 </Row>
                 <Row label={t("sheet.entryDialog.prerequisites")}>

@@ -76,6 +76,44 @@ export function traitBaseCost(entry: LeveledTraitLike): number {
   return traitPointsSemantics(entry) === "total" ? points : points * levelsOf(entry);
 }
 
+const round2 = (n: number): number => Math.round(n * 100) / 100;
+
+/**
+ * The value a per-level editor field should DISPLAY for this row.
+ * Total-semantics rows store the full cost in `points`, so the per-level
+ * figure is derived (rounded to 2 decimals for display).
+ */
+export function perLevelPoints(entry: LeveledTraitLike): number {
+  const points = Number(entry.points ?? 0) || 0;
+  if (!usesLeveledPoints(entry.kind)) return points;
+  return traitPointsSemantics(entry) === "total" ? round2(points / levelsOf(entry)) : points;
+}
+
+/**
+ * The `points` value to STORE after the user edits the per-level figure
+ * (and optionally the level count) in the editor.
+ *
+ * - Legacy per-level rows keep storing the per-level number.
+ * - Total-semantics rows store perLevel × levels so raising `levels`
+ *   scales the charged cost again.
+ */
+export function storedPointsForPerLevel(
+  entry: LeveledTraitLike,
+  perLevel: number,
+  levels?: number,
+): number {
+  const per = Number(perLevel) || 0;
+  if (!usesLeveledPoints(entry.kind)) return round2(per);
+  if (traitPointsSemantics(entry) !== "total") return round2(per);
+  const lv =
+    levels === undefined
+      ? levelsOf(entry)
+      : Number.isFinite(levels) && levels > 1
+        ? levels
+        : 1;
+  return round2(per * lv);
+}
+
 /** Copy of `data` carrying the total-semantics marker. */
 export function withTotalSemantics(
   data: Record<string, unknown> | null | undefined,

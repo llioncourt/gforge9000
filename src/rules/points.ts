@@ -3,6 +3,7 @@ import { basicDamage, type BasicDamage } from "./damage";
 import { computeEncumbrance, drByLocation, type EncumbranceResult } from "./equipment";
 import { skillLevel } from "./skills";
 import { investedPoints, isSkillLikeKind } from "./skill-points";
+import { traitBaseCost } from "./trait-cost";
 import { fpState, hpState, type HealthState } from "./health";
 import { defaultRuleset, type Ruleset } from "./ruleset";
 import type { CharacterEntry, CharacterRecord, EntryKind, TraitModifier } from "./types";

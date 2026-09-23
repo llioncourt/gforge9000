@@ -38,17 +38,10 @@ import { getProfile, setProfilePreferences, upsertProfile, wipeAllMyData } from 
 import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
-import { hasRecentAuth, initiateGoogleReauth } from "@/lib/reauth";
+import { hasRecentAuth } from "@/lib/reauth";
 import { supabase } from "@/integrations/supabase/client";
 
 const THEME_KEY = "ucf:light-theme";
-/**
- * Remembers that the erase dialog should REOPEN after a full-page sign-in
- * redirect. It is a UI hint only and grants no permission — the confirm step
- * is unlocked by the signed session token (see `@/lib/reauth`).
- */
-const WIPE_INTENT_KEY = "ucf:wipe-intent";
-const WIPE_INTENT_TTL = 5 * 60 * 1000;
 
 /** Applies the theme by switching the root class (light palette lives under .light). */
 function applyTheme(light: boolean) {
@@ -70,7 +63,6 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [wipeOpen, setWipeOpen] = useState(false);
   const [verified, setVerified] = useState(false);
-  const [verifying, setVerifying] = useState(false);
 
   /**
    * Re-reads the CURRENT session token and decides whether it proves a recent
@@ -83,43 +75,10 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
     return ok;
   }, []);
 
-  // A full-page Google redirect returns here: reopen the dialog. Whether the
-  // destructive button unlocks is decided by the token, not by this flag.
-  useEffect(() => {
-    const raw = sessionStorage.getItem(WIPE_INTENT_KEY);
-    if (!raw) return;
-    sessionStorage.removeItem(WIPE_INTENT_KEY);
-    if (Date.now() - Number(raw) > WIPE_INTENT_TTL) return;
-    setOpen(true);
-    setWipeOpen(true);
-    void refreshVerified();
-  }, [refreshVerified]);
-
   // Opening the dialog always re-evaluates the token.
   useEffect(() => {
     if (wipeOpen) void refreshVerified();
   }, [wipeOpen, refreshVerified]);
-
-  async function confirmWithGoogle() {
-    setVerifying(true);
-    // Store the pending "resume the wipe dialog" intent separately from the
-    // OAuth redirect itself: the redirect always goes to the canonical site
-    // origin (never a per-route callback path), and this sessionStorage flag
-    // is what lets us reopen the wipe confirmation once the session from the
-    // full-page redirect has been hydrated back on the app.
-    sessionStorage.setItem(WIPE_INTENT_KEY, String(Date.now()));
-    try {
-      const { error } = await initiateGoogleReauth();
-      if (error) throw error;
-      // Success means a full-page redirect was initiated; this component
-      // unmounts. The dialog reopens via WIPE_INTENT_KEY on return.
-    } catch (e) {
-      sessionStorage.removeItem(WIPE_INTENT_KEY);
-      toast.error(e instanceof Error ? e.message : ts("toasts.identityFailed"));
-    } finally {
-      setVerifying(false);
-    }
-  }
 
   const wipe = useMutation({
     mutationFn: wipeAllMyData,
@@ -368,9 +327,7 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{ts("wipeDialog.title")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {ts("wipeDialog.description", { email: user?.email })}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{ts("wipeDialog.description")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={wipe.isPending}>{tc("actions.cancel")}</AlertDialogCancel>
@@ -387,10 +344,9 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
                 {ts("wipeDialog.deleteEverything")}
               </AlertDialogAction>
             ) : (
-              <Button onClick={confirmWithGoogle} disabled={verifying}>
-                {verifying ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-                {ts("wipeDialog.confirmWithGoogle")}
-              </Button>
+              <p className="flex-1 text-sm text-muted-foreground">
+                {ts("wipeDialog.recentSignInRequired")}
+              </p>
             )}
           </AlertDialogFooter>
         </AlertDialogContent>

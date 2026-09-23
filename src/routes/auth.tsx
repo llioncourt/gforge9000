@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Dices, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 import { logAuthEvent } from "@/lib/auth-diagnostics";
 import { metaLocale, metaText } from "@/i18n/meta";
@@ -30,19 +29,11 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const { t } = useT("auth");
   const navigate = useNavigate();
-  const { user, loading } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
-
-  useEffect(() => {
-    if (!loading && user) {
-      logAuthEvent("oauth:session-hydrated", { hasSession: true });
-      navigate({ to: "/dashboard", replace: true });
-    }
-  }, [loading, user, navigate]);
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();

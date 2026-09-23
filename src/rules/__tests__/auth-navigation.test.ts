@@ -10,5 +10,6 @@ describe("public sign-in navigation", () => {
     for (const link of authLinks) {
       expect(link[1]).toMatch(/\breloadDocument\b/);
     }
+
   });
 });

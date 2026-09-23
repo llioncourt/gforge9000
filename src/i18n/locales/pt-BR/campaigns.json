@@ -41,7 +41,8 @@
     "rolls": "Rolagens",
     "notes": "Notas e handouts",
     "members": "Membros",
-    "rules": "Regras da casa"
+    "rules": "Regras da casa",
+    "cover": "Capa"
   },
   "roster": {
     "empty": "Nenhum personagem enviado ainda. Os jogadores anexam um personagem abaixo.",

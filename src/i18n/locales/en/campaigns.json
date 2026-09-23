@@ -41,7 +41,8 @@
     "rolls": "Rolls",
     "notes": "Notes & handouts",
     "members": "Members",
-    "rules": "House rules"
+    "rules": "House rules",
+    "cover": "Cover"
   },
   "roster": {
     "empty": "No characters submitted yet. Players attach a character below.",

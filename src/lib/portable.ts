@@ -268,11 +268,9 @@ export function parsePortableLibrary(raw: string): PortableLibrary {
       rejected.push(`row ${position}: not an object`);
       return;
     }
+    const rawName = (entry as unknown as Record<string, unknown>)["name"];
     const label =
-      typeof (entry as Record<string, unknown>).name === "string" &&
-      (entry as Record<string, unknown>).name !== ""
-        ? `"${(entry as Record<string, unknown>).name as string}"`
-        : `row ${position}`;
+      typeof rawName === "string" && rawName !== "" ? `"${rawName}"` : `row ${position}`;
     if (typeof entry.name !== "string" || entry.name.trim() === "") {
       rejected.push(`row ${position}: missing a name`);
       return;

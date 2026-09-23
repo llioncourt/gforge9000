@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, LogOut, ShieldAlert, UserRound } from "lucide-react";
@@ -79,7 +79,7 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
    * Re-reads the CURRENT session token and decides whether it proves a recent
    * enough sign-in. Never trusts client storage for this.
    */
-  const refreshVerified = React.useCallback(async () => {
+  const refreshVerified = useCallback(async () => {
     const { data } = await supabase.auth.getSession();
     const ok = hasRecentAuth(data.session?.access_token ?? null);
     setVerified(ok);

@@ -1,55 +1,59 @@
 /**
  * App-owned browser Google sign-in helper.
  *
- * ROOT CAUSE (confirmed by tracing + a real click in a headless browser):
- * the previous path used `@lovable.dev/cloud-auth-js`
- * (`src/integrations/lovable/index.ts`), whose `signInWithOAuth()` navigates
- * the top-level page to a RELATIVE broker URL, `/~oauth/initiate` (see
- * `node_modules/@lovable.dev/cloud-auth-js/dist/index.js`). That path only
- * exists on Lovable's own hosted preview/production proxy. On this app's own
- * origin (e.g. local dev, or any deploy target where that proxy isn't in
- * front of the app) it 404s, so the browser never reaches Google, no tokens
- * ever come back, and `supabase.auth.setSession()` is never called — so no
- * `SIGNED_IN` event and no local session are ever created. That matches the
- * reported symptom exactly (failed attempts create no fresh session) and was
- * confirmed by observing the real navigation target on click:
- * `http://<origin>/~oauth/initiate?provider=google&...` -> 404.
+ * ROOT CAUSE (confirmed against the PUBLISHED site, not a local guess):
+ * `https://<supabase-ref>.supabase.co/auth/v1/authorize?provider=google`
+ * answers `400 validation_failed — "Unsupported provider: missing OAuth
+ * secret"`. The project's own Supabase Google provider has NO client
+ * id/secret, so any call to `supabase.auth.signInWithOAuth({provider:
+ * "google"})` fails with HTTP 400 *before* the browser can reach
+ * accounts.google.com. That is exactly the production symptom reported.
  *
- * FIX: let Supabase's own native Google provider own the redirect and the
- * callback/session exchange (`supabase.auth.signInWithOAuth`), instead of
- * going through the Lovable broker. Both normal sign-in (`/auth`) and
- * destructive-action reauthentication (`profile-menu.tsx` via `reauth.ts`)
- * must call this single helper so there is exactly one code path.
+ * The managed Google credentials live with the hosted platform, not with the
+ * project's Supabase instance, and are reached through the hosted initiate
+ * path. Verified live: that path answers `302` to the hosted OAuth service on
+ * BOTH the published site and the preview site. The earlier "the broker path
+ * 404s" conclusion was a LOCAL-ONLY artifact (that path is served by the
+ * hosting layer, which is absent in the sandbox) and did not reflect
+ * production.
+ *
+ * FIX: browser Google sign-in goes back through the managed helper, which
+ * owns initiation, the provider popup/redirect, and the token handoff into
+ * `supabase.auth.setSession()`. Normal login and destructive-action
+ * reauthentication both call THIS single helper — there is exactly one path.
+ *
+ * Password sign-in is unaffected and never touches this module.
  */
 
-import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { getAuthRedirectUri } from "@/lib/auth-redirect";
 import { logAuthEvent } from "@/lib/auth-diagnostics";
 
 export type GoogleSignInResult = { error: Error | null };
 
 /**
- * Starts native Supabase Google OAuth. On success this performs a full-page
- * redirect (the promise "succeeding" here only means the redirect was
- * initiated) — control does not return to the caller in that case. On
- * failure (e.g. provider misconfigured) it resolves with an error and does
- * NOT navigate away.
+ * Starts managed Google OAuth against the canonical site origin. Either the
+ * browser is redirected to the provider (control does not return), or the
+ * tokens come back and the session is already set when this resolves. On
+ * failure it resolves with an error and does NOT navigate away.
  */
 export async function signInWithGoogle(reason?: string): Promise<GoogleSignInResult> {
   logAuthEvent("oauth:start", { provider: "google", reason: reason ?? null });
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: getAuthRedirectUri() },
+  const result = await lovable.auth.signInWithOAuth("google", {
+    redirect_uri: getAuthRedirectUri(),
   });
-  if (error) {
+  if (result.error) {
     logAuthEvent("oauth:initiate-error", { provider: "google", reason: reason ?? null });
-    return { error };
+    return { error: result.error instanceof Error ? result.error : new Error(String(result.error)) };
   }
-  // supabase-js redirects the browser itself (window.location.assign) when
-  // it succeeds, so this line is normally never reached before navigation.
-  logAuthEvent("oauth:redirected", { provider: "google", reason: reason ?? null });
+  logAuthEvent("oauth:redirected", {
+    provider: "google",
+    reason: reason ?? null,
+    redirected: Boolean((result as { redirected?: boolean }).redirected),
+  });
   return { error: null };
 }
+
 
 const OAUTH_ERROR_PARAMS = ["error", "error_description", "error_code"];
 

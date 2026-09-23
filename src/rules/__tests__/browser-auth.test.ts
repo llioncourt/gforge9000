@@ -1,44 +1,51 @@
 /**
- * P0-01 regression: the browser Google sign-in path. The old path navigated
- * to the Lovable broker's relative `/~oauth/initiate` URL, which does not
- * exist on this app's origin, so the browser never reached Google and no
- * session was ever created. Sign-in now goes through Supabase's own provider,
- * from ONE app-owned helper shared by login and destructive reauthentication.
+ * Browser Google sign-in path.
  *
- * What this file proves: the helper calls native Supabase OAuth with the
- * canonical origin redirect, surfaces initiation failures instead of
- * silently looping, and recognises a failed/expired provider return.
- * Completing a real Google consent screen still requires manual validation.
+ * Production evidence: the project's own Supabase Google provider has no
+ * OAuth secret, so `/auth/v1/authorize?provider=google` answers HTTP 400
+ * ("missing OAuth secret") before the browser ever reaches Google. The
+ * managed hosted initiate path answers 302 on both the published and preview
+ * sites. Sign-in therefore goes through the managed helper, from ONE
+ * app-owned function shared by login and destructive reauthentication.
+ *
+ * What this file proves: the helper uses the managed provider with the
+ * canonical origin redirect, never calls the project's own Supabase OAuth
+ * endpoint, surfaces initiation failures instead of silently looping, and
+ * recognises a failed/expired provider return. Completing a real Google
+ * consent screen still requires manual validation.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const signInWithOAuth = vi.fn();
+const supabaseSignInWithOAuth = vi.fn();
 
+vi.mock("@/integrations/lovable", () => ({
+  lovable: { auth: { signInWithOAuth: (...a: unknown[]) => signInWithOAuth(...a) } },
+}));
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { auth: { signInWithOAuth: (...a: unknown[]) => signInWithOAuth(...a) } },
+  supabase: { auth: { signInWithOAuth: (...a: unknown[]) => supabaseSignInWithOAuth(...a) } },
 }));
 vi.mock("@/lib/auth-redirect", () => ({ getAuthRedirectUri: () => "https://app.example" }));
 
 const { signInWithGoogle, readOAuthReturnError } = await import("@/lib/browser-auth");
 
 describe("browser Google sign-in", () => {
-  beforeEach(() => signInWithOAuth.mockReset());
-
-  it("uses the native Supabase provider with the canonical origin redirect", async () => {
-    signInWithOAuth.mockResolvedValue({ error: null });
-    const result = await signInWithGoogle();
-    expect(result.error).toBeNull();
-    expect(signInWithOAuth).toHaveBeenCalledWith({
-      provider: "google",
-      options: { redirectTo: "https://app.example" },
-    });
+  beforeEach(() => {
+    signInWithOAuth.mockReset();
+    supabaseSignInWithOAuth.mockReset();
   });
 
-  it("never navigates through the broker path", async () => {
-    signInWithOAuth.mockResolvedValue({ error: null });
+  it("uses the managed provider with the canonical origin redirect", async () => {
+    signInWithOAuth.mockResolvedValue({ redirected: true });
+    const result = await signInWithGoogle();
+    expect(result.error).toBeNull();
+    expect(signInWithOAuth).toHaveBeenCalledWith("google", { redirect_uri: "https://app.example" });
+  });
+
+  it("never calls the project's own Supabase OAuth endpoint (it has no Google secret)", async () => {
+    signInWithOAuth.mockResolvedValue({ redirected: true });
     await signInWithGoogle();
-    const call = JSON.stringify(signInWithOAuth.mock.calls[0]);
-    expect(call).not.toContain("~oauth");
+    expect(supabaseSignInWithOAuth).not.toHaveBeenCalled();
   });
 
   it("returns the error when initiation fails", async () => {
@@ -47,6 +54,7 @@ describe("browser Google sign-in", () => {
     expect(result.error?.message).toBe("Unsupported provider");
   });
 });
+
 
 describe("provider return", () => {
   it("reports a query-string failure", () => {

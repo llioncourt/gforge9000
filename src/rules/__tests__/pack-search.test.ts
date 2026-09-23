@@ -277,8 +277,10 @@ describe("visible rows and searchable rows agree", () => {
 /* ------------------------------------------------------------------ */
 
 describe("a scan that hits the row cap reports truncation instead of a false empty result", () => {
-  // More rows than a small injected cap, with the target sorting after the cap.
-  const filler = Array.from({ length: 30 }, (_, index) =>
+  // Just over one server page (1000 rows) so the loop must start a second
+  // page — where an injected `maxScanRows` cap (well below 50000) can stop
+  // it before the alphabetically-last target is ever read.
+  const filler = Array.from({ length: 1005 }, (_, index) =>
     entry(`filler-${index}`, `Aaa ${String(index).padStart(4, "0")}`),
   );
   const target = entry("target", "Zzyzx Skill");
@@ -286,11 +288,10 @@ describe("a scan that hits the row cap reports truncation instead of a false emp
 
   it("marks the scan truncated and keeps the match count partial when the cap is hit", async () => {
     const { client } = fakeClient({ library_entries: rows, content_packs: packs });
-    // Cap set below PAGE_SIZE-worth of rows so the loop stops before reading everything.
     const scan = await loadPackCandidatesDetailed(client, {
       search: "Zzyzx",
       limit: 25,
-      maxScanRows: 10,
+      maxScanRows: 1000,
     });
     expect(scan.truncated).toBe(true);
     expect(scan.candidates).toEqual([]);
@@ -303,7 +304,7 @@ describe("a scan that hits the row cap reports truncation instead of a false emp
     const incomplete = await loadPackCandidatesDetailed(client, {
       search: "Zzyzx",
       limit: 25,
-      maxScanRows: 10,
+      maxScanRows: 1000,
     });
     expect(incomplete.matched).toBe(0);
     expect(incomplete.truncated).toBe(true);
@@ -311,6 +312,7 @@ describe("a scan that hits the row cap reports truncation instead of a false emp
     const complete = await loadPackCandidatesDetailed(client, {
       search: "Not In The Library At All",
       limit: 25,
+      maxScanRows: 1000,
     });
     expect(complete.matched).toBe(0);
     expect(complete.truncated).toBe(false);

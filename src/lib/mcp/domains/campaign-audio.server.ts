@@ -585,11 +585,14 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
       title: "Campaign audio",
       description:
         "Manage a campaign's soundtrack albums/tracks and one-shot sound effects. Actions: list " +
-        "(read albums with their tracks), create_album/update_album/delete_album (GM only, " +
+        "(read albums with their tracks, plus the campaign's current playback block), create_album/update_album/delete_album (GM only, " +
         "delete_album removes stored files, changes/deletes data), set_album_visibility (GM only, " +
         "changes data), add_track/update_track/delete_track (GM only, delete_track removes the " +
-        "stored file, changes/deletes data), get_track_url (short-lived signed URL), set_playback " +
-        "(GM only, changes data), prepare_cover_upload/upload_cover_base64 " +
+        "stored file, changes/deletes data), get_track_url (short-lived signed URL), play/pause/resume/seek/stop/" +
+        "set_loop (GM only, shared playback control; pause freezes the exact current point and " +
+        "resume continues from it, changes data), get_playback (read the shared state with " +
+        "position_seconds already derived from the anchor plus the track's duration_seconds), " +
+        "set_playback (legacy one-call form, still supported, GM only, changes data), prepare_cover_upload/upload_cover_base64 " +
         "(GM only, stage a cover image for create_album/update_album, changes data; " +
         "upload_cover_from_url is disabled for security reasons), " +
         "prepare_track_upload/upload_track_base64 (GM only, stage or add " +

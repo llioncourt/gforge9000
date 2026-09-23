@@ -35,32 +35,32 @@ that needs them (deduplicated by SHA-256 of the content).
 
 ## Top level of `adaptation.json`
 
-| Field | Meaning |
-| --- | --- |
-| `format`, `version` | Always `awd-campaign-adaptation` / `1`. |
-| `exported_at` | ISO timestamp. |
-| `source_campaign` | `campaign_id`, `name`, `revision` (the scan hash), and the UCF package format/version this campaign also exports as. |
-| `adaptation` | `id`, `name`, `source_mode`, `spoiler_policy`, `source_scope`, `creative_settings`. |
-| `story_bible` | Logline, synopsis, themes, tone, genre, setting, timeline summary. |
-| `facts` | Every reviewable statement, with provenance and sources. |
-| `conflicts` | Statements the sources disagree about. Never auto-resolved. |
-| `cast`, `locations`, `props`, `wardrobe` | Bible records with biography, visual description, traits and asset keys. |
-| `scenes` | The adapted scenes in order. |
-| `assets` | Asset manifest: path, media type, size, SHA-256, role, entity link. |
-| `targets` | Any combination of `comic`, `movie`, `book_narrative`, `adventure_module` (below). |
-| `sync` | Source fingerprints, scene hashes and target mapping hints. |
+| Field                                    | Meaning                                                                                                              |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `format`, `version`                      | Always `awd-campaign-adaptation` / `1`.                                                                              |
+| `exported_at`                            | ISO timestamp.                                                                                                       |
+| `source_campaign`                        | `campaign_id`, `name`, `revision` (the scan hash), and the UCF package format/version this campaign also exports as. |
+| `adaptation`                             | `id`, `name`, `source_mode`, `spoiler_policy`, `source_scope`, `creative_settings`.                                  |
+| `story_bible`                            | Logline, synopsis, themes, tone, genre, setting, timeline summary.                                                   |
+| `facts`                                  | Every reviewable statement, with provenance and sources.                                                             |
+| `conflicts`                              | Statements the sources disagree about. Never auto-resolved.                                                          |
+| `cast`, `locations`, `props`, `wardrobe` | Bible records with biography, visual description, traits and asset keys.                                             |
+| `scenes`                                 | The adapted scenes in order.                                                                                         |
+| `assets`                                 | Asset manifest: path, media type, size, SHA-256, role, entity link.                                                  |
+| `targets`                                | Any combination of `comic`, `movie`, `book_narrative`, `adventure_module` (below).                                   |
+| `sync`                                   | Source fingerprints, scene hashes and target mapping hints.                                                          |
 
 ### Provenance
 
 Every fact and scene has `provenance_type`, one of:
 
-| Value | Meaning |
-| --- | --- |
-| `campaign_canon` | Stated outright in a campaign record. |
-| `session_derived` | Taken from what happened at the table. |
-| `ai_inference` | Inferred by the reconstruction pipeline. Always reviewed before export. |
-| `adaptation_created` | Invented for this retelling. Never campaign truth. |
-| `conflict` | Sources disagree. |
+| Value                | Meaning                                                                 |
+| -------------------- | ----------------------------------------------------------------------- |
+| `campaign_canon`     | Stated outright in a campaign record.                                   |
+| `session_derived`    | Taken from what happened at the table.                                  |
+| `ai_inference`       | Inferred by the reconstruction pipeline. Always reviewed before export. |
+| `adaptation_created` | Invented for this retelling. Never campaign truth.                      |
+| `conflict`           | Sources disagree.                                                       |
 
 `canon_status` / `review_status` is `confirmed`, `needs_review` or `rejected`.
 Confidence is a number from 0 to 1. A fact that is not `adaptation_created`

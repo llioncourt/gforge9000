@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CAMPAIGN_SETTING_RANGES, HOUSE_RULES_MAX_LENGTH } from "@/lib/campaign-settings";
 
 /**
  * Campaign package (UCF-CAMPAIGN v1) — pure schema + helpers.
@@ -50,12 +51,32 @@ const visibilityField = z.preprocess((value) => {
 
 const settingsSchema = z
   .object({
-    point_limit: z.number().int().min(0).max(100000).optional(),
-    disadvantage_limit: z.number().int().min(-100000).max(0).optional(),
+    point_limit: z
+      .number()
+      .int()
+      .min(CAMPAIGN_SETTING_RANGES.point_limit.min)
+      .max(CAMPAIGN_SETTING_RANGES.point_limit.max)
+      .optional(),
+    disadvantage_limit: z
+      .number()
+      .int()
+      .min(CAMPAIGN_SETTING_RANGES.disadvantage_limit.min)
+      .max(CAMPAIGN_SETTING_RANGES.disadvantage_limit.max)
+      .optional(),
     /** Optional since v1; older packages simply omit it. */
-    quirk_limit: z.number().int().min(-100000).max(100000).optional(),
-    tech_level: z.number().int().min(0).max(20).optional(),
-    house_rules: text(20000).optional(),
+    quirk_limit: z
+      .number()
+      .int()
+      .min(CAMPAIGN_SETTING_RANGES.quirk_limit.min)
+      .max(CAMPAIGN_SETTING_RANGES.quirk_limit.max)
+      .optional(),
+    tech_level: z
+      .number()
+      .int()
+      .min(CAMPAIGN_SETTING_RANGES.tech_level.min)
+      .max(CAMPAIGN_SETTING_RANGES.tech_level.max)
+      .optional(),
+    house_rules: text(HOUSE_RULES_MAX_LENGTH).optional(),
     allowed_sources: z.array(text(80)).max(50).optional(),
     allowed_packs: z.array(text(120)).max(200).optional(),
   })

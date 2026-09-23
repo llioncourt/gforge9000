@@ -729,3 +729,116 @@ export function restoreDefinitionPatch(
     warnings,
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* Filling missing definition fields when linking                      */
+/* ------------------------------------------------------------------ */
+
+export interface LinkFillPatch {
+  /** Only present when it actually changes. */
+  category?: string | null;
+  points?: number;
+  data: Record<string, unknown>;
+  /** True when anything at all needs to be written. */
+  changed: boolean;
+  /** Names of the definition fields that were filled in. */
+  filled: string[];
+}
+
+function isEmptyValue(value: unknown): boolean {
+  if (value === undefined || value === null) return true;
+  if (typeof value === "string") return value.trim() === "";
+  if (Array.isArray(value)) return value.length === 0;
+  return false;
+}
+
+/**
+ * Definition fields the pack defines and the sheet is MISSING.
+ *
+ * Linking states a fact about where an entry came from; it must never
+ * overwrite a deliberate sheet customisation. But a field that is simply
+ * absent is not a customisation: an existing skill with no attribute and no
+ * difficulty computed the wrong level and showed up as "Modificada" purely
+ * because linking refused to fill the blanks. So linking now fills exactly
+ * the empty definition fields and leaves every non-empty value alone (a
+ * non-empty value that differs from the pack keeps the entry "modified" —
+ * linking is still not a restore).
+ *
+ * Progression is untouched: invested points, chosen specialisation, notes and
+ * levels survive. The one storage change is the leveled-trait conversion to
+ * total semantics, which preserves the effective cost exactly
+ * (see src/rules/trait-cost.ts).
+ *
+ * ONE implementation, used by the sheet UI and by the assistant (MCP).
+ */
+export function fillMissingDefinition(entry: CharacterEntryLike, item: PackItemLike): LinkFillPatch {
+  const entryData = { ...((entry.data ?? {}) as Record<string, unknown>) };
+  const itemData = (item.data ?? {}) as Record<string, unknown>;
+  const filled: string[] = [];
+  let changed = false;
+  const patch: LinkFillPatch = { data: entryData, changed: false, filled };
+
+  const put = (field: string, value: unknown): void => {
+    if (isEmptyValue(value)) return;
+    if (!isEmptyValue(entryData[field])) return;
+    entryData[field] = value;
+    filled.push(field);
+    changed = true;
+  };
+
+  // Category is a definition field; an existing one is never overwritten.
+  if (isEmptyValue(entry.category) && !isEmptyValue(item.category)) {
+    patch.category = text(item.category);
+    filled.push("category");
+    changed = true;
+  }
+
+  if (isSkillLike(entry.kind)) {
+    put("attribute", text(itemData["attribute"]));
+    put("difficulty", text(itemData["difficulty"]));
+    put("defaults", text(itemData["defaults"]));
+    put("prerequisites", itemData["prerequisites"]);
+    if (itemData["specialization_required"] && isEmptyValue(entryData["specialization_required"])) {
+      entryData["specialization_required"] = true;
+      filled.push("specialization_required");
+      changed = true;
+    }
+    if (entry.kind === "technique") {
+      put("defaultPenalty", numberOrNull(itemData["defaultPenalty"]));
+      put("baseSkill", text(itemData["baseSkill"]));
+    }
+  }
+
+  if (entry.kind === "equipment") {
+    const packGear = equipmentDefinition(itemData);
+    for (const field of EQUIPMENT_DEFINITION_FIELDS) {
+      put(field, itemData[field] === undefined ? packGear[field] : itemData[field]);
+    }
+  }
+
+  // Specialisation typed into the name is stored structurally when missing.
+  const specialization = specializationOf(entry);
+  if (specialization && isEmptyValue(entryData["specialization"])) {
+    entryData["specialization"] = specialization;
+    changed = true;
+  }
+
+  // Leveled traits: convert storage to canonical total semantics WITHOUT
+  // changing the entry's effective cost. Unmarked legacy rows keep their
+  // effective total (points=2, levels=2 -> points=4 + marker).
+  if (usesLeveledPoints(entry.kind) && traitPointsSemantics(entry) !== "total") {
+    const converted = toTotalSemantics({
+      kind: entry.kind,
+      points: entry.points,
+      levels: entry.levels,
+      data: entryData,
+    });
+    patch.points = converted.points;
+    Object.assign(entryData, converted.data);
+    filled.push("trait_points_semantics");
+    changed = true;
+  }
+
+  patch.changed = changed;
+  return patch;
+}

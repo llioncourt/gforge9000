@@ -327,9 +327,7 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{ts("wipeDialog.title")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {ts("wipeDialog.description")}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{ts("wipeDialog.description")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={wipe.isPending}>{tc("actions.cancel")}</AlertDialogCancel>

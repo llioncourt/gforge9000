@@ -95,11 +95,18 @@ export async function createRelationships(
   return data.length;
 }
 
+/**
+ * Writes to the base table (GM or owner) and reads the result back through the
+ * filtered read function: direct table reads are GM-only, so a non-GM owner
+ * must never ask for the written row with `RETURNING`.
+ */
 export async function updateEntity(
   id: string,
   patch: TablesUpdate<"entities">,
 ): Promise<EntityRow> {
-  return unwrap(await supabase.from("entities").update(patch).eq("id", id).select("*").single());
+  const { error } = await supabase.from("entities").update(patch).eq("id", id);
+  if (error) throw new Error(error.message);
+  return getEntity(id);
 }
 
 export async function deleteEntity(id: string): Promise<void> {

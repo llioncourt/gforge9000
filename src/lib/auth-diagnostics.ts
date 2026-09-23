@@ -29,6 +29,5 @@ export type AuthDiagnosticDetail = Record<string, string | number | boolean | nu
 
 export function logAuthEvent(event: string, detail?: AuthDiagnosticDetail): void {
   if (!isEnabled()) return;
-  // eslint-disable-next-line no-console
   console.info(`[auth] ${event}`, detail ?? {});
 }

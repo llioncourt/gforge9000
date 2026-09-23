@@ -147,8 +147,8 @@ function Landing() {
             </div>
 
             <div className="grid flex-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <SystemLedger title="System" rows={SYSTEM_ROWS} t={t} />
-              <SystemLedger title="Principles" rows={PRINCIPLE_ROWS} t={t} bordered />
+              <SystemLedger title="System" rows={SYSTEM_ROWS} />
+              <SystemLedger title="Principles" rows={PRINCIPLE_ROWS} bordered />
             </div>
           </div>
         </section>
@@ -168,14 +168,14 @@ function Landing() {
 function SystemLedger({
   title,
   rows,
-  t,
   bordered = false,
 }: {
   title: string;
   rows: readonly (typeof SYSTEM_ROWS[number] | typeof PRINCIPLE_ROWS[number])[];
-  t: (key: string) => string;
   bordered?: boolean;
 }) {
+  const { t } = useT("marketing");
+
   return (
     <section className={bordered ? "border-t border-border sm:border-t-0 sm:border-l lg:border-l-0 lg:border-t xl:border-t-0 xl:border-l" : ""}>
       <h2 className="border-b border-border px-6 py-4 font-mono text-[10px] font-bold uppercase text-primary">

@@ -1,3 +1,10 @@
+/* DORMANT FOR THIS RELEASE — do not register.
+   This service worker is kept in the repo for future re-enablement only. A
+   past production incident (stale cached routing/asset shell after deploys)
+   led to registration being disabled everywhere; see `src/lib/pwa.ts`
+   (`PWA_ENABLED`) and `src/components/app/pwa-register.tsx`, which now only
+   unregister existing workers and clear CacheStorage. Nothing in the app
+   calls `navigator.serviceWorker.register()` while `PWA_ENABLED` is false. */
 /* Universal Character Forge service worker.
    Network-first for navigations (never serve stale HTML), cache-first for
    immutable build assets, offline fallback page. */

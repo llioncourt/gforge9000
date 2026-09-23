@@ -160,41 +160,48 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
+  const location = useRouterState({ select: (state) => state.location });
+  const pathname = location.pathname;
+  const searchStr = location.searchStr ?? "";
 
   // Temporary `/auth` freeze diagnostics — see `@/lib/diag-modes`.
-  const diag = readDiagFlags();
+  const diag = resolveDiagFlags(pathname, searchStr);
+
+  // The public sign-in route boots a minimal shell: no global auth listener,
+  // no service-worker retirement, no dice runtime. Application routes mount
+  // the full runtime again, and route protection is unchanged.
+  const authShell = isAuthShellPath(pathname);
 
   useEffect(() => {
     diagTrace(diag.trace, "root mounted");
   }, [diag.trace]);
 
-  useEffect(() => {
-    if (diag.skipRootAuthListener) return;
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      diagTrace(diag.trace, `auth event: ${event}`);
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      logAuthEvent("router:invalidate", { event });
-      diagTrace(diag.trace, "router.invalidate start");
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
-      diagTrace(diag.trace, "router.invalidate end");
-    });
-    diagTrace(diag.trace, "auth listener subscribed");
-    return () => sub.subscription.unsubscribe();
-  }, [router, queryClient, diag.skipRootAuthListener, diag.trace]);
+  const content = (
+    <>
+      <Outlet />
+      <Toaster position="top-right" richColors />
+    </>
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider initialLocale={detectLocale()}>
         <TooltipProvider delayDuration={200}>
-          <DiceProvider>
-            <PwaRegister skipCleanup={diag.skipPwaCleanup} trace={diag.trace} />
-            <Outlet />
-            <Toaster position="top-right" richColors />
-          </DiceProvider>
+          {authShell ? (
+            content
+          ) : (
+            <AppRuntime
+              queryClient={queryClient}
+              skipAuthListener={diag.skipRootAuthListener}
+              skipPwaCleanup={diag.skipPwaCleanup}
+              trace={diag.trace}
+            >
+              {content}
+            </AppRuntime>
+          )}
         </TooltipProvider>
       </I18nProvider>
     </QueryClientProvider>
   );
 }
+

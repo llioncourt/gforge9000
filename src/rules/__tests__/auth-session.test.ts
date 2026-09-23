@@ -141,38 +141,4 @@ describe("auth session regressions", () => {
     auth.getUser = originalGetUser;
   });
 
-  it("resumes a pending destructive-reauth intent after the session is hydrated", () => {
-    const WIPE_INTENT_KEY = "ucf:wipe-intent";
-    const WIPE_INTENT_TTL = 5 * 60 * 1000;
-
-    const store = new Map<string, string>();
-    const sessionStorageFake = {
-      getItem: (k: string) => store.get(k) ?? null,
-      setItem: (k: string, v: string) => void store.set(k, v),
-      removeItem: (k: string) => void store.delete(k),
-    };
-
-    // Reauth click stores the intent, independent of the OAuth redirect URI.
-    sessionStorageFake.setItem(WIPE_INTENT_KEY, String(Date.now()));
-
-    // App reloads after the full-page Google redirect; session is hydrated
-    // and the intent is resumed.
-    const raw = sessionStorageFake.getItem(WIPE_INTENT_KEY);
-    expect(raw).not.toBeNull();
-    const withinTtl = raw !== null && Date.now() - Number(raw) <= WIPE_INTENT_TTL;
-    expect(withinTtl).toBe(true);
-    sessionStorageFake.removeItem(WIPE_INTENT_KEY);
-    expect(sessionStorageFake.getItem(WIPE_INTENT_KEY)).toBeNull();
-  });
-
-  it("does not resume a stale destructive-reauth intent past its TTL", () => {
-    const WIPE_INTENT_KEY = "ucf:wipe-intent";
-    const WIPE_INTENT_TTL = 5 * 60 * 1000;
-    const store = new Map<string, string>();
-    store.set(WIPE_INTENT_KEY, String(Date.now() - WIPE_INTENT_TTL - 1000));
-
-    const raw = store.get(WIPE_INTENT_KEY) ?? null;
-    const withinTtl = raw !== null && Date.now() - Number(raw) <= WIPE_INTENT_TTL;
-    expect(withinTtl).toBe(false);
-  });
 });

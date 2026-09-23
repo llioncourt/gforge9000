@@ -22,6 +22,7 @@ import {
   listReply,
   loadCampaign,
   requireGmFor,
+  safeRpc,
   uuid,
 } from "@/lib/mcp/kit.server";
 import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.server";

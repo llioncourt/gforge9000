@@ -84,17 +84,46 @@ registered tool set is exactly these 39 names; keep it passing.
    by schema object identity in a module-level `WeakMap`) — never request or
    user state.
 
-## Uploads: no remote-URL ingestion
+## Uploads: legacy `upload_from_url` actions stay registered but fail closed
 
-Media domains offer signed upload (`prepare_upload` + `finalize_upload`) and
-`upload_base64` only. **`upload_from_url` (or any other remote-URL ingestion
-tool/action) must not be re-added.** It was removed because a server-side
+The legacy remote-URL upload actions — `campaign_assets.upload_from_url`,
+`maps.upload_image_from_url`, `campaign_videos.upload_from_url`,
+`character_portrait.upload_from_url` — **remain registered** for backward
+compatibility. They are part of the frozen public contract: **do not remove
+or rename them.** Any MCP client that already calls one of these actions must
+keep getting a recognized action name back, not a "no such action" error.
+
+What changes is their *behavior*, not their existence: each one **must fail
+closed** with a clear, security-labeled error (see `TD-002` comments next to
+each handler in `campaign-assets.server.ts`, `maps.server.ts`,
+`campaign-videos.server.ts`, `character-portrait.server.ts`) instead of
+performing a server-side fetch. They fail this way because a server-side
 fetch of an arbitrary caller-supplied URL is an SSRF vector against internal
-services and cloud metadata endpoints; the two supported upload paths — a
-short-lived signed PUT the caller's own client performs, and inline base64 —
-never make the server fetch a caller-chosen network address. All buckets stay
-private; only ever return short-lived signed URLs, and only after authorizing
-the caller. Enforce the bucket's existing byte limit and MIME allow-list.
+services and cloud metadata endpoints, and this runtime cannot guarantee
+resolve-then-pin DNS/TLS safety (resolve the hostname, pin the connection to
+the resolved IP, and verify TLS against that same pinned IP) for an outbound
+fetch to an arbitrary caller-supplied host. See `fetchRemoteFile` in
+`src/lib/mcp/uploads.server.ts` for the details of why that guarantee isn't
+achievable here today.
+
+Rules for future changes:
+
+- **Never remove or rename** these four actions. They must keep appearing in
+  each domain tool's action union and description.
+- **Never restore server-side arbitrary URL fetching** in these handlers (or
+  add a new one elsewhere) unless the runtime can prove validated,
+  pinned-DNS/TLS safety end to end. Until then they must keep throwing the
+  clear security error instead of fetching anything.
+- The **supported alternatives** are unchanged and must keep working: a
+  short-lived signed upload the caller's own client performs
+  (`prepare_upload` + `finalize_upload`), and inline `upload_base64` for small
+  files. Neither makes the server fetch a caller-chosen network address. All
+  buckets stay private; only ever return short-lived signed URLs, and only
+  after authorizing the caller. Enforce the bucket's existing byte limit and
+  MIME allow-list.
+- The 39 top-level tool names (listed above) and every existing action name
+  within them — including these four legacy actions — are preserved. This is
+  additive-only territory: see "Public contract stability" above.
 
 ## Response contract
 

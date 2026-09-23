@@ -38,7 +38,7 @@ import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.se
 import type { Database } from "@/integrations/supabase/types";
 import { allowedPacksOf, isPackAllowed } from "@/lib/packs";
 import { loadCampaignSettings } from "@/lib/pack-link-service";
-import { loadPackCandidatesDetailed, parseSearchName, withVersions } from "@/lib/pack-match";
+import { MAX_SCAN_ROWS, loadPackCandidatesDetailed, parseSearchName, withVersions } from "@/lib/pack-match";
 import { candidateView } from "@/lib/mcp/pack-link.server";
 
 // Source of truth: src/lib/ai-import-guides.ts (ENTRY_KINDS, not exported there)

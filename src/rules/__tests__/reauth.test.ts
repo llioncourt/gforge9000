@@ -7,8 +7,7 @@ import { describe, expect, it } from "vitest";
 import { authAgeSeconds, decodeJwtClaims, hasRecentAuth } from "@/lib/reauth";
 
 function token(payload: Record<string, unknown>): string {
-  const b64 = (s: string) =>
-    btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const b64 = (s: string) => btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   return `${b64('{"alg":"HS256"}')}.${b64(JSON.stringify(payload))}.sig`;
 }
 
@@ -19,7 +18,10 @@ describe("recent authentication", () => {
   it("reads the newest amr timestamp", () => {
     const t = token({
       iat: nowSec - 3600,
-      amr: [{ method: "password", timestamp: nowSec - 3600 }, { method: "oauth", timestamp: nowSec - 30 }],
+      amr: [
+        { method: "password", timestamp: nowSec - 3600 },
+        { method: "oauth", timestamp: nowSec - 30 },
+      ],
     });
     expect(authAgeSeconds(t, NOW)).toBe(30);
     expect(hasRecentAuth(t, NOW)).toBe(true);

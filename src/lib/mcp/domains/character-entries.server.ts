@@ -138,7 +138,8 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
       if (isSkillLikeKind(input.kind)) {
         const data = (payload["data"] as Record<string, unknown> | undefined) ?? {};
         const value =
-          input.points ?? investedPoints({ kind: input.kind, points: payload["points"] as number, data });
+          input.points ??
+          investedPoints({ kind: input.kind, points: payload["points"] as number, data });
         payload["points"] = value;
         payload["data"] = { ...data, points: value };
       }

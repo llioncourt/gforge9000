@@ -271,7 +271,6 @@ describe("visible rows and searchable rows agree", () => {
   });
 });
 
-
 /* ------------------------------------------------------------------ */
 /* P0-04: scan truncation is reported, never silently swallowed         */
 /* ------------------------------------------------------------------ */

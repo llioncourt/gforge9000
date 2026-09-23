@@ -38,7 +38,12 @@ import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.se
 import type { Database } from "@/integrations/supabase/types";
 import { allowedPacksOf, isPackAllowed } from "@/lib/packs";
 import { loadCampaignSettings } from "@/lib/pack-link-service";
-import { MAX_SCAN_ROWS, loadPackCandidatesDetailed, parseSearchName, withVersions } from "@/lib/pack-match";
+import {
+  MAX_SCAN_ROWS,
+  loadPackCandidatesDetailed,
+  parseSearchName,
+  withVersions,
+} from "@/lib/pack-match";
 import { candidateView } from "@/lib/mcp/pack-link.server";
 
 // Source of truth: src/lib/ai-import-guides.ts (ENTRY_KINDS, not exported there)
@@ -550,7 +555,9 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
           `(${MAX_SCAN_ROWS}); results may be missing. Narrow the search with ` +
           `pack_id/kind or a more specific query.`;
         return {
-          content: [{ type: "text" as const, text: `${truncationNote}\n\n${base.content[0]!.text}` }],
+          content: [
+            { type: "text" as const, text: `${truncationNote}\n\n${base.content[0]!.text}` },
+          ],
           structuredContent: {
             ...base.structuredContent,
             search_truncated: true,

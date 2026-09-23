@@ -321,7 +321,11 @@ describe("G — add from pack and restore preserve effective invested points", (
 
 describe("H — every consumer agrees on one investment", () => {
   it("computePoints and skillLevel read the same helper", () => {
-    const e = entry({ points: 12, data: { attribute: "DX", difficulty: "A", points: 8 }, ...PACK_LINK });
+    const e = entry({
+      points: 12,
+      data: { attribute: "DX", difficulty: "A", points: 8 },
+      ...PACK_LINK,
+    });
     const sheet = buildSheet(character, [e], defaultRuleset);
     expect(sheet.points.skills).toBe(12);
     expect(sheet.skills[0]!.level.relative).toBe(3);

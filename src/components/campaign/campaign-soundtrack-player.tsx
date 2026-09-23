@@ -32,6 +32,7 @@ import {
   type SoundtrackTrack,
 } from "@/lib/campaign-soundtrack";
 import { listCampaignSoundFx, soundFxSignedUrl } from "@/lib/campaign-sound-fx";
+import { derivePlaybackPosition, shouldCorrectDrift } from "@/lib/playback-anchor";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -59,6 +60,8 @@ type Player = {
   next: () => Promise<void>;
   previous: () => Promise<void>;
   stop: () => Promise<void>;
+  /** A GM-commanded video takes over: the soundtrack pauses and later resumes. */
+  setVideoActive: (active: boolean) => void;
 };
 const Context = createContext<Player | null>(null);
 
@@ -85,6 +88,7 @@ export function CampaignSoundtrackProvider({
     [time, setTime] = useState(0),
     [duration, setDuration] = useState(0),
     [playing, setPlaying] = useState(false),
+    [videoActive, setVideoActive] = useState(false),
     [volume, setVolumeState] = useState(0.85);
   // The signed-in id comes from the session already held in memory; asking the
   // auth service again added a network round-trip to every screen.
@@ -215,21 +219,21 @@ export function CampaignSoundtrackProvider({
       return;
     }
     if (el.src !== url) el.src = url;
-    const target =
-      Number(state.position_seconds) +
-      (state.is_playing
-        ? Math.max(0, (Date.now() - new Date(state.changed_at).getTime()) / 1000)
-        : 0);
-    if (Math.abs(el.currentTime - target) > 1.5) el.currentTime = target;
-    if (state.is_playing) void el.play().catch(() => setPlaying(false));
+    const target = derivePlaybackPosition(state, activeTrack.duration_seconds ?? null);
+    if (shouldCorrectDrift(el.currentTime, target)) el.currentTime = target;
+    // While a commanded video plays, the soundtrack stays silent locally; when
+    // the video ends this effect runs again and picks the shared point back up.
+    if (state.is_playing && !videoActive) void el.play().catch(() => setPlaying(false));
     else el.pause();
   }, [
     campaignId,
     activeTrack?.id,
+    activeTrack?.duration_seconds,
     url,
-    state?.changed_at,
+    videoActive,
+    state?.anchored_at,
     state?.is_playing,
-    state?.position_seconds,
+    state?.anchor_position_seconds,
   ]);
   const write = useCallback(
     async (
@@ -309,6 +313,7 @@ export function CampaignSoundtrackProvider({
       next: () => move(1),
       previous: () => move(-1),
       stop: () => write(null, null, false, 0),
+      setVideoActive,
     }),
     [
       campaignId,
@@ -322,6 +327,7 @@ export function CampaignSoundtrackProvider({
       volume,
       loopOne,
       isGm,
+      videoActive,
       write,
       move,
     ],
@@ -337,6 +343,11 @@ export function useCampaignSoundtrack() {
   const v = useContext(Context);
   if (!v) throw new Error("Campaign soundtrack provider is missing");
   return v;
+}
+
+/** Same context, but tolerant of screens rendered outside the player provider. */
+export function useCampaignSoundtrackOptional() {
+  return useContext(Context);
 }
 function Mini() {
   const p = useCampaignSoundtrack();

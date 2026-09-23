@@ -28,7 +28,7 @@ export interface AuthInvalidationDeps {
   /** Cancels a handle returned by `schedule`. */
   cancel: (handle: unknown) => void;
   /** Optional trace sink; never receives tokens or user data. */
-  trace?: (event: string) => void;
+  trace?: ((event: string) => void) | undefined;
 }
 
 export interface AuthInvalidationHandler {

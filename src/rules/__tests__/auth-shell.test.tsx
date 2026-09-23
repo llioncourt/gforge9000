@@ -52,8 +52,12 @@ describe("global auth callback scheduling", () => {
     const calls: string[] = [];
     const scheduled: (() => void)[] = [];
     const handler = createAuthInvalidationHandler({
-      invalidateRouter: () => calls.push("router"),
-      invalidateQueries: () => calls.push("queries"),
+      invalidateRouter: () => {
+        calls.push("router");
+      },
+      invalidateQueries: () => {
+        calls.push("queries");
+      },
       schedule: (run) => {
         scheduled.push(run);
         return scheduled.length - 1;
@@ -138,7 +142,7 @@ describe("global auth callback scheduling", () => {
       cancel: () => undefined,
     });
     handler.handle("SIGNED_IN", "user:1");
-    expect(() => scheduled[0]()).not.toThrow();
+    expect(() => scheduled[0]!()).not.toThrow();
   });
 });
 
@@ -202,7 +206,6 @@ describe("public/sw.js tombstone behaviour", () => {
       registration: { unregister },
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
     new Function("self", "caches", src)(self, cachesStub);
 
     let waited: Promise<unknown> = Promise.resolve();

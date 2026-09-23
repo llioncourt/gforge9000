@@ -393,7 +393,6 @@ export async function loadPackCandidates(
   return (await loadPackCandidatesDetailed(client, scope)).candidates;
 }
 
-
 /** Full match flow: load what the caller may use, then match deterministically. */
 export async function findPackMatch(
   client: PackClient,
@@ -406,7 +405,10 @@ export async function findPackMatch(
     kind: query.kind,
     // The base name keeps translated/qualified variants in range.
     search: undefined,
+    // Matching must see every visible row of that kind, never just one page.
+    exhaustive: true,
   });
+
   const result = matchPackCandidates(query, candidates);
   return {
     ...result,

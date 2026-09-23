@@ -44,6 +44,27 @@ describe("auth shell boundary", () => {
     renderToStaticMarkup(createElement(Shell, { pathname: "/dashboard" }));
     expect(mounted).toEqual(["runtime", "page"]);
   });
+
+  it("keeps useDice available on /auth (DiceProvider is mounted on every route)", () => {
+    // Regression for the production freeze: during a transition toward /auth
+    // the outgoing authenticated tree still renders and calls useDice while
+    // authShell has already flipped. DiceProvider must wrap both branches.
+    function OutgoingPage() {
+      const dice = useDice();
+      expect(dice).toBeDefined();
+      return createElement("main", null, "outgoing");
+    }
+
+    expect(() =>
+      renderToStaticMarkup(
+        createElement(
+          I18nProvider,
+          { initialLocale: "en" },
+          createElement(DiceProvider, null, createElement(OutgoingPage)),
+        ),
+      ),
+    ).not.toThrow();
+  });
 });
 
 describe("global auth callback scheduling", () => {

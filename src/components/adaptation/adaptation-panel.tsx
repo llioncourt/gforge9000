@@ -33,6 +33,7 @@ import {
   updateAdaptation,
   type AdaptationProject,
 } from "@/lib/adaptation/api";
+import { selectedTargets } from "@/lib/adaptation/types";
 import { AdaptationWizard } from "@/components/adaptation/adaptation-wizard";
 
 /** GM-only entry point: the list of adaptations for this campaign. */
@@ -138,16 +139,11 @@ export function AdaptationPanel({ campaignId }: { campaignId: string }) {
                   <Badge variant="outline" className="text-[10px]">
                     {t(`panel.status.${project.status}`)}
                   </Badge>
-                  {project.target_comic ? (
-                    <Badge variant="secondary" className="text-[10px]">
-                      {t("wizard.targetComic")}
+                  {selectedTargets(project).map((target) => (
+                    <Badge key={target} variant="secondary" className="text-[10px]">
+                      {t(`wizard.targets.${target}`)}
                     </Badge>
-                  ) : null}
-                  {project.target_movie ? (
-                    <Badge variant="secondary" className="text-[10px]">
-                      {t("wizard.targetMovie")}
-                    </Badge>
-                  ) : null}
+                  ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {t("panel.updated", { when: f.date(project.updated_at) })}

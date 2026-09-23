@@ -163,6 +163,8 @@ const input = z.discriminatedUnion("action", [
       spoiler_policy: spoilerPolicy.optional(),
       target_comic: z.boolean().optional(),
       target_movie: z.boolean().optional(),
+      target_book_narrative: z.boolean().optional(),
+      target_adventure_module: z.boolean().optional(),
     })
     .describe("Create a new adaptation project for a campaign. GM only — changes data."),
   z
@@ -175,6 +177,8 @@ const input = z.discriminatedUnion("action", [
       spoiler_policy: spoilerPolicy.optional(),
       target_comic: z.boolean().optional(),
       target_movie: z.boolean().optional(),
+      target_book_narrative: z.boolean().optional(),
+      target_adventure_module: z.boolean().optional(),
       source_scope: jsonObject.optional(),
       creative_settings: jsonObject.optional(),
       wizard_step: wizardStep.optional(),
@@ -438,8 +442,8 @@ export function registerAdaptation(tool: ToolRegistrar, ctx: McpToolContext): vo
     {
       title: "Campaign Adaptation Studio",
       description:
-        "Manage the Campaign Adaptation Studio: turning a campaign's canon into a comic and/or " +
-        "movie pipeline source. Every action requires the caller to be the Game Master of the " +
+        "Manage the Campaign Adaptation Studio: turning a campaign's canon into any mix of four " +
+        "formats: comic, movie, narrative book, and GURPS adventure module. Every action requires the caller to be the Game Master of the " +
         "adaptation's campaign — the Studio is GM-only by design. " +
         "Projects: list_projects, get_project (read), create_project, update_project, " +
         "delete_project (changes/deletes data). " +
@@ -488,6 +492,8 @@ export function registerAdaptation(tool: ToolRegistrar, ctx: McpToolContext): vo
             spoiler_policy: i.spoiler_policy,
             target_comic: i.target_comic,
             target_movie: i.target_movie,
+            target_book_narrative: i.target_book_narrative,
+            target_adventure_module: i.target_adventure_module,
             created_by: ctx.userId,
           })
           .select("*")
@@ -504,6 +510,8 @@ export function registerAdaptation(tool: ToolRegistrar, ctx: McpToolContext): vo
           spoiler_policy: i.spoiler_policy,
           target_comic: i.target_comic,
           target_movie: i.target_movie,
+          target_book_narrative: i.target_book_narrative,
+          target_adventure_module: i.target_adventure_module,
           source_scope: i.source_scope,
           creative_settings: i.creative_settings,
           wizard_step: i.wizard_step,

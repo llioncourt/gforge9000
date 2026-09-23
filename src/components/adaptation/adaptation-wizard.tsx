@@ -12,14 +12,25 @@ import {
   type AdaptationProject,
   type CreativeSettings,
 } from "@/lib/adaptation/api";
-import { WIZARD_STEPS, type WizardStep } from "@/lib/adaptation/types";
+import {
+  activeWizardSteps,
+  resolveWizardStep,
+  selectedTargets,
+  type WizardStep,
+} from "@/lib/adaptation/types";
 import { SourceStep, ScopeStep } from "@/components/adaptation/steps/scope-steps";
 import { ScanStep } from "@/components/adaptation/steps/scan-step";
 import { ReconstructionStep } from "@/components/adaptation/steps/reconstruction-step";
 import { TimelineStep } from "@/components/adaptation/steps/timeline-step";
 import { CanonStep } from "@/components/adaptation/steps/canon-step";
 import { AssetsStep } from "@/components/adaptation/steps/assets-step";
-import { ComicStep, MovieStep, NarrativeStep } from "@/components/adaptation/steps/settings-steps";
+import {
+  AdventureModuleStep,
+  BookNarrativeStep,
+  ComicStep,
+  MovieStep,
+  NarrativeStep,
+} from "@/components/adaptation/steps/settings-steps";
 import { GenerateStep, ValidationStep } from "@/components/adaptation/steps/generate-steps";
 
 export interface StepProps {
@@ -40,7 +51,10 @@ export function AdaptationWizard({
   const { t } = useT("adaptation");
   const queryClient = useQueryClient();
   const [current, setCurrent] = useState<AdaptationProject>(project);
-  const [step, setStep] = useState<WizardStep>(project.wizard_step ?? "source");
+  const [requested, setStep] = useState<WizardStep>(project.wizard_step ?? "source");
+  // Target steps only exist for selected targets; a stale step lands on the next active one.
+  const steps = activeWizardSteps(current);
+  const step = resolveWizardStep(requested, current);
 
   const save = useMutation({
     mutationFn: (patch: Partial<AdaptationProject>) => updateAdaptation(current.id, patch),
@@ -67,7 +81,7 @@ export function AdaptationWizard({
     });
   };
 
-  const index = WIZARD_STEPS.indexOf(step);
+  const index = steps.indexOf(step);
   const goto = async (next: WizardStep) => {
     setStep(next);
     await patch({ wizard_step: next });
@@ -89,14 +103,11 @@ export function AdaptationWizard({
         <div className="flex-1">
           <h3 className="font-display text-base font-semibold">{current.name}</h3>
           <p className="text-xs text-muted-foreground">
-            {t("wizard.stepOf", { current: index + 1, total: WIZARD_STEPS.length })} ·{" "}
+            {t("wizard.stepOf", { current: index + 1, total: steps.length })} ·{" "}
             {t("wizard.targetsLabel")}{" "}
-            {[
-              current.target_comic ? t("wizard.targetComic") : null,
-              current.target_movie ? t("wizard.targetMovie") : null,
-            ]
-              .filter(Boolean)
-              .join(" · ")}
+            {selectedTargets(current)
+              .map((target) => t(`wizard.targets.${target}`))
+              .join(" · ") || t("wizard.noTargets")}
           </p>
         </div>
         <Badge variant="outline" className="text-[10px]">
@@ -105,9 +116,9 @@ export function AdaptationWizard({
       </div>
 
       <div className="space-y-3">
-        <Progress value={((index + 1) / WIZARD_STEPS.length) * 100} />
+        <Progress value={((index + 1) / steps.length) * 100} />
         <div className="flex flex-wrap gap-2">
-          {WIZARD_STEPS.map((value, position) => (
+          {steps.map((value, position) => (
             <Button
               key={value}
               size="sm"
@@ -131,6 +142,8 @@ export function AdaptationWizard({
         {step === "narrative" ? <NarrativeStep {...props} /> : null}
         {step === "comic" ? <ComicStep {...props} /> : null}
         {step === "movie" ? <MovieStep {...props} /> : null}
+        {step === "book_narrative" ? <BookNarrativeStep {...props} /> : null}
+        {step === "adventure_module" ? <AdventureModuleStep {...props} /> : null}
         {step === "validation" ? <ValidationStep {...props} /> : null}
         {step === "generate" ? <GenerateStep {...props} /> : null}
       </div>
@@ -139,7 +152,7 @@ export function AdaptationWizard({
         <Button
           variant="outline"
           disabled={index === 0}
-          onClick={() => void goto(WIZARD_STEPS[Math.max(0, index - 1)]!)}
+          onClick={() => void goto(steps[Math.max(0, index - 1)]!)}
         >
           <ArrowLeft className="mr-1 h-4 w-4" /> {t("wizard.back")}
         </Button>
@@ -147,8 +160,8 @@ export function AdaptationWizard({
           {t("wizard.saveAndClose")}
         </Button>
         <Button
-          disabled={index === WIZARD_STEPS.length - 1}
-          onClick={() => void goto(WIZARD_STEPS[Math.min(WIZARD_STEPS.length - 1, index + 1)]!)}
+          disabled={index === steps.length - 1}
+          onClick={() => void goto(steps[Math.min(steps.length - 1, index + 1)]!)}
         >
           {t("wizard.next")} <ArrowRight className="ml-1 h-4 w-4" />
         </Button>

@@ -348,6 +348,377 @@ export const movieProjectionSchema = z
   })
   .strict();
 
+/* ------------------------------------------------------------------ books */
+
+const provenanceField = z.enum(PROVENANCE_TYPES);
+const refs = (max: number) => z.array(sourceRefSchema).max(max).default([]);
+
+const bookParagraphSchema = z
+  .object({
+    kind: z.enum(["narration", "action", "dialogue", "transition"]),
+    text: text(8000),
+    speaker: nullableText(200),
+    delivery: nullableText(200),
+    provenance_type: provenanceField,
+    /** Transitions carry a brief instead of prose until an author writes them. */
+    writing_brief: nullableText(2000),
+  })
+  .strict();
+
+const bookSectionSchema = z
+  .object({
+    section_no: z.number().int().min(1),
+    kind: z.enum(["scene", "transition"]),
+    scene_key: nullableText(200),
+    heading: nullableText(300),
+    location: nullableText(200),
+    characters: z.array(text(200)).max(100).default([]),
+    paragraphs: z.array(bookParagraphSchema).max(2000).default([]),
+    provenance_type: provenanceField,
+    review_status: z.enum(CANON_STATUSES).default("needs_review"),
+    source_refs: refs(200),
+  })
+  .strict();
+
+const bookChapterSchema = z
+  .object({
+    chapter_no: z.number().int().min(1),
+    key: text(200),
+    title: text(300),
+    summary: text(8000).default(""),
+    pov_character: nullableText(200),
+    scene_keys: z.array(text(200)).max(200).default([]),
+    word_target: z.number().int().min(0).nullish(),
+    source_word_count: z.number().int().min(0).default(0),
+    sections: z.array(bookSectionSchema).max(400).default([]),
+    source_refs: refs(400),
+  })
+  .strict();
+
+export const BOOK_LENGTH_MODES = ["auto", "short_story", "novella", "novel"] as const;
+export type BookLengthMode = (typeof BOOK_LENGTH_MODES)[number];
+
+/** Narrative book — a literary novelization, not a play report. */
+export const bookNarrativeProjectionSchema = z
+  .object({
+    target_system: z.literal("book"),
+    target_projection: z
+      .object({
+        format: z.literal("awd.book.narrative.v1"),
+        front_matter: z
+          .object({
+            title: text(300),
+            subtitle: nullableText(300),
+            language: text(20).default("en"),
+            logline: text(2000).default(""),
+            synopsis: text(20000).default(""),
+            tone: text(500).default(""),
+            pov: text(500).default(""),
+            audience: text(500).default(""),
+          })
+          .strict(),
+        structure: z
+          .object({
+            length_mode: z.enum(BOOK_LENGTH_MODES),
+            resolved_form: z.enum(["short_story", "novella", "novel"]),
+            chapter_count: z.number().int().min(1),
+            chapter_target: z.number().int().min(1).nullish(),
+            word_target: z.number().int().min(1).nullish(),
+            source_word_count: z.number().int().min(0),
+            /** Why the automatic mode picked this structure, as machine-readable reason codes. */
+            reasons: z.array(text(120)).max(20).default([]),
+          })
+          .strict(),
+        chapters: z.array(bookChapterSchema).max(400).default([]),
+        dramatis_personae: z
+          .array(
+            z
+              .object({
+                name: text(200),
+                entity_id: nullableText(64),
+                description: text(4000).default(""),
+                chapters: z.array(z.number().int().min(1)).max(400).default([]),
+              })
+              .strict(),
+          )
+          .max(500)
+          .default([]),
+        locations: z.array(bibleRecordSchema).max(500).default([]),
+        adaptation_notes: z
+          .object({
+            canon_preserved: z.literal(true),
+            reconstructed_dialogue_lines: z.number().int().min(0),
+            adaptation_created_sections: z.number().int().min(0),
+            unreviewed_sections: z.number().int().min(0),
+          })
+          .strict(),
+      })
+      .strict(),
+  })
+  .strict();
+
+/* ------------------------------------------------------- adventure module */
+
+export const MODULE_APPROACHES = [
+  "social",
+  "stealth",
+  "force",
+  "investigation",
+  "evasion",
+] as const;
+
+const gurpsStatBlockSchema = z
+  .object({
+    st: z.number(),
+    dx: z.number(),
+    iq: z.number(),
+    ht: z.number(),
+    hp: z.number(),
+    will: z.number(),
+    per: z.number(),
+    fp: z.number(),
+    basic_speed: z.number(),
+    basic_move: z.number(),
+    dodge: z.number(),
+    point_total: z.number().nullish(),
+    source_character_id: nullableText(64),
+  })
+  .strict();
+
+const moduleNpcSchema = z
+  .object({
+    key: text(200),
+    entity_id: nullableText(64),
+    name: text(200),
+    role: z.enum(["antagonist", "ally", "neutral", "player_character"]),
+    player_description: text(8000).default(""),
+    gm_notes: text(20000).default(""),
+    gurps: gurpsStatBlockSchema.nullish(),
+    encounter_keys: z.array(text(200)).max(200).default([]),
+    asset_keys: z.array(text(200)).max(50).default([]),
+    source_refs: refs(100),
+  })
+  .strict();
+
+const moduleRouteSchema = z
+  .object({
+    key: text(200),
+    approach: z.enum([...MODULE_APPROACHES, "original_table"]),
+    description: text(4000),
+    /** The route taken at the original table is recorded, never mandatory. */
+    original_table: z.boolean().default(false),
+    suggested_skills: z.array(text(120)).max(20).default([]),
+    /** Null means the GM sets the modifier for the situation. */
+    modifier: z.number().int().min(-10).max(10).nullish(),
+    leads_to: z.array(text(200)).max(20).default([]),
+    provenance_type: provenanceField,
+    review_status: z.enum(CANON_STATUSES).default("needs_review"),
+  })
+  .strict();
+
+const moduleEncounterSchema = z
+  .object({
+    key: text(200),
+    scene_key: text(200),
+    act_no: z.number().int().min(1),
+    title: text(300),
+    gm_summary: text(8000).default(""),
+    /** Player-safe framing the GM can read or paraphrase at the table. */
+    player_framing: text(8000).default(""),
+    objective: text(2000).default(""),
+    location: nullableText(200),
+    npcs: z.array(text(200)).max(100).default([]),
+    clue_keys: z.array(text(200)).max(100).default([]),
+    routes: z.array(moduleRouteSchema).max(20).default([]),
+    outcomes: z
+      .array(
+        z
+          .object({
+            condition: z.enum(["success", "partial", "failure", "skipped"]),
+            consequence: text(2000),
+            provenance_type: provenanceField,
+          })
+          .strict(),
+      )
+      .max(10)
+      .default([]),
+    hazards: z.array(text(500)).max(20).default([]),
+    handout_asset_keys: z.array(text(200)).max(50).default([]),
+    gm_only: z.boolean().default(true),
+    source_refs: refs(200),
+  })
+  .strict();
+
+const moduleClueSchema = z
+  .object({
+    key: text(200),
+    statement: text(4000),
+    fact_key: nullableText(200),
+    /** What the GM holds, what characters can uncover, and what players may simply be shown. */
+    audience: z.enum(["gm_only", "discoverable", "player_facing"]),
+    points_to: z.array(text(200)).max(50).default([]),
+    found_in: z.array(text(200)).max(50).default([]),
+    reveal_conditions: z.array(text(500)).max(20).default([]),
+    if_missed: text(2000).default(""),
+    revealed_in_original: z.boolean().default(false),
+    provenance_type: provenanceField,
+    source_refs: refs(100),
+  })
+  .strict();
+
+export const adventureModuleProjectionSchema = z
+  .object({
+    target_system: z.literal("gurps"),
+    target_projection: z
+      .object({
+        format: z.literal("awd.adventure-module.gurps.v1"),
+        game_system: z.literal("gurps_4e"),
+        adaptation_level: z.literal("complete_module"),
+        front_matter: z
+          .object({
+            title: text(300),
+            subtitle: nullableText(300),
+            language: text(20).default("en"),
+            players_min: z.number().int().min(1).max(20),
+            players_max: z.number().int().min(1).max(20),
+            starting_points: z.number().int().min(0).max(10000).nullish(),
+            tech_level: z.number().int().min(0).max(12).nullish(),
+          })
+          .strict(),
+        introduction: z
+          .object({ gm_summary: text(20000).default(""), player_pitch: text(8000).default("") })
+          .strict(),
+        overview: z
+          .object({
+            premise: text(8000).default(""),
+            themes: z.array(text(200)).max(50).default([]),
+            tone: text(500).default(""),
+            act_count: z.number().int().min(0),
+            encounter_count: z.number().int().min(0),
+          })
+          .strict(),
+        background: z
+          .object({ gm_truth: text(20000).default(""), common_knowledge: text(20000).default("") })
+          .strict(),
+        hooks: z
+          .array(
+            z
+              .object({
+                key: text(200),
+                text: text(2000),
+                provenance_type: provenanceField,
+                source_refs: refs(50),
+              })
+              .strict(),
+          )
+          .max(50)
+          .default([]),
+        npcs: z.array(moduleNpcSchema).max(500).default([]),
+        antagonist_keys: z.array(text(200)).max(200).default([]),
+        locations: z
+          .array(
+            z
+              .object({
+                key: text(200),
+                entity_id: nullableText(64),
+                name: text(200),
+                player_description: text(8000).default(""),
+                gm_notes: text(20000).default(""),
+                map_asset_keys: z.array(text(200)).max(50).default([]),
+                encounter_keys: z.array(text(200)).max(200).default([]),
+                source_refs: refs(100),
+              })
+              .strict(),
+          )
+          .max(500)
+          .default([]),
+        chronology: z
+          .object({
+            initial_situation: text(8000).default(""),
+            events: z
+              .array(
+                z
+                  .object({
+                    order: z.number().int().min(1),
+                    scene_key: text(200),
+                    summary: text(4000),
+                  })
+                  .strict(),
+              )
+              .max(2000)
+              .default([]),
+          })
+          .strict(),
+        getting_started: z
+          .object({
+            opening_encounter_key: nullableText(200),
+            player_framing: text(8000).default(""),
+          })
+          .strict(),
+        acts: z
+          .array(
+            z
+              .object({
+                act_no: z.number().int().min(1),
+                title: text(300),
+                summary: text(8000).default(""),
+                encounter_keys: z.array(text(200)).max(200).default([]),
+              })
+              .strict(),
+          )
+          .max(50)
+          .default([]),
+        encounters: z.array(moduleEncounterSchema).max(2000).default([]),
+        clues: z.array(moduleClueSchema).max(5000).default([]),
+        revelations: z
+          .array(
+            z
+              .object({
+                key: text(200),
+                statement: text(4000),
+                clue_keys: z.array(text(200)).max(50).default([]),
+                revealed_in_original: z.boolean().default(false),
+                source_refs: refs(100),
+              })
+              .strict(),
+          )
+          .max(2000)
+          .default([]),
+        handouts: z
+          .array(
+            z
+              .object({
+                asset_key: text(200),
+                role: z.enum(ASSET_ROLES),
+                title: text(300),
+                player_safe: z.boolean(),
+              })
+              .strict(),
+          )
+          .max(1000)
+          .default([]),
+        appendices: z
+          .object({
+            fact_index: z
+              .array(
+                z
+                  .object({
+                    key: text(200),
+                    statement: text(4000),
+                    provenance_type: provenanceField,
+                    gm_only: z.boolean(),
+                  })
+                  .strict(),
+              )
+              .max(20000)
+              .default([]),
+          })
+          .strict(),
+      })
+      .strict(),
+  })
+  .strict();
+
 const syncManifestSchema = z
   .object({
     sources: z
@@ -419,6 +790,9 @@ export const adaptationManifestSchema = z
       .object({
         comic: comicProjectionSchema.nullish(),
         movie: movieProjectionSchema.nullish(),
+        // Added without a version bump: older v1 packages simply omit them.
+        book_narrative: bookNarrativeProjectionSchema.nullish(),
+        adventure_module: adventureModuleProjectionSchema.nullish(),
       })
       .strict()
       .default({}),
@@ -434,6 +808,8 @@ export type BibleRecord = z.infer<typeof bibleRecordSchema>;
 export type ComicProjection = z.infer<typeof comicProjectionSchema>;
 export type MovieProjection = z.infer<typeof movieProjectionSchema>;
 export type StoryBible = z.infer<typeof storyBibleSchema>;
+export type BookNarrativeProjection = z.infer<typeof bookNarrativeProjectionSchema>;
+export type AdventureModuleProjection = z.infer<typeof adventureModuleProjectionSchema>;
 
 /** Parses and validates `adaptation.json`, with readable errors. */
 export function parseAdaptationManifest(raw: string): AdaptationManifest {
@@ -526,6 +902,47 @@ export function validateAdaptationManifest(manifest: AdaptationManifest): string
         );
       }
     }
+  }
+
+  const book = manifest.targets.book_narrative;
+  if (book) {
+    const numbers = book.target_projection.chapters.map((c) => c.chapter_no);
+    if (new Set(numbers).size !== numbers.length) problems.push("Duplicate book chapter numbers.");
+    for (const chapter of book.target_projection.chapters) {
+      for (const key of chapter.scene_keys) {
+        if (!sceneKeys.has(key))
+          problems.push(`Book chapter ${chapter.chapter_no} references unknown scene "${key}".`);
+      }
+    }
+  }
+
+  const adventure = manifest.targets.adventure_module;
+  if (adventure) {
+    const module = adventure.target_projection;
+    const encounterKeys = new Set(module.encounters.map((e) => e.key));
+    const clueKeys = new Set(module.clues.map((c) => c.key));
+    for (const encounter of module.encounters) {
+      if (!sceneKeys.has(encounter.scene_key))
+        problems.push(
+          `Encounter "${encounter.key}" references unknown scene "${encounter.scene_key}".`,
+        );
+      for (const key of encounter.clue_keys)
+        if (!clueKeys.has(key))
+          problems.push(`Encounter "${encounter.key}" uses unknown clue "${key}".`);
+      for (const route of encounter.routes)
+        for (const next of route.leads_to)
+          if (!encounterKeys.has(next))
+            problems.push(`Route "${route.key}" leads to unknown encounter "${next}".`);
+      if (encounter.routes.length && encounter.routes.every((route) => route.original_table))
+        problems.push(`Encounter "${encounter.key}" offers only the original table's solution.`);
+    }
+    for (const act of module.acts)
+      for (const key of act.encounter_keys)
+        if (!encounterKeys.has(key))
+          problems.push(`Act ${act.act_no} lists unknown encounter "${key}".`);
+    for (const handout of module.handouts)
+      if (!assetKeys.has(handout.asset_key))
+        problems.push(`Handout references unknown asset "${handout.asset_key}".`);
   }
 
   return problems;

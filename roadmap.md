@@ -5,3 +5,6 @@ The Lore and Battle grid phases are complete. See [Archived Roadmap](docs/histor
 ## Future Phases
 - [ ] TBD
 
+
+## Adaptation Studio
+- [x] Book — Narrative and Book — Adventure Module targets

@@ -55,17 +55,26 @@
       "timeline": "Linha do tempo",
       "canon": "Revisão de cânone",
       "assets": "Recursos",
-      "narrative": "Narrativa",
+      "narrative": "Direção narrativa",
       "comic": "Quadrinho",
       "movie": "Filme",
       "validation": "Validação",
-      "generate": "Gerar"
+      "generate": "Gerar",
+      "book_narrative": "Livro — Narrativa",
+      "adventure_module": "Livro — Módulo de Aventura"
     },
     "failuresTitle": "Algumas etapas não terminaram",
     "retryStage": "Repetir esta etapa",
     "targetsLabel": "Produzindo:",
     "targetComic": "Quadrinho",
-    "targetMovie": "Filme"
+    "targetMovie": "Filme",
+    "targets": {
+      "comic": "Quadrinho",
+      "movie": "Filme",
+      "book_narrative": "Livro — Narrativa",
+      "adventure_module": "Livro — Módulo de Aventura"
+    },
+    "noTargets": "Nenhum formato escolhido"
   },
   "source": {
     "title": "Escolha o material de origem",
@@ -78,7 +87,26 @@
     },
     "targetsLabel": "O que esta adaptação deve produzir?",
     "targetComic": "Quadrinho",
-    "targetMovie": "Pacote de filme / animação"
+    "targetMovie": "Pacote de filme / animação",
+    "targetsHint": "Escolha qualquer combinação. Todos usam a mesma reconstrução.",
+    "targets": {
+      "comic": {
+        "label": "Quadrinho",
+        "description": "Uma edição em páginas e quadros."
+      },
+      "movie": {
+        "label": "Filme",
+        "description": "Um filme inteiro dividido em cenas e tomadas."
+      },
+      "book_narrative": {
+        "label": "Livro — Narrativa",
+        "description": "Um romance que conta a história escolhida como literatura, não como relatório de sessão."
+      },
+      "adventure_module": {
+        "label": "Livro — Módulo de Aventura",
+        "description": "Uma aventura GURPS completa para um Mestre narrar, com caminhos alternativos."
+      }
+    }
   },
   "scope": {
     "title": "Escopo e política de spoilers",
@@ -232,8 +260,8 @@
     }
   },
   "narrative": {
-    "title": "Configurações narrativas",
-    "description": "Defina o tom geral da adaptação antes de gerar as projeções de quadrinho ou filme.",
+    "title": "Direção narrativa",
+    "description": "Voz comum a todos os formatos escolhidos: tom, ponto de vista e público.",
     "toneLabel": "Tom",
     "tonePlaceholder": "ex.: Sombrio, esperançoso, cômico",
     "povLabel": "Ponto de vista",
@@ -284,7 +312,10 @@
       "missingVisuals": "{{count}} entrada(s) sem referência visual.",
       "unresolvedAssets": "{{count}} recurso(s) ainda não resolvido(s) ou ambíguo(s).",
       "noComicConfig": "As configurações do quadrinho estão incompletas.",
-      "noMovieConfig": "As configurações do filme estão incompletas."
+      "noMovieConfig": "As configurações do filme estão incompletas.",
+      "noBookConfig": "Livro — Narrativa precisa de um título.",
+      "noModuleConfig": "Livro — Módulo de Aventura precisa de título e de uma faixa de jogadores válida.",
+      "noTargets": "Escolha pelo menos um formato."
     },
     "actions": {
       "fix": "Resolver",
@@ -317,6 +348,28 @@
     "exporting": "Preparando exportação…",
     "toasts": {
       "exported": "Pacote pronto."
+    },
+    "targets": {
+      "comic": {
+        "title": "Projeção de quadrinho",
+        "description": "Apenas o que a RX Comics precisa para montar a edição.",
+        "button": "Exportar pacote de quadrinho"
+      },
+      "movie": {
+        "title": "Projeção de filme",
+        "description": "Apenas o que o MovieSmith precisa para montar o filme.",
+        "button": "Exportar pacote de filme"
+      },
+      "book_narrative": {
+        "title": "Livro narrativo",
+        "description": "Abertura e capítulos em ordem, com um rascunho para leitura.",
+        "button": "Exportar livro"
+      },
+      "adventure_module": {
+        "title": "Módulo de aventura",
+        "description": "Atos, encontros, pistas, caminhos e atributos GURPS, com um rascunho para leitura.",
+        "button": "Exportar módulo"
+      }
     }
   },
   "chronicle": {
@@ -380,5 +433,45 @@
       "reconstructed": "Descobertas do rascunho prontas para revisão.",
       "itemUpdated": "Item atualizado."
     }
+  },
+  "bookNarrative": {
+    "title": "Livro — Narrativa",
+    "description": "Como o livro é apresentado e qual o tamanho.",
+    "titleLabel": "Título",
+    "subtitleLabel": "Subtítulo (opcional)",
+    "languageLabel": "Idioma",
+    "lengthLabel": "Extensão",
+    "lengths": {
+      "auto": "Automático (recomendado)",
+      "short_story": "Conto",
+      "novella": "Novela",
+      "novel": "Romance"
+    },
+    "lengthHint": "O modo automático analisa o material escolhido e define uma estrutura coerente.",
+    "chapterTargetLabel": "Capítulos aproximados",
+    "wordTargetLabel": "Palavras aproximadas",
+    "targetsHint": "Deixe vazio para a estrutura decidir.",
+    "canonNote": "O que aconteceu na campanha continua verdadeiro. Cenas podem ser condensadas ou reordenadas e diálogos reconstruídos, e tudo o que for acrescentado fica marcado como escrito para o livro."
+  },
+  "adventureModule": {
+    "title": "Livro — Módulo de Aventura",
+    "description": "Um módulo GURPS completo que outro Mestre pode narrar.",
+    "titleLabel": "Título",
+    "subtitleLabel": "Subtítulo (opcional)",
+    "languageLabel": "Idioma",
+    "systemLabel": "Sistema",
+    "systemValue": "GURPS 4ª Edição — módulo completo",
+    "playersMinLabel": "Mínimo de jogadores",
+    "playersMaxLabel": "Máximo de jogadores",
+    "pointsLabel": "Pontos iniciais de personagem",
+    "techLevelLabel": "Nível tecnológico",
+    "branchingLabel": "Caminhos alternativos por encontro",
+    "branchings": {
+      "light": "Poucos",
+      "standard": "Padrão",
+      "rich": "Muitos"
+    },
+    "statBlocksLabel": "Incluir atributos GURPS de personagens com ficha",
+    "canonNote": "A solução dos seus jogadores vira uma opção entre várias, nunca a única. Segredos, pistas e o que pode ser mostrado aos jogadores ficam separados, e tudo o que for criado para o jogo fica marcado como novo."
   }
 }

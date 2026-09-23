@@ -10,7 +10,9 @@ import { useT } from "@/i18n/hooks";
 import { listEntities } from "@/lib/lore";
 import { listSessionChronicles } from "@/lib/adaptation/chronicle-api";
 import {
+  ADAPTATION_TARGETS,
   SOURCE_MODES,
+  TARGET_COLUMN,
   SPOILER_POLICIES,
   type SourceMode,
   type SpoilerPolicy,
@@ -50,26 +52,25 @@ export function SourceStep({ project, patch }: StepProps) {
 
       <div className="space-y-3">
         <Label>{t("source.targetsLabel")}</Label>
-        <div className="flex items-center gap-3">
-          <Checkbox
-            id="target-comic"
-            checked={project.target_comic}
-            onCheckedChange={(checked) => void patch({ target_comic: checked === true })}
-          />
-          <Label htmlFor="target-comic" className="font-normal">
-            {t("source.targetComic")}
-          </Label>
-        </div>
-        <div className="flex items-center gap-3">
-          <Checkbox
-            id="target-movie"
-            checked={project.target_movie}
-            onCheckedChange={(checked) => void patch({ target_movie: checked === true })}
-          />
-          <Label htmlFor="target-movie" className="font-normal">
-            {t("source.targetMovie")}
-          </Label>
-        </div>
+        <p className="text-xs text-muted-foreground">{t("source.targetsHint")}</p>
+        {ADAPTATION_TARGETS.map((target) => (
+          <div key={target} className="flex items-start gap-3">
+            <Checkbox
+              id={`target-${target}`}
+              className="mt-0.5"
+              checked={project[TARGET_COLUMN[target]] === true}
+              onCheckedChange={(checked) =>
+                void patch({ [TARGET_COLUMN[target]]: checked === true } as Partial<typeof project>)
+              }
+            />
+            <Label htmlFor={`target-${target}`} className="font-normal leading-snug">
+              <span className="block">{t(`source.targets.${target}.label`)}</span>
+              <span className="block text-xs text-muted-foreground">
+                {t(`source.targets.${target}.description`)}
+              </span>
+            </Label>
+          </div>
+        ))}
       </div>
     </div>
   );

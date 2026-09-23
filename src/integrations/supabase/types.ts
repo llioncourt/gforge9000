@@ -243,6 +243,8 @@ export type Database = {
           source_scope: Json
           spoiler_policy: string
           status: string
+          target_adventure_module: boolean
+          target_book_narrative: boolean
           target_comic: boolean
           target_movie: boolean
           updated_at: string
@@ -260,6 +262,8 @@ export type Database = {
           source_scope?: Json
           spoiler_policy?: string
           status?: string
+          target_adventure_module?: boolean
+          target_book_narrative?: boolean
           target_comic?: boolean
           target_movie?: boolean
           updated_at?: string
@@ -277,6 +281,8 @@ export type Database = {
           source_scope?: Json
           spoiler_policy?: string
           status?: string
+          target_adventure_module?: boolean
+          target_book_narrative?: boolean
           target_comic?: boolean
           target_movie?: boolean
           updated_at?: string

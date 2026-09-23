@@ -2,7 +2,6 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter } from "@tanstack/react-router";
 import type { QueryClient } from "@tanstack/react-query";
 
-import { DiceProvider } from "@/components/app/dice-context";
 import { PwaRegister } from "@/components/app/pwa-register";
 import { supabase } from "@/integrations/supabase/client";
 import { logAuthEvent } from "@/lib/auth-diagnostics";
@@ -10,12 +9,14 @@ import { createAuthInvalidationHandler } from "@/lib/app-runtime";
 import { diagTrace } from "@/lib/diag-modes";
 
 /**
- * Global application runtime: the shared auth-state listener, obsolete
- * service-worker retirement and the dice runtime.
+ * Global application runtime: the shared auth-state listener and obsolete
+ * service-worker retirement. (The dice provider lives in the root route so it
+ * stays mounted across every navigation — including transitions toward
+ * `/auth`, where the outgoing tree may still call `useDice`.)
  *
  * Mounted on application routes only. The public `/auth` route renders the
- * minimal shell (query + i18n + tooltip + toaster) so that merely opening the
- * sign-in page starts no background systems.
+ * minimal shell (query + i18n + tooltip + dice + toaster) so that merely
+ * opening the sign-in page starts no background systems.
  */
 export function AppRuntime({
   queryClient,
@@ -59,9 +60,9 @@ export function AppRuntime({
   }, [router, queryClient, skipAuthListener, trace]);
 
   return (
-    <DiceProvider>
+    <>
       <PwaRegister skipCleanup={skipPwaCleanup} trace={trace} />
       {children}
-    </DiceProvider>
+    </>
   );
 }

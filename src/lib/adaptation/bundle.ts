@@ -36,7 +36,6 @@ import {
   type StatBlockInput,
 } from "@/lib/adaptation/book-projections";
 import { deriveStats } from "@/rules/attributes";
-import { characterPoints } from "@/rules/points";
 import type { CharacterRecord } from "@/rules/types";
 import type { AdaptationTarget } from "@/lib/adaptation/types";
 import { renderAdventureModuleMarkdown, renderBookMarkdown } from "@/lib/adaptation/book-render";
@@ -325,12 +324,6 @@ async function loadStatBlocks(
     if (!row.is_npc) playerCharacterIds.push(entity.id);
     const record = row as unknown as CharacterRecord;
     const stats = deriveStats(record);
-    let total: number | null = null;
-    try {
-      total = characterPoints(record, []).total;
-    } catch {
-      total = null;
-    }
     statBlocks[entity.id] = {
       st: stats.st,
       dx: stats.dx,
@@ -343,7 +336,7 @@ async function loadStatBlocks(
       basic_speed: stats.basicSpeed,
       basic_move: stats.basicMove,
       dodge: stats.dodge,
-      point_total: total,
+      point_total: row.point_budget ?? null,
       source_character_id: row.id,
     };
   }

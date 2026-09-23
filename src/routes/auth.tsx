@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 import { logAuthEvent } from "@/lib/auth-diagnostics";
-import { readOAuthReturnError, signInWithGoogle } from "@/lib/browser-auth";
+import { readOAuthReturnError } from "@/lib/browser-auth";
 import { metaLocale, metaText } from "@/i18n/meta";
 import { Trans } from "react-i18next";
 
@@ -94,18 +94,6 @@ function AuthPage() {
       return;
     }
     navigate({ to: "/dashboard", replace: true });
-  }
-
-  async function google() {
-    logAuthEvent("login:click", { method: "google" });
-    const { error } = await signInWithGoogle("login");
-    if (error) {
-      logAuthEvent("login:result", { method: "google", ok: false });
-      toast.error(t("errors.googleSignInFailed"));
-      return;
-    }
-    // Success means a full-page redirect to Google was initiated; this
-    // component unmounts. The dashboard decision happens on return, above.
   }
 
   return (
@@ -223,14 +211,6 @@ function AuthPage() {
                   </Button>
                 </form>
               </TabsContent>
-
-              <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-widest text-muted-foreground">
-                <span className="h-px flex-1 bg-border" /> {t("form.or")}{" "}
-                <span className="h-px flex-1 bg-border" />
-              </div>
-              <Button variant="outline" className="w-full" onClick={google}>
-                {t("form.actions.continueWithGoogle")}
-              </Button>
 
               <p className="mt-6 text-center text-xs text-muted-foreground">
                 <Trans

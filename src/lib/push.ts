@@ -1,4 +1,5 @@
 /** Browser-side Web Push subscription helpers. */
+import { PWA_ENABLED } from "@/lib/pwa";
 import {
   getPushPublicKey,
   removePushSubscription,
@@ -24,9 +25,16 @@ function encodeKey(buffer: ArrayBuffer | null): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-/** True when background push can work here (installed app / real deployment). */
+/**
+ * True when background push can work here (installed app / real deployment
+ * AND the service worker is allowed for this release). While `PWA_ENABLED`
+ * is false, this is always false — callers must fail fast instead of
+ * awaiting `navigator.serviceWorker.ready`, which never resolves without a
+ * registered worker.
+ */
 export function isPushSupported(): boolean {
   return (
+    PWA_ENABLED &&
     typeof window !== "undefined" &&
     "serviceWorker" in navigator &&
     "PushManager" in window &&
@@ -36,7 +44,9 @@ export function isPushSupported(): boolean {
 
 /**
  * Registers this device for background alerts. Requires notification
- * permission to be granted already. Returns false when unsupported.
+ * permission to be granted already. Returns false immediately (without
+ * touching `navigator.serviceWorker.ready`) when unsupported or when
+ * background push is disabled for this release.
  */
 export async function enableBackgroundPush(): Promise<boolean> {
   if (!isPushSupported()) return false;

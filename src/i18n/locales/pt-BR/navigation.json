@@ -71,7 +71,8 @@
     "timeAgoSeconds": "há {{count}}s",
     "timeAgoMinutes": "há {{count}}min",
     "timeAgoHours": "há {{count}}h",
-    "timeAgoDays": "há {{count}}d"
+    "timeAgoDays": "há {{count}}d",
+    "backgroundPushUnavailable": "Alertas em segundo plano estão indisponíveis nesta versão. As notificações no app continuam funcionando."
   },
   "profile": {
     "title": "Perfil",

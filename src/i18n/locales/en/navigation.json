@@ -71,7 +71,8 @@
     "timeAgoSeconds": "{{count}}s ago",
     "timeAgoMinutes": "{{count}}m ago",
     "timeAgoHours": "{{count}}h ago",
-    "timeAgoDays": "{{count}}d ago"
+    "timeAgoDays": "{{count}}d ago",
+    "backgroundPushUnavailable": "Background alerts are unavailable in this release. In-app notifications still work."
   },
   "profile": {
     "title": "Profile",

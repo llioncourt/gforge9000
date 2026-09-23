@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppRuntime } from "@/components/app/app-runtime";
+import { DiceProvider } from "@/components/app/dice-context";
 import { I18nProvider } from "@/i18n/provider";
 import { detectLocale } from "@/i18n/detect";
 import { localeDirection } from "@/i18n/config";

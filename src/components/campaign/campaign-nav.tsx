@@ -54,7 +54,13 @@ export function buildCampaignNavGroups(opts: {
   const settingsItems: CampaignNavItem[] = [
     { value: "rules", label: t("tabs.rules"), icon: Settings2 },
   ];
-  if (isGm) settingsItems.push({ value: "adapt", label: adaptLabel, icon: Wand2 });
+
+  const storyItems: CampaignNavItem[] = [
+    { value: "story", label: t("tabs.story"), icon: Scroll },
+    { value: "reveals", label: t("tabs.reveals"), icon: Sparkles },
+    { value: "notes", label: t("tabs.notes"), icon: NotebookPen },
+  ];
+  if (isGm) storyItems.push({ value: "adapt", label: adaptLabel, icon: Wand2 });
 
   const groups: CampaignNavGroup[] = [
     {
@@ -91,12 +97,9 @@ export function buildCampaignNavGroups(opts: {
       id: "story",
       label: t("nav.story"),
       icon: Scroll,
-      items: [
-        { value: "story", label: t("tabs.story"), icon: Scroll },
-        { value: "reveals", label: t("tabs.reveals"), icon: Sparkles },
-        { value: "notes", label: t("tabs.notes"), icon: NotebookPen },
-      ],
+      items: storyItems,
     },
+
     {
       id: "settings",
       label: t("nav.settings"),

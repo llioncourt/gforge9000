@@ -16,7 +16,8 @@ vi.mock("@/integrations/supabase/client", () => {
     const self: Record<string, unknown> = {};
     self["select"] = () => {
       if (name !== "library_entries" || pendingInsert === null) {
-        return Promise.resolve({ data: [], error: null });
+        // Still chainable: lookups do `.select(...).eq(...).maybeSingle()`.
+        return self;
       }
       const inserted = pendingInsert.map((row, i) => ({
         id: `row-${state.rows.length + i}`,

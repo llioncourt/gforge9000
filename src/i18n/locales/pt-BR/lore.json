@@ -676,6 +676,7 @@
       "noLinkedSheet": "Nenhuma ficha vinculada",
       "summary": "Resumo",
       "playerDescription": "Descrição para o jogador",
+      "fullDescription": "Descrição completa (mestre)",
       "gmNotes": "Notas do mestre"
     },
     "image": {

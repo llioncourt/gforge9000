@@ -676,6 +676,7 @@
       "noLinkedSheet": "No linked sheet",
       "summary": "Summary",
       "playerDescription": "Player-facing description",
+      "fullDescription": "Full description (GM)",
       "gmNotes": "GM notes"
     },
     "image": {

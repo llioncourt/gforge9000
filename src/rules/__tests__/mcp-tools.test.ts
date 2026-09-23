@@ -126,17 +126,31 @@ describe("assistant tool surface", () => {
 });
 
 describe("game master fields", () => {
-  const entity = { id: "e1", name: "Vault", gm_notes: "secret", summary: "public" };
+  const entity = {
+    id: "e1",
+    name: "Vault",
+    gm_notes: "secret",
+    description: "gm canon",
+    player_description: "what players see",
+    summary: "public",
+  };
 
-  it("removes gm notes for players", () => {
+  it("removes gm notes and the full description for players", () => {
     const out = __stripGmFields(entity, false, MCP_GM_ONLY_FIELDS.entity);
     expect(out).not.toHaveProperty("gm_notes");
+    expect(out).not.toHaveProperty("description");
     expect(out["summary"]).toBe("public");
+    expect(out["player_description"]).toBe("what players see");
   });
 
-  it("keeps gm notes for the game master", () => {
+  it("keeps gm notes and the full description for the game master", () => {
     const out = __stripGmFields(entity, true, MCP_GM_ONLY_FIELDS.entity);
     expect(out["gm_notes"]).toBe("secret");
+    expect(out["description"]).toBe("gm canon");
+  });
+
+  it("declares both GM-only entity columns", () => {
+    expect([...MCP_GM_ONLY_FIELDS.entity].sort()).toEqual(["description", "gm_notes"]);
   });
 
   it("removes gm descriptions from relationships for players", () => {
@@ -284,11 +298,47 @@ describe("get_entry text content", () => {
 
     expect(result.content[0]!.text).not.toContain("gm_notes");
     expect(result.content[0]!.text).not.toContain("traitor");
-    // Non-GM still receives the full public item in the text block.
-    expect(result.content[0]!.text).toContain('"description":');
+    // The full description is GM canon too, and must not appear anywhere.
+    expect(result.content[0]!.text).not.toContain('"description":');
+    expect(result.content[0]!.text).not.toContain("dawn bell");
+    // Player-facing text is still there.
+    expect(result.content[0]!.text).toContain('"summary": "A sealed vault under the citadel."');
 
     const item = result.structuredContent["item"] as Record<string, unknown>;
     expect(item).not.toHaveProperty("gm_notes");
+    expect(item).not.toHaveProperty("description");
+  });
+});
+
+describe("entry version history", () => {
+  it("refuses to list saved versions for a non-GM caller", async () => {
+    const tools = serverWith({ entities: entityRow, campaigns: campaignRow }, USER);
+    await expect(
+      tools["history"]!.handler({ action: "list_entry_revisions", entry_id: ENTITY_ID }),
+    ).rejects.toThrow(/Game Master/i);
+  });
+
+  it("refuses to save a version for a non-GM caller", async () => {
+    const tools = serverWith({ entities: entityRow, campaigns: campaignRow }, USER);
+    await expect(
+      tools["history"]!.handler({ action: "snapshot_entry", entry_id: ENTITY_ID }),
+    ).rejects.toThrow(/Game Master/i);
+  });
+
+  it("lets the game master list saved versions", async () => {
+    const tools = serverWith(
+      {
+        entities: entityRow,
+        campaigns: campaignRow,
+        entity_revisions: [{ id: "r1", label: "before the raid", created_at: "x", created_by: GM }],
+      },
+      GM,
+    );
+    const result = await tools["history"]!.handler({
+      action: "list_entry_revisions",
+      entry_id: ENTITY_ID,
+    });
+    expect(result.structuredContent["items"]).toHaveLength(1);
   });
 });
 

@@ -154,7 +154,7 @@ export function registerEntries(tool: ToolRegistrar, ctx: McpToolContext): void 
     {
       title: "Get a campaign entry",
       description:
-        "Reads one world or story entry in full. Game Master notes and GM-only fields are removed for players.",
+        "Reads one world or story entry in full. `summary` and `player_description` are player-visible; `description` and `gm_notes` are GM-only and are removed for players, together with GM-only data keys.",
       inputSchema: getEntryInput,
       outputSchema: itemOutput,
       annotations: READ,
@@ -178,7 +178,7 @@ export function registerEntries(tool: ToolRegistrar, ctx: McpToolContext): void 
     {
       title: "Create a campaign entry",
       description:
-        "Adds a world or story entry to a campaign. Only the campaign's Game Master can do this. `kind` must be one of the kinds from list_entry_types. `status` is matched against that kind's own statuses ignoring capitalisation and stored in the app's exact spelling; leave it out to get that kind's default status.",
+        "Adds a world or story entry to a campaign. Only the campaign's Game Master can do this. `summary` and `player_description` are player-visible; `description` and `gm_notes` are GM-only. `kind` must be one of the kinds from list_entry_types. `status` is matched against that kind's own statuses ignoring capitalisation and stored in the app's exact spelling; leave it out to get that kind's default status.",
       inputSchema: createEntryInput,
       outputSchema: itemOutput,
       annotations: CREATE,
@@ -215,7 +215,7 @@ export function registerEntries(tool: ToolRegistrar, ctx: McpToolContext): void 
     {
       title: "Update a campaign entry",
       description:
-        "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. Fields left out are untouched. When supplied, `data`, `aliases`, and `tags` replace the entire stored object/array rather than being merged. Read the entry first and resend any existing keys/items you want to preserve. `status` is matched against the kind's own statuses ignoring capitalisation and stored in the app's exact spelling; if you change `kind` and the current status does not exist for the new kind, supply a valid one.",
+        "Changes fields on an existing world or story entry. Only the campaign's Game Master can do this. `summary` and `player_description` are player-visible; `description` and `gm_notes` are GM-only. Fields left out are untouched. When supplied, `data`, `aliases`, and `tags` replace the entire stored object/array rather than being merged. Read the entry first and resend any existing keys/items you want to preserve. `status` is matched against the kind's own statuses ignoring capitalisation and stored in the app's exact spelling; if you change `kind` and the current status does not exist for the new kind, supply a valid one.",
       inputSchema: updateEntryInput,
       outputSchema: itemOutput,
       annotations: MODIFY,

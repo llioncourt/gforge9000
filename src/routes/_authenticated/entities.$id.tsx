@@ -268,6 +268,7 @@ function EntityPage() {
         name: String(snapshot["name"] ?? ""),
         summary: (snapshot["summary"] ?? null) as string | null,
         player_description: (snapshot["player_description"] ?? null) as string | null,
+        description: (snapshot["description"] ?? null) as string | null,
         gm_notes: (snapshot["gm_notes"] ?? null) as string | null,
         status: String(snapshot["status"] ?? ""),
         visibility: String(snapshot["visibility"] ?? ""),
@@ -696,6 +697,18 @@ function EntityPage() {
               onBlur={() => commit({ player_description: form.player_description })}
             />
           </div>
+          {isGm ? (
+            <div className="space-y-2">
+              <Label htmlFor="entity-description">{t("entityPage.fields.fullDescription")}</Label>
+              <Textarea
+                id="entity-description"
+                rows={6}
+                value={form.description ?? ""}
+                onChange={(event) => patch({ description: event.target.value })}
+                onBlur={() => commit({ description: form.description })}
+              />
+            </div>
+          ) : null}
           {isGm ? (
             <div className="space-y-2">
               <Label htmlFor="entity-gm">{t("entityPage.fields.gmNotes")}</Label>

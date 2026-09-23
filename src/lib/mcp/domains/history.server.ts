@@ -21,10 +21,12 @@ import {
   limitField,
   listReply,
   loadCharacter,
+  requireGmFor,
   safeRpc,
   uuid,
 } from "@/lib/mcp/kit.server";
 import type { McpToolContext, ToolRegistrar, Structured } from "@/lib/mcp/kit.server";
+import { loadEntity } from "@/lib/mcp/domains/shared.server";
 
 const input = z.discriminatedUnion("action", [
   z
@@ -93,6 +95,9 @@ export function registerHistory(tool: ToolRegistrar, ctx: McpToolContext): void 
     },
     actionRouter<Input>({
       list_entry_revisions: async (i) => {
+        // Saved revisions carry the entry's full GM text, so they are GM-only.
+        const { campaign } = await loadEntity(ctx, i.entry_id);
+        requireGmFor(campaign, "read saved versions of an entry");
         const { data, error } = await ctx.supabase
           .from("entity_revisions")
           .select("id, label, created_at, created_by")
@@ -104,6 +109,8 @@ export function registerHistory(tool: ToolRegistrar, ctx: McpToolContext): void 
         return listReply("entry revisions", items, items.length);
       },
       snapshot_entry: async (i) => {
+        const { campaign } = await loadEntity(ctx, i.entry_id);
+        requireGmFor(campaign, "save a version of an entry");
         const { data: entry, error: entryError } = await ctx.supabase
           .from("entities")
           .select("*")

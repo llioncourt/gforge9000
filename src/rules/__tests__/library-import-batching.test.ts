@@ -31,7 +31,8 @@ vi.mock("@/integrations/supabase/client", () => {
       return self;
     };
     self["eq"] = () => self;
-    self["maybeSingle"] = () => Promise.resolve({ data: { id: "pack-1" }, error: null });
+    self["maybeSingle"] = () =>
+      Promise.resolve({ data: name === "content_packs" ? { id: "pack-1" } : null, error: null });
     return self;
   };
   return {

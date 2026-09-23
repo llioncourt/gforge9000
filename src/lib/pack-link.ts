@@ -18,6 +18,7 @@ import { investedPoints } from "@/rules/skill-points";
 import {
   TRAIT_POINTS_SEMANTICS_KEY,
   toTotalSemantics,
+  traitPointsSemantics,
   usesLeveledPoints,
 } from "@/rules/trait-cost";
 import { normalizeText } from "@/lib/text-normalize";

@@ -131,7 +131,6 @@ function PanelFallback() {
 
 export const CAMPAIGN_TABS = [
   "media",
-  "cover",
   "roster",
   "lore",
   "story",
@@ -148,7 +147,7 @@ export const CAMPAIGN_TABS = [
   "rules",
 ] as const;
 export type CampaignTab = (typeof CAMPAIGN_TABS)[number];
-export type MediaSubTab = "videos" | "soundtrack" | "sound-fx";
+export type MediaSubTab = "cover" | "videos" | "soundtrack" | "sound-fx";
 
 export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   staticData: { sitemap: false },
@@ -162,7 +161,8 @@ export const Route = createFileRoute("/_authenticated/campaigns/$id")({
     if (typeof tab === "string" && (CAMPAIGN_TABS as readonly string[]).includes(tab))
       out.tab = tab as CampaignTab;
     if (typeof item === "string" && item) out.item = item;
-    if (sub === "videos" || sub === "soundtrack" || sub === "sound-fx") out.sub = sub;
+    if (sub === "cover" || sub === "videos" || sub === "soundtrack" || sub === "sound-fx")
+      out.sub = sub;
     return out;
   },
   head: ({ params }) => {
@@ -539,14 +539,11 @@ function CampaignPage() {
             <MediaPanel
               campaignId={id}
               isGm={isGm}
+              cover={<CampaignCover campaignId={id} settings={settings} disabled={!isGm} />}
               sub={subParam ?? null}
               focusId={itemParam ?? null}
             />
           </Suspense>
-        </TabsContent>
-
-        <TabsContent value="cover" className="mt-6">
-          <CampaignCover campaignId={id} settings={settings} disabled={!isGm} />
         </TabsContent>
 
         <TabsContent value="roster" className="mt-6 space-y-6">

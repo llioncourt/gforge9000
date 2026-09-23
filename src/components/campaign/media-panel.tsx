@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 import { useT } from "@/i18n/hooks";
 import { CampaignVideosPanel } from "@/components/campaign/intro-panel";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +13,7 @@ const SoundFxPanel = lazy(() =>
   import("@/components/campaign/sound-fx-panel").then((mod) => ({ default: mod.SoundFxPanel })),
 );
 
-export type MediaTab = "videos" | "soundtrack" | "sound-fx";
+export type MediaTab = "cover" | "videos" | "soundtrack" | "sound-fx";
 
 function MediaFallback() {
   return (
@@ -31,16 +31,18 @@ function useMediaT() {
 export function MediaPanel({
   campaignId,
   isGm,
+  cover,
   sub = null,
   focusId = null,
 }: {
   campaignId: string;
   isGm: boolean;
+  cover: ReactNode;
   sub?: MediaTab | null;
   focusId?: string | null;
 }) {
   const { t } = useMediaT();
-  const [tab, setTab] = useState<MediaTab>(sub ?? "videos");
+  const [tab, setTab] = useState<MediaTab>(sub ?? "cover");
 
   useEffect(() => {
     if (sub) setTab(sub);
@@ -49,10 +51,14 @@ export function MediaPanel({
   return (
     <Tabs value={tab} onValueChange={(value) => setTab(value as MediaTab)}>
       <ScrollableTabsList className="max-w-xl">
+        <TabsTrigger value="cover">{t("panel.tabs.cover")}</TabsTrigger>
         <TabsTrigger value="videos">{t("panel.tabs.videos")}</TabsTrigger>
         <TabsTrigger value="soundtrack">{t("panel.tabs.soundtrack")}</TabsTrigger>
         <TabsTrigger value="sound-fx">{t("panel.tabs.soundFx")}</TabsTrigger>
       </ScrollableTabsList>
+      <TabsContent value="cover" className="mt-6">
+        {cover}
+      </TabsContent>
       <TabsContent value="videos" className="mt-6">
         <CampaignVideosPanel campaignId={campaignId} isGm={isGm} />
       </TabsContent>

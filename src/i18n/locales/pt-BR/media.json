@@ -48,6 +48,7 @@
   },
   "panel": {
     "tabs": {
+      "cover": "Capa",
       "videos": "Vídeos",
       "soundtrack": "Trilha sonora",
       "soundFx": "Efeitos sonoros"

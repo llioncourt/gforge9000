@@ -48,6 +48,7 @@
   },
   "panel": {
     "tabs": {
+      "cover": "Cover",
       "videos": "Videos",
       "soundtrack": "Soundtrack",
       "soundFx": "Sound FX"

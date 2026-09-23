@@ -15,8 +15,8 @@
  * Authorisation now comes from the signed access token itself: the `amr`
  * (authentication methods reference) and `auth_time`/`iat` claims that
  * Supabase issues. A client cannot forge those without forging the token.
- * `sessionStorage` is now used only to remember that a dialog should reopen
- * after the full-page OAuth redirect — never as proof of anything.
+ * A fresh email/password sign-in mints a fresh token, which is how a user
+ * re-qualifies for the destructive action.
  *
  * Making this a REAL boundary requires changing the database function so it
  * inspects the same claims server-side. That change is intentionally NOT

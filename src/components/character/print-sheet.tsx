@@ -153,7 +153,7 @@ export function PrintSheet({
             (entry.data["specialization"] ? ` (${String(entry.data["specialization"])})` : ""),
           entry.kind,
           level.label,
-          String(Number(entry.data["points"] ?? 0)),
+          String(investedPoints(entry)),
           String(level.effective ?? noValue),
         ])}
         emptyLabel={noValue}

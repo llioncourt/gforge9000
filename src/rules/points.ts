@@ -2,6 +2,7 @@ import { attributePoints, deriveStats, type DerivedStats } from "./attributes";
 import { basicDamage, type BasicDamage } from "./damage";
 import { computeEncumbrance, drByLocation, type EncumbranceResult } from "./equipment";
 import { skillLevel } from "./skills";
+import { investedPoints, isSkillLikeKind } from "./skill-points";
 import { fpState, hpState, type HealthState } from "./health";
 import { defaultRuleset, type Ruleset } from "./ruleset";
 import type { CharacterEntry, CharacterRecord, EntryKind, TraitModifier } from "./types";
@@ -49,8 +50,10 @@ export function modifiedCost(
 
 export function entryCost(entry: CharacterEntry, rules: Ruleset = defaultRuleset): number {
   const modifiers = (entry.data?.modifiers as TraitModifier[] | undefined) ?? [];
-  if (entry.kind === "skill" || entry.kind === "technique" || entry.kind === "spell") {
-    return Number(entry.data?.points ?? entry.points ?? 0);
+  if (isSkillLikeKind(entry.kind)) {
+    // Shared resolver: the UI, the MCP write paths and pack restore all agree
+    // on this one value. See src/rules/skill-points.ts.
+    return investedPoints(entry);
   }
   if (entry.kind === "equipment") return 0;
   const base = Number(entry.points ?? 0) * Math.max(1, Number(entry.levels ?? 1));

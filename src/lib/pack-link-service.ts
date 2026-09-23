@@ -282,9 +282,13 @@ async function updateEntryRow(
 }
 
 /**
- * Adds `source.link` to an existing entry. Sheet values are deliberately left
- * untouched — linking states a fact, it does not rewrite the character.
- * Specialisation typed into the name is stored structurally when it is missing.
+ * Adds `source.link` to an existing entry and fills ONLY the definition fields
+ * the sheet is missing (shared `fillMissingDefinition`, also used by the
+ * assistant). An existing value is never overwritten — linking states a fact,
+ * it does not rewrite the character — but a blank attribute/difficulty is not
+ * a customisation, and leaving it blank made a correct entry look "modified"
+ * and compute the wrong level. Leveled traits are converted to canonical
+ * total-cost storage with their effective cost unchanged.
  */
 export async function linkEntry(
   client: PackClient,
@@ -295,11 +299,11 @@ export async function linkEntry(
 ): Promise<LinkOutcome> {
   const link = await buildLink(item, method);
   const patch: Record<string, unknown> = { source: withPackLink(entry.source, link) };
-  const specialization = specializationOf(entry);
-  const data = { ...((entry.data ?? {}) as Record<string, unknown>) };
-  if (specialization && !data["specialization"]) {
-    data["specialization"] = specialization;
-    patch["data"] = data;
+  const fill = fillMissingDefinition(entry, item);
+  if (fill.changed) {
+    patch["data"] = fill.data;
+    if (fill.category !== undefined) patch["category"] = fill.category;
+    if (fill.points !== undefined) patch["points"] = fill.points;
   }
   const updated = await updateEntryRow(client, entry.id, patch);
   return { entry: updated, status: await statusOf(client, updated, campaignSettings) };

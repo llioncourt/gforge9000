@@ -23,6 +23,18 @@
  * applied here; see the proposal in `docs/security/wipe-reauth.md`.
  */
 
+import { signInWithGoogle } from "@/lib/browser-auth";
+
+/**
+ * Starts the same native Supabase Google sign-in used for normal login, but
+ * tagged as a reauthentication initiation for diagnostics. This is the ONLY
+ * call site destructive-action reauth should use — it must never go through
+ * a separate OAuth path from normal login.
+ */
+export function initiateGoogleReauth() {
+  return signInWithGoogle("reauth-wipe");
+}
+
 /** How fresh an authentication has to be to unlock a destructive action. */
 export const REAUTH_MAX_AGE_SECONDS = 5 * 60;
 

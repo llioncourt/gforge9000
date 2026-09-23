@@ -35,13 +35,10 @@ import {
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { getProfile, setProfilePreferences, upsertProfile, wipeAllMyData } from "@/lib/api";
-import { lovable } from "@/integrations/lovable/index";
 import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
-import { getAuthRedirectUri } from "@/lib/auth-redirect";
-import { logAuthEvent } from "@/lib/auth-diagnostics";
-import { hasRecentAuth } from "@/lib/reauth";
+import { hasRecentAuth, initiateGoogleReauth } from "@/lib/reauth";
 import { supabase } from "@/integrations/supabase/client";
 
 const THEME_KEY = "ucf:light-theme";
@@ -111,20 +108,11 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
     // is what lets us reopen the wipe confirmation once the session from the
     // full-page redirect has been hydrated back on the app.
     sessionStorage.setItem(WIPE_INTENT_KEY, String(Date.now()));
-    logAuthEvent("oauth:start", { provider: "google", reason: "reauth-wipe" });
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: getAuthRedirectUri(),
-      });
-      if ("redirected" in result && result.redirected) {
-        logAuthEvent("oauth:redirected", { provider: "google", reason: "reauth-wipe" });
-        return;
-      }
-      if (result.error) throw result.error;
-      sessionStorage.removeItem(WIPE_INTENT_KEY);
-      const ok = await refreshVerified();
-      if (!ok) throw new Error(ts("toasts.identityFailed"));
-      toast.success(ts("toasts.identityConfirmed"));
+      const { error } = await initiateGoogleReauth();
+      if (error) throw error;
+      // Success means a full-page redirect was initiated; this component
+      // unmounts. The dialog reopens via WIPE_INTENT_KEY on return.
     } catch (e) {
       sessionStorage.removeItem(WIPE_INTENT_KEY);
       toast.error(e instanceof Error ? e.message : ts("toasts.identityFailed"));

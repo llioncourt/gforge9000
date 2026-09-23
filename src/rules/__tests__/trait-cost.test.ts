@@ -8,7 +8,11 @@ import {
   traitPointsSemantics,
   usesLeveledPoints,
 } from "@/rules/trait-cost";
-import { fillMissingDefinition, restoreDefinitionPatch, derivePackLinkState } from "@/lib/pack-link";
+import {
+  fillMissingDefinition,
+  restoreDefinitionPatch,
+  derivePackLinkState,
+} from "@/lib/pack-link";
 import type { CharacterEntry } from "@/rules/types";
 
 function entry(partial: Partial<CharacterEntry>): CharacterEntry {
@@ -69,7 +73,7 @@ describe("leveled trait cost semantics", () => {
     const row = entry({
       points: 2,
       levels: 2,
-      source: { link: LINK },
+      source: { link: LINK } as never,
     });
     expect(traitBaseCost(row)).toBe(4);
   });
@@ -88,7 +92,7 @@ describe("leveled trait cost semantics", () => {
     const patch = restoreDefinitionPatch(entry({ points: 2, levels: 2 }), packItem);
     expect(patch.points).toBe(4);
     expect(patch.data[TRAIT_POINTS_SEMANTICS_KEY]).toBe("total");
-    const restored = entry({ points: patch.points, levels: patch.levels, data: patch.data });
+    const restored = entry({ points: patch.points ?? 0, levels: patch.levels, data: patch.data });
     expect(traitBaseCost(restored)).toBe(4);
   });
 
@@ -98,19 +102,19 @@ describe("leveled trait cost semantics", () => {
     const fill = fillMissingDefinition(legacy, packItem);
     expect(fill.points).toBe(4);
     expect(fill.data[TRAIT_POINTS_SEMANTICS_KEY]).toBe("total");
-    const linked = entry({ points: fill.points, levels: 2, data: fill.data });
+    const linked = entry({ points: fill.points ?? 0, levels: 2, data: fill.data });
     expect(traitBaseCost(linked)).toBe(4);
   });
 
   it("F. the restored entry is Official and still costs 4", () => {
     const patch = restoreDefinitionPatch(entry({ points: 2, levels: 2 }), packItem);
     const restored = entry({
-      points: patch.points,
+      points: patch.points ?? 0,
       levels: patch.levels,
       category: patch.category,
       name: patch.name,
       data: patch.data,
-      source: { link: LINK },
+      source: { link: LINK } as never,
     });
     const status = derivePackLinkState(restored, {
       item: packItem,

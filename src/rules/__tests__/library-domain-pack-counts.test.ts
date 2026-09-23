@@ -43,7 +43,9 @@ function fakeSupabase(tables: {
       to = end;
       return self;
     };
-    self["then"] = (resolve: (value: { data: unknown; count: number | null; error: null }) => unknown) => {
+    self["then"] = (
+      resolve: (value: { data: unknown; count: number | null; error: null }) => unknown,
+    ) => {
       const page = working.slice(from, to + 1).slice(0, SERVER_MAX_ROWS);
       return resolve({
         data: countMode ? null : page,
@@ -86,7 +88,10 @@ describe("library.list_packs reports exact entry counts past the server page cap
       owner_id: "user-1",
       pack: "GURPS Basico",
     }));
-    const ctx: McpToolContext = { supabase: fakeSupabase({ content_packs: packs, library_entries: entries }), userId: "user-1" };
+    const ctx: McpToolContext = {
+      supabase: fakeSupabase({ content_packs: packs, library_entries: entries }),
+      userId: "user-1",
+    };
     const library = buildLibraryTool(ctx);
     const result = await library({ action: "list_packs", limit: 50 });
     const item = result.structuredContent.items.find((p) => p.name === "GURPS Basico");
@@ -102,11 +107,18 @@ describe("library.list_packs reports exact entry counts past the server page cap
       ...Array.from({ length: 5 }, (_, i) => ({ id: `a-${i}`, owner_id: "user-1", pack: "core" })),
       ...Array.from({ length: 3 }, (_, i) => ({ id: `b-${i}`, owner_id: "user-2", pack: "Core" })),
     ];
-    const ctx: McpToolContext = { supabase: fakeSupabase({ content_packs: packs, library_entries: entries }), userId: "user-1" };
+    const ctx: McpToolContext = {
+      supabase: fakeSupabase({ content_packs: packs, library_entries: entries }),
+      userId: "user-1",
+    };
     const library = buildLibraryTool(ctx);
     const result = await library({ action: "list_packs", limit: 50 });
-    const mine = result.structuredContent.items.find((p) => p.name === "Core" && (p as unknown as { owned_by_caller: boolean }).owned_by_caller);
-    const theirs = result.structuredContent.items.find((p) => p.name === "Core" && !(p as unknown as { owned_by_caller: boolean }).owned_by_caller);
+    const mine = result.structuredContent.items.find(
+      (p) => p.name === "Core" && (p as unknown as { owned_by_caller: boolean }).owned_by_caller,
+    );
+    const theirs = result.structuredContent.items.find(
+      (p) => p.name === "Core" && !(p as unknown as { owned_by_caller: boolean }).owned_by_caller,
+    );
     expect(mine?.entry_count).toBe(5);
     expect(theirs?.entry_count).toBe(3);
   });

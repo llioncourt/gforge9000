@@ -18,9 +18,9 @@
   },
   "wipeDialog": {
     "title": "Apagar tudo na sua conta?",
-    "description": "Personagens, campanhas, notas, itens de biblioteca, pacotes e histórico de rolagens são excluídos permanentemente. Entre novamente com o Google ({{email}}) para continuar.",
-    "confirmWithGoogle": "Confirmar com o Google",
-    "deleteEverything": "Excluir tudo"
+    "description": "Personagens, campanhas, notas, itens de biblioteca, pacotes e histórico de rolagens são excluídos permanentemente. Isso não pode ser desfeito.",
+    "deleteEverything": "Excluir tudo",
+    "recentSignInRequired": "Para sua proteção, isso só fica disponível logo após entrar na conta. Saia, entre novamente e tente de novo."
   },
   "toasts": {
     "identityConfirmed": "Identidade confirmada.",

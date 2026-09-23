@@ -14,6 +14,7 @@
  * from, not a game rule. No calculation in `src/rules` depends on it.
  */
 
+import { investedPoints } from "@/rules/skill-points";
 import { normalizeText } from "@/lib/text-normalize";
 import { normaliseName, rawQualifier } from "@/lib/trait-match";
 

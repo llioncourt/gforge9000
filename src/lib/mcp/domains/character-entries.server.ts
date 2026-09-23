@@ -5,6 +5,7 @@
  */
 import { z } from "zod/v4";
 import type { Database } from "@/integrations/supabase/types";
+import { investedPoints, isSkillLikeKind } from "@/rules/skill-points";
 import {
   assertLinkFlags,
   candidateView,
@@ -132,6 +133,15 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
         ...(input.levels === undefined ? {} : { levels: input.levels }),
         ...linkFields,
       };
+      // Skill-like entries carry invested points in BOTH `points` and
+      // `data.points`; a new row must never be created with the two diverging.
+      if (isSkillLikeKind(input.kind)) {
+        const data = (payload["data"] as Record<string, unknown> | undefined) ?? {};
+        const value =
+          input.points ?? investedPoints({ kind: input.kind, points: payload["points"] as number, data });
+        payload["points"] = value;
+        payload["data"] = { ...data, points: value };
+      }
       const { data, error } = await ctx.supabase
         .from("character_entries")
         .insert(payload as Database["public"]["Tables"]["character_entries"]["Insert"])
@@ -163,7 +173,7 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
       assertLinkFlags({ pack_entry_id, match_pack, unlink });
       const { data: found, error: lookupError } = await ctx.supabase
         .from("character_entries")
-        .select("id, name, kind, category, character_id, source")
+        .select("id, name, kind, category, character_id, source, points, data")
         .eq("id", entry_id)
         .maybeSingle();
       if (lookupError) fail("Entry lookup", lookupError);
@@ -205,6 +215,25 @@ export function registerCharacterEntries(tool: ToolRegistrar, ctx: McpToolContex
           // No match: an existing link is never silently removed.
           ambiguousNote = " No matching pack item was found; any existing link was kept.";
         }
+      }
+
+      // Skill-like entries: an explicit `points` write is authoritative and is
+      // mirrored into `data.points`, preserving every other data key. Any
+      // other touch on such an entry normalises the two representations to the
+      // current EFFECTIVE value (legacy untouched rows are left alone).
+      const effectiveKind = (update["kind"] as string | undefined) ?? found.kind;
+      if (isSkillLikeKind(effectiveKind) && Object.keys(update).length > 0) {
+        const currentData = (found.data as Record<string, unknown> | null) ?? {};
+        const value =
+          patch.points ??
+          investedPoints({
+            kind: effectiveKind,
+            points: found.points,
+            data: currentData,
+            source: found.source,
+          });
+        update["points"] = value;
+        update["data"] = { ...currentData, ...((update["data"] as object) ?? {}), points: value };
       }
 
       if (Object.keys(update).length === 0) {

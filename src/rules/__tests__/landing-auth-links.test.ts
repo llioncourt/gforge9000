@@ -2,29 +2,29 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-/**
- * Regression: the two landing-page auth CTAs (header "nav.signIn" and hero
- * "hero.startBuilding") MUST use native full-document navigation
- * (<a href="/auth">), not client-side routing. Owner-verified production
- * evidence: direct /auth works, but SPA transition / -> /auth froze.
- */
 const source = readFileSync(
   fileURLToPath(new URL("../../routes/index.tsx", import.meta.url)),
   "utf8",
 );
+const authSource = readFileSync(
+  fileURLToPath(new URL("../../routes/auth.tsx", import.meta.url)),
+  "utf8",
+);
 
-describe("landing auth CTAs use full-document navigation", () => {
-  it("header sign-in CTA is a native anchor to /auth", () => {
-    expect(source).toContain('<a href="/auth">{t("nav.signIn")}</a>');
-    expect(source).not.toContain('<Link to="/auth">{t("nav.signIn")}</Link>');
+describe("root route uses the existing authentication page", () => {
+  it("redirects the root route to /auth before rendering content", () => {
+    expect(source).toContain('throw redirect({ to: "/auth" });');
+    expect(source).not.toContain("component:");
   });
 
-  it("hero start-building CTA is a native anchor to /auth", () => {
-    expect(source).toContain('<a href="/auth">{t("hero.startBuilding")}</a>');
-    expect(source).not.toContain('<Link to="/auth">{t("hero.startBuilding")}</Link>');
+  it("contains no remaining landing-page content", () => {
+    expect(source).not.toContain("function Landing");
+    expect(source).not.toContain("hero.startBuilding");
+    expect(source).not.toContain("FEATURE_KEYS");
   });
 
-  it("no client-side Link points at /auth anywhere on the landing page", () => {
-    expect(source).not.toMatch(/<Link[^>]*to="\/auth"/);
+  it("keeps the authentication route as the destination", () => {
+    expect(authSource).toContain('createFileRoute("/auth")');
+    expect(authSource).toContain("component: AuthPage");
   });
 });

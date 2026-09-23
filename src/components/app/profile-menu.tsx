@@ -39,6 +39,8 @@ import { lovable } from "@/integrations/lovable/index";
 import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
+import { getAuthRedirectUri } from "@/lib/auth-redirect";
+import { logAuthEvent } from "@/lib/auth-diagnostics";
 
 const THEME_KEY = "ucf:light-theme";
 const WIPE_INTENT_KEY = "ucf:wipe-intent";
@@ -79,12 +81,21 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
 
   async function confirmWithGoogle() {
     setVerifying(true);
+    // Store the pending "resume the wipe dialog" intent separately from the
+    // OAuth redirect itself: the redirect always goes to the canonical site
+    // origin (never a per-route callback path), and this sessionStorage flag
+    // is what lets us reopen the wipe confirmation once the session from the
+    // full-page redirect has been hydrated back on the app.
     sessionStorage.setItem(WIPE_INTENT_KEY, String(Date.now()));
+    logAuthEvent("oauth:start", { provider: "google", reason: "reauth-wipe" });
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: `${window.location.origin}/dashboard`,
+        redirect_uri: getAuthRedirectUri(),
       });
-      if ("redirected" in result && result.redirected) return;
+      if ("redirected" in result && result.redirected) {
+        logAuthEvent("oauth:redirected", { provider: "google", reason: "reauth-wipe" });
+        return;
+      }
       if (result.error) throw result.error;
       sessionStorage.removeItem(WIPE_INTENT_KEY);
       setVerified(true);

@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
+import { getAuthRedirectUri } from "@/lib/auth-redirect";
+import { logAuthEvent } from "@/lib/auth-diagnostics";
 import { metaLocale, metaText } from "@/i18n/meta";
 import { Trans } from "react-i18next";
 
@@ -43,13 +45,16 @@ function AuthPage() {
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
+    logAuthEvent("login:click", { method: "password" });
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
     if (error) {
+      logAuthEvent("login:result", { method: "password", ok: false });
       toast.error(error.message);
       return;
     }
+    logAuthEvent("login:result", { method: "password", ok: true });
     navigate({ to: "/dashboard", replace: true });
   }
 
@@ -77,14 +82,21 @@ function AuthPage() {
   }
 
   async function google() {
+    logAuthEvent("login:click", { method: "google" });
+    logAuthEvent("oauth:start", { provider: "google" });
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: getAuthRedirectUri(),
     });
     if (result.error) {
+      logAuthEvent("login:result", { method: "google", ok: false });
       toast.error(t("errors.googleSignInFailed"));
       return;
     }
-    if (result.redirected) return;
+    if (result.redirected) {
+      logAuthEvent("oauth:redirected", { provider: "google" });
+      return;
+    }
+    logAuthEvent("login:result", { method: "google", ok: true });
     navigate({ to: "/dashboard", replace: true });
   }
 

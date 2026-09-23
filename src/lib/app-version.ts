@@ -37,6 +37,7 @@ export function isNewAppAssetAvailable(loadedAssetId: string | null, deployedAss
   );
 }
 
+/** Authoritative probe: a tiny JSON endpoint carrying the current build id. */
 export async function fetchDeployedBuildId(signal?: AbortSignal) {
   const response = await fetch(`/api/public/version?t=${Date.now()}`, {
     cache: "no-store",
@@ -50,6 +51,12 @@ export async function fetchDeployedBuildId(signal?: AbortSignal) {
   return typeof payload.buildId === "string" ? payload.buildId : null;
 }
 
+/**
+ * Fallback only: used when `fetchDeployedBuildId` fails (e.g. the version
+ * endpoint is unreachable or not deployed yet behind a proxy/CDN). Fetches
+ * the published index HTML and extracts the current app asset path. Not run
+ * in parallel with the primary probe — only as a rescue when it throws.
+ */
 export async function fetchDeployedAppAssetId(signal?: AbortSignal) {
   const response = await fetch(`/?__version_check=${Date.now()}`, {
     cache: "no-store",
@@ -62,6 +69,29 @@ export async function fetchDeployedAppAssetId(signal?: AbortSignal) {
 
   if (!response.ok) throw new Error(`App asset check failed (${response.status})`);
   return extractAppAssetId(await response.text());
+}
+
+/**
+ * Runs the authoritative version probe; only falls back to the index-HTML
+ * asset probe when the primary one fails. Returns true when either probe
+ * indicates a newer build/asset is published.
+ */
+export async function isUpdateAvailable(
+  loadedBuildId: string,
+  loadedAssetId: string | null,
+  signal?: AbortSignal,
+): Promise<boolean> {
+  try {
+    const deployedBuildId = await fetchDeployedBuildId(signal);
+    return isNewBuildAvailable(loadedBuildId, deployedBuildId);
+  } catch {
+    try {
+      const deployedAssetId = await fetchDeployedAppAssetId(signal);
+      return isNewAppAssetAvailable(loadedAssetId, deployedAssetId);
+    } catch {
+      return false;
+    }
+  }
 }
 
 export function refreshToLatestVersion(locationValue: Location = window.location) {

@@ -38,7 +38,7 @@ import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.se
 import type { Database } from "@/integrations/supabase/types";
 import { allowedPacksOf, isPackAllowed } from "@/lib/packs";
 import { loadCampaignSettings } from "@/lib/pack-link-service";
-import { loadPackCandidates, parseSearchName, withVersions } from "@/lib/pack-match";
+import { loadPackCandidatesDetailed, parseSearchName, withVersions } from "@/lib/pack-match";
 import { candidateView } from "@/lib/mcp/pack-link.server";
 
 // Source of truth: src/lib/ai-import-guides.ts (ENTRY_KINDS, not exported there)
@@ -528,18 +528,20 @@ export function registerLibrary(tool: ToolRegistrar, ctx: McpToolContext): void 
           ? await loadCampaignSettings(ctx.supabase, i.campaign_id)
           : undefined;
         const parsed = parseSearchName(searchText);
-        const scope: Parameters<typeof loadPackCandidates>[1] = {
+        const limit = i.limit ?? 25;
+        const scope: Parameters<typeof loadPackCandidatesDetailed>[1] = {
           search: parsed.base,
-          limit: (i.limit ?? 25) * 4,
+          limit,
         };
         if (i.kind) scope.kind = i.kind;
         if (i.pack_id) scope.packId = i.pack_id;
         if (settings !== undefined) scope.campaignSettings = settings;
-        const candidates = await loadPackCandidates(ctx.supabase, scope);
-        const limited = candidates.slice(0, i.limit ?? 25);
-        const withVersion = await withVersions(limited);
+        const scan = await loadPackCandidatesDetailed(ctx.supabase, scope);
+        const withVersion = await withVersions(scan.candidates);
         const items = withVersion.map((candidate) => candidateView(candidate));
-        return listReply("pack items", items, items.length);
+        // The total is the real number of matches, so a caller can tell an
+        // empty result from a capped one and ambiguity is never hidden.
+        return listReply("pack items", items, scan.matched);
       },
 
       get_pack: async (i) => {

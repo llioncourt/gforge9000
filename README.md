@@ -1,29 +1,43 @@
-# Welcome to your Lovable project
+# Universal Character Forge / GURPS Forge Companion (GF9)
 
-This project was built with [Lovable](https://lovable.dev).
+## Purpose
+GF9 is an unofficial GURPS 4e character builder and campaign companion. It provides tools for character management, lore tracking, battle grids, and campaign media synchronization.
 
-## Build with Lovable
+## Stack
+- **Framework:** [TanStack Start v1](https://tanstack.com/start)
+- **Frontend:** React 19, Vite 7, Tailwind v4
+- **Backend/Auth:** Supabase, Lovable Cloud Auth Bridge
+- **Language:** TypeScript
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+## Local Setup
+1. Install dependencies:
+   ```bash
+   bun install
+   ```
+2. Set up environment variables in `.env`.
+3. Start development server:
+   ```bash
+   bun dev
+   ```
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+## Quality Control
+- **Tests:** `bunx vitest run`
+- **Typecheck:** `npx tsgo --noEmit`
+- **Lint:** `bun run lint`
+- **Build:** `bun run build`
 
-## Development
+## MCP Endpoint Architecture
+The project exposes a public Model Context Protocol (MCP) server at `/api/public/mcp`.
+- **Standards:** Implements RFC 9728 protected-resource metadata.
+- **Security:** Native Supabase OAuth 2.1 authentication.
+- **Access Control:** RLS-scoped per-caller client; no service role usage in MCP domains.
+- **Capabilities:** 39 public tools for campaign and character management.
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## Auth Architecture
+- **Providers:** Supabase email/password + Google (via Lovable cloud auth bridge).
+- **Flow:** Site-origin redirect with RLS-enforced security across all layers.
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+## Deployment Safety Notes
+- **PWA/Service Worker:** Intentionally disabled for this release.
+- **Database:** No schema changes allowed without explicit approval.
+- **Environment:** Do not remove `.env` or `.lovable/plan` files.

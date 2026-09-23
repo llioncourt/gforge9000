@@ -1,19 +1,17 @@
 import { useEffect } from "react";
 
 /**
- * TEMPORARY — PRODUCTION INCIDENT ISOLATION.
- *
- * Service-worker registration is intentionally disabled everywhere (localhost,
- * preview and production) so that PWA/CacheStorage state can be ruled out as a
- * cause of the published routing failure. This component now only performs a
- * one-time, idempotent cleanup: it unregisters every service worker for this
- * origin and deletes every CacheStorage entry.
+ * PWA registration is disabled for this release — see `PWA_ENABLED` in
+ * `@/lib/pwa` for the production incident that caused it (a stale cached
+ * routing/asset shell served after deploys). This component now only
+ * performs a one-time, idempotent cleanup: it unregisters every service
+ * worker for this origin and deletes every CacheStorage entry.
  *
  * It never reloads the page, never loops, and never touches localStorage,
  * sessionStorage, cookies, auth or any backend data.
  *
- * REVERT after diagnosis: restore the `isServiceWorkerAllowed` guarded
- * registration of `/sw.js` (see `@/lib/pwa`, which is kept for that purpose).
+ * TO RE-ENABLE later: flip `PWA_ENABLED` to `true` in `@/lib/pwa`, then
+ * restore an `isServiceWorkerAllowed`-guarded registration of `/sw.js` here.
  */
 export function PwaRegister() {
   useEffect(() => {

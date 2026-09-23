@@ -20,6 +20,7 @@ import { I18nProvider } from "@/i18n/provider";
 import { detectLocale } from "@/i18n/detect";
 import { localeDirection } from "@/i18n/config";
 import { useT } from "@/i18n/hooks";
+import { logAuthEvent } from "@/lib/auth-diagnostics";
 
 function NotFoundComponent() {
   const { t } = useT("errors");
@@ -163,6 +164,7 @@ function RootComponent() {
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      logAuthEvent("router:invalidate", { event });
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
     });

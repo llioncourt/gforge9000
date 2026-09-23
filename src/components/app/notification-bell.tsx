@@ -7,7 +7,7 @@ import {
   showSystemNotification,
   type NotificationPermissionState,
 } from "@/lib/system-notifications";
-import { enableBackgroundPush } from "@/lib/push";
+import { enableBackgroundPush, isPushSupported } from "@/lib/push";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check, Trash2 } from "lucide-react";
@@ -149,6 +149,12 @@ export function NotificationBell() {
         ) : permission === "open-in-new-tab" ? (
           <div className="border-b border-border bg-accent/20 px-3 py-2">
             <p className="text-xs text-muted-foreground">{t("notifications.openInNewTab")}</p>
+          </div>
+        ) : permission === "granted" && !isPushSupported() ? (
+          <div className="border-b border-border bg-accent/20 px-3 py-2">
+            <p className="text-xs text-muted-foreground">
+              {t("notifications.backgroundPushUnavailable")}
+            </p>
           </div>
         ) : null}
         <div className="flex items-center justify-between border-b border-border px-3 py-2">

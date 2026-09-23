@@ -29,7 +29,17 @@ type TableValue = unknown | QueueItem[];
 /** Chainable thenable standing in for a supabase-js query builder. */
 function query(data: unknown, extra: Record<string, unknown> = {}, spy?: Spy) {
   const self: Record<string, unknown> = {};
-  for (const method of ["select", "eq", "order", "limit", "ilike", "single", "maybeSingle", "in"]) {
+  for (const method of [
+    "select",
+    "eq",
+    "order",
+    "limit",
+    "range",
+    "ilike",
+    "single",
+    "maybeSingle",
+    "in",
+  ]) {
     self[method] = () => self;
   }
   self["update"] = (payload: unknown) => {

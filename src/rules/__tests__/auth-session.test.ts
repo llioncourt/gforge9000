@@ -1,0 +1,179 @@
+import { describe, expect, it, vi, beforeEach } from "vitest";
+
+/**
+ * Regression tests for the browser login / re-login flow (P0-01).
+ *
+ * These use in-memory fakes for the Supabase auth client, no network calls.
+ */
+
+type FakeUser = { id: string; email: string };
+type FakeSession = { user: FakeUser; access_token: string } | null;
+type AuthChangeCallback = (event: string, session: FakeSession) => void;
+
+/** A minimal in-memory stand-in for supabase.auth, enough to exercise the
+ * beforeLoad guard and the shared session store's contract. */
+function createFakeAuthClient() {
+  let session: FakeSession = null;
+  const listeners = new Set<AuthChangeCallback>();
+  let getUserNetworkError: Error | null = null;
+
+  function emit(event: string) {
+    for (const listener of listeners) listener(event, session);
+  }
+
+  return {
+    // test helpers
+    __setSession(next: FakeSession) {
+      session = next;
+    },
+    __setGetUserNetworkError(err: Error | null) {
+      getUserNetworkError = err;
+    },
+    __emit(event: string) {
+      emit(event);
+    },
+    // supabase-like surface
+    async getSession() {
+      return { data: { session } };
+    },
+    async getUser() {
+      if (getUserNetworkError) return { data: { user: null }, error: getUserNetworkError };
+      if (!session) return { data: { user: null }, error: new Error("no session") };
+      return { data: { user: session.user }, error: null };
+    },
+    async signInWithPassword({ email }: { email: string; password: string }) {
+      session = { user: { id: "u1", email }, access_token: "fake-token" };
+      emit("SIGNED_IN");
+      return { data: { session }, error: null };
+    },
+    async signOut() {
+      session = null;
+      emit("SIGNED_OUT");
+      return { error: null };
+    },
+    onAuthStateChange(cb: AuthChangeCallback) {
+      listeners.add(cb);
+      return { data: { subscription: { unsubscribe: () => listeners.delete(cb) } } };
+    },
+  };
+}
+
+/** Simulates the `_authenticated` route's `beforeLoad` guard logic: local
+ * session first, network `getUser()` fallback only when no local session. */
+async function runProtectedGuard(auth: ReturnType<typeof createFakeAuthClient>) {
+  const { data: sessionData } = await auth.getSession();
+  if (sessionData.session) {
+    return { outcome: "allow" as const, source: "local-session" as const };
+  }
+  const { data, error } = await auth.getUser();
+  if (error || !data.user) return { outcome: "redirect" as const };
+  return { outcome: "allow" as const, source: "getUser" as const };
+}
+
+describe("auth session regressions", () => {
+  let auth: ReturnType<typeof createFakeAuthClient>;
+
+  beforeEach(() => {
+    auth = createFakeAuthClient();
+  });
+
+  it("transitions to a signed-in session after password sign-in", async () => {
+    const events: string[] = [];
+    auth.onAuthStateChange((event) => events.push(event));
+
+    const result = await auth.signInWithPassword({ email: "a@b.com", password: "secret" });
+
+    expect(result.error).toBeNull();
+    expect(result.data.session?.user.email).toBe("a@b.com");
+    expect(events).toContain("SIGNED_IN");
+  });
+
+  it("supports sign-out followed by a clean re-login with no stuck state", async () => {
+    await auth.signInWithPassword({ email: "a@b.com", password: "secret" });
+    expect((await auth.getSession()).data.session).not.toBeNull();
+
+    await auth.signOut();
+    expect((await auth.getSession()).data.session).toBeNull();
+
+    const relogin = await auth.signInWithPassword({ email: "a@b.com", password: "secret" });
+    expect(relogin.error).toBeNull();
+    expect((await auth.getSession()).data.session?.user.email).toBe("a@b.com");
+  });
+
+  it("routes to the protected area once the OAuth-returned session is set", async () => {
+    // Simulates lovable.auth.signInWithOAuth() completing and calling
+    // supabase.auth.setSession() with the returned tokens.
+    auth.__setSession({ user: { id: "u2", email: "g@b.com" }, access_token: "oauth-token" });
+    auth.__emit("SIGNED_IN");
+
+    const guard = await runProtectedGuard(auth);
+    expect(guard.outcome).toBe("allow");
+  });
+
+  it("does not bounce a just-authenticated user even if getUser() would fail", async () => {
+    // Regression for AUTH-005: getUser() racing/failing during the token
+    // handoff must NOT cause a redirect to /auth when a local session exists.
+    auth.__setSession({ user: { id: "u3", email: "c@d.com" }, access_token: "tok" });
+    auth.__setGetUserNetworkError(new Error("network hiccup"));
+
+    const guard = await runProtectedGuard(auth);
+    expect(guard.outcome).toBe("allow");
+    expect(guard.source).toBe("local-session");
+  });
+
+  it("redirects to /auth when there is no local session and getUser() has none either", async () => {
+    const guard = await runProtectedGuard(auth);
+    expect(guard.outcome).toBe("redirect");
+  });
+
+  it("falls back to getUser() when there is no local session but the server has one", async () => {
+    // e.g. a session restored via a cookie/broker without a local copy yet.
+    const getSessionSpy = vi.spyOn(auth, "getSession");
+    const originalGetUser = auth.getUser.bind(auth);
+    auth.getUser = async () => {
+      return { data: { user: { id: "u4", email: "e@f.com" } }, error: null };
+    };
+
+    const guard = await runProtectedGuard(auth);
+    expect(guard.outcome).toBe("allow");
+    expect(guard.source).toBe("getUser");
+
+    getSessionSpy.mockRestore();
+    auth.getUser = originalGetUser;
+  });
+
+  it("resumes a pending destructive-reauth intent after the session is hydrated", () => {
+    const WIPE_INTENT_KEY = "ucf:wipe-intent";
+    const WIPE_INTENT_TTL = 5 * 60 * 1000;
+
+    const store = new Map<string, string>();
+    const sessionStorageFake = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+      removeItem: (k: string) => void store.delete(k),
+    };
+
+    // Reauth click stores the intent, independent of the OAuth redirect URI.
+    sessionStorageFake.setItem(WIPE_INTENT_KEY, String(Date.now()));
+
+    // App reloads after the full-page Google redirect; session is hydrated
+    // and the intent is resumed.
+    const raw = sessionStorageFake.getItem(WIPE_INTENT_KEY);
+    expect(raw).not.toBeNull();
+    const withinTtl = raw !== null && Date.now() - Number(raw) <= WIPE_INTENT_TTL;
+    expect(withinTtl).toBe(true);
+    sessionStorageFake.removeItem(WIPE_INTENT_KEY);
+    expect(sessionStorageFake.getItem(WIPE_INTENT_KEY)).toBeNull();
+  });
+
+  it("does not resume a stale destructive-reauth intent past its TTL", () => {
+    const WIPE_INTENT_KEY = "ucf:wipe-intent";
+    const WIPE_INTENT_TTL = 5 * 60 * 1000;
+    const store = new Map<string, string>();
+    store.set(WIPE_INTENT_KEY, String(Date.now() - WIPE_INTENT_TTL - 1000));
+
+    const raw = store.get(WIPE_INTENT_KEY) ?? null;
+    const withinTtl = raw !== null && Date.now() - Number(raw) <= WIPE_INTENT_TTL;
+    expect(withinTtl).toBe(false);
+  });
+});

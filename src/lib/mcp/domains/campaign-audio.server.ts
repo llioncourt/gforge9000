@@ -215,9 +215,7 @@ const input = z.discriminatedUnion("action", [
       position_seconds: secondsField.optional(),
       loop_one: z.boolean().optional(),
     })
-    .describe(
-      "Start a track from position_seconds (default 0). GM only, changes data.",
-    ),
+    .describe("Start a track from position_seconds (default 0). GM only, changes data."),
   z
     .object({ action: z.literal("pause"), campaign_id: uuid })
     .describe(

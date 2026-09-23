@@ -48,7 +48,11 @@ describe("derivePlaybackPosition", () => {
       anchored_at: new Date(base + 7_000).toISOString(),
     };
     expect(paused.anchor_position_seconds).toBe(37);
-    const resumed = { ...paused, is_playing: true, anchored_at: new Date(base + 90_000).toISOString() };
+    const resumed = {
+      ...paused,
+      is_playing: true,
+      anchored_at: new Date(base + 90_000).toISOString(),
+    };
     expect(derivePlaybackPosition(resumed, null, base + 90_000)).toBe(37);
   });
 });

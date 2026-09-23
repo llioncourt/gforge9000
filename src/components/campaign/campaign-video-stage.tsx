@@ -10,10 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { useT } from "@/i18n/hooks";
 import { campaignIntroUrl, campaignVideoTypeLabel, listCampaignVideos } from "@/lib/campaign-intro";
-import {
-  getCampaignVideoPlayback,
-  setCampaignVideoPlayback,
-} from "@/lib/campaign-video-playback";
+import { getCampaignVideoPlayback, setCampaignVideoPlayback } from "@/lib/campaign-video-playback";
 import { derivePlaybackPosition, shouldCorrectDrift } from "@/lib/playback-anchor";
 import { useCampaignSoundtrackOptional } from "@/components/campaign/campaign-soundtrack-player";
 
@@ -44,7 +41,8 @@ export function CampaignVideoStage({ campaignId, isGm }: { campaignId: string; i
 
   const state = playback.data ?? null;
   const video = videos.data?.find((item) => item.id === state?.video_id) ?? null;
-  const active = !!state?.video_id && !!video && (state.is_playing || state.anchor_position_seconds > 0);
+  const active =
+    !!state?.video_id && !!video && (state.is_playing || state.anchor_position_seconds > 0);
 
   useEffect(() => {
     const channel = supabase

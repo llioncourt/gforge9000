@@ -179,7 +179,9 @@ const input = z.discriminatedUnion("action", [
     .describe("Resume the video from the exact paused point. GM only. Changes data."),
   z
     .object({ action: z.literal("seek"), campaign_id: uuid, position_seconds: playbackSeconds })
-    .describe("Jump the video to a position, keeping playing/paused as it is. GM only. Changes data."),
+    .describe(
+      "Jump the video to a position, keeping playing/paused as it is. GM only. Changes data.",
+    ),
   z
     .object({ action: z.literal("stop"), campaign_id: uuid })
     .describe("Stop the video and reset its position to zero. GM only. Changes data."),

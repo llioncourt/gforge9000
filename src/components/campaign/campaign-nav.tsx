@@ -62,7 +62,6 @@ export function buildCampaignNavGroups(opts: {
   ];
   if (isGm) storyItems.push({ value: "adapt", label: adaptLabel, icon: Wand2 });
 
-
   const groups: CampaignNavGroup[] = [
     {
       id: "cast",

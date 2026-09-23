@@ -131,6 +131,7 @@ function PanelFallback() {
 
 export const CAMPAIGN_TABS = [
   "media",
+  "cover",
   "roster",
   "lore",
   "story",
@@ -542,6 +543,10 @@ function CampaignPage() {
               focusId={itemParam ?? null}
             />
           </Suspense>
+        </TabsContent>
+
+        <TabsContent value="cover" className="mt-6">
+          <CampaignCover campaignId={id} settings={settings} disabled={!isGm} />
         </TabsContent>
 
         <TabsContent value="roster" className="mt-6 space-y-6">

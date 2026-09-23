@@ -38,17 +38,10 @@ import { getProfile, setProfilePreferences, upsertProfile, wipeAllMyData } from 
 import { removePortrait, uploadAvatar } from "@/lib/portrait";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
-import { hasRecentAuth, initiateGoogleReauth } from "@/lib/reauth";
+import { hasRecentAuth } from "@/lib/reauth";
 import { supabase } from "@/integrations/supabase/client";
 
 const THEME_KEY = "ucf:light-theme";
-/**
- * Remembers that the erase dialog should REOPEN after a full-page sign-in
- * redirect. It is a UI hint only and grants no permission — the confirm step
- * is unlocked by the signed session token (see `@/lib/reauth`).
- */
-const WIPE_INTENT_KEY = "ucf:wipe-intent";
-const WIPE_INTENT_TTL = 5 * 60 * 1000;
 
 /** Applies the theme by switching the root class (light palette lives under .light). */
 function applyTheme(light: boolean) {
@@ -70,7 +63,6 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [wipeOpen, setWipeOpen] = useState(false);
   const [verified, setVerified] = useState(false);
-  const [verifying, setVerifying] = useState(false);
 
   /**
    * Re-reads the CURRENT session token and decides whether it proves a recent

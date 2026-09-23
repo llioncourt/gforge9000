@@ -146,6 +146,9 @@ export function definitionFill(
     if (supplied.points !== undefined) data["points"] = supplied.points;
   }
   if (specialization) data["specialization"] = specialization;
+  // A new pack-linked leveled trait is created with canonical TOTAL-cost
+  // storage, so the engine never multiplies it by levels a second time.
+  if (usesLeveledPoints(kind)) data[TRAIT_POINTS_SEMANTICS_KEY] = "total";
   if (Object.keys(data).length) out.data = data;
   return out;
 }

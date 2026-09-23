@@ -168,8 +168,10 @@ function RootComponent() {
   const diag = resolveDiagFlags(pathname, searchStr);
 
   // The public sign-in route boots a minimal shell: no global auth listener,
-  // no service-worker retirement, no dice runtime. Application routes mount
-  // the full runtime again, and route protection is unchanged.
+  // no service-worker retirement. Application routes mount the full runtime
+  // again, and route protection is unchanged. DiceProvider stays mounted on
+  // every route: it is pure in-memory state, and an outgoing route tree may
+  // still render (and call useDice) while a navigation toward /auth resolves.
   const authShell = isAuthShellPath(pathname);
 
   useEffect(() => {
@@ -187,18 +189,20 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <I18nProvider initialLocale={detectLocale()}>
         <TooltipProvider delayDuration={200}>
-          {authShell ? (
-            content
-          ) : (
-            <AppRuntime
-              queryClient={queryClient}
-              skipAuthListener={diag.skipRootAuthListener}
-              skipPwaCleanup={diag.skipPwaCleanup}
-              trace={diag.trace}
-            >
-              {content}
-            </AppRuntime>
-          )}
+          <DiceProvider>
+            {authShell ? (
+              content
+            ) : (
+              <AppRuntime
+                queryClient={queryClient}
+                skipAuthListener={diag.skipRootAuthListener}
+                skipPwaCleanup={diag.skipPwaCleanup}
+                trace={diag.trace}
+              >
+                {content}
+              </AppRuntime>
+            )}
+          </DiceProvider>
         </TooltipProvider>
       </I18nProvider>
     </QueryClientProvider>

@@ -60,9 +60,9 @@ export function AppRuntime({
   }, [router, queryClient, skipAuthListener, trace]);
 
   return (
-    <DiceProvider>
+    <>
       <PwaRegister skipCleanup={skipPwaCleanup} trace={trace} />
       {children}
-    </DiceProvider>
+    </>
   );
 }

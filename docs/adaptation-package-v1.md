@@ -47,7 +47,7 @@ that needs them (deduplicated by SHA-256 of the content).
 | `cast`, `locations`, `props`, `wardrobe` | Bible records with biography, visual description, traits and asset keys. |
 | `scenes` | The adapted scenes in order. |
 | `assets` | Asset manifest: path, media type, size, SHA-256, role, entity link. |
-| `targets` | `comic` and/or `movie` projections (below). |
+| `targets` | Any combination of `comic`, `movie`, `book_narrative`, `adventure_module` (below). |
 | `sync` | Source fingerprints, scene hashes and target mapping hints. |
 
 ### Provenance
@@ -121,6 +121,99 @@ new conversion logic.
 
 ---
 
+## Four targets, one reconstruction
+
+```text
+Campaign Adaptation master (scan, reconstruction, facts, canon, timeline, assets)
+ -> comic            (targets.comic)
+ -> movie            (targets.movie)
+ -> book_narrative   (targets.book_narrative)
+ -> adventure_module (targets.adventure_module)
+```
+
+Scan, reconstruction, facts, canon and assets are never duplicated per target.
+The project stores `target_comic`, `target_movie`, `target_book_narrative` and
+`target_adventure_module`; the two new flags default to `false`, so every
+existing adaptation keeps exactly its previous selection.
+
+### Shared narrative direction
+
+`creative_settings.narrative` (tone, POV, audience, max scenes) is the shared
+direction applied to every target. It is shown as "Narrative direction" and is
+**not** the book target. The book targets have their own settings in
+`creative_settings.book_narrative` and `creative_settings.adventure_module`.
+
+---
+
+## Narrative book projection (`targets.book_narrative`)
+
+`target_system: "book"`, `target_projection.format: "awd.book.narrative.v1"`.
+A literary novelization, not a play report.
+
+- `front_matter` — title, subtitle, language, logline, synopsis and the shared
+  tone / POV / audience.
+- `structure` — `length_mode` (`auto` | `short_story` | `novella` | `novel`),
+  `resolved_form`, `chapter_count`, optional `chapter_target` and `word_target`,
+  `source_word_count`, and `reasons` (codes explaining the automatic choice:
+  `few_scenes`, `moderate_scene_count`, `many_scenes`, `chapter_target`,
+  `capped_by_scene_count`, `word_target`, `explicit_length_mode`).
+- `chapters[]` — ordered; each has `key`, `title`, `summary`, `pov_character`,
+  `scene_keys`, a proportional `word_target`, and `sections[]`. A `scene`
+  section holds paragraphs (`narration`, `action`, `dialogue`) carrying the
+  scene's provenance and `source_refs`. Chapters break preferably where the
+  location changes.
+- `transition` sections bridge a change of place inside a chapter. They are
+  `adaptation_created`, `needs_review`, and carry a `writing_brief` (from/to
+  scene and location, plus which scenes they must not contradict) instead of
+  invented prose.
+- `dramatis_personae`, `locations`, and `adaptation_notes` (`canon_preserved`,
+  counts of reconstructed dialogue lines, created sections and unreviewed
+  sections).
+
+The standalone export also writes `book.md`, a readable draft.
+
+---
+
+## Adventure module projection (`targets.adventure_module`)
+
+`target_system: "gurps"`, `format: "awd.adventure-module.gurps.v1"`,
+`game_system: "gurps_4e"`, `adaptation_level: "complete_module"`.
+
+Sections: `front_matter` (players, starting points, TL), `introduction`,
+`overview`, `background` (`gm_truth` vs `common_knowledge`), `hooks`, `npcs`
+(role `antagonist` | `ally` | `neutral` | `player_character`, with GURPS stat
+blocks derived by the rules engine from linked character sheets),
+`antagonist_keys`, `locations` (with map asset keys), `chronology`,
+`getting_started`, `acts`, `encounters`, `clues`, `revelations`, `handouts`,
+`appendices.fact_index`.
+
+- **Not a railroad.** Every encounter has exactly one route with
+  `original_table: true` (what the players actually did) plus alternative
+  routes by approach (`social`, `stealth`, `force`, `investigation`,
+  `evasion`) with suggested GURPS skill names. Alternatives are
+  `adaptation_created` / `needs_review`; `modifier: null` means the GM sets it.
+  Some routes skip ahead, so beats can be bypassed. Validation rejects an
+  encounter whose only route is the original one.
+- **Outcomes** per encounter: `success`, `partial`, `failure`, `skipped`, as
+  machine-readable consequence codes (for example `clues_move_elsewhere:2`).
+- **Knowledge separation.** GM-only facts become `revelations` and `gm_only`
+  clues. Visible facts become clues with `audience: "discoverable"` when they
+  point at a GM truth about the same subject, otherwise `player_facing`. Each
+  clue lists `found_in` encounters, `reveal_conditions`, `if_missed` (another
+  encounter that also holds it, or a GM fallback) and `revealed_in_original`.
+
+The standalone export also writes `module.md`, a readable draft.
+
+---
+
+## Backward compatibility
+
+The format stays `version: 1`. `targets.book_narrative` and
+`targets.adventure_module` are optional additions: packages written before
+them parse unchanged, and readers that only know comic/movie ignore them.
+
+---
+
 ## Sync
 
 `sync.sources[]` lists `source_key`, `source_type`, `source_id`, `source_hash`
@@ -131,6 +224,9 @@ Re-scanning the campaign later produces a new source map. Comparing the two maps
 yields added, changed and removed sources, and the impact list names the scenes
 and facts each change touches. Scenes edited by hand are reported as conflicts
 rather than overwritten.
+
+`sync.target_mapping_hints` also maps book chapters and module encounters
+back to their scene keys.
 
 ---
 

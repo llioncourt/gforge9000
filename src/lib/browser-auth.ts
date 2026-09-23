@@ -44,7 +44,9 @@ export async function signInWithGoogle(reason?: string): Promise<GoogleSignInRes
   });
   if (result.error) {
     logAuthEvent("oauth:initiate-error", { provider: "google", reason: reason ?? null });
-    return { error: result.error instanceof Error ? result.error : new Error(String(result.error)) };
+    return {
+      error: result.error instanceof Error ? result.error : new Error(String(result.error)),
+    };
   }
   logAuthEvent("oauth:redirected", {
     provider: "google",
@@ -53,7 +55,6 @@ export async function signInWithGoogle(reason?: string): Promise<GoogleSignInRes
   });
   return { error: null };
 }
-
 
 const OAUTH_ERROR_PARAMS = ["error", "error_description", "error_code"];
 

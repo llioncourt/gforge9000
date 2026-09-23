@@ -55,7 +55,6 @@ describe("browser Google sign-in", () => {
   });
 });
 
-
 describe("provider return", () => {
   it("reports a query-string failure", () => {
     expect(

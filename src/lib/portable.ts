@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isSkillLikeKind } from "@/rules";
 import type { CharacterEntry, CharacterRecord, CharacterSheet } from "@/rules";
 import { withPackLink, type PackLink } from "@/lib/pack-link";
 

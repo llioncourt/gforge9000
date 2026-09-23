@@ -1,4 +1,5 @@
 import type { CharacterRow } from "@/lib/api";
+import { investedPoints } from "@/rules";
 import type { CharacterEntry, CharacterSheet } from "@/rules";
 import { PortraitFrame } from "@/components/character/portrait";
 import { useT } from "@/i18n/hooks";

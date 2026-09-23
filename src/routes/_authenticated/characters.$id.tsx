@@ -78,6 +78,7 @@ import {
   type CharacterEntry,
   type EntryKind,
   type WeaponMode,
+  investedPoints,
 } from "@/rules";
 import {
   BulkLinkDialog,

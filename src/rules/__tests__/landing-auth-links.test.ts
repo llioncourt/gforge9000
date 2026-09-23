@@ -14,12 +14,12 @@ const source = readFileSync(
 );
 
 describe("landing auth CTAs use full-document navigation", () => {
-  it('header sign-in CTA is a native anchor to /auth', () => {
+  it("header sign-in CTA is a native anchor to /auth", () => {
     expect(source).toContain('<a href="/auth">{t("nav.signIn")}</a>');
     expect(source).not.toContain('<Link to="/auth">{t("nav.signIn")}</Link>');
   });
 
-  it('hero start-building CTA is a native anchor to /auth', () => {
+  it("hero start-building CTA is a native anchor to /auth", () => {
     expect(source).toContain('<a href="/auth">{t("hero.startBuilding")}</a>');
     expect(source).not.toContain('<Link to="/auth">{t("hero.startBuilding")}</Link>');
   });

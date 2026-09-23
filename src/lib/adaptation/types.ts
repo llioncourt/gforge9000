@@ -61,10 +61,57 @@ export const WIZARD_STEPS = [
   "narrative",
   "comic",
   "movie",
+  "book_narrative",
+  "adventure_module",
   "validation",
   "generate",
 ] as const;
 export type WizardStep = (typeof WIZARD_STEPS)[number];
+
+/** The four output formats. All share one reconstruction; each adds a projection. */
+export const ADAPTATION_TARGETS = ["comic", "movie", "book_narrative", "adventure_module"] as const;
+export type AdaptationTarget = (typeof ADAPTATION_TARGETS)[number];
+
+/** Project column that stores whether a target is selected. */
+export const TARGET_COLUMN = {
+  comic: "target_comic",
+  movie: "target_movie",
+  book_narrative: "target_book_narrative",
+  adventure_module: "target_adventure_module",
+} as const satisfies Record<AdaptationTarget, string>;
+
+export type TargetFlags = {
+  target_comic?: boolean | null;
+  target_movie?: boolean | null;
+  target_book_narrative?: boolean | null;
+  target_adventure_module?: boolean | null;
+};
+
+/** Selected targets in canonical order. Missing columns (older rows) read as not selected. */
+export function selectedTargets(project: TargetFlags): AdaptationTarget[] {
+  return ADAPTATION_TARGETS.filter((target) => project[TARGET_COLUMN[target]] === true);
+}
+
+/** Wizard steps the user actually walks through: target steps only for selected targets. */
+export function activeWizardSteps(project: TargetFlags): WizardStep[] {
+  const selected = new Set<string>(selectedTargets(project));
+  return WIZARD_STEPS.filter(
+    (step) => !(ADAPTATION_TARGETS as readonly string[]).includes(step) || selected.has(step),
+  );
+}
+
+/**
+ * Maps a stored step onto the active list. A step that is no longer active
+ * (its target was deselected) lands on the next active step after it, so the
+ * user keeps their place instead of being thrown back to the start.
+ */
+export function resolveWizardStep(stored: string | null | undefined, project: TargetFlags): WizardStep {
+  const active = activeWizardSteps(project);
+  const position = WIZARD_STEPS.indexOf(stored as WizardStep);
+  if (position < 0) return active[0]!;
+  if (active.includes(stored as WizardStep)) return stored as WizardStep;
+  return active.find((step) => WIZARD_STEPS.indexOf(step) > position) ?? active[active.length - 1]!;
+}
 
 export const ADAPTATION_STATUSES = [
   "draft",

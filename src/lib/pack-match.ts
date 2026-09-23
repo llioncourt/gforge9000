@@ -276,10 +276,36 @@ export interface CandidateScope {
   search?: string | undefined;
   packId?: string | undefined;
   limit?: number | undefined;
+  /**
+   * Scan every visible row even when no text search is given. Deterministic
+   * matching (`findPackMatch`) needs the complete visible set; a picker that
+   * only shows the first page of names does not.
+   */
+  exhaustive?: boolean | undefined;
 }
 
-/** How many rows are pulled under RLS before an in-app text filter runs. */
-const SEARCH_POOL = 2000;
+/**
+ * Rows fetched per request. PostgREST caps a single response (Supabase's
+ * default `db.max-rows` is 1000), so a larger `.limit()` silently returns only
+ * the first page — that truncation is what made every later-alphabet pack item
+ * unfindable. The scan therefore pages explicitly instead of asking for more
+ * than one page at a time.
+ */
+const PAGE_SIZE = 1000;
+
+/**
+ * Safety stop for the paginated scan. Reaching it is reported through
+ * `truncated` rather than silently returning a wrong "no match".
+ */
+export const MAX_SCAN_ROWS = 50000;
+
+export interface CandidateScanResult {
+  candidates: PackCandidate[];
+  /** Rows actually read from the database before filtering. */
+  scanned: number;
+  /** True when MAX_SCAN_ROWS was hit and visible rows may remain unread. */
+  truncated: boolean;
+}
 
 /**
  * Pack items the caller may actually use.
@@ -290,35 +316,83 @@ const SEARCH_POOL = 2000;
  *
  * The free-text filter is applied in the app, not in SQL: the database has no
  * accent-insensitive comparison available here, so "sobrevivencia" would never
- * match "Sobrevivência". A bounded pool is read and ranked with the shared
- * accent-folding search helpers instead.
+ * match "Sobrevivência". To stay correct the candidate scan pages through every
+ * visible row (ordered by name then id, so pages cannot overlap or skip) and
+ * ranks the result with the shared accent-folding search helpers.
  */
+export async function loadPackCandidatesDetailed(
+  client: PackClient,
+  scope: CandidateScope = {},
+): Promise<CandidateScanResult> {
+  const packIndex = await loadPackIndex(client);
+  const limit = scope.limit ?? 1000;
+  const allowed = allowedPacksOf(scope.campaignSettings);
+  // A pack id can be turned into its name, which lets the database do the
+  // narrowing instead of reading rows only to drop them in the app.
+  const packName = scope.packId
+    ? ([...packIndex.values()].find((p) => p.id === scope.packId)?.name ?? null)
+    : null;
+  const needsFullScan = Boolean(scope.search) || scope.exhaustive === true;
+
+  const candidates: PackCandidate[] = [];
+  let scanned = 0;
+  let truncated = false;
+
+  for (let offset = 0; ; offset += PAGE_SIZE) {
+    if (offset >= MAX_SCAN_ROWS) {
+      truncated = true;
+      break;
+    }
+    let query = client
+      .from("library_entries")
+      .select(CANDIDATE_COLUMNS)
+      .order("name")
+      .order("id")
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (scope.kind) query = query.eq("kind", scope.kind);
+    if (packName) query = query.eq("pack", packName);
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+
+    const rows = (data ?? []) as unknown as LibraryCandidateRow[];
+    scanned += rows.length;
+    for (const row of rows) {
+      const candidate = toCandidate(row, packIndex);
+      if (scope.campaignSettings !== undefined && !isPackAllowed(candidate.pack, allowed)) continue;
+      if (scope.packId && candidate.pack_id !== scope.packId) continue;
+      candidates.push(candidate);
+    }
+
+    if (rows.length < PAGE_SIZE) break;
+    // Without a text search the caller only needs `limit` rows, so the scan
+    // stops as soon as it has them.
+    if (!needsFullScan && candidates.length >= limit) break;
+  }
+
+  if (scope.search) {
+    return {
+      candidates: rankSearch(scope.search, candidates, (c) => ({
+        name: c.name,
+        fields: [c.category, c.specialization, c.pack],
+      })).slice(0, limit),
+      scanned,
+      truncated,
+    };
+  }
+  return {
+    candidates: needsFullScan ? candidates : candidates.slice(0, limit),
+    scanned,
+    truncated,
+  };
+}
+
 export async function loadPackCandidates(
   client: PackClient,
   scope: CandidateScope = {},
 ): Promise<PackCandidate[]> {
-  const packIndex = await loadPackIndex(client);
-  const limit = scope.limit ?? 1000;
-  let query = client.from("library_entries").select(CANDIDATE_COLUMNS).order("name");
-  if (scope.kind) query = query.eq("kind", scope.kind);
-  const { data, error } = await query.limit(scope.search ? Math.max(limit, SEARCH_POOL) : limit);
-  if (error) throw new Error(error.message);
-
-  const allowed = allowedPacksOf(scope.campaignSettings);
-  const rows = (data ?? []) as unknown as LibraryCandidateRow[];
-  let candidates = rows.map((row) => toCandidate(row, packIndex));
-  if (scope.campaignSettings !== undefined) {
-    candidates = candidates.filter((candidate) => isPackAllowed(candidate.pack, allowed));
-  }
-  if (scope.packId) candidates = candidates.filter((c) => c.pack_id === scope.packId);
-  if (scope.search) {
-    candidates = rankSearch(scope.search, candidates, (c) => ({
-      name: c.name,
-      fields: [c.category, c.specialization, c.pack],
-    })).slice(0, limit);
-  }
-  return candidates;
+  return (await loadPackCandidatesDetailed(client, scope)).candidates;
 }
+
 
 /** Full match flow: load what the caller may use, then match deterministically. */
 export async function findPackMatch(

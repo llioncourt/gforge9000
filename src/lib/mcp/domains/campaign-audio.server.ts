@@ -816,24 +816,116 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
       },
 
       set_playback: async (i) => {
-        const campaign = await loadCampaign(ctx, i.campaign_id);
-        requireGmFor(campaign, "control soundtrack playback");
-        const { data, error } = await ctx.supabase
-          .from("campaign_soundtrack_state")
-          .upsert({
-            campaign_id: i.campaign_id,
-            album_id: i.album_id ?? null,
-            track_id: i.track_id ?? null,
-            is_playing: i.is_playing,
-            position_seconds: Math.max(0, i.position_seconds),
-            loop_one: i.loop_one,
-            changed_at: new Date().toISOString(),
-            changed_by: ctx.userId,
-          })
-          .select("*")
-          .single();
-        if (error) fail("Setting playback state", error);
-        return detailReply(`Playback state updated for "${campaign.name}".`, data);
+        const campaign = await requirePlaybackGm(ctx, i.campaign_id);
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: i.album_id ?? null,
+          track_id: i.track_id ?? null,
+          is_playing: i.is_playing,
+          position_seconds: i.position_seconds,
+          loop_one: i.loop_one,
+        });
+        return detailReply(
+          `Playback state updated for "${campaign.name}".`,
+          await playbackView(ctx, row),
+        );
+      },
+
+      play: async (i) => {
+        const campaign = await requirePlaybackGm(ctx, i.campaign_id);
+        const track = await loadTrack(ctx, i.track_id);
+        if (track.campaign_id !== i.campaign_id)
+          throw new Error("That track belongs to another campaign.");
+        const current = await loadPlayback(ctx, i.campaign_id);
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: track.album_id,
+          track_id: track.id,
+          is_playing: true,
+          position_seconds: i.position_seconds ?? 0,
+          loop_one: i.loop_one ?? current?.loop_one ?? false,
+        });
+        return detailReply(
+          `Playing "${String(track["title"] ?? "track")}" in "${campaign.name}".`,
+          await playbackView(ctx, row),
+        );
+      },
+
+      pause: async (i) => {
+        await requirePlaybackGm(ctx, i.campaign_id);
+        const current = await loadPlayback(ctx, i.campaign_id);
+        if (!current?.track_id) throw new Error("Nothing is playing in this campaign.");
+        const duration = await trackDuration(ctx, current.track_id);
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: current.album_id,
+          track_id: current.track_id,
+          is_playing: false,
+          position_seconds: currentPosition(current, duration),
+          loop_one: current.loop_one,
+        });
+        return detailReply("Playback paused.", await playbackView(ctx, row));
+      },
+
+      resume: async (i) => {
+        await requirePlaybackGm(ctx, i.campaign_id);
+        const current = await loadPlayback(ctx, i.campaign_id);
+        if (!current?.track_id) throw new Error("There is no track to resume.");
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: current.album_id,
+          track_id: current.track_id,
+          is_playing: true,
+          position_seconds: Math.max(0, Number(current.anchor_position_seconds) || 0),
+          loop_one: current.loop_one,
+        });
+        return detailReply("Playback resumed.", await playbackView(ctx, row));
+      },
+
+      seek: async (i) => {
+        await requirePlaybackGm(ctx, i.campaign_id);
+        const current = await loadPlayback(ctx, i.campaign_id);
+        if (!current?.track_id) throw new Error("There is no track to seek.");
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: current.album_id,
+          track_id: current.track_id,
+          is_playing: current.is_playing,
+          position_seconds: i.position_seconds,
+          loop_one: current.loop_one,
+        });
+        return detailReply("Playback position set.", await playbackView(ctx, row));
+      },
+
+      stop: async (i) => {
+        await requirePlaybackGm(ctx, i.campaign_id);
+        const current = await loadPlayback(ctx, i.campaign_id);
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: current?.album_id ?? null,
+          track_id: current?.track_id ?? null,
+          is_playing: false,
+          position_seconds: 0,
+          loop_one: current?.loop_one ?? false,
+        });
+        return detailReply("Playback stopped.", await playbackView(ctx, row));
+      },
+
+      set_loop: async (i) => {
+        await requirePlaybackGm(ctx, i.campaign_id);
+        const current = await loadPlayback(ctx, i.campaign_id);
+        const duration = await trackDuration(ctx, current?.track_id ?? null);
+        const row = await writePlayback(ctx, i.campaign_id, {
+          album_id: current?.album_id ?? null,
+          track_id: current?.track_id ?? null,
+          is_playing: current?.is_playing ?? false,
+          position_seconds: currentPosition(current, duration),
+          loop_one: i.loop_one,
+        });
+        return detailReply(
+          i.loop_one ? "Repeat-one turned on." : "Repeat-one turned off.",
+          await playbackView(ctx, row),
+        );
+      },
+
+      get_playback: async (i) => {
+        await requireMember(ctx, i.campaign_id);
+        const view = await playbackView(ctx, await loadPlayback(ctx, i.campaign_id));
+        return detailReply("Current soundtrack playback state.", view);
       },
 
       prepare_cover_upload: async (i) => {

@@ -268,6 +268,7 @@ function EntityPage() {
         name: String(snapshot["name"] ?? ""),
         summary: (snapshot["summary"] ?? null) as string | null,
         player_description: (snapshot["player_description"] ?? null) as string | null,
+        description: (snapshot["description"] ?? null) as string | null,
         gm_notes: (snapshot["gm_notes"] ?? null) as string | null,
         status: String(snapshot["status"] ?? ""),
         visibility: String(snapshot["visibility"] ?? ""),

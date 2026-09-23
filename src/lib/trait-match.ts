@@ -223,11 +223,27 @@ export function resolveMatches(
 }
 
 /**
+ * How a match treats the entry's existing `source` bag.
+ *
+ * Ordinary character imports rebuild provenance from the library row they
+ * matched (the historic behaviour). A campaign package, by contrast, carries
+ * its own historical provenance, which is authoritative: nothing in it may be
+ * replaced or dropped by reconciliation.
+ */
+export interface ReconcileOptions {
+  preserveSourceProvenance?: boolean;
+}
+
+/**
  * Rewrites an imported entry onto a catalogue entry, keeping the character's
  * own numbers (levels, chosen data) but taking identity and provenance from
  * the enabled pack.
  */
-export function applyCatalogue(entry: ImportedEntry, target: CatalogueEntry): ImportedEntry {
+export function applyCatalogue(
+  entry: ImportedEntry,
+  target: CatalogueEntry,
+  options: ReconcileOptions = {},
+): ImportedEntry {
   const levels = Number(entry.levels ?? 1) || 1;
   const perLevel = Number(target.cost_per_level ?? 0);
   const base = Number(target.base_points ?? 0);
@@ -247,30 +263,49 @@ export function applyCatalogue(entry: ImportedEntry, target: CatalogueEntry): Im
     importedQualifier && (entry.data?.["specialization"] ?? "") === ""
       ? { specialization: importedQualifier }
       : {};
-  // An existing content-pack link is provenance the rewrite must not destroy;
-  // it is the only key of the old source that survives.
   const previousSource =
     entry.source && typeof entry.source === "object"
       ? (entry.source as Record<string, unknown>)
       : {};
   const previousLink = previousSource["link"];
+
+  // Preserve mode: the imported bag wins key by key, including keys this code
+  // knows nothing about. A provenance key is only filled in when it is truly
+  // absent, and `link` is never touched.
+  const source = options.preserveSourceProvenance
+    ? {
+        label: previousSource["label"] ?? target.source_label ?? "Library",
+        edition: previousSource["edition"] ?? target.source_edition ?? "",
+        page: previousSource["page"] ?? target.source_page ?? "",
+        type: previousSource["type"] ?? target.source_type ?? "user",
+        pack: "pack" in previousSource ? previousSource["pack"] : (target.pack ?? null),
+        ...(entry.name !== name && previousSource["imported_as"] === undefined
+          ? { imported_as: entry.name }
+          : {}),
+        ...previousSource,
+      }
+    : {
+        label: target.source_label ?? "Library",
+        edition: target.source_edition ?? "",
+        page: target.source_page ?? "",
+        type: target.source_type ?? "user",
+        pack: target.pack ?? null,
+        imported_as: entry.name !== name ? entry.name : undefined,
+        // An existing content-pack link is provenance the rewrite must not
+        // destroy; it is the only key of the old source that survives.
+        ...(previousLink ? { link: previousLink } : {}),
+      };
+
   return {
     ...entry,
     name,
     category: target.category ?? entry.category ?? null,
     points,
     data: { ...(target.data ?? {}), ...(entry.data ?? {}), ...specialization },
-    source: {
-      label: target.source_label ?? "Library",
-      edition: target.source_edition ?? "",
-      page: target.source_page ?? "",
-      type: target.source_type ?? "user",
-      pack: target.pack ?? null,
-      imported_as: entry.name !== name ? entry.name : undefined,
-      ...(previousLink ? { link: previousLink } : {}),
-    },
+    source,
   };
 }
+
 
 export interface ReconcileResult {
   entries: ImportedEntry[];

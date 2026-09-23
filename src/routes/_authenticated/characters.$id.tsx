@@ -1540,7 +1540,7 @@ function EntryGroup({
                     ) : null}
                   </p>
                 </div>
-                <span className="stat-value text-sm">{e.points * Math.max(1, e.levels)}</span>
+                <span className="stat-value text-sm">{traitBaseCost(e)}</span>
                 <RowActions onEdit={() => onEdit(e)} onDelete={() => onDelete(e.id)} />
               </li>
             );

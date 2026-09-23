@@ -2,9 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { I18nextProvider } from "react-i18next";
-import { DiceProvider, useDice } from "@/components/app/dice-context";
-import { createI18nInstance } from "@/i18n";
 import { createAuthInvalidationHandler, isAuthShellPath } from "@/lib/app-runtime";
 import { runAuthRequest } from "@/lib/auth-submit";
 import {
@@ -44,44 +41,6 @@ describe("auth shell boundary", () => {
     mounted.length = 0;
     renderToStaticMarkup(createElement(Shell, { pathname: "/dashboard" }));
     expect(mounted).toEqual(["runtime", "page"]);
-  });
-
-  it("keeps useDice available on /auth (DiceProvider is mounted on every route)", async () => {
-    // Regression for the production freeze: during a transition toward /auth
-    // the outgoing authenticated tree still renders and calls useDice while
-    // authShell has already flipped. DiceProvider must wrap both branches.
-    const i18n = createI18nInstance("en");
-    await new Promise<void>((resolve) => {
-      if (i18n.isInitialized) resolve();
-      else i18n.on("initialized", () => resolve());
-    });
-    await i18n.loadNamespaces("dice");
-
-    function OutgoingPage() {
-      const dice = useDice();
-      expect(dice).toBeDefined();
-      return createElement("main", null, "outgoing");
-    }
-
-    expect(() =>
-      renderToStaticMarkup(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(DiceProvider, null, createElement(OutgoingPage)),
-        ),
-      ),
-    ).not.toThrow();
-  });
-
-  it("documents the failure mode: useDice without DiceProvider throws", () => {
-    function Bare() {
-      useDice();
-      return createElement("main", null, "bare");
-    }
-    expect(() => renderToStaticMarkup(createElement(Bare))).toThrow(
-      /useDice must be used inside DiceProvider/,
-    );
   });
 });
 

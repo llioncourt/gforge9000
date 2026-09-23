@@ -15,7 +15,6 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppRuntime } from "@/components/app/app-runtime";
-import { DiceProvider } from "@/components/app/dice-context";
 import { I18nProvider } from "@/i18n/provider";
 import { detectLocale } from "@/i18n/detect";
 import { localeDirection } from "@/i18n/config";
@@ -168,10 +167,8 @@ function RootComponent() {
   const diag = resolveDiagFlags(pathname, searchStr);
 
   // The public sign-in route boots a minimal shell: no global auth listener,
-  // no service-worker retirement. Application routes mount the full runtime
-  // again, and route protection is unchanged. DiceProvider stays mounted on
-  // every route: it is pure in-memory state, and an outgoing route tree may
-  // still render (and call useDice) while a navigation toward /auth resolves.
+  // no service-worker retirement, no dice runtime. Application routes mount
+  // the full runtime again, and route protection is unchanged.
   const authShell = isAuthShellPath(pathname);
 
   useEffect(() => {
@@ -189,20 +186,18 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <I18nProvider initialLocale={detectLocale()}>
         <TooltipProvider delayDuration={200}>
-          <DiceProvider>
-            {authShell ? (
-              content
-            ) : (
-              <AppRuntime
-                queryClient={queryClient}
-                skipAuthListener={diag.skipRootAuthListener}
-                skipPwaCleanup={diag.skipPwaCleanup}
-                trace={diag.trace}
-              >
-                {content}
-              </AppRuntime>
-            )}
-          </DiceProvider>
+          {authShell ? (
+            content
+          ) : (
+            <AppRuntime
+              queryClient={queryClient}
+              skipAuthListener={diag.skipRootAuthListener}
+              skipPwaCleanup={diag.skipPwaCleanup}
+              trace={diag.trace}
+            >
+              {content}
+            </AppRuntime>
+          )}
         </TooltipProvider>
       </I18nProvider>
     </QueryClientProvider>

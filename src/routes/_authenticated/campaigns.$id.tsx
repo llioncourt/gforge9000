@@ -131,7 +131,6 @@ function PanelFallback() {
 
 export const CAMPAIGN_TABS = [
   "media",
-  "cover",
   "roster",
   "lore",
   "story",
@@ -543,10 +542,6 @@ function CampaignPage() {
               focusId={itemParam ?? null}
             />
           </Suspense>
-        </TabsContent>
-
-        <TabsContent value="cover" className="mt-6">
-          <CampaignCover campaignId={id} settings={settings} disabled={!isGm} />
         </TabsContent>
 
         <TabsContent value="roster" className="mt-6 space-y-6">
@@ -1043,6 +1038,7 @@ function CampaignPage() {
 
         <TabsContent value="rules" className="mt-6">
           <HouseRules
+            campaignId={id}
             settings={settings}
             disabled={!isGm}
             knownPacks={knownPacks}
@@ -1063,16 +1059,27 @@ function Mini({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-function CampaignCover({
+function HouseRules({
   campaignId,
   settings,
   disabled,
+  knownPacks,
+  onSave,
 }: {
   campaignId: string;
   settings: Record<string, unknown>;
   disabled: boolean;
+  knownPacks: string[];
+  onSave: (patch: Record<string, unknown>) => void;
 }) {
   const { t } = useT("campaigns");
+  const { t: tc } = useT("common");
+  const [pointLimit, setPointLimit] = useState(String(settings["point_limit"] ?? 150));
+  const [disadvLimit, setDisadvLimit] = useState(String(settings["disadvantage_limit"] ?? -50));
+  const [tl, setTl] = useState(String(settings["tech_level"] ?? 8));
+  const [houseRules, setHouseRules] = useState(String(settings["house_rules"] ?? ""));
+  const [packs, setPacks] = useState<string[]>(allowedPacksOf(settings));
+  const [newPack, setNewPack] = useState("");
   const queryClient = useQueryClient();
   const coverPath =
     typeof settings[CAMPAIGN_COVER_SETTING] === "string"
@@ -1129,77 +1136,6 @@ function CampaignCover({
     },
     onError: (error: Error) => toast.error(error.message),
   });
-
-  return (
-    <div className="panel max-w-4xl space-y-3 p-6">
-      <div>
-        <Label>{t("houseRules.cover.label")}</Label>
-        <p className="mt-1 text-xs text-muted-foreground">{t("houseRules.cover.hint")}</p>
-      </div>
-      {coverPath || coverPreview ? (
-        <div className="relative aspect-[16/7] overflow-hidden rounded-lg border border-border">
-          <CampaignCoverBg path={coverPath} previewUrl={coverPreview} />
-        </div>
-      ) : null}
-      {!disabled ? (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-          <FileDropzone
-            compact
-            accept="image/*,.heic,.heif,.tif,.tiff,.bmp"
-            loading={cover.isPending}
-            loadingLabel={t("houseRules.cover.uploadingLabel")}
-            className="min-h-20 flex-1"
-            label={coverPath ? t("houseRules.cover.dropReplace") : t("houseRules.cover.dropNew")}
-            hint={t("houseRules.cover.sizeHint")}
-            onFiles={(files) => {
-              const file = files[0];
-              if (!file) return;
-              const preview = URL.createObjectURL(file);
-              setCoverPreview((current) => {
-                if (current) URL.revokeObjectURL(current);
-                return preview;
-              });
-              cover.mutate(file);
-            }}
-          />
-          {coverPath ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 self-end sm:h-auto sm:w-10 sm:self-stretch"
-              aria-label={t("houseRules.cover.removeAria")}
-              disabled={cover.isPending || removeCover.isPending}
-              onClick={() => removeCover.mutate()}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function HouseRules({
-  settings,
-  disabled,
-  knownPacks,
-  onSave,
-}: {
-  settings: Record<string, unknown>;
-  disabled: boolean;
-  knownPacks: string[];
-  onSave: (patch: Record<string, unknown>) => void;
-}) {
-  const { t } = useT("campaigns");
-  const { t: tc } = useT("common");
-  const [pointLimit, setPointLimit] = useState(String(settings["point_limit"] ?? 150));
-  const [disadvLimit, setDisadvLimit] = useState(String(settings["disadvantage_limit"] ?? -50));
-  const [tl, setTl] = useState(String(settings["tech_level"] ?? 8));
-  const [houseRules, setHouseRules] = useState(String(settings["house_rules"] ?? ""));
-  const [packs, setPacks] = useState<string[]>(allowedPacksOf(settings));
-  const [newPack, setNewPack] = useState("");
   const packOptions = useMemo(
     () => Array.from(new Set([...knownPacks, ...packs])).sort((a, b) => a.localeCompare(b)),
     [knownPacks, packs],
@@ -1209,6 +1145,54 @@ function HouseRules({
 
   return (
     <div className="panel max-w-4xl space-y-4 p-6">
+      <section className="space-y-3">
+        <div>
+          <Label>{t("houseRules.cover.label")}</Label>
+          <p className="mt-1 text-xs text-muted-foreground">{t("houseRules.cover.hint")}</p>
+        </div>
+        {coverPath || coverPreview ? (
+          <div className="relative aspect-[16/7] overflow-hidden rounded-lg border border-border">
+            <CampaignCoverBg path={coverPath} previewUrl={coverPreview} />
+          </div>
+        ) : null}
+        {!disabled ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+            <FileDropzone
+              compact
+              accept="image/*,.heic,.heif,.tif,.tiff,.bmp"
+              loading={cover.isPending}
+              loadingLabel={t("houseRules.cover.uploadingLabel")}
+              className="min-h-20 flex-1"
+              label={coverPath ? t("houseRules.cover.dropReplace") : t("houseRules.cover.dropNew")}
+              hint={t("houseRules.cover.sizeHint")}
+              onFiles={(files) => {
+                const file = files[0];
+                if (!file) return;
+                const preview = URL.createObjectURL(file);
+                setCoverPreview((current) => {
+                  if (current) URL.revokeObjectURL(current);
+                  return preview;
+                });
+                cover.mutate(file);
+              }}
+            />
+            {coverPath ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 self-end sm:h-auto sm:w-10 sm:self-stretch"
+                aria-label={t("houseRules.cover.removeAria")}
+                disabled={cover.isPending || removeCover.isPending}
+                onClick={() => removeCover.mutate()}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
+      <div className="border-t border-border" />
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
           <Label>{t("houseRules.pointLimit")}</Label>

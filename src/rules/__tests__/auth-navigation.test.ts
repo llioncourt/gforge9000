@@ -11,4 +11,11 @@ describe("public sign-in navigation", () => {
       expect(link[1]).toMatch(/\breloadDocument\b/);
     }
   });
+
+  it("does not auto-redirect from /auth based on a cached session snapshot", () => {
+    const source = readFileSync("src/routes/auth.tsx", "utf8");
+
+    expect(source).not.toContain("useSession");
+    expect(source).not.toContain('navigate({ to: "/dashboard", replace: true });\n    }\n  },');
+  });
 });

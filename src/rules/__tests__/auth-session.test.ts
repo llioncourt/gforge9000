@@ -140,5 +140,4 @@ describe("auth session regressions", () => {
     getSessionSpy.mockRestore();
     auth.getUser = originalGetUser;
   });
-
 });

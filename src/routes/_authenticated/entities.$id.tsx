@@ -699,9 +699,7 @@ function EntityPage() {
           </div>
           {isGm ? (
             <div className="space-y-2">
-              <Label htmlFor="entity-description">
-                {t("entityPage.fields.fullDescription")}
-              </Label>
+              <Label htmlFor="entity-description">{t("entityPage.fields.fullDescription")}</Label>
               <Textarea
                 id="entity-description"
                 rows={6}

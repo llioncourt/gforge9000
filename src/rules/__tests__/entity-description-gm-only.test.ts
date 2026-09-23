@@ -54,7 +54,9 @@ describe("entity description is GM-only in the database", () => {
   });
 
   it("restricts entry version history to the game master", () => {
-    const body = latestDefinition(/CREATE POLICY entity_revisions_select ON public\.entity_revisions/);
+    const body = latestDefinition(
+      /CREATE POLICY entity_revisions_select ON public\.entity_revisions/,
+    );
     expect(body).not.toBe("");
     const policy = body.slice(0, body.indexOf(";"));
     expect(policy).toContain("private.is_campaign_gm(campaign_id, auth.uid())");

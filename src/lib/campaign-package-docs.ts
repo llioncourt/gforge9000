@@ -16,6 +16,7 @@ export const CAMPAIGN_PACKAGE_EXAMPLE = `{
     "settings": {
       "point_limit": 150,
       "disadvantage_limit": -50,
+      "quirk_limit": -5,
       "tech_level": 9,
       "house_rules": "No cinematic skills.",
       "allowed_sources": ["user"]

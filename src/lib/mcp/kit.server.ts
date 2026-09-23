@@ -330,13 +330,28 @@ export const DESTROY: ToolAnnotations = {
 };
 
 /**
+ * Module-level cache of the immutable JSON Schema conversion for a given zod
+ * schema object. Schemas are built once, at server-construction time, from
+ * fixed tool definitions — never from request or user state — so caching by
+ * object identity is safe and holds only immutable schema JSON, nothing
+ * request-scoped. This only avoids re-running `z.toJSONSchema` for the same
+ * schema object across repeated MCP requests; server construction itself
+ * stays stateless per request, with handlers bound to that request's
+ * RLS-scoped ctx.
+ */
+const jsonSchemaCache = new WeakMap<z.ZodType, unknown>();
+
+/**
  * The MCP SDK accepts any Standard Schema that can also describe itself as JSON
  * Schema; zod covers the first half, so we attach the second.
  */
 export function withJson<T extends z.ZodType>(schema: T): T {
-  return Object.assign(schema, {
-    jsonSchema: z.toJSONSchema(schema, { io: "input", unrepresentable: "any" }),
-  });
+  let jsonSchema = jsonSchemaCache.get(schema);
+  if (jsonSchema === undefined) {
+    jsonSchema = z.toJSONSchema(schema, { io: "input", unrepresentable: "any" });
+    jsonSchemaCache.set(schema, jsonSchema);
+  }
+  return Object.assign(schema, { jsonSchema });
 }
 
 export type ToolRegistrar = <I extends z.ZodType, O extends z.ZodType>(

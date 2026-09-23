@@ -303,6 +303,8 @@ export interface CandidateScanResult {
   candidates: PackCandidate[];
   /** Rows actually read from the database before filtering. */
   scanned: number;
+  /** How many candidates matched before `limit` was applied. */
+  matched: number;
   /** True when MAX_SCAN_ROWS was hit and visible rows may remain unread. */
   truncated: boolean;
 }
@@ -370,18 +372,16 @@ export async function loadPackCandidatesDetailed(
   }
 
   if (scope.search) {
-    return {
-      candidates: rankSearch(scope.search, candidates, (c) => ({
-        name: c.name,
-        fields: [c.category, c.specialization, c.pack],
-      })).slice(0, limit),
-      scanned,
-      truncated,
-    };
+    const ranked = rankSearch(scope.search, candidates, (c) => ({
+      name: c.name,
+      fields: [c.category, c.specialization, c.pack],
+    }));
+    return { candidates: ranked.slice(0, limit), scanned, matched: ranked.length, truncated };
   }
   return {
     candidates: needsFullScan ? candidates : candidates.slice(0, limit),
     scanned,
+    matched: candidates.length,
     truncated,
   };
 }

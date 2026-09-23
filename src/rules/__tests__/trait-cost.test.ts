@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computePoints } from "@/rules/points";
+import type { CharacterRecord } from "@/rules/types";
 import {
   TRAIT_POINTS_SEMANTICS_KEY,
   toTotalSemantics,
@@ -25,6 +26,26 @@ function entry(partial: Partial<CharacterEntry>): CharacterEntry {
   } as CharacterEntry;
 }
 
+const CHAR = {
+  id: "c1",
+  name: "Teste",
+  st: 10,
+  dx: 10,
+  iq: 10,
+  ht: 10,
+  point_total: 100,
+  data: {},
+} as unknown as CharacterRecord;
+
+const LINK = {
+  pack_entry_id: "p1",
+  pack_id: "pack1",
+  pack_name: "Pack",
+  pack_version: "v1:sha256:x",
+  linked_at: "2026-01-01T00:00:00.000Z",
+  link_method: "manual",
+};
+
 const packItem = {
   id: "p1",
   kind: "advantage",
@@ -41,14 +62,14 @@ describe("leveled trait cost semantics", () => {
     const row = entry({ points: 2, levels: 2 });
     expect(traitPointsSemantics(row)).toBe("per_level");
     expect(traitBaseCost(row)).toBe(4);
-    expect(computePoints([row]).advantages).toBe(4);
+    expect(computePoints(CHAR, [row]).advantages).toBe(4);
   });
 
   it("B. an OLD linked but unmarked row keeps its legacy effective cost", () => {
     const row = entry({
       points: 2,
       levels: 2,
-      source: { link: { pack_entry_id: "p1", pack_version: "v1:sha256:x" } },
+      source: { link: LINK },
     });
     expect(traitBaseCost(row)).toBe(4);
   });
@@ -60,7 +81,7 @@ describe("leveled trait cost semantics", () => {
       data: { [TRAIT_POINTS_SEMANTICS_KEY]: "total" },
     });
     expect(traitBaseCost(row)).toBe(4);
-    expect(computePoints([row]).advantages).toBe(4);
+    expect(computePoints(CHAR, [row]).advantages).toBe(4);
   });
 
   it("D. restore writes the canonical total plus the marker", () => {
@@ -89,15 +110,15 @@ describe("leveled trait cost semantics", () => {
       category: patch.category,
       name: patch.name,
       data: patch.data,
-      source: { link: { pack_entry_id: "p1", pack_version: "v1:sha256:x" } },
+      source: { link: LINK },
     });
-    const state = derivePackLinkState(restored, {
-      resolution: "found",
+    const status = derivePackLinkState(restored, {
       item: packItem,
-      versionChanged: false,
-    } as never);
-    expect(state).toBe("official");
-    expect(computePoints([restored]).advantages).toBe(4);
+      currentVersion: "v1:sha256:x",
+      packAllowed: true,
+    });
+    expect(status.state).toBe("official");
+    expect(computePoints(CHAR, [restored]).advantages).toBe(4);
   });
 
   it("G. non-leveled traits are unaffected", () => {
@@ -113,7 +134,7 @@ describe("leveled trait cost semantics", () => {
     expect(usesLeveledPoints("equipment")).toBe(false);
     expect(usesLeveledPoints("advantage")).toBe(true);
     const skill = entry({ kind: "skill", points: 4, levels: 2, data: { points: 4 } });
-    expect(computePoints([skill]).skills).toBe(4);
+    expect(computePoints(CHAR, [skill]).skills).toBe(4);
   });
 });
 

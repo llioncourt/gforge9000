@@ -210,3 +210,57 @@ describe("linking fills only MISSING definition fields", () => {
     expect(fill.data["cost"]).toBe(100);
   });
 });
+
+describe("leveled trait editor semantics (pack-linked rows)", () => {
+  it("G. a pack-linked leveled row shows the per-level figure, not the stored total", () => {
+    const row = entry({
+      points: 6,
+      levels: 3,
+      data: { [TRAIT_POINTS_SEMANTICS_KEY]: "total" },
+    });
+    expect(perLevelPoints(row)).toBe(2);
+  });
+
+  it("H. raising levels on a pack-linked row multiplies the charged cost again", () => {
+    const row = entry({
+      points: 2,
+      levels: 1,
+      data: { [TRAIT_POINTS_SEMANTICS_KEY]: "total" },
+    });
+    // Player edits levels 1 -> 3 keeping 2 pts/level.
+    const stored = storedPointsForPerLevel({ ...row, levels: 3 }, perLevelPoints(row), 3);
+    const edited = entry({ points: stored, levels: 3, data: row.data });
+    expect(stored).toBe(6);
+    expect(traitBaseCost(edited)).toBe(6);
+    expect(computePoints(CHAR, [edited]).advantages).toBe(6);
+  });
+
+  it("I. editing the per-level figure on a pack-linked row stores the total", () => {
+    const row = entry({
+      points: 4,
+      levels: 2,
+      data: { [TRAIT_POINTS_SEMANTICS_KEY]: "total" },
+    });
+    const stored = storedPointsForPerLevel(row, 3);
+    expect(stored).toBe(6);
+    expect(traitBaseCost(entry({ points: stored, levels: 2, data: row.data }))).toBe(6);
+  });
+
+  it("J. legacy unmarked rows keep per-level storage unchanged by the helpers", () => {
+    const row = entry({ points: 2, levels: 2 });
+    expect(perLevelPoints(row)).toBe(2);
+    expect(storedPointsForPerLevel(row, 5)).toBe(5);
+    expect(storedPointsForPerLevel({ ...row, levels: 4 }, 2, 4)).toBe(2);
+    expect(traitBaseCost(entry({ points: 2, levels: 4 }))).toBe(8);
+  });
+
+  it("K. invalid level input on a marked row stores the bare per-level figure", () => {
+    const row = entry({
+      points: 2,
+      levels: 1,
+      data: { [TRAIT_POINTS_SEMANTICS_KEY]: "total" },
+    });
+    expect(storedPointsForPerLevel(row, 2, Number("abc"))).toBe(2);
+    expect(storedPointsForPerLevel(row, 2, 0)).toBe(2);
+  });
+});

@@ -79,6 +79,7 @@ import {
   type EntryKind,
   type WeaponMode,
   investedPoints,
+  traitBaseCost,
 } from "@/rules";
 import {
   BulkLinkDialog,

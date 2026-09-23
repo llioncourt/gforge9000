@@ -180,6 +180,11 @@ export async function importCampaignPackageCore(
     tech_level: manifest.campaign.settings?.tech_level ?? 8,
     house_rules: manifest.campaign.settings?.house_rules ?? "",
     allowed_sources: manifest.campaign.settings?.allowed_sources ?? ["user"],
+    // Optional in the format: an older package without it keeps the app's
+    // existing default behaviour rather than gaining an invented limit.
+    ...(typeof manifest.campaign.settings?.quirk_limit === "number"
+      ? { quirk_limit: manifest.campaign.settings.quirk_limit }
+      : {}),
     ...(manifest.campaign.settings?.allowed_packs
       ? { allowed_packs: manifest.campaign.settings.allowed_packs }
       : {}),
@@ -310,6 +315,9 @@ export async function importCampaignPackageCore(
             supabase,
             portable.entries as unknown as ImportedEntry[],
             allowedPacksOf(settings),
+            // The package's own source bag is authoritative history: matching
+            // may canonicalise names/data but never rebuilds provenance.
+            { preserveSourceProvenance: true },
           );
           const rows = reconciled.entries.map((item, index) => ({
             character_id: characterId,

@@ -21,10 +21,12 @@ import {
   limitField,
   listReply,
   loadCharacter,
+  requireGmFor,
   safeRpc,
   uuid,
 } from "@/lib/mcp/kit.server";
 import type { McpToolContext, ToolRegistrar, Structured } from "@/lib/mcp/kit.server";
+import { loadEntity } from "@/lib/mcp/domains/shared.server";
 
 const input = z.discriminatedUnion("action", [
   z

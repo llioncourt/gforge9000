@@ -75,10 +75,13 @@ import { CampaignIntroExperience } from "@/components/campaign/intro-panel";
 import { CampaignVideoStage } from "@/components/campaign/campaign-video-stage";
 import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
 import {
+  CAMPAIGN_COVER_POSITION_SETTING,
   CAMPAIGN_COVER_SETTING,
+  coverPositionFromSettings,
   removeCampaignCoverFile,
   uploadCampaignCover,
 } from "@/lib/campaign-cover";
+import { Slider } from "@/components/ui/slider";
 import { metaText } from "@/i18n/meta";
 
 // Heavy campaign tabs load on demand — the campaign page ships a much
@@ -1202,6 +1205,11 @@ function CampaignCover({
       ? String(settings[CAMPAIGN_COVER_SETTING])
       : null;
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const savedPosition = coverPositionFromSettings(settings);
+  const [positionDraft, setPositionDraft] = useState<number | null>(null);
+  const positionY = positionDraft ?? savedPosition;
+
+  useEffect(() => setPositionDraft(null), [savedPosition]);
 
   useEffect(
     () => () => {
@@ -1245,7 +1253,11 @@ function CampaignCover({
   const removeCover = useMutation({
     mutationFn: async () => {
       await updateCampaign(campaignId, {
-        settings: { ...settings, [CAMPAIGN_COVER_SETTING]: null } as never,
+        settings: {
+          ...settings,
+          [CAMPAIGN_COVER_SETTING]: null,
+          [CAMPAIGN_COVER_POSITION_SETTING]: null,
+        } as never,
       });
       if (coverPath) await removeCampaignCoverFile(coverPath).catch(() => undefined);
     },
@@ -1253,6 +1265,16 @@ function CampaignCover({
       await refreshCampaigns();
       toast.success(t("houseRules.cover.removed"));
     },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const savePosition = useMutation({
+    mutationFn: async (value: number) => {
+      await updateCampaign(campaignId, {
+        settings: { ...settings, [CAMPAIGN_COVER_POSITION_SETTING]: value } as never,
+      });
+    },
+    onSuccess: () => refreshCampaigns(),
     onError: (error: Error) => toast.error(error.message),
   });
 
@@ -1264,7 +1286,31 @@ function CampaignCover({
       </div>
       {coverPath || coverPreview ? (
         <div className="relative aspect-[16/7] overflow-hidden rounded-lg border border-border">
-          <CampaignCoverBg path={coverPath} previewUrl={coverPreview} />
+          <CampaignCoverBg path={coverPath} previewUrl={coverPreview} positionY={positionY} />
+        </div>
+      ) : null}
+      {coverPath && !disabled ? (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="cover-framing">{t("houseRules.cover.framing")}</Label>
+            <span className="text-xs text-muted-foreground">
+              {t("houseRules.cover.framingHint")}
+            </span>
+          </div>
+          <Slider
+            id="cover-framing"
+            min={0}
+            max={100}
+            step={1}
+            value={[positionY]}
+            disabled={savePosition.isPending}
+            onValueChange={([v]) => setPositionDraft(v)}
+            onValueCommit={([v]) => {
+              setPositionDraft(v);
+              savePosition.mutate(v);
+            }}
+            aria-label={t("houseRules.cover.framing")}
+          />
         </div>
       ) : null}
       {!disabled ? (

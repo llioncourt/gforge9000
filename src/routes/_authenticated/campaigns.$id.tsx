@@ -75,10 +75,13 @@ import { CampaignIntroExperience } from "@/components/campaign/intro-panel";
 import { CampaignVideoStage } from "@/components/campaign/campaign-video-stage";
 import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
 import {
+  CAMPAIGN_COVER_POSITION_SETTING,
   CAMPAIGN_COVER_SETTING,
+  coverPositionFromSettings,
   removeCampaignCoverFile,
   uploadCampaignCover,
 } from "@/lib/campaign-cover";
+import { Slider } from "@/components/ui/slider";
 import { metaText } from "@/i18n/meta";
 
 // Heavy campaign tabs load on demand — the campaign page ships a much
@@ -1202,6 +1205,11 @@ function CampaignCover({
       ? String(settings[CAMPAIGN_COVER_SETTING])
       : null;
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const savedPosition = coverPositionFromSettings(settings);
+  const [positionDraft, setPositionDraft] = useState<number | null>(null);
+  const positionY = positionDraft ?? savedPosition;
+
+  useEffect(() => setPositionDraft(null), [savedPosition]);
 
   useEffect(
     () => () => {

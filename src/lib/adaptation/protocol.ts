@@ -784,6 +784,9 @@ export const adaptationManifestSchema = z
       .object({
         comic: comicProjectionSchema.nullish(),
         movie: movieProjectionSchema.nullish(),
+        // Added without a version bump: older v1 packages simply omit them.
+        book_narrative: bookNarrativeProjectionSchema.nullish(),
+        adventure_module: adventureModuleProjectionSchema.nullish(),
       })
       .strict()
       .default({}),
@@ -799,6 +802,8 @@ export type BibleRecord = z.infer<typeof bibleRecordSchema>;
 export type ComicProjection = z.infer<typeof comicProjectionSchema>;
 export type MovieProjection = z.infer<typeof movieProjectionSchema>;
 export type StoryBible = z.infer<typeof storyBibleSchema>;
+export type BookNarrativeProjection = z.infer<typeof bookNarrativeProjectionSchema>;
+export type AdventureModuleProjection = z.infer<typeof adventureModuleProjectionSchema>;
 
 /** Parses and validates `adaptation.json`, with readable errors. */
 export function parseAdaptationManifest(raw: string): AdaptationManifest {
@@ -891,6 +896,43 @@ export function validateAdaptationManifest(manifest: AdaptationManifest): string
         );
       }
     }
+  }
+
+  const book = manifest.targets.book_narrative;
+  if (book) {
+    const numbers = book.target_projection.chapters.map((c) => c.chapter_no);
+    if (new Set(numbers).size !== numbers.length) problems.push("Duplicate book chapter numbers.");
+    for (const chapter of book.target_projection.chapters) {
+      for (const key of chapter.scene_keys) {
+        if (!sceneKeys.has(key))
+          problems.push(`Book chapter ${chapter.chapter_no} references unknown scene "${key}".`);
+      }
+    }
+  }
+
+  const adventure = manifest.targets.adventure_module;
+  if (adventure) {
+    const module = adventure.target_projection;
+    const encounterKeys = new Set(module.encounters.map((e) => e.key));
+    const clueKeys = new Set(module.clues.map((c) => c.key));
+    for (const encounter of module.encounters) {
+      if (!sceneKeys.has(encounter.scene_key))
+        problems.push(`Encounter "${encounter.key}" references unknown scene "${encounter.scene_key}".`);
+      for (const key of encounter.clue_keys)
+        if (!clueKeys.has(key)) problems.push(`Encounter "${encounter.key}" uses unknown clue "${key}".`);
+      for (const route of encounter.routes)
+        for (const next of route.leads_to)
+          if (!encounterKeys.has(next))
+            problems.push(`Route "${route.key}" leads to unknown encounter "${next}".`);
+      if (encounter.routes.length && encounter.routes.every((route) => route.original_table))
+        problems.push(`Encounter "${encounter.key}" offers only the original table's solution.`);
+    }
+    for (const act of module.acts)
+      for (const key of act.encounter_keys)
+        if (!encounterKeys.has(key)) problems.push(`Act ${act.act_no} lists unknown encounter "${key}".`);
+    for (const handout of module.handouts)
+      if (!assetKeys.has(handout.asset_key))
+        problems.push(`Handout references unknown asset "${handout.asset_key}".`);
   }
 
   return problems;

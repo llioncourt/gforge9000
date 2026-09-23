@@ -28,7 +28,9 @@ import {
   requireGmFor,
   uuid,
   dbPayload,
+  anyDb,
 } from "@/lib/mcp/kit.server";
+import { derivePlaybackPosition } from "@/lib/playback-anchor";
 import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.server";
 import {
   decodeBase64File,

@@ -11,6 +11,7 @@ import {
 import { dedupeByHash, resolveAssets, resolverStats } from "@/lib/adaptation/assets";
 import {
   adaptationManifestSchema,
+  adaptationSceneSchema,
   isSafeBundlePath,
   parseAdaptationManifest,
   referencedFiles,

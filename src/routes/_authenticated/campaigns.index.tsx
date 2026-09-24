@@ -33,7 +33,7 @@ import {
 import { createCampaign, deleteCampaign, joinCampaign, listCampaigns } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
 import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
-import { CAMPAIGN_COVER_SETTING } from "@/lib/campaign-cover";
+import { CAMPAIGN_COVER_SETTING, coverPositionFromSettings } from "@/lib/campaign-cover";
 import { CampaignPackageImport } from "@/components/campaign/campaign-package-import";
 import { Progress } from "@/components/ui/progress";
 import { buildCampaignPackageZip, type CampaignExportStep } from "@/lib/campaign-package-export";
@@ -251,7 +251,7 @@ function CampaignsPage() {
                 params={{ id: c.id }}
                 className="panel hover-lift relative flex min-h-[180px] flex-col overflow-hidden p-5 transition-colors hover:border-ring"
               >
-                <CampaignCoverBg path={coverPath} />
+                <CampaignCoverBg path={coverPath} positionY={coverPositionFromSettings(settings)} />
                 <div className="relative flex items-start justify-between gap-2">
                   <h2 className="font-display text-lg font-semibold">{c.name}</h2>
                   <Badge variant={c.gm_id === user?.id ? "default" : "outline"}>

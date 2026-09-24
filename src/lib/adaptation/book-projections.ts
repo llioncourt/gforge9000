@@ -564,7 +564,7 @@ export function buildAdventureModuleProjection(
       act_no: actOf.get(scene.stable_key) ?? 1,
       title: scene.title,
       gm_summary: scene.synopsis,
-      player_framing: scene.gm_only ? "" : scene.narration.map((n) => n.text).join("\n\n").slice(0, 20000),
+      player_framing: scene.gm_only ? "" : scene.narration.map((n) => n.text).join("\n\n").slice(0, 8000),
       objective: scene.dramatic_goal,
       location: nameOf(input.locations, scene.location_entity_id),
       npcs: scene.cast_entity_ids

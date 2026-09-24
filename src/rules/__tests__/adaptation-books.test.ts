@@ -270,3 +270,16 @@ describe("adventure module projection", () => {
     expect(renderAdventureModuleMarkdown(module)).toContain("GURPS");
   });
 });
+
+describe("large campaigns stay within package limits", () => {
+  it("long joined text does not break the projections", () => {
+    const big = input(7);
+    big.scenes = big.scenes.map((s) => ({ ...s, title: "T".repeat(300), synopsis: "S".repeat(8000) }));
+    big.storyBible.timeline_summary = "X".repeat(20000);
+    big.facts = big.facts.map((f) => ({ ...f, statement: "F".repeat(4000) }));
+    const book = buildBookNarrativeProjection(big, { ...DEFAULT_BOOK_NARRATIVE, title: "B" });
+    expect(bookNarrativeProjectionSchema.parse(book)).toBeTruthy();
+    const mod = buildAdventureModuleProjection(big, { ...DEFAULT_ADVENTURE_MODULE, title: "M" });
+    expect(adventureModuleProjectionSchema.parse(mod)).toBeTruthy();
+  });
+});

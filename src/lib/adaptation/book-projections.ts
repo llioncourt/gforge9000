@@ -19,6 +19,9 @@ import type {
 import { MODULE_APPROACHES } from "@/lib/adaptation/protocol";
 import { stableHash } from "@/lib/adaptation/hash";
 
+/** Keep joined text within the package field limit. */
+const clip = (value: string, max: number) => value.slice(0, max);
+
 export interface BookNarrativeConfig {
   title: string;
   subtitle?: string | null;
@@ -332,11 +335,15 @@ export function buildBookNarrativeProjection(
     return {
       chapter_no: chapterNo,
       key: `chapter:${stableHash(group.map((s) => s.stable_key).join("|")).slice(0, 16)}`,
-      title: group.length === 1 ? group[0]!.title : `${group[0]!.title} — ${group.at(-1)!.title}`,
+      title: clip(
+        group.length === 1 ? group[0]!.title : `${group[0]!.title} — ${group.at(-1)!.title}`,
+        300,
+      ),
       summary: group
         .map((scene) => scene.synopsis)
         .filter(Boolean)
-        .join(" "),
+        .join(" ")
+        .slice(0, 8000),
       pov_character: lead ? nameOf(input.cast, lead[0]) : null,
       scene_keys: group.map((scene) => scene.stable_key),
       word_target:
@@ -525,7 +532,7 @@ export function buildAdventureModuleProjection(
       {
         key: `${key}:original`,
         approach: "original_table",
-        description: scene.synopsis || scene.title,
+        description: clip(scene.synopsis || scene.title, 4000),
         original_table: true,
         suggested_skills: [],
         modifier: null,
@@ -561,7 +568,12 @@ export function buildAdventureModuleProjection(
       act_no: actOf.get(scene.stable_key) ?? 1,
       title: scene.title,
       gm_summary: scene.synopsis,
-      player_framing: scene.gm_only ? "" : scene.narration.map((n) => n.text).join("\n\n"),
+      player_framing: scene.gm_only
+        ? ""
+        : scene.narration
+            .map((n) => n.text)
+            .join("\n\n")
+            .slice(0, 8000),
       objective: scene.dramatic_goal,
       location: nameOf(input.locations, scene.location_entity_id),
       npcs: scene.cast_entity_ids
@@ -676,13 +688,15 @@ export function buildAdventureModuleProjection(
       background: {
         gm_truth: [input.storyBible.timeline_summary, ...truths.map((t) => t.statement)]
           .filter(Boolean)
-          .join("\n\n"),
+          .join("\n\n")
+          .slice(0, 20000),
         common_knowledge: [
           input.storyBible.setting,
           ...visible.filter((f) => !f.gm_only).map((f) => f.statement),
         ]
           .filter(Boolean)
-          .join("\n\n"),
+          .join("\n\n")
+          .slice(0, 20000),
       },
       hooks,
       npcs,
@@ -704,7 +718,7 @@ export function buildAdventureModuleProjection(
         events: scenes.map((scene, index) => ({
           order: index + 1,
           scene_key: scene.stable_key,
-          summary: scene.synopsis || scene.title,
+          summary: clip(scene.synopsis || scene.title, 4000),
         })),
       },
       getting_started: {
@@ -717,7 +731,8 @@ export function buildAdventureModuleProjection(
         summary: group
           .map((scene) => scene.synopsis)
           .filter(Boolean)
-          .join(" "),
+          .join(" ")
+          .slice(0, 8000),
         encounter_keys: group.map(encounterKey),
       })),
       encounters,

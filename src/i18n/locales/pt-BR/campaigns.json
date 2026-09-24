@@ -118,6 +118,8 @@
   },
   "houseRules": {
     "cover": {
+      "framing": "Enquadramento",
+      "framingHint": "Deslize para escolher qual parte da imagem aparece no card.",
       "label": "Capa do card da campanha",
       "hint": "Esta imagem aparece atrás do card da campanha.",
       "uploadingLabel": "Enviando capa…",

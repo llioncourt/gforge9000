@@ -33,7 +33,7 @@ import {
 import { createCampaign, deleteCampaign, joinCampaign, listCampaigns } from "@/lib/api";
 import { useSession } from "@/hooks/use-session";
 import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
-import { CAMPAIGN_COVER_SETTING } from "@/lib/campaign-cover";
+import { CAMPAIGN_COVER_SETTING, coverPositionFromSettings } from "@/lib/campaign-cover";
 import { CampaignPackageImport } from "@/components/campaign/campaign-package-import";
 import { Progress } from "@/components/ui/progress";
 import { buildCampaignPackageZip, type CampaignExportStep } from "@/lib/campaign-package-export";

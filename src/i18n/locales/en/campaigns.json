@@ -118,6 +118,8 @@
   },
   "houseRules": {
     "cover": {
+      "framing": "Framing",
+      "framingHint": "Slide to choose which part of the image shows on the card.",
       "label": "Campaign card cover",
       "hint": "This image appears behind the campaign card.",
       "uploadingLabel": "Uploading cover…",

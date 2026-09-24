@@ -11,6 +11,7 @@ import {
 import { dedupeByHash, resolveAssets, resolverStats } from "@/lib/adaptation/assets";
 import {
   adaptationManifestSchema,
+  adaptationSceneSchema,
   isSafeBundlePath,
   parseAdaptationManifest,
   referencedFiles,
@@ -506,6 +507,22 @@ const PROJECTION_INPUT = {
     timeline_summary: "",
   },
 };
+
+describe("scene schema", () => {
+  it("accepts narration placement notes longer than 40 characters", () => {
+    const s = scene(0);
+    s.narration = [
+      {
+        order: 0,
+        text: "Later…",
+        placement:
+          "Open the chapter with this caption directly above the wide establishing panel of the river crossing",
+      },
+    ];
+    const parsed = adaptationSceneSchema.safeParse(s);
+    expect(parsed.success).toBe(true);
+  });
+});
 
 describe("comic projection", () => {
   it("packs beats into pages and keeps every panel", () => {

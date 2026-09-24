@@ -251,7 +251,7 @@ function CampaignsPage() {
                 params={{ id: c.id }}
                 className="panel hover-lift relative flex min-h-[180px] flex-col overflow-hidden p-5 transition-colors hover:border-ring"
               >
-                <CampaignCoverBg path={coverPath} />
+                <CampaignCoverBg path={coverPath} positionY={coverPositionFromSettings(settings)} />
                 <div className="relative flex items-start justify-between gap-2">
                   <h2 className="font-display text-lg font-semibold">{c.name}</h2>
                   <Badge variant={c.gm_id === user?.id ? "default" : "outline"}>

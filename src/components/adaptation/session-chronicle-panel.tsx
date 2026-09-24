@@ -37,6 +37,7 @@ import {
   type SessionChronicleItem,
 } from "@/lib/adaptation/chronicle-api";
 import { useT, useFormatters } from "@/i18n/hooks";
+import { useCanUseAi } from "@/hooks/use-can-use-ai";
 
 /** Reads a dropped transcript file, extracting sensibly from JSON when possible. */
 async function extractTranscriptText(file: File): Promise<string> {
@@ -383,6 +384,7 @@ function ChronicleDetail({
   running: boolean;
   onRun: () => void;
 }) {
+  const aiAllowed = useCanUseAi();
   const { t } = useT("adaptation");
   const { t: tc } = useT("common");
   const [rawNotes, setRawNotes] = useState(chronicle.raw_notes);
@@ -552,7 +554,7 @@ function ChronicleDetail({
             <p className="font-medium">{t("chronicle.draftTitle")}</p>
             <p className="text-sm text-muted-foreground">{t("chronicle.draftDescription")}</p>
           </div>
-          <Button onClick={onRun} disabled={!canRun || running}>
+          <Button onClick={onRun} disabled={!canRun || running || !aiAllowed}>
             <Sparkles className="mr-1 h-4 w-4" />
             {running ? t("chronicle.running") : t("chronicle.runButton")}
           </Button>

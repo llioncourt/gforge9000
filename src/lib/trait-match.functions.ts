@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { MatchResolution } from "@/lib/trait-match";
+import { canUseAi } from "@/lib/ai-access";
 
 const Item = z.object({ kind: z.string().min(1).max(40), name: z.string().min(1).max(160) });
 
@@ -18,7 +19,8 @@ const MatchInput = z.object({
 export const matchImportedTraits = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => MatchInput.parse(input))
-  .handler(async ({ data }): Promise<MatchResolution[]> => {
+  .handler(async ({ data, context }): Promise<MatchResolution[]> => {
+    if (!canUseAi((context.claims as { email?: string }).email)) return [];
     const { requestTraitMatches } = await import("@/lib/trait-match.server");
     return requestTraitMatches(data.items, data.candidates);
   });

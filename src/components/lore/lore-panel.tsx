@@ -42,10 +42,12 @@ import { EntityThumb } from "@/components/lore/entity-thumb";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
 import { useLoreRealtime } from "@/hooks/use-lore-realtime";
 import { useT } from "@/i18n/hooks";
+import { useCanUseAi } from "@/hooks/use-can-use-ai";
 
 const GROUP_KEYS = ["world", "story", "play", "assets"] as const;
 
 export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const aiAllowed = useCanUseAi();
   const { t } = useT("lore");
   const { t: tc } = useT("common");
   const queryClient = useQueryClient();
@@ -207,6 +209,7 @@ export function LorePanel({ campaignId, isGm }: { campaignId: string; isGm: bool
               </Button>
               <Button
                 variant="outline"
+                disabled={!aiAllowed}
                 onClick={() => {
                   setDraftKind(
                     kindFilter !== "ALL" ? kindFilter : (kindsInGroup[0]?.kind ?? "NPC"),

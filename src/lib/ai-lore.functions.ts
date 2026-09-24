@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { buildLorePrompt, type LoreDraft } from "@/lib/ai-lore";
+import { assertAiAccess } from "@/lib/ai-access";
 
 const DraftInput = z.object({
   campaignId: z.string().uuid(),
@@ -15,6 +16,7 @@ export const draftLoreEntry = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => DraftInput.parse(input))
   .handler(async ({ data, context }): Promise<LoreDraft> => {
+    assertAiAccess(context.claims as { email?: unknown });
     // Only the campaign's game master may generate drafts.
     const { data: campaign, error } = await context.supabase
       .from("campaigns")

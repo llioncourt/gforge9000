@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { AI_STAGES } from "@/lib/adaptation/ai-schemas";
+import { assertAiAccess } from "@/lib/ai-access";
 
 /**
  * Authenticated entry point for the AI reconstruction pipeline.
@@ -26,6 +27,7 @@ export const runAdaptationStage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => inputSchema.parse(input))
   .handler(async ({ data, context }) => {
+    assertAiAccess(context.claims as { email?: unknown });
     // Reading the adaptation with the caller's client proves GM access: RLS
     // returns nothing for anyone else.
     const { data: project, error } = await (

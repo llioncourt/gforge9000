@@ -98,7 +98,7 @@ const narrationSchema = z
   .object({
     order: z.number().int().min(0),
     text: text(4000),
-    placement: text(40).default("caption"),
+    placement: text(400).default("caption"),
   })
   .strict();
 

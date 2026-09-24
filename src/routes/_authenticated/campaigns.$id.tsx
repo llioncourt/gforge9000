@@ -1304,10 +1304,10 @@ function CampaignCover({
             step={1}
             value={[positionY]}
             disabled={savePosition.isPending}
-            onValueChange={([v]) => setPositionDraft(v)}
+            onValueChange={([v]) => setPositionDraft(v ?? 0)}
             onValueCommit={([v]) => {
-              setPositionDraft(v);
-              savePosition.mutate(v);
+              setPositionDraft(v ?? 0);
+              savePosition.mutate(v ?? 0);
             }}
             aria-label={t("houseRules.cover.framing")}
           />

@@ -707,7 +707,7 @@ export function buildAdventureModuleProjection(
         events: scenes.map((scene, index) => ({
           order: index + 1,
           scene_key: scene.stable_key,
-          summary: scene.synopsis || scene.title,
+          summary: clip(scene.synopsis || scene.title, 4000),
         })),
       },
       getting_started: {

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/i18n/hooks";
+import { useCanUseAi } from "@/hooks/use-can-use-ai";
 import { upsertFacts, upsertScenes } from "@/lib/adaptation/api";
 import { runReconstruction, type ReconstructionResult } from "@/lib/adaptation/pipeline";
 import { scanCampaign, type ScanScope } from "@/lib/adaptation/scanner";
@@ -15,6 +16,7 @@ import type { StepProps } from "@/components/adaptation/adaptation-wizard";
 
 export function ReconstructionStep({ project, patch }: StepProps) {
   const { t } = useT("adaptation");
+  const aiAllowed = useCanUseAi();
   const queryClient = useQueryClient();
   const [instructions, setInstructions] = useState("");
   const [progress, setProgress] = useState<{ label: string; percent: number } | null>(null);
@@ -78,7 +80,7 @@ export function ReconstructionStep({ project, patch }: StepProps) {
         />
       </div>
 
-      <Button disabled={run.isPending} onClick={() => run.mutate()}>
+      <Button disabled={run.isPending || !aiAllowed} onClick={() => run.mutate()}>
         <Sparkles className="mr-1 h-4 w-4" />
         {run.isPending ? t("reconstruction.running") : t("reconstruction.runButton")}
       </Button>

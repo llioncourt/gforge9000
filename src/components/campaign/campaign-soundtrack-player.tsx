@@ -31,7 +31,11 @@ import {
   type SoundtrackAlbum,
   type SoundtrackTrack,
 } from "@/lib/campaign-soundtrack";
-import { listCampaignSoundFx, soundFxSignedUrl } from "@/lib/campaign-sound-fx";
+import {
+  listCampaignSoundFx,
+  soundFxReachesUser,
+  soundFxSignedUrl,
+} from "@/lib/campaign-sound-fx";
 import { derivePlaybackPosition, shouldCorrectDrift } from "@/lib/playback-anchor";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -153,13 +157,20 @@ export function CampaignSoundtrackProvider({
           table: "campaign_sound_fx_state",
           filter: `campaign_id=eq.${campaignId}`,
         },
-        (payload) => void play(payload.new as { event_id?: string; effect_id?: string | null }),
+        (payload) =>
+          void play(
+            payload.new as {
+              event_id?: string;
+              effect_id?: string | null;
+              target_user_ids?: string[] | null;
+            },
+          ),
       )
       .subscribe();
     return () => {
       void supabase.removeChannel(ch);
     };
-  }, [campaignId, volume]);
+  }, [campaignId, volume, userId]);
   useEffect(() => {
     if (!campaignId) return;
     const ch = supabase

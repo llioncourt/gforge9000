@@ -197,30 +197,7 @@ function AlbumCover({ album }: { album: SoundtrackAlbum }) {
     </Dialog>
   );
 }
-export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
-  const { t } = useT("media");
-  const { t: tc } = useT("common");
-  const player = useCampaignSoundtrack(),
-    qc = useQueryClient(),
-    [albumIndex, setAlbumIndex] = useState(0);
-  const focusItem = (useSearch({ strict: false }) as { item?: string }).item;
-  useEffect(() => {
-    if (!focusItem) return;
-    const byAlbum = player.albums.findIndex((a) => a.id === focusItem);
-    if (byAlbum >= 0) {
-      setAlbumIndex(byAlbum);
-      return;
-    }
-    const byTrack = player.albums.findIndex((a) =>
-      player.tracks.some((t) => t.album_id === a.id && t.id === focusItem),
-    );
-    if (byTrack >= 0) setAlbumIndex(byTrack);
-  }, [focusItem, player.albums, player.tracks]);
-  useEffect(() => {
-    setAlbumIndex((current) => Math.min(current, Math.max(0, player.albums.length - 1)));
-  }, [player.albums.length]);
-  const importer = useMutation({
-    mutationFn: async (file: File) => {
+export async function importSoundtrackArchive(campaignId: string, file: File, t: Translate) {
       const archive = unzipSync(new Uint8Array(await file.arrayBuffer())),
         pick = (p: string) => archive[p] ?? archive[p.replace(/^\.\//, "")],
         raw = archive["album.json"];
@@ -257,7 +234,32 @@ export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm
         { name: manifest.album.cover, bytes: cover },
         tracks,
       );
-    },
+}
+
+export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
+  const { t } = useT("media");
+  const { t: tc } = useT("common");
+  const player = useCampaignSoundtrack(),
+    qc = useQueryClient(),
+    [albumIndex, setAlbumIndex] = useState(0);
+  const focusItem = (useSearch({ strict: false }) as { item?: string }).item;
+  useEffect(() => {
+    if (!focusItem) return;
+    const byAlbum = player.albums.findIndex((a) => a.id === focusItem);
+    if (byAlbum >= 0) {
+      setAlbumIndex(byAlbum);
+      return;
+    }
+    const byTrack = player.albums.findIndex((a) =>
+      player.tracks.some((t) => t.album_id === a.id && t.id === focusItem),
+    );
+    if (byTrack >= 0) setAlbumIndex(byTrack);
+  }, [focusItem, player.albums, player.tracks]);
+  useEffect(() => {
+    setAlbumIndex((current) => Math.min(current, Math.max(0, player.albums.length - 1)));
+  }, [player.albums.length]);
+  const importer = useMutation({
+    mutationFn: (file: File) => importSoundtrackArchive(campaignId, file, t as Translate),
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ["campaign-soundtrack", campaignId] });
     },

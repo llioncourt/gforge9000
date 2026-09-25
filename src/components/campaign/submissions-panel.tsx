@@ -58,6 +58,7 @@ export function SubmissionsPanel({
 }) {
   const { t } = useT("campaigns");
   const { t: tc } = useT("common");
+  const { t: tMedia } = useT("media");
   const qc = useQueryClient();
   const key = ["campaign-submissions", campaignId];
   const list = useQuery({ queryKey: key, queryFn: () => listSubmissions(campaignId) });
@@ -87,11 +88,7 @@ export function SubmissionsPanel({
   const approve = useMutation({
     mutationFn: async (row: CampaignSubmission) => {
       const { importSoundtrackArchive } = await import("@/components/campaign/soundtrack-panel");
-      const { i18n } = await import("@/i18n");
-      const tm = i18n.getFixedT(null, "media") as unknown as (
-        k: string,
-        o?: Record<string, unknown>,
-      ) => string;
+      const tm = tMedia as unknown as (k: string, o?: Record<string, unknown>) => string;
       await approveSubmission(row, (cid, f) => importSoundtrackArchive(cid, f, tm));
     },
     onSuccess: () => {

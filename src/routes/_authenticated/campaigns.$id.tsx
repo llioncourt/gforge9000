@@ -83,6 +83,8 @@ import {
 } from "@/lib/campaign-cover";
 import { Slider } from "@/components/ui/slider";
 import { metaText } from "@/i18n/meta";
+import { SubmissionsPanel } from "@/components/campaign/submissions-panel";
+import { setMemberRole } from "@/lib/campaign-submissions";
 
 // Heavy campaign tabs load on demand — the campaign page ships a much
 // smaller first bundle and each panel is fetched only when its tab opens.
@@ -148,6 +150,7 @@ export const CAMPAIGN_TABS = [
   "notes",
   "members",
   "rules",
+  "submissions",
 ] as const;
 export type CampaignTab = (typeof CAMPAIGN_TABS)[number];
 export type MediaSubTab = "cover" | "videos" | "soundtrack" | "sound-fx";
@@ -243,6 +246,15 @@ function CampaignPage() {
   const knownPacks = useMemo(() => libraryPacks.data ?? [], [libraryPacks.data]);
 
   const isGm = campaign.data?.gm_id === user?.id;
+  const isProducer = (members.data ?? []).some(
+    (m) => m.user_id === user?.id && m.role === "producer",
+  );
+  const changeRole = useMutation({
+    mutationFn: (v: { userId: string; role: "player" | "producer" }) =>
+      setMemberRole(id, v.userId, v.role),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["members", id] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
   const settings = (campaign.data?.settings ?? {}) as Record<string, unknown>;
 
   const campaignRuleset = useMemo(() => rulesetFromSettings(settings), [settings]);
@@ -526,6 +538,7 @@ function CampaignPage() {
         <CampaignNav
           value={tabParam ?? "roster"}
           isGm={isGm}
+          isProducer={isProducer}
           adaptLabel={ta("tab")}
           onChange={(v) =>
             navigate({
@@ -1032,14 +1045,47 @@ function CampaignPage() {
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
-                  <Badge variant={m.role === "gm" ? "default" : "outline"}>
-                    {m.role === "gm" ? t("list.badge.gm") : t("list.badge.player")}
-                  </Badge>
+                  {isGm && m.role !== "gm" ? (
+                    <Select
+                      value={m.role}
+                      onValueChange={(v) =>
+                        changeRole.mutate({ userId: m.user_id, role: v as "player" | "producer" })
+                      }
+                    >
+                      <SelectTrigger className="h-8 w-32" aria-label={t("members.roleLabel")}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="player">{t("members.rolePlayer")}</SelectItem>
+                        <SelectItem value="producer">{t("members.roleProducer")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge variant={m.role === "gm" ? "default" : "outline"}>
+                      {m.role === "gm"
+                        ? t("list.badge.gm")
+                        : m.role === "producer"
+                          ? t("list.badge.producer")
+                          : t("list.badge.player")}
+                    </Badge>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </TabsContent>
+
+        {isGm || isProducer ? (
+          <TabsContent value="submissions" className="mt-6">
+            <SubmissionsPanel
+              campaignId={id}
+              isGm={isGm}
+              isProducer={isProducer}
+              userId={user?.id}
+              members={members.data ?? []}
+            />
+          </TabsContent>
+        ) : null}
 
         <TabsContent value="rules" className="mt-6">
           <HouseRules

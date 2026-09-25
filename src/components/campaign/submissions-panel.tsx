@@ -177,7 +177,10 @@ export function SubmissionsPanel({
               const f = files[0];
               if (!f) return;
               const err = validateSubmissionFile(kind, f);
-              if (err) return toast.error(err);
+              if (err) {
+                toast.error(err);
+                return;
+              }
               setFile(f);
               if (!title.trim()) setTitle(f.name.replace(/\.[^.]+$/, ""));
             }}
@@ -208,7 +211,7 @@ export function SubmissionsPanel({
                 <div className="min-w-0">
                   <p className="truncate font-medium">{row.title}</p>
                   <p className="text-xs text-muted-foreground">
-                    {t(`submissions.kinds.${row.kind}`)} · {formatBytes(row.byte_size)} ·{" "}
+                    {t(`submissions.kinds.${row.kind as SubmissionKind}`)} · {formatBytes(row.byte_size)} ·{" "}
                     {t("submissions.by", { name: nameOf(row.submitted_by) })}
                   </p>
                 </div>

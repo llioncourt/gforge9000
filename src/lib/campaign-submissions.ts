@@ -89,7 +89,7 @@ export async function submissionUrl(path: string) {
     .from(CAMPAIGN_SUBMISSIONS_BUCKET)
     .createSignedUrl(path, 60 * 60);
   fail(error);
-  return data.signedUrl;
+  return data?.signedUrl ?? "";
 }
 
 /**

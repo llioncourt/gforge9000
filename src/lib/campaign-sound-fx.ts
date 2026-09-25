@@ -121,7 +121,15 @@ export async function deleteCampaignSoundFx(effect: CampaignSoundFx) {
   await supabase.storage.from(CAMPAIGN_SOUND_FX_BUCKET).remove([effect.storage_path]);
 }
 
-export async function triggerCampaignSoundFx(campaignId: string, effectId: string) {
+/**
+ * Fire a one-shot effect. An empty `targetUserIds` means everyone in the
+ * campaign; otherwise only the listed members play it.
+ */
+export async function triggerCampaignSoundFx(
+  campaignId: string,
+  effectId: string,
+  targetUserIds: string[] = [],
+) {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("You need to be signed in.");
   const result = await supabase.from("campaign_sound_fx_state").upsert({
@@ -130,6 +138,13 @@ export async function triggerCampaignSoundFx(campaignId: string, effectId: strin
     event_id: crypto.randomUUID(),
     changed_by: auth.user.id,
     changed_at: new Date().toISOString(),
+    target_user_ids: [...new Set(targetUserIds)],
   });
   fail(result.error);
+}
+
+/** Decide whether a given listener should hear a triggered effect. */
+export function soundFxReachesUser(targetUserIds: string[] | null | undefined, userId: string) {
+  if (!targetUserIds || targetUserIds.length === 0) return true;
+  return targetUserIds.includes(userId);
 }

@@ -125,12 +125,14 @@ export function CampaignNav({
   value,
   onChange,
   isGm,
+  isProducer = false,
   adaptLabel,
   className,
 }: {
   value: string;
   onChange: (next: string) => void;
   isGm: boolean;
+  isProducer?: boolean;
   adaptLabel: string;
   className?: string;
 }) {

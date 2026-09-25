@@ -607,8 +607,8 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
         "list_sound_fx (read), create_sound_fx/update_sound_fx/" +
         "delete_sound_fx (GM only, delete_sound_fx removes the stored file, changes/deletes data), " +
         "reorder_sound_fx (GM only, rewrites play order, changes data), set_sound_fx_visibility " +
-        "(GM only, changes data), get_sound_fx_url (short-lived signed URL), trigger_sound_fx (GM only, optional target_user_ids limits who hears it, " +
-        "only, fires a shared event, changes data), prepare_effect_upload/" +
+        "(GM only, changes data), get_sound_fx_url (short-lived signed URL), trigger_sound_fx (GM " +
+        "only, fires a shared event, optional target_user_ids limits who hears it, changes data), prepare_effect_upload/" +
         "upload_effect_base64 (GM only, stage or create a sound effect, changes data; " +
         "upload_effect_from_url is disabled for security reasons).",
       inputSchema: input,

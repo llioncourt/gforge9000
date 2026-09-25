@@ -6,6 +6,7 @@ import {
   Dices,
   Film,
   Grid3X3,
+  Inbox,
   History,
   Library as LibraryIcon,
   ListTree,
@@ -48,12 +49,15 @@ export function buildCampaignNavGroups(opts: {
   t: (k: string) => string;
   adaptLabel: string;
   isGm: boolean;
+  isProducer?: boolean;
 }): { groups: CampaignNavGroup[]; standalone: CampaignNavItem[] } {
-  const { t, adaptLabel, isGm } = opts;
+  const { t, adaptLabel, isGm, isProducer = false } = opts;
 
   const settingsItems: CampaignNavItem[] = [
     { value: "rules", label: t("tabs.rules"), icon: Settings2 },
   ];
+  if (isGm || isProducer)
+    settingsItems.push({ value: "submissions", label: t("tabs.submissions"), icon: Inbox });
 
   const storyItems: CampaignNavItem[] = [
     { value: "story", label: t("tabs.story"), icon: Scroll },
@@ -136,6 +140,7 @@ export function CampaignNav({
     t: t as unknown as (k: string) => string,
     adaptLabel,
     isGm,
+    isProducer,
   });
 
   const select = (next: string) => {

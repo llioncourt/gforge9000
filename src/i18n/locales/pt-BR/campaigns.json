@@ -42,7 +42,8 @@
     "notes": "Notas e handouts",
     "members": "Membros",
     "rules": "Regras da casa",
-    "cover": "Capa"
+    "cover": "Capa",
+    "submissions": "Envios de conteúdo"
   },
   "roster": {
     "empty": "Nenhum personagem enviado ainda. Os jogadores anexam um personagem abaixo.",
@@ -114,7 +115,10 @@
     "transfer": "Transferir",
     "removeAria": "Remover {{name}} da campanha",
     "removeConfirmTitle": "Remover este membro?",
-    "removeConfirmBody": "{{name}} perde o acesso a esta campanha. Os personagens dele permanecem na conta dele e podem ser reanexados depois."
+    "removeConfirmBody": "{{name}} perde o acesso a esta campanha. Os personagens dele permanecem na conta dele e podem ser reanexados depois.",
+    "roleLabel": "Papel",
+    "rolePlayer": "Jogador",
+    "roleProducer": "Produtor"
   },
   "houseRules": {
     "cover": {
@@ -267,7 +271,8 @@
     "empty": "Nenhuma campanha ainda. Crie uma como mestre, ou entre com um código do seu mestre.",
     "badge": {
       "gm": "Mestre",
-      "player": "Jogador"
+      "player": "Jogador",
+      "producer": "Produtor"
     },
     "noPremise": "Nenhuma premissa escrita ainda.",
     "points": "{{count}} pts",
@@ -321,5 +326,34 @@
     "cast": "Elenco",
     "settings": "Ajustes",
     "menu": "Menu"
+  },
+  "submissions": {
+    "title": "Envios de conteúdo",
+    "intro": "Produtores enviam conteúdo aqui. Ele entra na campanha depois que o Mestre aprovar.",
+    "gmIntro": "Revise o que seus produtores enviaram. Itens aprovados vão para o lugar deles na campanha.",
+    "send": "Enviar conteúdo",
+    "kind": "Tipo",
+    "kinds": {
+      "video": "Vídeo",
+      "sound_fx": "Efeito sonoro",
+      "image": "Imagem",
+      "soundtrack": "Álbum de trilha (ZIP)"
+    },
+    "titleLabel": "Título",
+    "videoType": "Tipo de vídeo",
+    "drop": "Solte um arquivo aqui ou clique para escolher",
+    "submit": "Enviar para aprovação",
+    "sending": "Enviando…",
+    "empty": "Nada aguardando aprovação.",
+    "by": "Enviado por {{name}}",
+    "approve": "Aprovar",
+    "delete": "Excluir",
+    "preview": "Prévia",
+    "sent": "Enviado para aprovação.",
+    "approved": "Aprovado e adicionado à campanha.",
+    "deleted": "Envio excluído.",
+    "deleteTitle": "Excluir este envio?",
+    "deleteBody": "O arquivo será removido e não poderá ser recuperado.",
+    "needTitle": "Informe um título."
   }
 }

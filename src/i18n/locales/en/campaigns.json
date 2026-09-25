@@ -42,7 +42,8 @@
     "notes": "Notes & handouts",
     "members": "Members",
     "rules": "House rules",
-    "cover": "Cover"
+    "cover": "Cover",
+    "submissions": "Content submissions"
   },
   "roster": {
     "empty": "No characters submitted yet. Players attach a character below.",
@@ -114,7 +115,10 @@
     "transfer": "Transfer",
     "removeAria": "Remove {{name}} from the campaign",
     "removeConfirmTitle": "Remove this member?",
-    "removeConfirmBody": "{{name}} loses access to this campaign. Their characters stay in their account and can be re-attached later."
+    "removeConfirmBody": "{{name}} loses access to this campaign. Their characters stay in their account and can be re-attached later.",
+    "roleLabel": "Role",
+    "rolePlayer": "Player",
+    "roleProducer": "Producer"
   },
   "houseRules": {
     "cover": {
@@ -267,7 +271,8 @@
     "empty": "No campaigns yet. Create one as GM, or join with a code from your Game Master.",
     "badge": {
       "gm": "GM",
-      "player": "Player"
+      "player": "Player",
+      "producer": "Producer"
     },
     "noPremise": "No premise written yet.",
     "points": "{{count}} pts",
@@ -321,5 +326,34 @@
     "cast": "Cast",
     "settings": "Settings",
     "menu": "Menu"
+  },
+  "submissions": {
+    "title": "Content submissions",
+    "intro": "Producers send content here. It joins the campaign once the Game Master approves it.",
+    "gmIntro": "Review what your producers sent. Approved items move to their place in the campaign.",
+    "send": "Send content",
+    "kind": "Type",
+    "kinds": {
+      "video": "Video",
+      "sound_fx": "Sound effect",
+      "image": "Image",
+      "soundtrack": "Soundtrack album (ZIP)"
+    },
+    "titleLabel": "Title",
+    "videoType": "Video type",
+    "drop": "Drop a file here or click to choose",
+    "submit": "Send for approval",
+    "sending": "Sending…",
+    "empty": "Nothing waiting for approval.",
+    "by": "Sent by {{name}}",
+    "approve": "Approve",
+    "delete": "Delete",
+    "preview": "Preview",
+    "sent": "Sent for approval.",
+    "approved": "Approved and added to the campaign.",
+    "deleted": "Submission deleted.",
+    "deleteTitle": "Delete this submission?",
+    "deleteBody": "The file is removed and cannot be recovered.",
+    "needTitle": "Enter a title."
   }
 }

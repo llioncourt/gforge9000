@@ -55,6 +55,11 @@
     }
   },
   "soundFx": {
+    "audience": {
+      "title": "Quem escuta",
+      "hint": "Escolha uma ou mais pessoas, ou deixe todos selecionados.",
+      "everyone": "Todos"
+    },
     "upload": {
       "title": "Enviar efeito sonoro",
       "description": "Os efeitos tocam uma vez para todos que estão nesta campanha.",

@@ -37,6 +37,7 @@ import {
   type CampaignSoundFx,
 } from "@/lib/campaign-sound-fx";
 import { buildSoundFxPackZip, readSoundFxPack } from "@/lib/sound-fx-pack";
+import { listMembers } from "@/lib/api";
 import { useT } from "@/i18n/hooks";
 
 export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {
@@ -65,8 +66,19 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
     },
     onError: (error: Error) => toast.error(error.message),
   });
+  const members = useQuery({
+    queryKey: ["campaign-members", campaignId],
+    queryFn: () => listMembers(campaignId),
+    enabled: isGm,
+  });
+  const [audience, setAudience] = useState<string[]>([]);
+  const toggleAudience = (id: string, checked: boolean) =>
+    setAudience((current) =>
+      checked ? [...new Set([...current, id])] : current.filter((item) => item !== id),
+    );
   const trigger = useMutation({
-    mutationFn: (effect: CampaignSoundFx) => triggerCampaignSoundFx(campaignId, effect.id),
+    mutationFn: (effect: CampaignSoundFx) =>
+      triggerCampaignSoundFx(campaignId, effect.id, audience),
     onError: (error: Error) => toast.error(error.message),
   });
   const [selected, setSelected] = useState<string[]>([]);
@@ -188,6 +200,32 @@ export function SoundFxPanel({ campaignId, isGm }: { campaignId: string; isGm: b
               run={importPackFile}
             />
             {exportTask.node}
+          </div>
+        </section>
+      ) : null}
+      {isGm ? (
+        <section className="panel p-5">
+          <h2 className="font-display text-lg font-semibold">{t("soundFx.audience.title")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("soundFx.audience.hint")}</p>
+          <div className="mt-4 flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={audience.length === 0}
+                onCheckedChange={(checked) => {
+                  if (checked === true) setAudience([]);
+                }}
+              />
+              {t("soundFx.audience.everyone")}
+            </label>
+            {(members.data ?? []).map((member) => (
+              <label key={member.user_id} className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  checked={audience.includes(member.user_id)}
+                  onCheckedChange={(checked) => toggleAudience(member.user_id, checked === true)}
+                />
+                {member.display_name}
+              </label>
+            ))}
           </div>
         </section>
       ) : null}

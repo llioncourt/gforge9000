@@ -357,9 +357,18 @@ const input = z.discriminatedUnion("action", [
     .object({ action: z.literal("get_sound_fx_url"), effect_id: uuid })
     .describe("Get a short-lived signed URL to play a sound effect."),
   z
-    .object({ action: z.literal("trigger_sound_fx"), campaign_id: uuid, effect_id: uuid })
+    .object({
+      action: z.literal("trigger_sound_fx"),
+      campaign_id: uuid,
+      effect_id: uuid,
+      target_user_ids: z
+        .array(uuid)
+        .optional()
+        .describe("Only these campaign members hear it. Omit or leave empty for everyone."),
+    })
     .describe(
-      "Fire a one-shot sound effect event for everyone in the campaign. GM only, changes data.",
+      "Fire a one-shot sound effect event for the campaign, optionally only for selected members " +
+        "(target_user_ids). GM only, changes data.",
     ),
   z
     .object({
@@ -599,7 +608,7 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
         "delete_sound_fx (GM only, delete_sound_fx removes the stored file, changes/deletes data), " +
         "reorder_sound_fx (GM only, rewrites play order, changes data), set_sound_fx_visibility " +
         "(GM only, changes data), get_sound_fx_url (short-lived signed URL), trigger_sound_fx (GM " +
-        "only, fires a shared event, changes data), prepare_effect_upload/" +
+        "only, fires a shared event, optional target_user_ids limits who hears it, changes data), prepare_effect_upload/" +
         "upload_effect_base64 (GM only, stage or create a sound effect, changes data; " +
         "upload_effect_from_url is disabled for security reasons).",
       inputSchema: input,
@@ -1192,6 +1201,7 @@ export function registerCampaignAudio(tool: ToolRegistrar, ctx: McpToolContext):
             event_id: crypto.randomUUID(),
             changed_by: ctx.userId,
             changed_at: new Date().toISOString(),
+            target_user_ids: [...new Set(i.target_user_ids ?? [])],
           })
           .select("*")
           .single();

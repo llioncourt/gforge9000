@@ -754,6 +754,7 @@ export type Database = {
           changed_by: string
           effect_id: string | null
           event_id: string
+          target_user_ids: string[]
         }
         Insert: {
           campaign_id: string
@@ -761,6 +762,7 @@ export type Database = {
           changed_by?: string
           effect_id?: string | null
           event_id?: string
+          target_user_ids?: string[]
         }
         Update: {
           campaign_id?: string
@@ -768,6 +770,7 @@ export type Database = {
           changed_by?: string
           effect_id?: string | null
           event_id?: string
+          target_user_ids?: string[]
         }
         Relationships: [
           {

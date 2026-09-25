@@ -55,6 +55,11 @@
     }
   },
   "soundFx": {
+    "audience": {
+      "title": "Who hears it",
+      "hint": "Pick one or more people, or leave everyone selected.",
+      "everyone": "Everyone"
+    },
     "upload": {
       "title": "Upload Sound FX",
       "description": "Effects play once for everyone currently in this campaign.",

@@ -981,6 +981,59 @@ export type Database = {
           },
         ]
       }
+      campaign_submissions: {
+        Row: {
+          byte_size: number
+          campaign_id: string
+          created_at: string
+          file_name: string
+          id: string
+          kind: string
+          mime_type: string
+          storage_path: string
+          submitted_by: string
+          title: string
+          updated_at: string
+          video_type: string | null
+        }
+        Insert: {
+          byte_size: number
+          campaign_id: string
+          created_at?: string
+          file_name: string
+          id?: string
+          kind: string
+          mime_type: string
+          storage_path: string
+          submitted_by: string
+          title: string
+          updated_at?: string
+          video_type?: string | null
+        }
+        Update: {
+          byte_size?: number
+          campaign_id?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          kind?: string
+          mime_type?: string
+          storage_path?: string
+          submitted_by?: string
+          title?: string
+          updated_at?: string
+          video_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_submissions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_video_playback: {
         Row: {
           anchor_position_seconds: number
@@ -2634,6 +2687,10 @@ export type Database = {
       }
       revoke_entity_knowledge: { Args: { _grant: string }; Returns: Json }
       rotate_campaign_invite: { Args: { _campaign: string }; Returns: string }
+      set_campaign_member_role: {
+        Args: { _campaign: string; _role: string; _user: string }
+        Returns: undefined
+      }
       set_weapon_ammo: {
         Args: { _entry: string; _mode: string; _shots: number }
         Returns: {

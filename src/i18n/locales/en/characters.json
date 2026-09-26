@@ -591,6 +591,28 @@
     "needKey": "Add your ElevenLabs key in your profile to give this character a voice.",
     "pick": "Choose a voice",
     "linePlaceholder": "Line to speak",
-    "speak": "Speak"
+    "speak": "Speak",
+    "lines": {
+      "open": "Lines",
+      "title": "Character lines",
+      "new": "New line",
+      "label": "Label (optional)",
+      "saveGenerate": "Generate and save",
+      "saveOnly": "Save without audio",
+      "empty": "No lines yet.",
+      "play": "Listen",
+      "stop": "Stop",
+      "generate": "Generate audio",
+      "regenerate": "Regenerate audio",
+      "stale": "Out of date",
+      "visible": "Visible to players",
+      "delete": "Delete line",
+      "deleteConfirm": "Delete this line? This cannot be undone.",
+      "cancel": "Cancel",
+      "noVoice": "Choose a voice for this character first.",
+      "tooLong": "Lines can have up to 2500 characters.",
+      "noAudio": "No audio yet",
+      "dragHint": "Drag to reorder"
+    }
   }
 }

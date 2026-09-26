@@ -27,8 +27,8 @@ function collectSchemas(ctx: McpToolContext) {
 }
 
 describe("MCP schema-cache hoisting (SCHEMACACHE)", () => {
-  it("keeps exactly 39 top-level tools", () => {
-    expect(MCP_TOOL_NAMES.length).toBe(39);
+  it("keeps exactly 40 top-level tools", () => {
+    expect(MCP_TOOL_NAMES.length).toBe(40);
   });
 
   it("reuses the same prepared JSON schema object across two server builds", () => {

@@ -31,6 +31,7 @@ import { registerCharacterPortrait } from "@/lib/mcp/domains/character-portrait.
 import { registerLibrary } from "@/lib/mcp/domains/library.server";
 import { registerCampaignPackage } from "@/lib/mcp/domains/campaign-package.server";
 import { registerAdaptation } from "@/lib/mcp/domains/adaptation.server";
+import { registerCharacterVoiceLines } from "@/lib/mcp/domains/character-voice-lines.server";
 
 /**
  * Every registrar function, in the exact order tools are exposed. This is the
@@ -59,6 +60,7 @@ const REGISTRARS: ((tool: ToolRegistrar, ctx: McpToolContext) => void)[] = [
   registerLibrary,
   registerCampaignPackage,
   registerAdaptation,
+  registerCharacterVoiceLines,
 ];
 
 /** Registers every tool this server exposes against a real ToolRegistrar. */

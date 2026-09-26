@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useT } from "@/i18n/hooks";
+import { VoiceLinesDialog } from "./voice-lines-dialog";
 import { getVoiceKeyStatus, getVoices, speakCharacter } from "@/lib/tts.functions";
 
 /** Character voice: pick one of your own voices, then hear lines in it. */
@@ -32,15 +33,18 @@ export function VoicePanel({
   const [text, setText] = useState("");
   const speak = useMutation({
     mutationFn: () => speakFn({ data: { characterId, text } }),
-    onSuccess: (r) => void new Audio(`data:${r.mime};base64,${r.audio_base64}`).play(),
+    onSuccess: (r) => void new Audio(r.audio_url).play(),
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
     <div className="space-y-2 rounded-lg border border-border p-3">
-      <Label className="flex items-center gap-2">
-        <Volume2 className="size-4" /> {t("voice.title")}
-      </Label>
+      <div className="flex items-center justify-between gap-2">
+        <Label className="flex items-center gap-2">
+          <Volume2 className="size-4" /> {t("voice.title")}
+        </Label>
+        <VoiceLinesDialog characterId={characterId} hasVoice={!!voiceId} hasKey={status.data?.hasKey === true} />
+      </div>
       {status.data && !status.data.hasKey ? (
         <p className="text-xs text-muted-foreground">{t("voice.needKey")}</p>
       ) : (

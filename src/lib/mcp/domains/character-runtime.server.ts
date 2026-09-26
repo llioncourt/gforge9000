@@ -135,10 +135,13 @@ const input = z.discriminatedUnion("action", [
       action: z.literal("speak"),
       character_id: uuid,
       text: z.string().min(1).max(TTS_MAX_CHARS),
+      inline: z.boolean().optional(),
     })
     .describe(
       "Speak a line in the character's saved voice using the CALLER's own ElevenLabs account " +
-        "(their credits). Returns base64 MP3 audio. Requires a voice chosen on the sheet and the " +
+        "(their credits). Saves nothing on the sheet; returns a 15-minute signed audio_url, " +
+        "duration_seconds, characters_used, voice_name and cached (repeat lines reuse stored audio). " +
+        "audio_base64 only when inline is true. Requires a voice chosen on the sheet and the " +
         "caller's key saved in their profile. Does not change data.",
     ),
   z
@@ -174,7 +177,7 @@ export function registerCharacterRuntime(tool: ToolRegistrar, ctx: McpToolContex
         "mode's shots to an exact value, owner or campaign GM only, changes data), adjust_ammo " +
         "(add or subtract shots atomically, clamped at zero, owner or campaign GM only, changes " +
         "data), speak (voice a line in the character's saved voice with the caller's own " +
-        "ElevenLabs account; returns base64 MP3; does not change data).",
+        "ElevenLabs account; returns a signed audio URL; does not change the sheet).",
       inputSchema: input,
       outputSchema: domainOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
@@ -183,7 +186,7 @@ export function registerCharacterRuntime(tool: ToolRegistrar, ctx: McpToolContex
       speak: async (i) => {
         const access = await loadCharacter(ctx, i.character_id);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table newer than generated types
-        const audio = await speakAsCharacter(ctx.supabase as any, ctx.userId, i.character_id, i.text);
+        const audio = await speakAsCharacter(ctx.supabase as any, ctx.userId, i.character_id, i.text, i.inline ?? false);
         return detailReply(`Spoke a line as "${access.row.name}".`, {
           character_id: i.character_id,
           ...audio,

@@ -654,7 +654,7 @@ export function buildAdventureModuleProjection(
   const first = encounters[0];
   const hooks = scenes.slice(0, 1).map((scene) => ({
     key: `hook:${scene.stable_key}`,
-    text: scene.dramatic_goal || scene.synopsis,
+    text: clip(scene.dramatic_goal || scene.synopsis, 2000),
     provenance_type: scene.provenance_type,
     source_refs: scene.source_refs,
   }));

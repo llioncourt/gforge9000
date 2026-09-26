@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { countLibrary, createCharacter, listCampaigns, listCharacters, listRolls } from "@/lib/api";
-import { CardPortraitBg } from "@/components/character/card-portrait-bg";
+import { PortraitFrame, usePortraitUrl } from "@/components/character/portrait";
 import { McpConsentResume } from "@/components/app/mcp-consent-resume";
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";

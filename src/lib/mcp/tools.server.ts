@@ -6,7 +6,7 @@
  * this path. On top of RLS, the application's own Game Master / owner rules
  * are checked explicitly so a write never depends on a policy alone.
  *
- * This file is a thin composition root: the 39 tools themselves live in
+ * This file is a thin composition root: the 40 tools themselves live in
  * `src/lib/mcp/domains/*.server.ts`, registered through the single registry
  * in `src/lib/mcp/domains/index.server.ts`. `MCP_TOOL_NAMES` is re-exported
  * from that registry so it can never drift from what actually gets

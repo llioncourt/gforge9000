@@ -591,6 +591,28 @@
     "needKey": "Adicione sua chave do ElevenLabs no seu perfil para dar voz a este personagem.",
     "pick": "Escolha uma voz",
     "linePlaceholder": "Fala do personagem",
-    "speak": "Falar"
+    "speak": "Falar",
+    "lines": {
+      "open": "Falas",
+      "title": "Falas do personagem",
+      "new": "Nova fala",
+      "label": "Rótulo (opcional)",
+      "saveGenerate": "Gerar e salvar",
+      "saveOnly": "Salvar sem áudio",
+      "empty": "Nenhuma fala ainda.",
+      "play": "Ouvir",
+      "stop": "Parar",
+      "generate": "Gerar áudio",
+      "regenerate": "Regenerar áudio",
+      "stale": "Desatualizada",
+      "visible": "Visível para jogadores",
+      "delete": "Excluir fala",
+      "deleteConfirm": "Excluir esta fala? Não dá para desfazer.",
+      "cancel": "Cancelar",
+      "noVoice": "Escolha uma voz para este personagem primeiro.",
+      "tooLong": "As falas podem ter até 2500 caracteres.",
+      "noAudio": "Sem áudio ainda",
+      "dragHint": "Arraste para reordenar"
+    }
   }
 }

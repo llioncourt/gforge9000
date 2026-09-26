@@ -22,7 +22,7 @@ describe("assistant tool surface", () => {
       (server as unknown as { _registeredTools: Record<string, unknown> })._registeredTools,
     );
     expect(registered.sort()).toEqual([...MCP_TOOL_NAMES].sort());
-    expect(registered).toHaveLength(39);
+    expect(registered).toHaveLength(40);
     expect(new Set(MCP_TOOL_NAMES).size).toBe(MCP_TOOL_NAMES.length);
   });
 
@@ -1462,6 +1462,6 @@ describe("pack linking contracts", () => {
   });
 
   it("does not add any new tool", () => {
-    expect(MCP_TOOL_NAMES).toHaveLength(39);
+    expect(MCP_TOOL_NAMES).toHaveLength(40);
   });
 });

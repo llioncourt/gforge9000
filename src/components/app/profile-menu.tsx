@@ -40,6 +40,7 @@ import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 import { hasRecentAuth } from "@/lib/reauth";
 import { supabase } from "@/integrations/supabase/client";
+import { VoiceKeySection } from "@/components/app/voice-key-section";
 
 const THEME_KEY = "ucf:light-theme";
 
@@ -289,6 +290,7 @@ export function ProfileMenu({ onSignOut }: { onSignOut: () => void }) {
               <Label>{t("profile.email")}</Label>
               <Input value={user?.email ?? ""} readOnly disabled />
             </div>
+            <VoiceKeySection />
             <div className="space-y-3 rounded-lg border border-destructive/40 p-4">
               <div className="flex items-start gap-3">
                 <ShieldAlert className="mt-0.5 size-5 shrink-0 text-destructive" />

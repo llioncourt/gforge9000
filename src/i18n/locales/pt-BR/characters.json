@@ -585,5 +585,12 @@
         "levels_over_max": "Os níveis deste item ({{value}}) estão acima do que o pacote de conteúdo permite agora ({{allowed}}). Os níveis escolhidos foram mantidos — nada foi alterado automaticamente."
       }
     }
+  },
+  "voice": {
+    "title": "Voz",
+    "needKey": "Adicione sua chave do ElevenLabs no seu perfil para dar voz a este personagem.",
+    "pick": "Escolha uma voz",
+    "linePlaceholder": "Fala do personagem",
+    "speak": "Falar"
   }
 }

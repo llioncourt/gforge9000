@@ -30,5 +30,14 @@
   "language": {
     "title": "Language",
     "description": "Choose the interface language."
+  },
+  "voice": {
+    "title": "ElevenLabs voices",
+    "description": "Character voices use your own ElevenLabs account.",
+    "placeholder": "Your ElevenLabs API key",
+    "saved": "Key saved.",
+    "connected": "Connected",
+    "save": "Save key",
+    "remove": "Remove key"
   }
 }

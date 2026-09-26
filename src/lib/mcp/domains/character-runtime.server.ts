@@ -22,6 +22,7 @@ import {
 } from "@/lib/mcp/kit.server";
 import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.server";
 import type { Database } from "@/integrations/supabase/types";
+import { speakAsCharacter, TTS_MAX_CHARS } from "@/lib/tts.server";
 import type { CharacterEntry, CharacterRecord } from "@/rules";
 import { rulesetFromSettings } from "@/rules/campaign-ruleset";
 import { validateCharacter } from "@/lib/pack-validation";
@@ -130,6 +131,17 @@ const input = z.discriminatedUnion("action", [
         "adjust_weapon_ammo RPC, clamped at zero. Owner or campaign GM only. Changes data.",
     ),
   z
+    .object({
+      action: z.literal("speak"),
+      character_id: uuid,
+      text: z.string().min(1).max(TTS_MAX_CHARS),
+    })
+    .describe(
+      "Speak a line in the character's saved voice using the CALLER's own ElevenLabs account " +
+        "(their credits). Returns base64 MP3 audio. Requires a voice chosen on the sheet and the " +
+        "caller's key saved in their profile. Does not change data.",
+    ),
+  z
     .object({ action: z.literal("validate"), character_id: uuid })
     .describe(
       "Check a sheet without changing anything: point totals against the sheet budget and any " +
@@ -161,12 +173,23 @@ export function registerCharacterRuntime(tool: ToolRegistrar, ctx: McpToolContex
         "update_character), list_ammo (read a sheet's weapon ammo rows), set_ammo (set an attack " +
         "mode's shots to an exact value, owner or campaign GM only, changes data), adjust_ammo " +
         "(add or subtract shots atomically, clamped at zero, owner or campaign GM only, changes " +
-        "data).",
+        "data), speak (voice a line in the character's saved voice with the caller's own " +
+        "ElevenLabs account; returns base64 MP3; does not change data).",
       inputSchema: input,
       outputSchema: domainOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     },
     actionRouter<z.infer<typeof input>>({
+      speak: async (i) => {
+        const access = await loadCharacter(ctx, i.character_id);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table newer than generated types
+        const audio = await speakAsCharacter(ctx.supabase as any, ctx.userId, i.character_id, i.text);
+        return detailReply(`Spoke a line as "${access.row.name}".`, {
+          character_id: i.character_id,
+          ...audio,
+        });
+      },
+
       get: async (i) => {
         const access = await loadCharacter(ctx, i.character_id);
         const ammo = await listAmmoRows(ctx, i.character_id);

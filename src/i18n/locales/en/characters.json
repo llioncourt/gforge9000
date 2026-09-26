@@ -585,5 +585,12 @@
         "levels_over_max": "This item's levels ({{value}}) are above what the content pack now allows ({{allowed}}). Your chosen levels were kept — nothing was changed automatically."
       }
     }
+  },
+  "voice": {
+    "title": "Voice",
+    "needKey": "Add your ElevenLabs key in your profile to give this character a voice.",
+    "pick": "Choose a voice",
+    "linePlaceholder": "Line to speak",
+    "speak": "Speak"
   }
 }

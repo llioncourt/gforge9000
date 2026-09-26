@@ -122,6 +122,7 @@ import { buildLink, loadPackItem } from "@/lib/pack-link-service";
 import { invalidatePackLinkQueries } from "@/components/character/pack-link";
 import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
 import { ModelPanel } from "@/components/character/model-panel";
+import { VoicePanel } from "@/components/character/voice-panel";
 import { parseModelTransform } from "@/lib/model3d";
 import { allowedPacksOf, pickerPacks } from "@/lib/packs";
 import { buildImagePrompt } from "@/lib/image-prompt";
@@ -658,6 +659,11 @@ function CharacterPage() {
                     onChange={(p) => patch({ model_path: p })}
                     transform={parseModelTransform(form.model_transform)}
                     onTransformChange={(t) => patch({ model_transform: t })}
+                  />
+                  <VoicePanel
+                    characterId={id}
+                    voiceId={form.voice_id ?? null}
+                    onChange={(v) => patch(v)}
                   />
                 </div>
 

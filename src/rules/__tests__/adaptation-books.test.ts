@@ -282,4 +282,18 @@ describe("large campaigns stay within package limits", () => {
     const mod = buildAdventureModuleProjection(big, { ...DEFAULT_ADVENTURE_MODULE, title: "M" });
     expect(adventureModuleProjectionSchema.parse(mod)).toBeTruthy();
   });
+
+  it("adventure module hook survives empty dramatic_goal with long synopsis", () => {
+    const big = input(7);
+    // First scene has no dramatic goal and a synopsis longer than the
+    // 2000-char hook limit — the exact path that used to abort the bundle.
+    big.scenes[0] = {
+      ...big.scenes[0]!,
+      dramatic_goal: "",
+      synopsis: "S".repeat(8000),
+    };
+    const mod = buildAdventureModuleProjection(big, { ...DEFAULT_ADVENTURE_MODULE, title: "M" });
+    expect(adventureModuleProjectionSchema.parse(mod)).toBeTruthy();
+    expect(mod.target_projection.hooks[0]!.text.length).toBeLessThanOrEqual(2000);
+  });
 });

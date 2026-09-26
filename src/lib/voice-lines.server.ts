@@ -84,7 +84,7 @@ async function attachAudio(db: Db, userId: string, line: VoiceLine) {
 export async function createLine(
   db: Db,
   userId: string,
-  input: { character_id: string; text: string; label?: string | null; generate_audio?: boolean },
+  input: { character_id: string; text: string; label?: string | null | undefined; generate_audio?: boolean | undefined },
 ): Promise<VoiceLine> {
   const text = validateText(input.text);
   const ch = await loadCharacterVoice(db, input.character_id);
@@ -118,7 +118,13 @@ export async function createLine(
 
 export async function updateLine(
   db: Db,
-  input: { line_id: string; text?: string; label?: string | null; position?: number; visible_to_players?: boolean },
+  input: {
+    line_id: string;
+    text?: string | undefined;
+    label?: string | null | undefined;
+    position?: number | undefined;
+    visible_to_players?: boolean | undefined;
+  },
 ): Promise<VoiceLine> {
   const patch: Record<string, unknown> = {};
   if (input.text !== undefined) patch["text"] = validateText(input.text);

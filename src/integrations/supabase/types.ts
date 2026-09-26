@@ -1355,6 +1355,8 @@ export type Database = {
           status: number
           tech_level: number
           updated_at: string
+          voice_id: string | null
+          voice_name: string | null
           wealth: string
           will_delta: number
         }
@@ -1393,6 +1395,8 @@ export type Database = {
           status?: number
           tech_level?: number
           updated_at?: string
+          voice_id?: string | null
+          voice_name?: string | null
           wealth?: string
           will_delta?: number
         }
@@ -1431,6 +1435,8 @@ export type Database = {
           status?: number
           tech_level?: number
           updated_at?: string
+          voice_id?: string | null
+          voice_name?: string | null
           wealth?: string
           will_delta?: number
         }
@@ -2475,6 +2481,24 @@ export type Database = {
           },
         ]
       }
+      user_voice_keys: {
+        Row: {
+          api_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2640,6 +2664,8 @@ export type Database = {
           status: number
           tech_level: number
           updated_at: string
+          voice_id: string | null
+          voice_name: string | null
           wealth: string
           will_delta: number
         }

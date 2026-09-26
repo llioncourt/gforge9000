@@ -1274,6 +1274,78 @@ export type Database = {
           },
         ]
       }
+      character_voice_lines: {
+        Row: {
+          audio_hash: string | null
+          audio_path: string | null
+          campaign_id: string | null
+          character_id: string
+          created_at: string
+          created_by: string
+          duration_seconds: number | null
+          id: string
+          label: string | null
+          model_id: string | null
+          position: number
+          text: string
+          updated_at: string
+          visible_to_players: boolean
+          voice_id: string | null
+          voice_settings: Json | null
+        }
+        Insert: {
+          audio_hash?: string | null
+          audio_path?: string | null
+          campaign_id?: string | null
+          character_id: string
+          created_at?: string
+          created_by?: string
+          duration_seconds?: number | null
+          id?: string
+          label?: string | null
+          model_id?: string | null
+          position?: number
+          text: string
+          updated_at?: string
+          visible_to_players?: boolean
+          voice_id?: string | null
+          voice_settings?: Json | null
+        }
+        Update: {
+          audio_hash?: string | null
+          audio_path?: string | null
+          campaign_id?: string | null
+          character_id?: string
+          created_at?: string
+          created_by?: string
+          duration_seconds?: number | null
+          id?: string
+          label?: string | null
+          model_id?: string | null
+          position?: number
+          text?: string
+          updated_at?: string
+          visible_to_players?: boolean
+          voice_id?: string | null
+          voice_settings?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_voice_lines_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "character_voice_lines_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       character_weapon_state: {
         Row: {
           character_entry_id: string

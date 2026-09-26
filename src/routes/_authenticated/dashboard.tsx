@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { countLibrary, createCharacter, listCampaigns, listCharacters, listRolls } from "@/lib/api";
-import { CardPortraitBg } from "@/components/character/card-portrait-bg";
+import { PortraitFrame, usePortraitUrl } from "@/components/character/portrait";
 import { McpConsentResume } from "@/components/app/mcp-consent-resume";
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";
@@ -117,26 +117,23 @@ function Dashboard() {
                     key={c.id}
                     to="/characters/$id"
                     params={{ id: c.id }}
-                    className="panel relative flex items-center gap-4 overflow-hidden p-4 transition-colors hover:border-ring"
+                    className="panel flex items-center gap-4 p-4 transition-colors hover:border-ring"
                   >
-                    <CardPortraitBg path={c.portrait_path} />
-                    <div className="relative min-w-0 flex-1">
+                    <CharacterThumb path={c.portrait_path} name={c.name} />
+                    <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{c.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
                         {c.concept || t("character.noConcept")} ·{" "}
                         {t("character.techLevel", { level: c.tech_level })}
                       </p>
                     </div>
-                    {c.is_npc ? (
-                      <Badge variant="outline" className="relative">
-                        {t("character.npc")}
-                      </Badge>
-                    ) : null}
-                    <span className="stat-value relative shrink-0 text-sm">
+                    {c.is_npc ? <Badge variant="outline">{t("character.npc")}</Badge> : null}
+                    <span className="stat-value shrink-0 text-sm">
                       {t("character.points", { count: c.point_budget })}
                     </span>
                   </Link>
                 ))}
+
           </div>
         </section>
 
@@ -174,6 +171,12 @@ function Dashboard() {
     </div>
   );
 }
+
+function CharacterThumb({ path, name }: { path: string | null | undefined; name: string }) {
+  const url = usePortraitUrl(path);
+  return <PortraitFrame url={url} name={name} className="h-14 w-11 shrink-0" />;
+}
+
 
 function StatCard({
   icon: Icon,

@@ -152,12 +152,8 @@ export async function speakLine(db: Db, userId: string, lineId: string, regenera
   let line = await getLine(db, lineId);
   let cached = true;
   let charactersUsed = 0;
-  if (!line.audio_path || (regenerate && line.stale) || (regenerate && !line.stale && false)) {
-    const r = await attachAudio(db, userId, line);
-    cached = r.cached;
-    charactersUsed = r.characters_used;
-    line = await getLine(db, lineId);
-  } else if (regenerate) {
+  if (!line.audio_path || regenerate) {
+    // Cache by hash: regenerating an unchanged line reuses the stored audio.
     const r = await attachAudio(db, userId, line);
     cached = r.cached;
     charactersUsed = r.characters_used;

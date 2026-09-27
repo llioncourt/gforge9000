@@ -12,13 +12,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 const API = "https://api.elevenlabs.io";
 export const TTS_MAX_CHARS = 2500;
 export const VOICE_BUCKET = "character-voice-lines";
-export const TTS_MODEL_ID = "eleven_multilingual_v2";
+export const TTS_MODEL_ID = "eleven_v3";
 // Fixed settings + fixed model keep a character sounding the same every time.
+// v3 uses audio tags like [whispers] in the text; style/speaker boost don't apply.
 export const TTS_VOICE_SETTINGS = {
-  stability: 0.6,
+  stability: 0.5,
   similarity_boost: 0.8,
-  style: 0.3,
-  use_speaker_boost: true,
 } as const;
 const SIGNED_URL_SECONDS = 15 * 60;
 const MP3_BITS_PER_SECOND = 128_000;

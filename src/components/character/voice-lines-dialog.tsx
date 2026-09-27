@@ -116,6 +116,7 @@ function LinesBody({ characterId, hasVoice, hasKey }: { characterId: string; has
           <Label>{t("voice.lines.new")}</Label>
           <Input value={label} maxLength={120} placeholder={t("voice.lines.label")} onChange={(e) => setLabel(e.target.value)} />
           <Textarea value={text} rows={3} placeholder={t("voice.linePlaceholder")} onChange={(e) => setText(e.target.value)} />
+          <p className="text-xs text-muted-foreground">{t("voice.lines.tagsHint")}</p>
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <span className={tooLong ? "text-destructive" : ""}>
               {text.length}/{MAX}

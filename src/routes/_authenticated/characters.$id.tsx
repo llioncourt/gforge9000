@@ -660,11 +660,6 @@ function CharacterPage() {
                     transform={parseModelTransform(form.model_transform)}
                     onTransformChange={(t) => patch({ model_transform: t })}
                   />
-                  <VoicePanel
-                    characterId={id}
-                    voiceId={form.voice_id ?? null}
-                    onChange={(v) => patch(v)}
-                  />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -712,6 +707,12 @@ function CharacterPage() {
                   </Field>
                 </div>
               </div>
+              <VoicePanel
+                characterId={id}
+                voiceId={form.voice_id ?? null}
+                onChange={(v) => patch(v)}
+              />
+
 
               <div className="flex items-center justify-between rounded-md border border-border p-3">
                 <div>

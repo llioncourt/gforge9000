@@ -40,15 +40,17 @@ export function VoicePanel({
   return (
     <div className="space-y-3 rounded-md border border-border p-3">
       <div className="flex items-center justify-between">
-        <Label className="flex items-center gap-2">
-          <Volume2 className="size-4" /> {t("voice.title")}
-        </Label>
+        <div>
+          <Label className="flex items-center gap-2">
+            <Volume2 className="size-4" /> {t("voice.title")}
+          </Label>
+        </div>
         <VoiceLinesDialog characterId={characterId} hasVoice={!!voiceId} hasKey={status.data?.hasKey === true} />
       </div>
       {status.data && !status.data.hasKey ? (
         <p className="text-xs text-muted-foreground">{t("voice.needKey")}</p>
       ) : (
-        <div className="space-y-2">
+        <div className="grid gap-2 sm:grid-cols-[220px_1fr_auto] sm:items-start">
           <Select
             value={voiceId ?? ""}
             onValueChange={(id) =>
@@ -85,4 +87,5 @@ export function VoicePanel({
       )}
     </div>
   );
+
 }

@@ -38,8 +38,8 @@ export function VoicePanel({
   });
 
   return (
-    <div className="space-y-2 rounded-lg border border-border p-3">
-      <div className="flex items-center justify-between gap-2">
+    <div className="space-y-3 rounded-md border border-border p-3">
+      <div className="flex items-center justify-between">
         <Label className="flex items-center gap-2">
           <Volume2 className="size-4" /> {t("voice.title")}
         </Label>
@@ -48,7 +48,7 @@ export function VoicePanel({
       {status.data && !status.data.hasKey ? (
         <p className="text-xs text-muted-foreground">{t("voice.needKey")}</p>
       ) : (
-        <>
+        <div className="space-y-2">
           <Select
             value={voiceId ?? ""}
             onValueChange={(id) =>
@@ -81,7 +81,7 @@ export function VoicePanel({
             {speak.isPending && <Loader2 className="mr-1 size-4 animate-spin" />}
             {t("voice.speak")}
           </Button>
-        </>
+        </div>
       )}
     </div>
   );

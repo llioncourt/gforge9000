@@ -612,7 +612,8 @@
       "noVoice": "Escolha uma voz para este personagem primeiro.",
       "tooLong": "As falas podem ter até 2500 caracteres.",
       "noAudio": "Sem áudio ainda",
-      "dragHint": "Arraste para reordenar"
+      "dragHint": "Arraste para reordenar",
+      "tagsHint": "Você pode usar tags de expressão entre colchetes, ex.: [whispers], [shouts], [angry], [sad], [nervous], [sarcastic], [sighs], [laughs], [crying], [pause]"
     }
   }
 }

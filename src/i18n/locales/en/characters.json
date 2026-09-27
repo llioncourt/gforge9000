@@ -612,7 +612,8 @@
       "noVoice": "Choose a voice for this character first.",
       "tooLong": "Lines can have up to 2500 characters.",
       "noAudio": "No audio yet",
-      "dragHint": "Drag to reorder"
+      "dragHint": "Drag to reorder",
+      "tagsHint": "You can add expression tags in brackets, e.g.: [whispers], [shouts], [angry], [sad], [nervous], [sarcastic], [sighs], [laughs], [crying], [pause]"
     }
   }
 }

@@ -12,7 +12,8 @@
     "assistant": "Assistente",
     "settings": "Configurações",
     "legal": "Companion não oficial · Política legal e de conteúdo",
-    "home": "Início"
+    "home": "Início",
+    "admin": "Admin"
   },
   "sidebar": {
     "open": "Abrir navegação",
@@ -112,6 +113,36 @@
     },
     "labels": {
       "untitled": "Sem título"
+    }
+  },
+  "admin": {
+    "title": "Administração",
+    "description": "Todas as pessoas usando o app, suas campanhas e personagens.",
+    "notAllowed": "Esta página não está disponível.",
+    "search": "Buscar pessoas ou campanhas",
+    "blockedBadge": "Bloqueado",
+    "stats": {
+      "users": "Pessoas",
+      "blocked": "Bloqueados",
+      "campaigns": "Campanhas",
+      "characters": "Personagens"
+    },
+    "tabs": {
+      "users": "Pessoas",
+      "campaigns": "Campanhas"
+    },
+    "cols": {
+      "user": "Pessoa",
+      "joined": "Entrou em",
+      "lastSeen": "Último acesso",
+      "characters": "Personagens",
+      "campaigns": "Campanhas",
+      "admin": "Admin",
+      "blocked": "Bloqueado",
+      "campaign": "Campanha",
+      "gm": "Mestre",
+      "members": "Membros",
+      "created": "Criada em"
     }
   }
 }

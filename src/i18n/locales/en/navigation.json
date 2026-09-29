@@ -12,7 +12,8 @@
     "assistant": "Assistant",
     "settings": "Settings",
     "legal": "Unofficial companion · Legal & content policy",
-    "home": "Home"
+    "home": "Home",
+    "admin": "Admin"
   },
   "sidebar": {
     "open": "Open navigation",
@@ -112,6 +113,36 @@
     },
     "labels": {
       "untitled": "Untitled"
+    }
+  },
+  "admin": {
+    "title": "Site admin",
+    "description": "Everyone using the app, their campaigns and characters.",
+    "notAllowed": "This page is not available.",
+    "search": "Search people or campaigns",
+    "blockedBadge": "Blocked",
+    "stats": {
+      "users": "People",
+      "blocked": "Blocked",
+      "campaigns": "Campaigns",
+      "characters": "Characters"
+    },
+    "tabs": {
+      "users": "People",
+      "campaigns": "Campaigns"
+    },
+    "cols": {
+      "user": "Person",
+      "joined": "Joined",
+      "lastSeen": "Last sign-in",
+      "characters": "Characters",
+      "campaigns": "Campaigns",
+      "admin": "Admin",
+      "blocked": "Blocked",
+      "campaign": "Campaign",
+      "gm": "Game Master",
+      "members": "Members",
+      "created": "Created"
     }
   }
 }

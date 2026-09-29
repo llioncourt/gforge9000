@@ -50,39 +50,42 @@ export function VoicePanel({
       {status.data && !status.data.hasKey ? (
         <p className="text-xs text-muted-foreground">{t("voice.needKey")}</p>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-[220px_1fr_auto] sm:items-start">
-          <Select
-            value={voiceId ?? ""}
-            onValueChange={(id) =>
-              onChange({ voice_id: id, voice_name: voices.data?.find((v) => v.voice_id === id)?.name ?? null })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t("voice.pick")} />
-            </SelectTrigger>
-            <SelectContent>
-              {(voices.data ?? []).map((v) => (
-                <SelectItem key={v.voice_id} value={v.voice_id}>
-                  {v.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Select
+              value={voiceId ?? ""}
+              onValueChange={(id) =>
+                onChange({ voice_id: id, voice_name: voices.data?.find((v) => v.voice_id === id)?.name ?? null })
+              }
+            >
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder={t("voice.pick")} />
+              </SelectTrigger>
+              <SelectContent>
+                {(voices.data ?? []).map((v) => (
+                  <SelectItem key={v.voice_id} value={v.voice_id}>
+                    {v.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              disabled={!voiceId || !text.trim() || speak.isPending}
+              onClick={() => speak.mutate()}
+            >
+              {speak.isPending && <Loader2 className="mr-1 size-4 animate-spin" />}
+              {t("voice.speak")}
+            </Button>
+          </div>
           <Textarea
             value={text}
             maxLength={2500}
             rows={2}
+            className="w-full"
             placeholder={t("voice.linePlaceholder")}
             onChange={(e) => setText(e.target.value)}
           />
-          <Button
-            size="sm"
-            disabled={!voiceId || !text.trim() || speak.isPending}
-            onClick={() => speak.mutate()}
-          >
-            {speak.isPending && <Loader2 className="mr-1 size-4 animate-spin" />}
-            {t("voice.speak")}
-          </Button>
         </div>
       )}
     </div>

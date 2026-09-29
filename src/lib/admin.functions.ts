@@ -61,7 +61,7 @@ export const getAdminOverview = createServerFn({ method: "GET" })
         characters: count(characters.data, "owner_id", u.id),
         campaigns: count(members.data, "user_id", u.id),
       })),
-      campaigns: (campaigns.data ?? []).map((c: any) => ({
+      campaigns: ((campaigns.data ?? []) as any[]).map((c: any): { id: string; name: string; gm: string; createdAt: string; members: number; characters: number } => ({
         id: c.id as string,
         name: c.name as string,
         gm: nameOf.get(c.gm_id) ?? "",

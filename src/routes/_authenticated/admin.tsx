@@ -14,6 +14,7 @@ import { matchesSearch } from "@/lib/search";
 import { useT } from "@/i18n/hooks";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "Admin — Character Forge" }] }),
   component: AdminPage,
 });

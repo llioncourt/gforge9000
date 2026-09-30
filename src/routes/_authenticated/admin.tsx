@@ -143,13 +143,14 @@ function AdminPage() {
                   <th className="p-3">{t("admin.cols.campaigns")}</th>
                   <th className="p-3">{t("admin.cols.admin")}</th>
                   <th className="p-3">{t("admin.cols.blocked")}</th>
+                  <th className="p-3">{t("admin.cols.access")}</th>
                 </tr>
               </thead>
               <tbody>
                 {!d
                   ? [0, 1, 2, 3, 4].map((i) => (
                       <tr key={i} className="border-t border-border">
-                        <td colSpan={7} className="p-3"><Skeleton className="h-8" /></td>
+                        <td colSpan={8} className="p-3"><Skeleton className="h-8" /></td>
                       </tr>
                     ))
                   : users.map((u) => (
@@ -176,6 +177,18 @@ function AdminPage() {
                             />
                             {u.blocked ? <Badge variant="destructive">{t("admin.blockedBadge")}</Badge> : null}
                           </div>
+                        </td>
+                        <td className="p-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setPwUser({ id: u.id, email: u.email });
+                              setPw("");
+                            }}
+                          >
+                            {t("admin.password.action")}
+                          </Button>
                         </td>
                       </tr>
                     ))}

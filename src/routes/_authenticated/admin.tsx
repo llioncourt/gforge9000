@@ -224,6 +224,39 @@ function AdminPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={pwUser !== null} onOpenChange={(o) => !o && setPwUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("admin.password.title")}</DialogTitle>
+            <DialogDescription>
+              {t("admin.password.description", { email: pwUser?.email ?? "" })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="admin-password">{t("admin.password.label")}</Label>
+            <Input
+              id="admin-password"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              placeholder={t("admin.password.placeholder")}
+              autoComplete="off"
+            />
+            <p className="text-xs text-muted-foreground">{t("admin.password.hint")}</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPwUser(null)}>
+              {t("admin.password.cancel")}
+            </Button>
+            <Button
+              disabled={pw.trim().length < 8 || setPassword.isPending}
+              onClick={() => pwUser && setPassword.mutate({ userId: pwUser.id, password: pw.trim() })}
+            >
+              {t("admin.password.save")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

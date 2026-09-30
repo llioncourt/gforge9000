@@ -9,7 +9,23 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAdminOverview, getIsAdmin, setUserAdmin, setUserBlocked } from "@/lib/admin.functions";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  getAdminOverview,
+  getIsAdmin,
+  setUserAdmin,
+  setUserBlocked,
+  setUserPassword,
+} from "@/lib/admin.functions";
 import { matchesSearch } from "@/lib/search";
 import { useT } from "@/i18n/hooks";
 

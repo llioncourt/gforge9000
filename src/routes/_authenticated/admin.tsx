@@ -51,7 +51,10 @@ function AdminPage() {
   const overviewFn = useServerFn(getAdminOverview);
   const blockFn = useServerFn(setUserBlocked);
   const adminFn = useServerFn(setUserAdmin);
+  const passwordFn = useServerFn(setUserPassword);
   const [q, setQ] = useState("");
+  const [pwUser, setPwUser] = useState<{ id: string; email: string } | null>(null);
+  const [pw, setPw] = useState("");
 
   const isAdmin = useQuery({ queryKey: ["is-admin"], queryFn: () => isAdminFn() });
   const overview = useQuery({

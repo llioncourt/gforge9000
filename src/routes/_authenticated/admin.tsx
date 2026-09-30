@@ -75,6 +75,16 @@ function AdminPage() {
     onSuccess: refresh,
     onError,
   });
+  const setPassword = useMutation({
+    mutationFn: (v: { userId: string; password: string }) => passwordFn({ data: v }),
+    onSuccess: () => {
+      toast.success(t("admin.password.done"));
+      setPwUser(null);
+      setPw("");
+      refresh();
+    },
+    onError,
+  });
 
   const users = useMemo(
     () => (overview.data?.users ?? []).filter((u) => matchesSearch(q, [u.name, u.email])),

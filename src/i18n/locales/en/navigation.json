@@ -139,10 +139,22 @@
       "campaigns": "Campaigns",
       "admin": "Admin",
       "blocked": "Blocked",
+      "access": "Access",
       "campaign": "Campaign",
       "gm": "Game Master",
       "members": "Members",
       "created": "Created"
+    },
+    "password": {
+      "action": "Set password",
+      "title": "Set a password",
+      "description": "Choose a password for {{email}}. Share it with them so they can sign in.",
+      "label": "New password",
+      "placeholder": "At least 8 characters",
+      "hint": "They can change it later from their account.",
+      "cancel": "Cancel",
+      "save": "Save password",
+      "done": "Password set."
     }
   }
 }

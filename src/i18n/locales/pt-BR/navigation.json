@@ -139,10 +139,22 @@
       "campaigns": "Campanhas",
       "admin": "Admin",
       "blocked": "Bloqueado",
+      "access": "Acesso",
       "campaign": "Campanha",
       "gm": "Mestre",
       "members": "Membros",
       "created": "Criada em"
+    },
+    "password": {
+      "action": "Definir senha",
+      "title": "Definir uma senha",
+      "description": "Escolha uma senha para {{email}}. Passe a senha para a pessoa entrar.",
+      "label": "Nova senha",
+      "placeholder": "Pelo menos 8 caracteres",
+      "hint": "A pessoa pode trocar depois na própria conta.",
+      "cancel": "Cancelar",
+      "save": "Salvar senha",
+      "done": "Senha definida."
     }
   }
 }

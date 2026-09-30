@@ -86,6 +86,22 @@ export const setUserBlocked = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const setUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z.object({ userId: z.string().uuid(), password: z.string().min(8).max(72) }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as Ctx);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      password: data.password,
+      email_confirm: true,
+    } as any);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 export const setUserAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ userId: z.string().uuid(), admin: z.boolean() }).parse(d))

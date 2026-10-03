@@ -141,6 +141,14 @@ function AuthPage() {
     );
   }
 
+  async function updatePassword(e: React.FormEvent) {
+    e.preventDefault();
+    await submit(
+      () => supabase.auth.updateUser({ password: newPassword }),
+      () => setPasswordUpdated(true),
+    );
+  }
+
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="grid-noise hidden flex-col justify-between border-r border-border p-10 lg:flex">
@@ -159,7 +167,60 @@ function AuthPage() {
 
       <div className="flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
-          {resetMode ? (
+          {recoveryMode ? (
+            <div className="panel p-6">
+              {passwordUpdated ? (
+                <div className="text-center">
+                  <h1 className="font-display text-xl font-semibold">
+                    {t("resetPassword.updatedTitle")}
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t("resetPassword.updatedBody")}
+                  </p>
+                  <Button
+                    className="mt-6 w-full"
+                    onClick={() => navigate({ to: "/dashboard", replace: true })}
+                  >
+                    {t("resetPassword.continue")}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <h1 className="font-display text-xl font-semibold">
+                    {t("resetPassword.chooseTitle")}
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t("resetPassword.chooseBody")}
+                  </p>
+                  <form onSubmit={updatePassword} className="mt-6 space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="password-new">{t("resetPassword.newPassword")}</Label>
+                      <Input
+                        id="password-new"
+                        type="password"
+                        required
+                        minLength={6}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={busy}
+                      aria-label={t("resetPassword.save")}
+                    >
+                      {busy ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        t("resetPassword.save")
+                      )}
+                    </Button>
+                  </form>
+                </>
+              )}
+            </div>
+          ) : resetMode ? (
             <div className="panel p-6">
               {resetSent ? (
                 <div className="text-center">

@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Keep viewer-specific roster card selection in the campaign card component so the full roster card remains the single unchanged fallback.
+- Read fellow-player roster cards through an authenticated server function that returns only card-safe fields, because full character rows contain private sheet data.

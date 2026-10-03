@@ -8,3 +8,6 @@ The Lore and Battle grid phases are complete. See [Archived Roadmap](docs/histor
 
 ## Adaptation Studio
 - [x] Book — Narrative and Book — Adventure Module targets
+
+## Campaign roster
+- [ ] Show approved fellow-player character cards without exposing their sheets

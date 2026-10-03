@@ -56,7 +56,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   return (
     <I18nProvider initialLocale={detectLocale()}>
       <ErrorScreen
-        error={error}
+        error={error instanceof Error ? error : new Error(String(error))}
         onRetry={() => {
           router.invalidate();
           reset();

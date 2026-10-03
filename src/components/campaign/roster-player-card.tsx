@@ -23,7 +23,7 @@ export function RosterPlayerCard({
       search={{ from: `campaign:${campaignId}:${tab}` }}
       className="panel hover:border-primary/50 flex h-[203px] items-stretch gap-3 overflow-hidden p-4 transition"
     >
-      <PortraitFrame url={url} name={character.name} className="h-full w-28 shrink-0" />
+      <PortraitFrame url={url} name={character.name} className="h-full w-32 shrink-0" />
       <span className="font-display flex min-w-0 flex-1 items-center text-lg leading-tight font-semibold">
         <span className="line-clamp-4">{character.name}</span>
       </span>

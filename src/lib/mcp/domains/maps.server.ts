@@ -34,7 +34,8 @@ import {
 import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.server";
 import {
   decodeBase64File,
-  fetchRemoteFile,
+  fetchRemoteImage,
+  sniffImage,
   prepareSignedUpload,
   removeStoredObject,
   signedReadUrl,
@@ -83,8 +84,15 @@ const input = z.discriminatedUnion("action", [
     .describe("List a campaign's maps. Players never see maps with visible_to_players = false."),
   z.object({ action: z.literal("get"), map_id: uuid }).describe("Read one map by id."),
   z
-    .object({ action: z.literal("create"), campaign_id: uuid, ...mapEditable })
-    .describe("Create a new map in a campaign. Changes data. GM only."),
+    .object({
+      action: z.literal("create"),
+      campaign_id: uuid,
+      ...mapEditable,
+      image_url: boundedText(2000).optional(),
+    })
+    .describe(
+      "Create a new map in a campaign. Optional image_url downloads the map image from an allowed https host. Changes data. GM only.",
+    ),
   z
     .object({
       action: z.literal("update"),
@@ -140,13 +148,15 @@ const input = z.discriminatedUnion("action", [
   z
     .object({ action: z.literal("upload_image_from_url"), map_id: uuid, url: boundedText(2000) })
     .describe(
-      "Disabled for security reasons: use prepare_upload + finalize_image_upload, or upload_image_base64.",
+      "Download a JPEG/PNG/WebP image (max 15 MB) from an allowed https host and set it as the map's " +
+        "image, replacing the previous one; width and height are recorded. Changes data. GM only.",
     ),
   z
     .object({
       action: z.literal("upload_image_base64"),
       map_id: uuid,
-      data: z.string().min(1),
+      data: z.string().min(1).optional(),
+      data_base64: z.string().min(1).optional(),
       mime_type: z.enum(MAP_TYPES),
       file_name: boundedText(200),
     })
@@ -271,6 +281,20 @@ async function afterImageAttach(
   return data as Structured;
 }
 
+async function attachRemoteMapImage(
+  ctx: McpToolContext,
+  access: MapAccess,
+  url: string,
+): Promise<Structured> {
+  const file = await fetchRemoteImage(url, { maxBytes: MAP_MAX_BYTES });
+  const path = storagePathFor(`${ctx.userId}/${access.campaignId}`, `map.${file.ext}`);
+  await uploadBytes(ctx.supabase, MAP_BUCKET, path, file);
+  return afterImageAttach(ctx, access, path, {
+    image_width: file.width ?? undefined,
+    image_height: file.height ?? undefined,
+  });
+}
+
 export function registerMaps(tool: ToolRegistrar, ctx: McpToolContext): void {
   tool(
     "maps",
@@ -285,7 +309,8 @@ export function registerMaps(tool: ToolRegistrar, ctx: McpToolContext): void {
         "only), update_object (change a token, changes data, GM may change any token, a player " +
         "only their own non-hidden token), delete_object (remove a token, deletes data, GM only), " +
         "prepare_upload/finalize_image_upload/upload_image_base64 (attach a map image, changes " +
-        "data, GM only; upload_image_from_url is disabled for security reasons).",
+        "data, GM only), upload_image_from_url (download a map image from an allowed https host, " +
+        "records width/height, GM only). create also accepts image_url.",
       inputSchema: input,
       outputSchema: domainOutput,
       annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
@@ -345,6 +370,12 @@ export function registerMaps(tool: ToolRegistrar, ctx: McpToolContext): void {
           .select("*")
           .single();
         if (error) fail("Creating map", error);
+        if (i.image_url) {
+          const created = data as MapRow;
+          const access = await loadMap(ctx, created.id);
+          const item = await attachRemoteMapImage(ctx, access, i.image_url);
+          return detailReply(`Created map "${created.name}" with its image.`, item);
+        }
         return detailReply(`Created map "${(data as MapRow).name}".`, data as Structured);
       },
 
@@ -528,26 +559,31 @@ export function registerMaps(tool: ToolRegistrar, ctx: McpToolContext): void {
         return detailReply(`Map image attached to "${access.map.name}".`, item);
       },
 
-      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
-      // resolve+pin SSRF protection is not achievable on this runtime.
-      upload_image_from_url: async () => {
-        throw new Error(
-          "Downloading files from a web address is turned off for security reasons. " +
-            "Use prepare_upload with finalize_image_upload instead, or upload_image_base64 for small files.",
-        );
+      upload_image_from_url: async (i) => {
+        const access = await loadMap(ctx, i.map_id);
+        const campaign = await loadCampaign(ctx, access.campaignId);
+        requireGmFor(campaign, "upload map images");
+        const item = await attachRemoteMapImage(ctx, access, i.url);
+        return detailReply(`Map image attached to "${access.map.name}".`, item);
       },
 
       upload_image_base64: async (i) => {
         const access = await loadMap(ctx, i.map_id);
         const campaign = await loadCampaign(ctx, access.campaignId);
         requireGmFor(campaign, "upload map images");
-        const file = decodeBase64File(i.data, i.mime_type, {
+        const payload = i.data_base64 ?? i.data;
+        if (!payload) throw new Error("Send the image as data_base64.");
+        const file = decodeBase64File(payload, i.mime_type, {
           maxBytes: MAP_MAX_BYTES,
           allowedMime: MAP_TYPES,
         });
+        const kind = sniffImage(file.bytes);
         const path = storagePathFor(`${ctx.userId}/${access.campaignId}`, i.file_name);
         await uploadBytes(ctx.supabase, MAP_BUCKET, path, file);
-        const item = await afterImageAttach(ctx, access, path, {});
+        const item = await afterImageAttach(ctx, access, path, {
+          image_width: kind?.width ?? undefined,
+          image_height: kind?.height ?? undefined,
+        });
         return detailReply(`Map image attached to "${access.map.name}".`, item);
       },
     }),

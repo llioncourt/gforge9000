@@ -19,7 +19,7 @@ import {
 import type { McpToolContext, ToolRegistrar } from "@/lib/mcp/kit.server";
 import {
   decodeBase64File,
-  fetchRemoteFile,
+  fetchRemoteImage,
   prepareSignedUpload,
   removeStoredObject,
   signedReadUrl,
@@ -73,7 +73,7 @@ const input = z.discriminatedUnion("action", [
   z
     .object({ action: z.literal("upload_from_url"), character_id: uuid, url: z.string().max(2000) })
     .describe(
-      "Disabled for security reasons: use prepare_upload + finalize_upload, or upload_base64 for small files.",
+      "Download a JPEG/PNG/WebP image (max 15 MB) from an allowed https host and set it as the character's portrait, replacing the previous one. Owner or campaign GM only. Changes data.",
     ),
   z
     .object({
@@ -194,13 +194,13 @@ export function registerCharacterPortrait(tool: ToolRegistrar, ctx: McpToolConte
         return replacePortrait(ctx, i.character_id, stored.path);
       },
 
-      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
-      // resolve+pin SSRF protection is not achievable on this runtime.
-      upload_from_url: async () => {
-        throw new Error(
-          "Downloading files from a web address is turned off for security reasons. " +
-            "Use prepare_upload with finalize_upload instead, or send small files directly with upload_base64.",
-        );
+      upload_from_url: async (i) => {
+        const access = await loadCharacter(ctx, i.character_id);
+        requireCharacterWrite(access);
+        const file = await fetchRemoteImage(i.url, { maxBytes: PORTRAIT_MAX_BYTES });
+        const path = storagePathFor(`${ctx.userId}/${i.character_id}`, `portrait.${file.ext}`);
+        await uploadBytes(ctx.supabase, PORTRAIT_BUCKET, path, file);
+        return replacePortrait(ctx, i.character_id, path);
       },
 
       upload_base64: async (i) => {

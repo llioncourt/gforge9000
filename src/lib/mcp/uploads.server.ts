@@ -120,42 +120,164 @@ function assertMime(mime: string, allowed: readonly string[]): void {
 }
 
 /**
- * TD-002: `upload_from_url` is disabled everywhere. Do not re-enable it
- * without a genuine resolve-and-pin fetch.
+ * Hosts the server may download images from. Everything else is refused.
+ * Edit this list to allow another source. Exact hostnames only.
  *
- * Why this cannot be made SSRF-safe on this runtime: to be safe, the code
- * must resolve the hostname, validate every returned address as public, and
- * then guarantee the TCP connection actually goes to one of those validated
- * addresses (otherwise a second, attacker-controlled DNS answer served
- * between validation and connection — "DNS rebinding" — lets a hostname that
- * looked public actually connect to a private/internal address). Cloudflare
- * Workers (workerd) give us no primitive that does both parts safely:
- *  - `node:dns` / `dns.promises.resolve4` are not implemented in workerd
- *    (nodejs_compat does not include a real resolver), so there is no way to
- *    even learn the candidate addresses ourselves.
- *  - The platform `fetch()` takes a hostname and resolves + connects
- *    internally; there is no option to pin it to a caller-chosen IP, so even
- *    a DNS-over-HTTPS lookup we did ourselves could not be trusted to be the
- *    address `fetch()` actually dials.
- *  - `cloudflare:sockets` can open a raw TCP connection to a literal IP, but
- *    TLS certificate validation is then checked against that IP, not the
- *    original hostname, so it would either break certificate validation or
- *    require disabling it — trading SSRF risk for MITM risk. Sending the
- *    real hostname as SNI/Host while connecting to a pinned IP is not
- *    something the available APIs let us do together with normal cert
- *    checks.
- * Since resolve+pin cannot be guaranteed here, per the approved spec this
- * function refuses instead of shipping partial protection.
+ * Why an allow-list: this runtime cannot resolve-and-pin DNS (see TD-002 in
+ * git history), so arbitrary hosts cannot be made SSRF-safe. Restricting to a
+ * small set of known public file hosts closes that gap.
  */
+export const ALLOWED_REMOTE_HOSTS: readonly string[] = [
+  "s.3daistudio.com",
+  "3dai-service-fs.fsn1.your-objectstorage.com",
+];
+
+export const REMOTE_MAX_BYTES = 15 * 1024 * 1024;
+export const REMOTE_TIMEOUT_MS = 20_000;
+export const REMOTE_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+const MAX_REDIRECTS = 3;
+
+export interface RemoteImage extends FetchedFile {
+  width: number | null;
+  height: number | null;
+  ext: "jpg" | "png" | "webp";
+}
+
+function assertAllowedRemoteUrl(raw: string): URL {
+  const url = assertPublicHttpsUrl(raw);
+  const host = url.hostname.toLowerCase().replace(/\.$/, "");
+  if (url.port && url.port !== "443") throw new Error("That web address is not accepted.");
+  if (!ALLOWED_REMOTE_HOSTS.includes(host)) {
+    throw new Error("Downloads from that site are not allowed.");
+  }
+  return url;
+}
+
+/** Identifies jpeg/png/webp from the file's own bytes and reads its size. */
+export function sniffImage(
+  bytes: Uint8Array,
+): { mime: (typeof REMOTE_IMAGE_TYPES)[number]; ext: RemoteImage["ext"]; width: number | null; height: number | null } | null {
+  const b = bytes;
+  if (
+    b.length >= 24 &&
+    b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 &&
+    b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a
+  ) {
+    const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    return { mime: "image/png", ext: "png", width: dv.getUint32(16), height: dv.getUint32(20) };
+  }
+  if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) {
+    let width: number | null = null;
+    let height: number | null = null;
+    let i = 2;
+    while (i + 9 < b.length) {
+      if (b[i] !== 0xff) { i += 1; continue; }
+      const marker = b[i + 1]!;
+      if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) { i += 2; continue; }
+      const len = (b[i + 2]! << 8) | b[i + 3]!;
+      if (
+        (marker >= 0xc0 && marker <= 0xcf) && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc
+      ) {
+        height = (b[i + 5]! << 8) | b[i + 6]!;
+        width = (b[i + 7]! << 8) | b[i + 8]!;
+        break;
+      }
+      i += 2 + len;
+    }
+    return { mime: "image/jpeg", ext: "jpg", width, height };
+  }
+  if (
+    b.length >= 30 &&
+    b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+    b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50
+  ) {
+    const chunk = String.fromCharCode(b[12]!, b[13]!, b[14]!, b[15]!);
+    let width: number | null = null;
+    let height: number | null = null;
+    if (chunk === "VP8X") {
+      width = 1 + (b[24]! | (b[25]! << 8) | (b[26]! << 16));
+      height = 1 + (b[27]! | (b[28]! << 8) | (b[29]! << 16));
+    } else if (chunk === "VP8 ") {
+      width = (b[26]! | (b[27]! << 8)) & 0x3fff;
+      height = (b[28]! | (b[29]! << 8)) & 0x3fff;
+    } else if (chunk === "VP8L") {
+      const bits = b[21]! | (b[22]! << 8) | (b[23]! << 16) | (b[24]! << 24);
+      width = (bits & 0x3fff) + 1;
+      height = ((bits >>> 14) & 0x3fff) + 1;
+    }
+    return { mime: "image/webp", ext: "webp", width, height };
+  }
+  return null;
+}
+
+/**
+ * Downloads a jpeg/png/webp image from an allow-listed https host.
+ * Https only, no literal/private addresses, redirects followed manually and
+ * only to allow-listed hosts, 15 MB cap, 20 s timeout, type checked by bytes.
+ */
+export async function fetchRemoteImage(
+  rawUrl: string,
+  options: { maxBytes?: number; fetchImpl?: typeof fetch } = {},
+): Promise<RemoteImage> {
+  const cap = Math.min(options.maxBytes ?? REMOTE_MAX_BYTES, REMOTE_MAX_BYTES);
+  const doFetch = options.fetchImpl ?? fetch;
+  const signal = AbortSignal.timeout(REMOTE_TIMEOUT_MS);
+  let url = assertAllowedRemoteUrl(rawUrl);
+  let response: Response | null = null;
+  try {
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+      response = await doFetch(url.toString(), { redirect: "manual", signal });
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get("location");
+        if (!location) throw new Error("The download was redirected without a destination.");
+        url = assertAllowedRemoteUrl(new URL(location, url).toString());
+        response = null;
+        continue;
+      }
+      break;
+    }
+    if (!response) throw new Error("Too many redirects.");
+    if (!response.ok) throw new Error(`The download failed (status ${response.status}).`);
+    const declared = Number(response.headers.get("content-length") ?? 0);
+    if (declared > cap) throw new Error("That file is too large (max 15 MB).");
+    if (!response.body) throw new Error("The download was empty.");
+
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > cap) {
+        await reader.cancel();
+        throw new Error("That file is too large (max 15 MB).");
+      }
+      chunks.push(value);
+    }
+    if (total === 0) throw new Error("The download was empty.");
+    const bytes = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    const kind = sniffImage(bytes);
+    if (!kind) throw new Error("Only JPEG, PNG or WebP images are accepted.");
+    return { bytes, size: total, mime: kind.mime, ext: kind.ext, width: kind.width, height: kind.height };
+  } catch (error) {
+    if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
+      throw new Error("The download took too long (limit 20 seconds).");
+    }
+    throw error;
+  }
+}
+
+/** Back-compat wrapper used by domains; images only. */
 export async function fetchRemoteFile(
-  _rawUrl: string,
-  _options: { maxBytes: number; allowedMime: readonly string[] },
+  rawUrl: string,
+  options: { maxBytes: number; allowedMime: readonly string[] },
 ): Promise<FetchedFile> {
-  throw new Error(
-    "Downloading files from a web address is turned off for security reasons. " +
-      "Use the signed upload target (prepare_upload / finalize_upload) instead, " +
-      "or send small files directly with the base64 upload option.",
-  );
+  const file = await fetchRemoteImage(rawUrl, { maxBytes: options.maxBytes });
+  assertMime(file.mime, options.allowedMime);
+  return file;
 }
 
 /* ------------------------------------------------------------------ */

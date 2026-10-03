@@ -16,6 +16,10 @@ import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CampaignNav } from "@/components/campaign/campaign-nav";
 import {
+  OtherPlayerRosterCard,
+  shouldUseOtherPlayerRosterCard,
+} from "@/components/campaign/other-player-roster-card";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -580,6 +584,24 @@ function CampaignPage() {
                 const playerMember = (members.data ?? []).find(
                   (m) => m.display_name === c.player_name,
                 );
+                const ownerMember = (members.data ?? []).find((m) => m.user_id === c.owner_id);
+                if (
+                  shouldUseOtherPlayerRosterCard({
+                    isGm,
+                    isNpc: c.is_npc,
+                    ownerId: c.owner_id,
+                    viewerId: user?.id,
+                  })
+                ) {
+                  return (
+                    <OtherPlayerRosterCard
+                      key={c.id}
+                      characterName={c.name}
+                      playerName={ownerMember?.display_name ?? c.player_name}
+                      portraitPath={c.portrait_path}
+                    />
+                  );
+                }
                 return (
                   <div key={c.id} className="panel relative overflow-hidden p-4">
                     <CardPortraitBg path={c.portrait_path} />

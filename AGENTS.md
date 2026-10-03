@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep viewer-specific roster card selection in the campaign card component so the full roster card remains the single unchanged fallback.

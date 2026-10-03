@@ -167,6 +167,15 @@ export async function removeCampaignVideo(video: CampaignVideo) {
 
 export const removeCampaignIntro = removeCampaignVideo;
 
+/** Toggle whether players can see a campaign video (GM only; RLS enforces). */
+export async function setCampaignVideoVisibility(video: CampaignVideo, visibleToPlayers: boolean) {
+  const { error } = await supabase
+    .from("campaign_videos")
+    .update({ visible_to_players: visibleToPlayers })
+    .eq("id", video.id);
+  fail(error);
+}
+
 export async function saveCampaignIntroView(campaignId: string, introVersion: string) {
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("You need to be signed in.");

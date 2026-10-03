@@ -118,6 +118,14 @@ function VideoRow({
     },
     onError: (error: Error) => toast.error(error.message),
   });
+  const saveVisibility = useMutation({
+    mutationFn: (visible: boolean) => setCampaignVideoVisibility(video, visible),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["campaign-videos", video.campaign_id] });
+      toast.success(t("videos.visibility.updated"));
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
 
   return (
     <div data-search-id={video.id} className="panel flex items-center gap-3 p-3 sm:gap-4">

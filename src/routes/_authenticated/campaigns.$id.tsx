@@ -67,6 +67,7 @@ import { CampaignRules } from "@/components/campaign/campaign-rules";
 import { CAMPAIGN_RULESET_SETTING, rulesetFromSettings } from "@/rules/campaign-ruleset";
 import { useSession } from "@/hooks/use-session";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
+import { RosterPlayerCard } from "@/components/campaign/roster-player-card";
 import { useT } from "@/i18n/hooks";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
@@ -572,6 +573,17 @@ function CampaignPage() {
           ) : (roster.data?.length ?? 0) === 0 ? (
             <div className="panel p-8 text-center text-sm text-muted-foreground">
               {t("roster.empty")}
+            </div>
+          ) : !isGm ? (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {roster.data?.map((c) => (
+                <RosterPlayerCard
+                  key={c.id}
+                  campaignId={id}
+                  tab={tabParam ?? "roster"}
+                  character={c}
+                />
+              ))}
             </div>
           ) : (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">

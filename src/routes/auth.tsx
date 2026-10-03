@@ -35,6 +35,23 @@ function AuthPage() {
   const [displayName, setDisplayName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordUpdated, setPasswordUpdated] = useState(false);
+
+  // Arriving via the email reset link puts the session in recovery mode;
+  // show the "choose a new password" form instead of the sign-in form.
+  // (PASSWORD_RECOVERY fires once on landing with the recovery token.)
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setRecoveryMode(true);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Guards against double submits and against late completions updating the
   // form (or navigating) after the page is gone.
@@ -114,6 +131,25 @@ function AuthPage() {
     );
   }
 
+  async function resetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    await submit(
+      () =>
+        supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin,
+        }),
+      () => setResetSent(true),
+    );
+  }
+
+  async function updatePassword(e: React.FormEvent) {
+    e.preventDefault();
+    await submit(
+      () => supabase.auth.updateUser({ password: newPassword }),
+      () => setPasswordUpdated(true),
+    );
+  }
+
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="grid-noise hidden flex-col justify-between border-r border-border p-10 lg:flex">
@@ -132,7 +168,124 @@ function AuthPage() {
 
       <div className="flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
-          {sent ? (
+          {recoveryMode ? (
+            <div className="panel p-6">
+              {passwordUpdated ? (
+                <div className="text-center">
+                  <h1 className="font-display text-xl font-semibold">
+                    {t("resetPassword.updatedTitle")}
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t("resetPassword.updatedBody")}
+                  </p>
+                  <Button
+                    className="mt-6 w-full"
+                    onClick={() => navigate({ to: "/dashboard", replace: true })}
+                  >
+                    {t("resetPassword.continue")}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <h1 className="font-display text-xl font-semibold">
+                    {t("resetPassword.chooseTitle")}
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t("resetPassword.chooseBody")}
+                  </p>
+                  <form onSubmit={updatePassword} className="mt-6 space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="password-new">{t("resetPassword.newPassword")}</Label>
+                      <Input
+                        id="password-new"
+                        type="password"
+                        required
+                        minLength={6}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={busy}
+                      aria-label={t("resetPassword.save")}
+                    >
+                      {busy ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        t("resetPassword.save")
+                      )}
+                    </Button>
+                  </form>
+                </>
+              )}
+            </div>
+          ) : resetMode ? (
+            <div className="panel p-6">
+              {resetSent ? (
+                <div className="text-center">
+                  <h1 className="font-display text-xl font-semibold">
+                    {t("resetPassword.sentTitle")}
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t("resetPassword.sentBody", { email })}
+                  </p>
+                  <Button
+                    className="mt-6 w-full"
+                    variant="outline"
+                    onClick={() => {
+                      setResetMode(false);
+                      setResetSent(false);
+                    }}
+                  >
+                    {t("resetPassword.back")}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <h1 className="font-display text-xl font-semibold">
+                    {t("resetPassword.title")}
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t("resetPassword.body")}
+                  </p>
+                  <form onSubmit={resetPassword} className="mt-6 space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="email-reset">{t("form.fields.email")}</Label>
+                      <Input
+                        id="email-reset"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={busy}
+                      aria-label={t("resetPassword.send")}
+                    >
+                      {busy ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        t("resetPassword.send")
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      className="w-full"
+                      variant="ghost"
+                      onClick={() => setResetMode(false)}
+                    >
+                      {t("resetPassword.back")}
+                    </Button>
+                  </form>
+                </>
+              )}
+            </div>
+          ) : sent ? (
             <div className="panel p-6 text-center">
               <h1 className="font-display text-xl font-semibold">{t("confirmEmail.title")}</h1>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -171,6 +324,15 @@ function AuthPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
+                  </div>
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground underline hover:text-foreground"
+                      onClick={() => setResetMode(true)}
+                    >
+                      {t("resetPassword.link")}
+                    </button>
                   </div>
                   <Button
                     type="submit"

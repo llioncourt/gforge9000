@@ -36,6 +36,16 @@ export const listCampaignRosterCards = createServerFn({ method: "GET" })
 
     if (charactersError) throw new Error(charactersError.message);
 
+    const ownerIds = [...new Set((characters ?? []).map((character) => character.owner_id))];
+    const { data: profiles, error: profilesError } = ownerIds.length
+      ? await supabaseAdmin.from("profiles").select("id, display_name").in("id", ownerIds)
+      : { data: [], error: null };
+
+    if (profilesError) throw new Error(profilesError.message);
+    const displayNameByOwner = new Map(
+      (profiles ?? []).map((profile) => [profile.id, profile.display_name]),
+    );
+
     return Promise.all(
       (characters ?? []).map(async (character) => {
         let portraitUrl: string | null = null;
@@ -50,7 +60,7 @@ export const listCampaignRosterCards = createServerFn({ method: "GET" })
           id: character.id,
           ownerId: character.owner_id,
           characterName: character.name,
-          playerName: character.player_name,
+          playerName: displayNameByOwner.get(character.owner_id) ?? character.player_name,
           portraitUrl,
         };
       }),

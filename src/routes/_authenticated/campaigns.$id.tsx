@@ -67,6 +67,7 @@ import { CampaignRules } from "@/components/campaign/campaign-rules";
 import { CAMPAIGN_RULESET_SETTING, rulesetFromSettings } from "@/rules/campaign-ruleset";
 import { useSession } from "@/hooks/use-session";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
+import { RosterPlayerCard } from "@/components/campaign/roster-player-card";
 import { useT } from "@/i18n/hooks";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";

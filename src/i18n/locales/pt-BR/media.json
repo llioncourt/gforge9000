@@ -37,7 +37,11 @@
       "success": "Vídeo enviado."
     },
     "removeSuccess": "Vídeo removido.",
-    "empty": "Nenhum vídeo de campanha ainda."
+    "empty": "Nenhum vídeo de campanha ainda.",
+    "visibility": {
+      "label": "Visível para os jogadores",
+      "updated": "Visibilidade do vídeo atualizada."
+    }
   },
   "introExperience": {
     "ariaLabel": "Introdução da campanha",

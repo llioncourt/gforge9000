@@ -8,7 +8,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import type { ReactNode } from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 /* ---------- module doubles (everything else is the real thing) ---------- */
@@ -72,9 +72,10 @@ describe("roster card as players see it", () => {
   it("shows the name and the portrait and nothing else", async () => {
     const { container } = renderCard();
     expect(await screen.findByText("Baltazar Fragoso")).toBeTruthy();
+    // The portrait arrives asynchronously; until then the frame holds initials.
+    await waitFor(() => expect(container.querySelector("img")).toBeTruthy());
     // No HP/FP, no attribute grid, no point summary, no approval badge.
     expect(container.textContent?.trim()).toBe("Baltazar Fragoso");
-    expect(container.querySelector("img")).toBeTruthy();
     expect(container.querySelectorAll("button")).toHaveLength(0);
     expect(container.querySelectorAll('[role="combobox"]')).toHaveLength(0);
   });

@@ -30,6 +30,16 @@ import {
   campaignSettingsPatch,
   SETTINGS_DOC,
 } from "@/lib/mcp/domains/shared.server";
+import {
+  fetchRemoteImage,
+  removeStoredObject,
+  storagePathFor,
+  uploadBytes,
+} from "@/lib/mcp/uploads.server";
+
+// Same bucket and folder layout the app uses for covers (src/lib/campaign-cover.ts).
+const COVER_BUCKET = "lore-assets";
+const COVER_MAX_BYTES = 15 * 1024 * 1024;
 
 const deleteCampaignOutput = z.object({
   deleted: z.boolean(),
@@ -52,6 +62,7 @@ const updateCampaignInput = z.object({
   name: boundedText(120).optional(),
   description: z.string().max(4000).nullable().optional(),
   ...campaignSettingFields,
+  cover_url: z.string().max(2000).optional(),
 });
 const deleteCampaignInput = z.object({ campaign_id: uuid, confirm_name: z.string().max(200) });
 
@@ -180,23 +191,43 @@ export function registerCampaigns(tool: ToolRegistrar, ctx: McpToolContext): voi
     "update_campaign",
     {
       title: "Update a campaign",
-      description: `Changes the name, premise or settings of a campaign. Only the campaign's Game Master can edit it. Fields left out stay unchanged. ${SETTINGS_DOC}`,
+      description: `Changes the name, premise or settings of a campaign. Only the campaign's Game Master can edit it. Fields left out stay unchanged. ${SETTINGS_DOC} To set the cover from the web, pass cover_url (JPEG/PNG/WebP up to 15 MB from an allowed https host); the image is stored in the app and replaces the current cover.`,
       inputSchema: updateCampaignInput,
       outputSchema: itemOutput,
       annotations: MODIFY,
     },
-    async ({ campaign_id, name, description, ...rest }) => {
+    async ({ campaign_id, name, description, cover_url, ...rest }) => {
       const campaign = await loadCampaign(ctx, campaign_id);
       requireGm(campaign);
       const patch = buildPatch({ name, description });
       const settingsPatch = campaignSettingsPatch(rest as Record<string, unknown>);
+      let previousCover: string | null = null;
+      let newCover: string | null = null;
+      if (cover_url) {
+        const file = await fetchRemoteImage(cover_url, { maxBytes: COVER_MAX_BYTES });
+        newCover = storagePathFor(`${ctx.userId}/${campaign_id}`, `cover.${file.ext}`);
+        await uploadBytes(ctx.supabase, COVER_BUCKET, newCover, file);
+        const { data: current } = await ctx.supabase
+          .from("campaigns")
+          .select("settings")
+          .eq("id", campaign_id)
+          .maybeSingle();
+        const old = (current?.settings as Record<string, unknown> | null)?.["cover_path"];
+        previousCover = typeof old === "string" ? old : null;
+        settingsPatch["cover_path"] = newCover;
+      }
       requirePatch({ ...patch, ...settingsPatch });
       const { data, error } = await safeRpc(ctx.supabase)("mcp_update_campaign", {
         _campaign: campaign_id,
         _patch: patch,
         _settings_patch: settingsPatch,
       });
-      if (error) fail("Updating the campaign", error);
+      if (error) {
+        if (newCover) await removeStoredObject(ctx.supabase, COVER_BUCKET, newCover);
+        fail("Updating the campaign", error);
+      }
+      if (newCover && previousCover && previousCover !== newCover && !/^https?:/i.test(previousCover))
+        await removeStoredObject(ctx.supabase, COVER_BUCKET, previousCover);
       const row = data as Database["public"]["Tables"]["campaigns"]["Row"];
       return detailReply(`Updated campaign "${row.name}" (${row.id}).`, row);
     },

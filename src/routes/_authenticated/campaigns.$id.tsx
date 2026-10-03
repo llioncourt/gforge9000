@@ -574,6 +574,17 @@ function CampaignPage() {
             <div className="panel p-8 text-center text-sm text-muted-foreground">
               {t("roster.empty")}
             </div>
+          ) : !isGm ? (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {roster.data?.map((c) => (
+                <RosterPlayerCard
+                  key={c.id}
+                  campaignId={id}
+                  tab={tabParam ?? "roster"}
+                  character={c}
+                />
+              ))}
+            </div>
           ) : (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {roster.data?.map((c) => {

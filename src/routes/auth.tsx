@@ -37,6 +37,20 @@ function AuthPage() {
   const [sent, setSent] = useState(false);
   const [resetMode, setResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordUpdated, setPasswordUpdated] = useState(false);
+
+  // Arriving via the email reset link puts the session in recovery mode;
+  // show the "choose a new password" form instead of the sign-in form.
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setRecoveryMode(true);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Guards against double submits and against late completions updating the
   // form (or navigating) after the page is gone.

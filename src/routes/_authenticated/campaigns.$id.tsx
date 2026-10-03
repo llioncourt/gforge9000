@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, Pencil, Plus, Trash2 } from "lucide-react";
@@ -71,6 +72,7 @@ import { CampaignRules } from "@/components/campaign/campaign-rules";
 import { CAMPAIGN_RULESET_SETTING, rulesetFromSettings } from "@/rules/campaign-ruleset";
 import { useSession } from "@/hooks/use-session";
 import { CardPortraitBg } from "@/components/character/card-portrait-bg";
+import { listCampaignRosterCards } from "@/lib/campaign-roster.functions";
 import { useT } from "@/i18n/hooks";
 import { UserAvatar } from "@/components/app/user-avatar";
 import { VisibilityBadge } from "@/components/lore/visibility-badge";
@@ -236,6 +238,11 @@ function CampaignPage() {
   const roster = useQuery({
     queryKey: ["campaign-characters", id],
     queryFn: () => listCampaignCharacters(id),
+  });
+  const fetchRosterCards = useServerFn(listCampaignRosterCards);
+  const rosterCards = useQuery({
+    queryKey: ["campaign-roster-cards", id],
+    queryFn: () => fetchRosterCards({ data: { campaignId: id } }),
   });
   const members = useQuery({ queryKey: ["members", id], queryFn: () => listMembers(id) });
   const notes = useQuery({ queryKey: ["notes", id], queryFn: () => listNotes(id) });
@@ -579,6 +586,20 @@ function CampaignPage() {
             </div>
           ) : (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {(rosterCards.data ?? [])
+                .filter(
+                  (card) =>
+                    card.ownerId !== user?.id &&
+                    !(roster.data ?? []).some((character) => character.id === card.id),
+                )
+                .map((card) => (
+                  <OtherPlayerRosterCard
+                    key={card.id}
+                    characterName={card.characterName}
+                    playerName={card.playerName}
+                    portraitUrl={card.portraitUrl}
+                  />
+                ))}
               {roster.data?.map((c) => {
                 const sheet = sheets.get(c.id);
                 const playerMember = (members.data ?? []).find(
@@ -598,7 +619,7 @@ function CampaignPage() {
                       key={c.id}
                       characterName={c.name}
                       playerName={ownerMember?.display_name ?? c.player_name}
-                      portraitPath={c.portrait_path}
+                      portraitUrl={null}
                     />
                   );
                 }

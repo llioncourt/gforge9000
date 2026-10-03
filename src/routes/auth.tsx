@@ -43,6 +43,7 @@ function AuthPage() {
 
   // Arriving via the email reset link puts the session in recovery mode;
   // show the "choose a new password" form instead of the sign-in form.
+  // (PASSWORD_RECOVERY fires once on landing with the recovery token.)
   useEffect(() => {
     const {
       data: { subscription },

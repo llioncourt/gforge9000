@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { VideoFramePicker } from "@/components/campaign/video-frame-picker";
 import { useT } from "@/i18n/hooks";
 import {
@@ -50,6 +51,7 @@ import {
   listCampaignVideos,
   removeCampaignVideo,
   saveCampaignIntroView,
+  setCampaignVideoVisibility,
   shouldBlockForCampaignIntro,
   uploadCampaignVideo,
   type CampaignVideo,
@@ -116,6 +118,14 @@ function VideoRow({
     },
     onError: (error: Error) => toast.error(error.message),
   });
+  const saveVisibility = useMutation({
+    mutationFn: (visible: boolean) => setCampaignVideoVisibility(video, visible),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["campaign-videos", video.campaign_id] });
+      toast.success(t("videos.visibility.updated"));
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
 
   return (
     <div data-search-id={video.id} className="panel flex items-center gap-3 p-3 sm:gap-4">
@@ -150,6 +160,17 @@ function VideoRow({
             {formatDuration(duration)} ·{" "}
             {t("videos.sizeMb", { size: Math.ceil(video.byte_size / 1024 / 1024) })}
           </span>
+          {isGm ? (
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Switch
+                checked={video.visible_to_players}
+                disabled={saveVisibility.isPending}
+                onCheckedChange={(checked) => saveVisibility.mutate(checked)}
+                aria-label={t("videos.visibility.label")}
+              />
+              {t("videos.visibility.label")}
+            </label>
+          ) : null}
         </div>
       </div>
       {url ? (

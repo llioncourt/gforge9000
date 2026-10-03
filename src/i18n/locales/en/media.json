@@ -37,7 +37,11 @@
       "success": "Video uploaded."
     },
     "removeSuccess": "Video removed.",
-    "empty": "No campaign videos yet."
+    "empty": "No campaign videos yet.",
+    "visibility": {
+      "label": "Visible to players",
+      "updated": "Video visibility updated."
+    }
   },
   "introExperience": {
     "ariaLabel": "Campaign introduction",

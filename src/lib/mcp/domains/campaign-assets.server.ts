@@ -26,7 +26,7 @@ import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.se
 import type { Database } from "@/integrations/supabase/types";
 import {
   decodeBase64File,
-  fetchRemoteFile,
+  fetchRemoteImage,
   prepareSignedUpload,
   removeStoredObject,
   signedReadUrl,
@@ -112,13 +112,16 @@ const input = z.discriminatedUnion("action", [
       action: z.literal("upload_from_url"),
       campaign_id: uuid,
       url: z.string().max(2000),
-      title: boundedText(200),
+      asset_id: uuid.optional(),
+      title: boundedText(200).optional(),
       caption: z.string().max(2000).optional(),
       tags: tagsField,
       visible_to_players: z.boolean().optional(),
     })
     .describe(
-      "Disabled for security reasons: use prepare_upload + finalize_upload, or upload_base64 for small files.",
+      "Download a JPEG/PNG/WebP image (max 15 MB) from an allowed https host and store it in the app. " +
+        "Without asset_id a new asset is created (title required). With asset_id the existing asset's " +
+        "image is replaced in place, keeping its title, caption, tags and visibility. GM only. Changes data.",
     ),
   z
     .object({
@@ -331,12 +334,79 @@ export function registerCampaignAssets(tool: ToolRegistrar, ctx: McpToolContext)
         );
       },
 
-      // TD-002: disabled — see fetchRemoteFile in uploads.server.ts for why
-      // resolve+pin SSRF protection is not achievable on this runtime.
-      upload_from_url: async () => {
-        throw new Error(
-          "Downloading files from a web address is turned off for security reasons. " +
-            "Use prepare_upload with finalize_upload instead, or send small files directly with upload_base64.",
+      upload_from_url: async (i) => {
+        const campaign = await loadCampaign(ctx, i.campaign_id);
+        requireGmFor(campaign, "upload assets");
+        let existing: AssetRow | null = null;
+        if (i.asset_id) {
+          const { data, error } = await ctx.supabase
+            .from("campaign_assets")
+            .select("*")
+            .eq("id", i.asset_id)
+            .eq("campaign_id", i.campaign_id)
+            .maybeSingle();
+          if (error) fail("Loading asset", error);
+          if (!data) throw new Error("Asset not found in this campaign.");
+          existing = data as AssetRow;
+        } else if (!i.title) {
+          throw new Error("title is required when creating a new asset.");
+        }
+        const file = await fetchRemoteImage(i.url, { maxBytes: ASSET_MAX_BYTES });
+        const path = storagePathFor(`${ctx.userId}/${i.campaign_id}`, `image.${file.ext}`);
+        await uploadBytes(ctx.supabase, ASSET_BUCKET, path, file);
+        if (existing) {
+          const patch = buildPatch({
+            storage_path: path,
+            mime_type: file.mime,
+            byte_size: file.size,
+            width: file.width,
+            height: file.height,
+            title: i.title,
+            caption: i.caption,
+            tags: i.tags,
+            visible_to_players: i.visible_to_players,
+          });
+          const { data, error } = await ctx.supabase
+            .from("campaign_assets")
+            .update(patch)
+            .eq("id", existing.id)
+            .select("*")
+            .single();
+          if (error) {
+            await removeStoredObject(ctx.supabase, ASSET_BUCKET, path);
+            fail("Replacing asset image", error);
+          }
+          if (existing.storage_path !== path)
+            await removeStoredObject(ctx.supabase, ASSET_BUCKET, existing.storage_path);
+          return detailReply(
+            `Replaced the image of asset "${(data as AssetRow).title}".`,
+            toStructured(data as AssetRow),
+          );
+        }
+        const { data, error } = await ctx.supabase
+          .from("campaign_assets")
+          .insert({
+            campaign_id: i.campaign_id,
+            title: i.title!,
+            caption: i.caption ?? null,
+            tags: i.tags ?? [],
+            storage_path: path,
+            mime_type: file.mime,
+            byte_size: file.size,
+            width: file.width,
+            height: file.height,
+            visible_to_players: i.visible_to_players ?? false,
+            created_by: ctx.userId,
+          })
+          .select("*")
+          .single();
+        if (error) {
+          await removeStoredObject(ctx.supabase, ASSET_BUCKET, path);
+          fail("Creating asset", error);
+        }
+        return detailReply(
+          `Created asset "${(data as AssetRow).title}".`,
+          toStructured(data as AssetRow),
         );
       },
 

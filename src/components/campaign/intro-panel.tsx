@@ -160,6 +160,17 @@ function VideoRow({
             {formatDuration(duration)} ·{" "}
             {t("videos.sizeMb", { size: Math.ceil(video.byte_size / 1024 / 1024) })}
           </span>
+          {isGm ? (
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Switch
+                checked={video.visible_to_players}
+                disabled={saveVisibility.isPending}
+                onCheckedChange={(checked) => saveVisibility.mutate(checked)}
+                aria-label={t("videos.visibility.label")}
+              />
+              {t("videos.visibility.label")}
+            </label>
+          ) : null}
         </div>
       </div>
       {url ? (

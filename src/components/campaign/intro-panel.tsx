@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { VideoFramePicker } from "@/components/campaign/video-frame-picker";
 import { useT } from "@/i18n/hooks";
 import {
@@ -50,6 +51,7 @@ import {
   listCampaignVideos,
   removeCampaignVideo,
   saveCampaignIntroView,
+  setCampaignVideoVisibility,
   shouldBlockForCampaignIntro,
   uploadCampaignVideo,
   type CampaignVideo,

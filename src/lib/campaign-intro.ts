@@ -95,7 +95,12 @@ export async function campaignIntroUrl(path: string) {
 export async function uploadCampaignVideo(
   campaignId: string,
   file: File,
-  input: { title: string; videoType: CampaignVideoType; thumb?: Blob | null },
+  input: {
+    title: string;
+    videoType: CampaignVideoType;
+    thumb?: Blob | null;
+    visibleToPlayers?: boolean;
+  },
 ) {
   const validation = validateCampaignVideoFile(file);
   if (validation) throw new Error(validation);
@@ -134,6 +139,7 @@ export async function uploadCampaignVideo(
     file_name: file.name,
     title,
     video_type: input.videoType,
+    visible_to_players: input.visibleToPlayers ?? true,
     byte_size: file.size,
     mime_type: "video/mp4",
     version: crypto.randomUUID(),

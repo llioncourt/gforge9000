@@ -280,8 +280,10 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
   });
   const [pending, setPending] = useState<{ file: File; url: string } | null>(null);
   const [thumb, setThumb] = useState<Blob | null>(null);
+  const [visibleToPlayers, setVisibleToPlayers] = useState(true);
   const upload = useMutation({
-    mutationFn: (file: File) => uploadCampaignVideo(campaignId, file, { title, videoType, thumb }),
+    mutationFn: (file: File) =>
+      uploadCampaignVideo(campaignId, file, { title, videoType, thumb, visibleToPlayers }),
     onSuccess: async () => {
       setTitle("");
       setPending((current) => {
@@ -325,6 +327,17 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder={t("videos.upload.titlePlaceholder")}
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="campaign-video-visibility">{t("videos.visibility.label")}</Label>
+              <div className="flex h-9 items-center">
+                <Switch
+                  id="campaign-video-visibility"
+                  checked={visibleToPlayers}
+                  onCheckedChange={setVisibleToPlayers}
+                  aria-label={t("videos.visibility.label")}
+                />
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="campaign-video-type">{t("videos.upload.typeLabel")}</Label>

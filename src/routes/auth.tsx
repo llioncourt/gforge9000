@@ -35,6 +35,8 @@ function AuthPage() {
   const [displayName, setDisplayName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   // Guards against double submits and against late completions updating the
   // form (or navigating) after the page is gone.
@@ -111,6 +113,17 @@ function AuthPage() {
         }
         navigate({ to: "/dashboard", replace: true });
       },
+    );
+  }
+
+  async function resetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    await submit(
+      () =>
+        supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin,
+        }),
+      () => setResetSent(true),
     );
   }
 

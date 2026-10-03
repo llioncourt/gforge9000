@@ -2627,19 +2627,6 @@ export type Database = {
         Returns: boolean
       }
       join_campaign: { Args: { _code: string }; Returns: string }
-      list_campaign_roster_cards: {
-        Args: { _campaign: string }
-        Returns: {
-          approved: boolean
-          campaign_id: string
-          id: string
-          is_npc: boolean
-          name: string
-          owner_id: string
-          player_name: string
-          portrait_path: string
-        }[]
-      }
       list_entities_safe: {
         Args: { _campaign?: string }
         Returns: {

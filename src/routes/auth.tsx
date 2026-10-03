@@ -145,7 +145,71 @@ function AuthPage() {
 
       <div className="flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
-          {sent ? (
+          {resetMode ? (
+            <div className="panel p-6">
+              {resetSent ? (
+                <div className="text-center">
+                  <h1 className="font-display text-xl font-semibold">
+                    {t("resetPassword.sentTitle")}
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t("resetPassword.sentBody", { email })}
+                  </p>
+                  <Button
+                    className="mt-6 w-full"
+                    variant="outline"
+                    onClick={() => {
+                      setResetMode(false);
+                      setResetSent(false);
+                    }}
+                  >
+                    {t("resetPassword.back")}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <h1 className="font-display text-xl font-semibold">
+                    {t("resetPassword.title")}
+                  </h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {t("resetPassword.body")}
+                  </p>
+                  <form onSubmit={resetPassword} className="mt-6 space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="email-reset">{t("form.fields.email")}</Label>
+                      <Input
+                        id="email-reset"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={busy}
+                      aria-label={t("resetPassword.send")}
+                    >
+                      {busy ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        t("resetPassword.send")
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      className="w-full"
+                      variant="ghost"
+                      onClick={() => setResetMode(false)}
+                    >
+                      {t("resetPassword.back")}
+                    </Button>
+                  </form>
+                </>
+              )}
+            </div>
+          ) : sent ? (
             <div className="panel p-6 text-center">
               <h1 className="font-display text-xl font-semibold">{t("confirmEmail.title")}</h1>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -184,6 +248,15 @@ function AuthPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
+                  </div>
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground underline hover:text-foreground"
+                      onClick={() => setResetMode(true)}
+                    >
+                      {t("resetPassword.link")}
+                    </button>
                   </div>
                   <Button
                     type="submit"

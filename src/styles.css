@@ -251,12 +251,15 @@
   }
 }
 
-/* The panel utility now reads as frosted glass everywhere it is already used. */
+/* The panel utility reads as frosted glass everywhere it is already used.
+   Panels sit directly on the ambient field, which is already a soft glow, so
+   the translucent fill alone gives the glass look. A live backdrop blur on
+   every panel made the browser re-blur each one whenever anything behind it
+   moved (every pointer move, every scroll frame). */
 @utility panel {
   background: color-mix(in oklab, var(--color-card) 72%, transparent);
   border: 1px solid color-mix(in oklab, var(--color-border) 85%, transparent);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(16px) saturate(145%);
   box-shadow: var(--shadow-panel);
 }
 
@@ -270,10 +273,10 @@
   contain: strict;
 }
 
+/* The soft falloff is painted into each glow's gradient (see
+   <AmbientBackground/>); no blur filter is applied to these layers. */
 .ambient-blob {
   position: absolute;
-  border-radius: 9999px;
-  filter: blur(90px);
   opacity: 0.6;
   will-change: transform;
   transform: translate3d(
@@ -313,10 +316,9 @@
   }
 }
 
-/* Touch devices: drop expensive blur-heavy compositing on the ambient field. */
+/* Touch devices: a quieter ambient field. */
 @media (hover: none) and (pointer: coarse) {
   .ambient-blob {
-    filter: blur(60px);
     opacity: 0.35;
   }
 }

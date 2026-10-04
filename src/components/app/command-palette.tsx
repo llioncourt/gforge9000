@@ -17,7 +17,7 @@ import {
   type SearchHit,
   type SearchTarget,
 } from "@/lib/global-search";
-import { useDice } from "@/components/app/dice-context";
+import { useDice } from "@/components/app/dice-state";
 import { useT } from "@/i18n/hooks";
 
 export function CommandPalette({

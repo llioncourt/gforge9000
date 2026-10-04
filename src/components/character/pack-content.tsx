@@ -17,7 +17,7 @@ import { rankSearch } from "@/lib/search";
 import { useT } from "@/i18n/hooks";
 
 /** Pack names that exist for this user: declared packs plus packs seen on entries. */
-export function useAvailablePacks() {
+function useAvailablePacks() {
   const packs = useQuery({ queryKey: ["packs"], queryFn: listContentPacks });
   const library = useQuery({ queryKey: ["library"], queryFn: listLibrary });
   return useMemo(() => {
@@ -233,10 +233,4 @@ export function PackPickerDialog({
       </Dialog>
     </Dialog>
   );
-}
-
-/** True when an entry was typed by hand rather than pulled from a pack. */
-export function isCustomEntry(source: unknown): boolean {
-  const s = (source ?? {}) as Record<string, unknown>;
-  return !s["pack"];
 }

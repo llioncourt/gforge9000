@@ -91,7 +91,7 @@ export function SubmissionsPanel({
 
   const approve = useMutation({
     mutationFn: async (row: CampaignSubmission) => {
-      const { importSoundtrackArchive } = await import("@/components/campaign/soundtrack-panel");
+      const { importSoundtrackArchive } = await import("@/lib/soundtrack-archive-import");
       const tm = tMedia as unknown as (k: string, o?: Record<string, unknown>) => string;
       await approveSubmission(row, (cid, f) => importSoundtrackArchive(cid, f, tm));
     },

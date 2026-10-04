@@ -15,7 +15,7 @@ import {
   chooseBulkCandidate,
   selectedBulkLinks,
   type BulkSelection,
-} from "@/components/character/pack-link";
+} from "@/components/character/pack-link-logic";
 import type { CharacterEntry } from "@/rules";
 import type { PackCandidate } from "@/lib/pack-match";
 import { summarizeCampaign, type CharacterPackSummary } from "@/lib/pack-link-service";

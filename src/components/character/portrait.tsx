@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { ImageUp, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,11 @@ import { FileDropzone } from "@/components/ui/FileDropzone";
 import { useT } from "@/i18n/hooks";
 import {
   portraitInitials,
-  portraitUrl,
   removePortrait,
   uploadPortrait,
   validatePortraitFile,
 } from "@/lib/portrait";
+import { usePortraitUrl } from "@/components/character/use-portrait-url";
 import { cn } from "@/lib/utils";
 
 /** Neutral silhouette + initials placeholder. Original artwork only. */
@@ -53,16 +53,6 @@ export function PortraitFrame({
       )}
     </div>
   );
-}
-
-export function usePortraitUrl(path: string | null | undefined) {
-  const query = useQuery({
-    queryKey: ["portrait", path ?? "none"],
-    queryFn: () => portraitUrl(path),
-    enabled: !!path,
-    staleTime: 1000 * 60 * 30,
-  });
-  return path ? (query.data ?? null) : null;
 }
 
 export function PortraitPanel({

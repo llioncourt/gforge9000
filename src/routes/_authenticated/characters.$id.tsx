@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useTransferTask } from "@/components/ui/transfer-dialog";
+import { useTransferTask } from "@/components/ui/use-transfer-task";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -81,11 +81,8 @@ import {
   investedPoints,
   traitBaseCost,
 } from "@/rules";
-import {
-  BulkLinkDialog,
-  PackStateBadge,
-  usePackLinkStatuses,
-} from "@/components/character/pack-link";
+import { BulkLinkDialog, PackStateBadge } from "@/components/character/pack-link";
+import { usePackLinkStatuses } from "@/components/character/pack-link-logic";
 import type { PackLinkStatus } from "@/lib/pack-link";
 import { rulesetFromSettings } from "@/rules/campaign-ruleset";
 import { AttackModeCard } from "@/components/character/attack-mode-card";
@@ -96,14 +93,10 @@ import {
   toWeaponStateMap,
   upsertWeaponState,
 } from "@/lib/weapon-state";
-import { useDice } from "@/components/app/dice-context";
+import { useDice } from "@/components/app/dice-state";
 import { PointsBar } from "@/components/character/stat-bar";
-import {
-  EntryDialog,
-  emptyDraft,
-  toDraft,
-  type EntryDraft,
-} from "@/components/character/entry-dialog";
+import { EntryDialog } from "@/components/character/entry-dialog";
+import { emptyDraft, toDraft, type EntryDraft } from "@/components/character/entry-draft";
 import {
   download,
   entriesToCsv,
@@ -111,16 +104,14 @@ import {
   slugify,
   toPortable,
 } from "@/lib/portable";
-import {
-  CharacterPacksPanel,
-  PackPickerDialog,
-  isCustomEntry,
-} from "@/components/character/pack-content";
+import { CharacterPacksPanel, PackPickerDialog } from "@/components/character/pack-content";
+import { isCustomEntry } from "@/components/character/pack-content-rules";
 import { getLibraryEntries, type LibraryListRow } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { buildLink, loadPackItem } from "@/lib/pack-link-service";
-import { invalidatePackLinkQueries } from "@/components/character/pack-link";
-import { PortraitPanel, usePortraitUrl } from "@/components/character/portrait";
+import { invalidatePackLinkQueries } from "@/components/character/pack-link-logic";
+import { PortraitPanel } from "@/components/character/portrait";
+import { usePortraitUrl } from "@/components/character/use-portrait-url";
 import { ModelPanel } from "@/components/character/model-panel";
 import { VoicePanel } from "@/components/character/voice-panel";
 import { parseModelTransform } from "@/lib/model3d";

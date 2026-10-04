@@ -12,7 +12,7 @@ import { useT } from "@/i18n/hooks";
 import { campaignIntroUrl, campaignVideoTypeLabel, listCampaignVideos } from "@/lib/campaign-intro";
 import { getCampaignVideoPlayback, setCampaignVideoPlayback } from "@/lib/campaign-video-playback";
 import { derivePlaybackPosition, shouldCorrectDrift } from "@/lib/playback-anchor";
-import { useCampaignSoundtrackOptional } from "@/components/campaign/campaign-soundtrack-player";
+import { useCampaignSoundtrackOptional } from "@/components/campaign/campaign-soundtrack-context";
 
 /**
  * Shared video playback commanded by the Game Master.

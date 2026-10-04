@@ -6,24 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { useDice } from "@/components/app/dice-context";
+import { useDice } from "@/components/app/dice-state";
+import { outcomeTone } from "@/components/app/dice-outcome";
 import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/hooks";
-
-export function outcomeTone(outcome: string | null) {
-  switch (outcome) {
-    case "critical success":
-      return "text-success";
-    case "success":
-      return "text-foreground";
-    case "critical failure":
-      return "text-destructive";
-    case "failure":
-      return "text-destructive/80";
-    default:
-      return "text-muted-foreground";
-  }
-}
 
 export function DiceTray({
   open,

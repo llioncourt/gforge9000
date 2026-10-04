@@ -3,8 +3,8 @@ import { Dices, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { prefersReducedMotion, useDice } from "@/components/app/dice-context";
-import { outcomeTone } from "@/components/app/dice-tray";
+import { prefersReducedMotion, useDice } from "@/components/app/dice-state";
+import { outcomeTone } from "@/components/app/dice-outcome";
 import { simulateToRest } from "@/lib/dice3d";
 import { useT } from "@/i18n/hooks";
 

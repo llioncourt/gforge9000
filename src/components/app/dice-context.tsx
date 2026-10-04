@@ -1,71 +1,22 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useT } from "@/i18n/hooks";
 import { recordRoll } from "@/lib/api";
-import { parseDice, resolveSuccess, rollExpression, type Outcome } from "@/rules";
-
-export interface RollEvent {
-  id: string;
-  label: string;
-  expression: string;
-  dice: number[];
-  total: number;
-  target: number | null;
-  margin: number | null;
-  outcome: Outcome | null;
-  contextKey: string | null;
-  characterId: string | null;
-  campaignId: string | null;
-  at: string;
-}
-
-export interface RollRequest {
-  label: string;
-  expression?: string;
-  target?: number | null;
-  characterId?: string | null;
-  campaignId?: string | null;
-  /** Optional UI identity used to associate the settled result with its source control. */
-  contextKey?: string;
-}
-
-/** A roll waiting for the 3D dice to settle. */
-export interface PendingRoll {
-  id: string;
-  seed: number;
-  count: number;
-  modifier: number;
-  multiplier: number;
-  request: Required<Pick<RollRequest, "label">> & RollRequest & { expression: string };
-}
-
-interface DiceContextValue {
-  history: RollEvent[];
-  roll: (opts: RollRequest) => void;
-  clear: () => void;
-  /** Roll currently tumbling in the 3D tray, if any. */
-  pending: PendingRoll | null;
-  /** Result of the last settled 3D roll, shown in the overlay. */
-  settled: RollEvent | null;
-  /** Called by the 3D tray with the faces read off the settled dice. */
-  reportFaces: (faces: number[]) => void;
-  rerollPending: () => void;
-  closeTray: () => void;
-}
-
-const DiceContext = createContext<DiceContextValue | null>(null);
+import { parseDice, resolveSuccess, rollExpression } from "@/rules";
+import {
+  DiceContext,
+  type DiceContextValue,
+  type PendingRoll,
+  type RollEvent,
+  type RollRequest,
+} from "@/components/app/dice-state";
 
 const MAX_3D_DICE = 6;
 
 /** Only plain d6 pools are rolled in 3D; everything else uses the parser path. */
-export function supports3d(expression: string): boolean {
+function supports3d(expression: string): boolean {
   const parsed = parseDice(expression);
   return !!parsed && parsed.sides === 6 && parsed.count >= 1 && parsed.count <= MAX_3D_DICE;
-}
-
-export function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 export function DiceProvider({ children }: { children: ReactNode }) {
@@ -212,10 +163,4 @@ export function DiceProvider({ children }: { children: ReactNode }) {
     [history, roll, pending, settled, reportFaces, rerollPending, closeTray],
   );
   return <DiceContext.Provider value={value}>{children}</DiceContext.Provider>;
-}
-
-export function useDice() {
-  const ctx = useContext(DiceContext);
-  if (!ctx) throw new Error("useDice must be used inside DiceProvider");
-  return ctx;
 }

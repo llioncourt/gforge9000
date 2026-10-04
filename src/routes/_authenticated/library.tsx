@@ -39,7 +39,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ImportDialog, useTransferTask } from "@/components/ui/transfer-dialog";
+import { ImportDialog } from "@/components/ui/transfer-dialog";
+import { useTransferTask } from "@/components/ui/use-transfer-task";
 import { AiConversionGuideButton } from "@/components/app/ai-conversion-guide-button";
 import {
   addEntry,
@@ -63,7 +64,7 @@ import {
 } from "@/lib/portable";
 import { supabase } from "@/integrations/supabase/client";
 import { buildLink, loadPackItem } from "@/lib/pack-link-service";
-import { invalidatePackLinkQueries } from "@/components/character/pack-link";
+import { invalidatePackLinkQueries } from "@/components/character/pack-link-logic";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";

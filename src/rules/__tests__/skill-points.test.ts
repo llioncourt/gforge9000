@@ -16,7 +16,7 @@ import {
 import type { CharacterEntry, CharacterRecord } from "@/rules";
 import { restoreDefinitionPatch } from "@/lib/pack-link";
 import { libraryEntryToCharacterDraft } from "@/lib/portable";
-import { emptyDraft, toDraft } from "@/components/character/entry-dialog";
+import { emptyDraft, toDraft } from "@/components/character/entry-draft";
 import { buildMcpServer } from "@/lib/mcp/tools.server";
 
 const USER = "00000000-0000-0000-0000-000000000001";

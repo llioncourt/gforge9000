@@ -49,7 +49,7 @@ import { useT } from "@/i18n/hooks";
 
 const ModelViewer = lazy(() => import("@/components/character/model-viewer"));
 
-export function useModelUrl(path: string | null | undefined) {
+function useModelUrl(path: string | null | undefined) {
   const query = useQuery({
     queryKey: ["model3d", path ?? "none"],
     queryFn: () => modelUrl(path),

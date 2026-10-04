@@ -16,7 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FileDropzone } from "@/components/ui/FileDropzone";
-import { ImportDialog, useTransferTask } from "@/components/ui/transfer-dialog";
+import { ImportDialog } from "@/components/ui/transfer-dialog";
+import { useTransferTask } from "@/components/ui/use-transfer-task";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";

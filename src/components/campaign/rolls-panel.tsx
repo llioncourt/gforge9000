@@ -5,7 +5,7 @@ import { listCampaignRolls } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { outcomeTone } from "@/components/app/dice-tray";
+import { outcomeTone } from "@/components/app/dice-outcome";
 import { cn } from "@/lib/utils";
 import { useT, useFormatters } from "@/i18n/hooks";
 

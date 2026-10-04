@@ -1,27 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { I18nextProvider } from "react-i18next";
 import type { i18n as I18nInstance } from "i18next";
-import {
-  DEFAULT_LOCALE,
-  type LocaleDefinition,
-  enabledLocales,
-  getLocale,
-  normalizeLocale,
-} from "./config";
+import { DEFAULT_LOCALE, enabledLocales, getLocale, normalizeLocale } from "./config";
 import { createI18nInstance } from "./index";
 import { persistLocale } from "./detect";
-
-interface LocaleContextValue {
-  locale: string;
-  definition: LocaleDefinition;
-  locales: LocaleDefinition[];
-  setLocale: (locale: string) => void;
-  /** Called by the account layer to apply a stored profile preference. */
-  applyAccountLocale: (locale: string | null | undefined) => void;
-}
-
-const LocaleContext = createContext<LocaleContextValue | null>(null);
+import { LocaleContext, type LocaleContextValue } from "./locale-context";
 
 /**
  * Single i18n provider for the whole application. The i18next instance is
@@ -81,12 +65,4 @@ export function I18nProvider({
       <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
     </I18nextProvider>
   );
-}
-
-export function useLocale(): LocaleContextValue {
-  const ctx = useContext(LocaleContext);
-  if (!ctx) {
-    throw new Error("useLocale must be used inside <I18nProvider>");
-  }
-  return ctx;
 }

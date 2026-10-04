@@ -59,7 +59,8 @@ import {
   readTimelineFile,
   type TimelineEventInput,
 } from "@/lib/timeline-pack";
-import { ImportDialog, useTransferTask } from "@/components/ui/transfer-dialog";
+import { ImportDialog } from "@/components/ui/transfer-dialog";
+import { useTransferTask } from "@/components/ui/use-transfer-task";
 import { useT } from "@/i18n/hooks";
 
 export type { WorldCalendar } from "@/lib/world-calendar";

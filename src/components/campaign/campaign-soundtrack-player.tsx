@@ -1,13 +1,4 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ChevronDown,
@@ -33,37 +24,17 @@ import {
 } from "@/lib/campaign-soundtrack";
 import { listCampaignSoundFx, soundFxReachesUser, soundFxSignedUrl } from "@/lib/campaign-sound-fx";
 import { derivePlaybackPosition, shouldCorrectDrift } from "@/lib/playback-anchor";
+import {
+  CampaignSoundtrackContext as Context,
+  useCampaignSoundtrack,
+  type Player,
+} from "@/components/campaign/campaign-soundtrack-context";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/i18n/hooks";
 import { useSession } from "@/hooks/use-session";
-
-type Player = {
-  campaignId: string | null;
-  albums: SoundtrackAlbum[];
-  tracks: SoundtrackTrack[];
-  activeTrack: SoundtrackTrack | null;
-  activeAlbum: SoundtrackAlbum | null;
-  isPlaying: boolean;
-  currentTime: number;
-  duration: number;
-  volume: number;
-  loopOne: boolean;
-  isGm: boolean;
-  setVolume: (n: number) => void;
-  setLoopOne: (value: boolean) => Promise<void>;
-  playTrack: (a: SoundtrackAlbum, t: SoundtrackTrack) => Promise<void>;
-  toggle: () => Promise<void>;
-  seek: (n: number) => Promise<void>;
-  next: () => Promise<void>;
-  previous: () => Promise<void>;
-  stop: () => Promise<void>;
-  /** A GM-commanded video takes over: the soundtrack pauses and later resumes. */
-  setVideoActive: (active: boolean) => void;
-};
-const Context = createContext<Player | null>(null);
 
 async function scope(path: string) {
   const campaign = /^\/campaigns\/([0-9a-f-]{36})/i.exec(path)?.[1];
@@ -350,16 +321,6 @@ export function CampaignSoundtrackProvider({
       <Mini />
     </Context.Provider>
   );
-}
-export function useCampaignSoundtrack() {
-  const v = useContext(Context);
-  if (!v) throw new Error("Campaign soundtrack provider is missing");
-  return v;
-}
-
-/** Same context, but tolerant of screens rendered outside the player provider. */
-export function useCampaignSoundtrackOptional() {
-  return useContext(Context);
 }
 function Mini() {
   const p = useCampaignSoundtrack();

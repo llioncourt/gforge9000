@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useTransferTask } from "@/components/ui/transfer-dialog";
+import { useTransferTask } from "@/components/ui/use-transfer-task";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Download, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";

@@ -12,10 +12,11 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { strToU8, unzipSync, zipSync } from "fflate";
+import { strToU8, zipSync } from "fflate";
 import { toast } from "sonner";
 import { FileDropzone } from "@/components/ui/FileDropzone";
-import { ImportDialog, useTransferTask } from "@/components/ui/transfer-dialog";
+import { ImportDialog } from "@/components/ui/transfer-dialog";
+import { useTransferTask } from "@/components/ui/use-transfer-task";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -37,38 +38,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
-import { useCampaignSoundtrack } from "@/components/campaign/campaign-soundtrack-player";
-import {
-  campaignSoundtrackManifestSchema,
-  formatSoundtrackTime,
-  MAX_SOUNDTRACK_COVER_BYTES,
-  MAX_SOUNDTRACK_TRACK_BYTES,
-  soundtrackAudioMime,
-} from "@/lib/campaign-soundtrack-pack";
+import { useCampaignSoundtrack } from "@/components/campaign/campaign-soundtrack-context";
+import { formatSoundtrackTime } from "@/lib/campaign-soundtrack-pack";
 import {
   deleteCampaignSoundtrack,
-  importCampaignSoundtrack,
   soundtrackSignedUrl,
   type SoundtrackAlbum,
 } from "@/lib/campaign-soundtrack";
-import { convertToAvif, isImageFile } from "@/lib/image-avif";
 import {
   buildSoundtrackPackPrompt,
   buildSoundtrackPackReadme,
   SOUNDTRACK_EXAMPLE_MANIFEST,
 } from "@/lib/soundtrack-pack-docs";
+import { importSoundtrackArchive } from "@/lib/soundtrack-archive-import";
 import { useT } from "@/i18n/hooks";
 /** Minimal translate signature shared by the helpers in this file. */
 type Translate = (key: string, options?: Record<string, unknown>) => string;
 
-async function coverToAvifBytes(path: string, bytes: Uint8Array, t: Translate) {
-  if (/\.avif$/i.test(path)) return bytes;
-  const name = path.split("/").pop() ?? "cover.png";
-  const file = new File([bytes.slice().buffer as ArrayBuffer], name);
-  if (!isImageFile(file)) throw new Error(t("soundtrack.errors.coverMustBeImage", { path }));
-  const converted = await convertToAvif(file);
-  return new Uint8Array(await converted.arrayBuffer());
-}
 async function copySoundtrackPrompt(t: Translate) {
   try {
     await navigator.clipboard.writeText(buildSoundtrackPackPrompt());
@@ -195,43 +181,6 @@ function AlbumCover({ album }: { album: SoundtrackAlbum }) {
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-export async function importSoundtrackArchive(campaignId: string, file: File, t: Translate) {
-  const archive = unzipSync(new Uint8Array(await file.arrayBuffer())),
-    pick = (p: string) => archive[p] ?? archive[p.replace(/^\.\//, "")],
-    raw = archive["album.json"];
-  if (!raw) throw new Error(t("soundtrack.errors.missingAlbumJson"));
-  const manifest = campaignSoundtrackManifestSchema.parse(
-      JSON.parse(new TextDecoder().decode(raw)),
-    ),
-    positions = manifest.tracks.map((tr) => tr.position).sort((a, b) => a - b);
-  if (positions.some((p, i) => p !== i + 1)) throw new Error(t("soundtrack.errors.trackPositions"));
-  const coverEntry = pick(manifest.album.cover);
-  if (!coverEntry)
-    throw new Error(t("soundtrack.errors.missingCover", { path: manifest.album.cover }));
-  if (coverEntry.length > MAX_SOUNDTRACK_COVER_BYTES)
-    throw new Error(t("soundtrack.errors.coverTooLarge"));
-  const cover = await coverToAvifBytes(manifest.album.cover, coverEntry, t as Translate);
-  const tracks = manifest.tracks.map((meta) => {
-    const bytes = pick(meta.file);
-    if (!bytes) throw new Error(t("soundtrack.errors.missingTrack", { file: meta.file }));
-    const mime = soundtrackAudioMime(meta.file);
-    if (!mime) throw new Error(t("soundtrack.errors.unsupportedFormat", { file: meta.file }));
-    if (bytes.length > MAX_SOUNDTRACK_TRACK_BYTES)
-      throw new Error(t("soundtrack.errors.trackTooLarge", { file: meta.file }));
-    return {
-      position: meta.position,
-      name: meta.file.split("/").pop() ?? `track-${meta.position}`,
-      bytes,
-      mime,
-    };
-  });
-  await importCampaignSoundtrack(
-    campaignId,
-    manifest,
-    { name: manifest.album.cover, bytes: cover },
-    tracks,
   );
 }
 

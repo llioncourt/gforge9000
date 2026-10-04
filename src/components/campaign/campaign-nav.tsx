@@ -45,7 +45,7 @@ export type CampaignNavGroup = {
   items: CampaignNavItem[];
 };
 
-export function buildCampaignNavGroups(opts: {
+function buildCampaignNavGroups(opts: {
   t: (k: string) => string;
   adaptLabel: string;
   isGm: boolean;

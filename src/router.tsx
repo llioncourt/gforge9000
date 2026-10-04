@@ -20,6 +20,10 @@ export const getRouter = () => {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
+    // Fetch the next screen's code as soon as a link is hovered or touched, so
+    // opening it does not start with a download. Screens load their data
+    // through queries after they mount, so this fetches code only.
+    defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
   });
 

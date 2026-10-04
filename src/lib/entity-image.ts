@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { cachedSignedUrl } from "@/lib/signed-url-cache";
 import { ASSET_BUCKET } from "@/lib/assets";
 import { PORTRAIT_BUCKET } from "@/lib/portrait";
 
@@ -36,6 +37,8 @@ export async function entityImageUrl(
 ): Promise<string | null> {
   if (!reference) return null;
   const { bucket, path } = resolveImageRef(reference, entityId);
-  const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60 * 8);
-  return data?.signedUrl ?? null;
+  return cachedSignedUrl(bucket, path, async () => {
+    const { data } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60 * 8);
+    return data?.signedUrl ?? null;
+  });
 }

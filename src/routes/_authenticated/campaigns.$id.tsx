@@ -194,6 +194,9 @@ export const Route = createFileRoute("/_authenticated/campaigns/$id")({
   component: CampaignPage,
 });
 
+/** Stable stand-in while the campaign loads, so derived data is not rebuilt on every render. */
+const NO_SETTINGS: Record<string, unknown> = {};
+
 function CampaignPage() {
   const { t } = useT("campaigns");
   const { t: tc } = useT("common");
@@ -266,7 +269,7 @@ function CampaignPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["members", id] }),
     onError: (e: Error) => toast.error(e.message),
   });
-  const settings = (campaign.data?.settings ?? {}) as Record<string, unknown>;
+  const settings = (campaign.data?.settings ?? NO_SETTINGS) as Record<string, unknown>;
 
   const campaignRuleset = useMemo(() => rulesetFromSettings(settings), [settings]);
 

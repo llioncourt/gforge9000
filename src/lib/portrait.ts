@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { cachedSignedUrl } from "@/lib/signed-url-cache";
 import { AVIF_MIME, convertToAvif } from "@/lib/image-avif";
 
 export const PORTRAIT_BUCKET = "portraits";
@@ -79,11 +80,13 @@ export async function removePortrait(path: string) {
 
 export async function portraitUrl(path: string | null | undefined): Promise<string | null> {
   if (!path) return null;
-  const { data, error } = await supabase.storage
-    .from(PORTRAIT_BUCKET)
-    .createSignedUrl(path, 60 * 60 * 8);
-  if (error) return null;
-  return data?.signedUrl ?? null;
+  return cachedSignedUrl(PORTRAIT_BUCKET, path, async () => {
+    const { data, error } = await supabase.storage
+      .from(PORTRAIT_BUCKET)
+      .createSignedUrl(path, 60 * 60 * 8);
+    if (error) return null;
+    return data?.signedUrl ?? null;
+  });
 }
 
 /** Initials used by the neutral placeholder — no third-party artwork. */

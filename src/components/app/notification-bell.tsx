@@ -49,6 +49,11 @@ export function NotificationBell() {
     staleTime: 1000 * 30,
   });
 
+  // The live channel follows the signed-in identity. The session object is
+  // replaced on every token renewal and tab focus; keying on it tore the
+  // channel down and opened it again each time.
+  const userId = user?.id ?? null;
+
   const [permission, setPermission] = useState<NotificationPermissionState>("unsupported");
 
   useEffect(() => {
@@ -59,19 +64,19 @@ export function NotificationBell() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     const channel = supabase
-      .channel(`notifications:${user.id}`)
+      .channel(`notifications:${userId}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "notifications",
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+          queryClient.invalidateQueries({ queryKey: ["notifications", userId] });
           if (payload.eventType !== "INSERT") return;
           const row = payload.new as NotificationRow;
           if (row.read_at) return;
@@ -88,7 +93,7 @@ export function NotificationBell() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient]);
+  }, [userId, queryClient]);
 
   const enableAlerts = async () => {
     const next = await requestNotificationPermission();

@@ -32,6 +32,7 @@ import { useT } from "@/i18n/hooks";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getIsAdmin } from "@/lib/admin.functions";
+import { clearSignedUrlCache } from "@/lib/signed-url-cache";
 
 /** Navigation items keep a translation key, never a literal label. */
 const NAV = [
@@ -54,7 +55,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useT("navigation");
   useAccountLocale();
   const isAdminFn = useServerFn(getIsAdmin);
-  const { data: isAdmin } = useQuery({ queryKey: ["is-admin"], queryFn: () => isAdminFn(), staleTime: 5 * 60_000 });
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin"],
+    queryFn: () => isAdminFn(),
+    staleTime: 5 * 60_000,
+  });
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -81,6 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   async function signOut() {
     await queryClient.cancelQueries();
     queryClient.clear();
+    clearSignedUrlCache();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
@@ -148,7 +154,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 to="/admin"
                 className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground font-medium ring-1 ring-sidebar-border" }}
+                activeProps={{
+                  className:
+                    "bg-sidebar-accent text-sidebar-accent-foreground font-medium ring-1 ring-sidebar-border",
+                }}
               >
                 <ShieldCheck className="h-4 w-4" />
                 {t("links.admin")}

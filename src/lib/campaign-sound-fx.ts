@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import type { Tables } from "@/integrations/supabase/types";
 
 export const CAMPAIGN_SOUND_FX_BUCKET = "campaign-sound-fx";
@@ -81,7 +82,7 @@ export async function uploadCampaignSoundFx(campaignId: string, title: string, f
   if (validation) throw new Error(validation);
   const cleanTitle = title.trim();
   if (!cleanTitle) throw new Error("Enter a sound effect title.");
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
   const mime = soundFxMime(file.name, file.type);
@@ -130,7 +131,7 @@ export async function triggerCampaignSoundFx(
   effectId: string,
   targetUserIds: string[] = [],
 ) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   if (!auth.user) throw new Error("You need to be signed in.");
   const result = await supabase.from("campaign_sound_fx_state").upsert({
     campaign_id: campaignId,

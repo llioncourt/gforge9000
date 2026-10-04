@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import type { Tables } from "@/integrations/supabase/types";
 
 export const CAMPAIGN_INTRO_BUCKET = "campaign-intros";
@@ -136,7 +137,7 @@ export async function uploadCampaignVideo(
   if (validation) throw new Error(validation);
   const title = input.title.trim();
   if (!title) throw new Error("Enter a video title.");
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
   const currentIntro = input.videoType === "intro" ? await getCampaignIntro(campaignId) : null;
@@ -213,7 +214,7 @@ export async function setCampaignVideoVisibility(video: CampaignVideo, visibleTo
 }
 
 export async function saveCampaignIntroView(campaignId: string, introVersion: string) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   if (!auth.user) throw new Error("You need to be signed in.");
   const { error } = await supabase.from("campaign_intro_views").upsert({
     campaign_id: campaignId,
@@ -243,7 +244,7 @@ async function uploadThumbBlob(campaignId: string, userId: string, blob: Blob) {
 
 /** Replace the stored thumbnail frame of a video. */
 export async function setCampaignVideoThumb(video: CampaignVideo, blob: Blob) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
   const path = await uploadThumbBlob(video.campaign_id, user.id, blob);

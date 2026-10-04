@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 
 export const MODEL_BUCKET = "models";
 export const MODEL_MAX_BYTES = 50 * 1024 * 1024;
@@ -21,7 +22,7 @@ export function modelPathFor(userId: string, characterId: string) {
 export async function uploadModel(characterId: string, file: File): Promise<string> {
   const invalid = validateModelFile(file);
   if (invalid) throw new Error(invalid);
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   if (!auth.user) throw new Error("You need to be signed in to upload a model.");
   const path = modelPathFor(auth.user.id, characterId);
   const { error } = await supabase.storage

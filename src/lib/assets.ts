@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import { cachedSignedUrl } from "@/lib/signed-url-cache";
 import { toAvifIfImage } from "@/lib/image-avif";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
@@ -70,7 +71,7 @@ export async function uploadAssetFile(
   campaignId: string,
   file: File,
 ): Promise<{ path: string; mimeType: string; byteSize: number }> {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
   const stored = await toAvifIfImage(file);

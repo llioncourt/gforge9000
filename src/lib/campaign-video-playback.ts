@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import { derivePlaybackPosition, type PlaybackAnchor } from "@/lib/playback-anchor";
 
 /**
@@ -41,7 +42,7 @@ export async function setCampaignVideoPlayback(input: {
   positionSeconds: number;
   loopOne?: boolean;
 }): Promise<void> {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
   const { error } = await db.from("campaign_video_playback").upsert({

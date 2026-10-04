@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import type { Tables } from "@/integrations/supabase/types";
 import type { CampaignSoundtrackManifest } from "@/lib/campaign-soundtrack-pack";
 
@@ -57,7 +58,7 @@ export async function importCampaignSoundtrack(
   cover: { name: string; bytes: Uint8Array },
   tracks: Array<{ position: number; name: string; bytes: Uint8Array; mime: string }>,
 ) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
   const albumId = crypto.randomUUID();
@@ -146,7 +147,7 @@ export async function setCampaignSoundtrackState(input: {
   positionSeconds: number;
   loopOne: boolean;
 }) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
   const position = Math.max(0, input.positionSeconds);

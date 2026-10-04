@@ -1,5 +1,6 @@
 import { DEFAULT_PACK_NAME } from "@/lib/packs";
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import type { CharacterEntry, CharacterRecord } from "@/rules";
 
@@ -86,7 +87,7 @@ export async function listEntries(characterId: string) {
 }
 
 export async function createCharacter(input: Partial<TablesInsert<"characters">> = {}) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   return unwrap(
     await supabase
       .from("characters")
@@ -128,7 +129,7 @@ export async function deleteEntriesOf(characterId: string) {
 
 /** Finds the sheet a previous import of the same file produced, if any. */
 export async function findCharacterByImportKey(key: string) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   if (!auth.user) return null;
   const { data, error } = await supabase
     .from("characters")
@@ -204,7 +205,7 @@ export async function getCampaign(id: string) {
 }
 
 export async function createCampaign(input: Partial<TablesInsert<"campaigns">> & { name: string }) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   return unwrap(
     await supabase
       .from("campaigns")
@@ -310,7 +311,7 @@ export async function listNotes(campaignId: string) {
 }
 
 export async function addNote(input: TablesInsert<"campaign_notes">) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   return unwrap(
     await supabase
       .from("campaign_notes")
@@ -421,7 +422,7 @@ export async function listLibraryPackNames(): Promise<string[]> {
 }
 
 export async function createLibraryEntry(input: TablesInsert<"library_entries">) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const pack = (input.pack ?? "").trim() || DEFAULT_PACK_NAME;
   await ensureContentPack(pack);
   return unwrap(
@@ -478,7 +479,7 @@ export async function listCampaignRolls(campaignId: string, limit = 100) {
 export type CampaignRollRow = Awaited<ReturnType<typeof listCampaignRolls>>[number];
 
 export async function recordRoll(input: Omit<TablesInsert<"roll_history">, "user_id">) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   if (!auth.user) return null;
   return unwrap(
     await supabase
@@ -588,7 +589,7 @@ const IMPORT_BATCH_SIZE = 400;
 export async function importLibraryEntries(
   rows: Omit<TablesInsert<"library_entries">, "owner_id">[],
 ) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   if (!rows.length) return [] as LibraryRow[];
   const withPacks = rows.map((r) => ({
     ...r,
@@ -621,7 +622,7 @@ export async function importLibraryEntries(
 
 /** Creates the pack row if this user does not have it yet. */
 async function ensureContentPack(name: string) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   if (!auth.user) return;
   const { data: existing } = await supabase
     .from("content_packs")
@@ -644,7 +645,7 @@ export async function listContentPacks() {
 export async function createContentPack(
   input: Partial<TablesInsert<"content_packs">> & { name: string },
 ) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   return unwrap(
     await supabase
       .from("content_packs")
@@ -661,7 +662,7 @@ export async function updateContentPack(id: string, patch: TablesUpdate<"content
 /** Renames a pack and re-tags every library entry that referenced the old name. */
 export async function renameContentPack(id: string, oldName: string, newName: string) {
   const pack = await updateContentPack(id, { name: newName });
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   if (auth.user) {
     const { error } = await supabase
       .from("library_entries")
@@ -681,7 +682,7 @@ export async function renameContentPack(id: string, oldName: string, newName: st
  * came from and can report it as no longer available.
  */
 export async function deletePackContents(name: string) {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   if (!auth.user) return;
   const { data: mine } = await supabase
     .from("characters")

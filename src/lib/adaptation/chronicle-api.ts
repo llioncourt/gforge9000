@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import { hashValue } from "@/lib/adaptation/hash";
 import type { ChronicleItemType, ProvenanceType } from "@/lib/adaptation/types";
 
@@ -77,7 +78,7 @@ export async function createSessionChronicle(input: {
   prep_note_id?: string | null;
   recap_note_id?: string | null;
 }): Promise<SessionChronicle> {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const created_by = auth.user?.id;
   if (!created_by) throw new Error("You must be signed in.");
   return unwrap(

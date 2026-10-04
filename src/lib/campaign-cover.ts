@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import { ASSET_BUCKET, ASSET_MAX_BYTES, assetPathFor, assetUrl } from "@/lib/assets";
 import { isImageFile, toAvifIfImage } from "@/lib/image-avif";
 
@@ -24,7 +25,7 @@ export async function uploadCampaignCover(campaignId: string, file: File): Promi
   const problem = validateCampaignCover(file);
   if (problem) throw new Error(problem);
 
-  const { data } = await supabase.auth.getUser();
+  const { data } = await currentUser();
   if (!data.user) throw new Error("You need to be signed in.");
 
   const converted = await toAvifIfImage(file);

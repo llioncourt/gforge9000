@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import type {
   AdaptationStatus,
   AssetRole,
@@ -213,7 +214,7 @@ export async function createAdaptation(input: {
   target_book_narrative?: boolean;
   target_adventure_module?: boolean;
 }): Promise<AdaptationProject> {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const created_by = auth.user?.id;
   if (!created_by) throw new Error("You must be signed in.");
   return unwrap(
@@ -342,7 +343,7 @@ export async function upsertFacts(
 }
 
 export async function reviewFact(id: string, status: CanonStatus): Promise<AdaptationFactRow> {
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   return unwrap(
     await db
       .from("adaptation_facts")

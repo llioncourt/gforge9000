@@ -9,6 +9,7 @@
  */
 import { unzipSync, zipSync } from "fflate";
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import { convertToAvif, isImageFile } from "@/lib/image-avif";
 import { MAX_CAMPAIGN_PACKAGE_BYTES, type CampaignImportSummary } from "@/lib/campaign-package";
 import { importCampaignPackageCore } from "@/lib/campaign-package-import-core";
@@ -55,7 +56,7 @@ export async function importCampaignPackage(
       `The package is larger than ${Math.round(MAX_CAMPAIGN_PACKAGE_BYTES / 1024 / 1024)} MB.`,
     );
   }
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
 

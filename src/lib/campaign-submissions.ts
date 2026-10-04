@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   uploadCampaignVideo,
@@ -55,7 +56,7 @@ export async function submitContent(input: {
 }) {
   const invalid = validateSubmissionFile(input.kind, input.file);
   if (invalid) throw new Error(invalid);
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   const user = auth.user;
   if (!user) throw new Error("You need to be signed in.");
   const safe = input.file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -115,7 +116,7 @@ export async function approveSubmission(
   } else if (row.kind === "sound_fx") {
     await uploadCampaignSoundFx(row.campaign_id, row.title, file);
   } else if (row.kind === "image") {
-    const { data: auth } = await supabase.auth.getUser();
+    const { data: auth } = await currentUser();
     if (!auth.user) throw new Error("You need to be signed in.");
     const stored = await uploadAssetFile(row.campaign_id, file);
     await createAsset({

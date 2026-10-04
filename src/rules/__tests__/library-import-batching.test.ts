@@ -38,7 +38,10 @@ vi.mock("@/integrations/supabase/client", () => {
   };
   return {
     supabase: {
-      auth: { getUser: () => Promise.resolve({ data: { user: { id: "user-1" } } }) },
+      auth: {
+        getUser: () => Promise.resolve({ data: { user: { id: "user-1" } } }),
+        getSession: () => Promise.resolve({ data: { session: { user: { id: "user-1" } } } }),
+      },
       from: (name: string) => table(name),
     },
   };

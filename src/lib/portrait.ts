@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currentUser } from "@/lib/current-user";
 import { cachedSignedUrl } from "@/lib/signed-url-cache";
 import { AVIF_MIME, convertToAvif } from "@/lib/image-avif";
 
@@ -46,7 +47,7 @@ export function portraitPathFor(
 export async function uploadPortrait(characterId: string, file: File): Promise<string> {
   const invalid = validatePortraitFile(file);
   if (invalid) throw new Error(invalid);
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   if (!auth.user) throw new Error("You need to be signed in to upload a portrait.");
   const avif = await convertToAvif(file);
   const path = portraitPathFor(auth.user.id, characterId, avif);
@@ -62,7 +63,7 @@ export async function uploadPortrait(characterId: string, file: File): Promise<s
 export async function uploadAvatar(file: File): Promise<string> {
   const invalid = validatePortraitFile(file);
   if (invalid) throw new Error(invalid);
-  const { data: auth } = await supabase.auth.getUser();
+  const { data: auth } = await currentUser();
   if (!auth.user) throw new Error("You need to be signed in to upload a photo.");
   const avif = await convertToAvif(file);
   const path = `${auth.user.id}/avatar/${crypto.randomUUID()}.avif`;

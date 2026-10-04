@@ -35,7 +35,9 @@ export function StoryPanel({ campaignId, isGm }: { campaignId: string; isGm: boo
     queryFn: () => listEntities(campaignId),
   });
 
-  const rows = entities.data ?? [];
+  // Same list object between renders, so the groupings below are rebuilt only
+  // when the entities actually change.
+  const rows = useMemo(() => entities.data ?? [], [entities.data]);
 
   const childrenOf = useMemo(() => {
     const map = new Map<string, EntityRow[]>();

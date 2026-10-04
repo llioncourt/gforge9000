@@ -446,7 +446,8 @@ function CharacterPage() {
   }
 
   const [pickerKinds, setPickerKinds] = useState<EntryKind[] | null>(null);
-  const linkedPacks = form?.packs ?? [];
+  const formPacks = form?.packs;
+  const linkedPacks = useMemo(() => formPacks ?? [], [formPacks]);
 
   const campaignPacks = useMemo(
     () => allowedPacksOf(campaignQuery.data?.settings),

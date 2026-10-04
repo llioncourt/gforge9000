@@ -105,7 +105,17 @@
       "bodyPlaceholder": "Conteúdo",
       "gmOnlyLabel": "Somente mestre",
       "submit": "Adicionar entrada",
-      "added": "Entrada adicionada."
+      "added": "Entrada adicionada.",
+      "privateLabel": "Nota privada",
+      "privateHint": "Só você e o mestre veem esta nota.",
+      "publicHint": "Todos na campanha veem esta nota."
+    },
+    "privateBadge": "Privada",
+    "fromSheet": {
+      "button": "Nota na Story",
+      "buttonAria": "Adicionar uma nota à Story da campanha",
+      "title": "Nova nota na Story",
+      "description": "A nota entra na Story da campanha deste personagem."
     }
   },
   "members": {

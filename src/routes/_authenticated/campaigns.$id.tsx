@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -10,12 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { CampaignNav } from "@/components/campaign/campaign-nav";
+import { StoryNoteForm } from "@/components/campaign/story-note-form";
 import {
   OtherPlayerRosterCard,
   shouldUseOtherPlayerRosterCard,
@@ -46,12 +46,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  addNote,
   deleteNote,
   getCampaign,
   listCampaignCharacters,
   listCharacters,
-  listEntriesForCharacters,
+  listCampaignEntries,
   listMembers,
   removeMember,
   transferCampaignGm,
@@ -250,16 +249,46 @@ function CampaignPage() {
   const members = useQuery({ queryKey: ["members", id], queryFn: () => listMembers(id) });
   const notes = useQuery({ queryKey: ["notes", id], queryFn: () => listNotes(id) });
   const mine = useQuery({ queryKey: ["characters"], queryFn: listCharacters });
+  // Read alongside the roster, not after it: the entries are filtered by the
+  // campaign itself, so the cards have their numbers when they first appear.
   const entries = useQuery({
-    queryKey: ["campaign-entries", id, roster.data?.map((c) => c.id).join(",")],
-    queryFn: () => listEntriesForCharacters((roster.data ?? []).map((c) => c.id)),
-    enabled: (roster.data?.length ?? 0) > 0,
+    queryKey: ["campaign-entries", id],
+    queryFn: () => listCampaignEntries(id),
   });
+  // A character joining or leaving the roster changes which entries matter.
+  const rosterSignature = roster.data?.map((c) => c.id).join(",");
+  const lastRosterSignature = useRef<string | null>(null);
+  useEffect(() => {
+    if (rosterSignature === undefined) return;
+    if (lastRosterSignature.current !== null && lastRosterSignature.current !== rosterSignature) {
+      void queryClient.invalidateQueries({ queryKey: ["campaign-entries", id] });
+    }
+    lastRosterSignature.current = rosterSignature;
+  }, [rosterSignature, id, queryClient]);
 
   const libraryPacks = useQuery({ queryKey: ["library-packs"], queryFn: listLibraryPackNames });
   const knownPacks = useMemo(() => libraryPacks.data ?? [], [libraryPacks.data]);
 
   const isGm = campaign.data?.gm_id === user?.id;
+
+  // Other players' cards come from a separate, card-safe read. The roster is
+  // shown once everything it draws is in, so the grid appears whole instead of
+  // the screen settling first and those cards arriving afterwards. A GM sees
+  // every character through the roster itself and does not wait for that read.
+  const otherPlayerCards = useMemo(
+    () =>
+      (rosterCards.data ?? []).filter(
+        (card) =>
+          card.ownerId !== user?.id &&
+          !(roster.data ?? []).some((character) => character.id === card.id),
+      ),
+    [rosterCards.data, roster.data, user?.id],
+  );
+  const rosterPending =
+    roster.isLoading ||
+    campaign.isLoading ||
+    (!isGm && rosterCards.isLoading) ||
+    ((roster.data?.length ?? 0) > 0 && entries.isLoading);
   const isProducer = (members.data ?? []).some(
     (m) => m.user_id === user?.id && m.role === "producer",
   );
@@ -403,33 +432,11 @@ function CampaignPage() {
   });
 
   const [noteFilter, setNoteFilter] = useState("all");
-  const [noteTitle, setNoteTitle] = useState("");
-  const [noteBody, setNoteBody] = useState("");
-  const [noteKind, setNoteKind] = useState("note");
-  const [gmOnly, setGmOnly] = useState(false);
 
   const visibleNotes = useMemo(
     () => (notes.data ?? []).filter((n) => noteFilter === "all" || n.kind === noteFilter),
     [notes.data, noteFilter],
   );
-
-  const createNote = useMutation({
-    mutationFn: () =>
-      addNote({
-        campaign_id: id,
-        title: noteTitle,
-        body: noteBody,
-        kind: noteKind,
-        gm_only: gmOnly,
-      } as never),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes", id] });
-      setNoteTitle("");
-      setNoteBody("");
-      toast.success(t("notes.addEntry.added"));
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
 
   const removeNote = useMutation({
     mutationFn: deleteNote,
@@ -577,32 +584,26 @@ function CampaignPage() {
         </TabsContent>
 
         <TabsContent value="roster" className="mt-6 space-y-6">
-          {roster.isLoading ? (
+          {rosterPending ? (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {[0, 1, 2].map((i) => (
                 <Skeleton key={i} className="h-[220px] w-full rounded-lg" />
               ))}
             </div>
-          ) : (roster.data?.length ?? 0) === 0 ? (
+          ) : (roster.data?.length ?? 0) === 0 && otherPlayerCards.length === 0 ? (
             <div className="panel p-8 text-center text-sm text-muted-foreground">
               {t("roster.empty")}
             </div>
           ) : (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {(rosterCards.data ?? [])
-                .filter(
-                  (card) =>
-                    card.ownerId !== user?.id &&
-                    !(roster.data ?? []).some((character) => character.id === card.id),
-                )
-                .map((card) => (
-                  <OtherPlayerRosterCard
-                    key={card.id}
-                    characterName={card.characterName}
-                    playerName={card.playerName}
-                    portraitUrl={card.portraitUrl}
-                  />
-                ))}
+              {otherPlayerCards.map((card) => (
+                <OtherPlayerRosterCard
+                  key={card.id}
+                  characterName={card.characterName}
+                  playerName={card.playerName}
+                  portraitUrl={card.portraitUrl}
+                />
+              ))}
               {roster.data?.map((c) => {
                 const sheet = sheets.get(c.id);
                 const playerMember = (members.data ?? []).find(
@@ -974,6 +975,11 @@ function CampaignPage() {
                           visibility={n.gm_only ? "GM_ONLY" : "ALL_PLAYERS"}
                           isGm={isGm}
                         />
+                        {!isGm && n.gm_only ? (
+                          <Badge variant="outline" className="text-[10px] uppercase">
+                            {t("notes.privateBadge")}
+                          </Badge>
+                        ) : null}
                       </div>
                       <Button
                         size="icon"
@@ -995,42 +1001,7 @@ function CampaignPage() {
 
           <div className="panel h-fit space-y-3 p-4">
             <h3 className="font-display text-sm font-semibold">{t("notes.addEntry.title")}</h3>
-            <Input
-              placeholder={t("notes.addEntry.titlePlaceholder")}
-              value={noteTitle}
-              onChange={(e) => setNoteTitle(e.target.value)}
-            />
-            <Textarea
-              rows={5}
-              placeholder={t("notes.addEntry.bodyPlaceholder")}
-              value={noteBody}
-              onChange={(e) => setNoteBody(e.target.value)}
-            />
-            <Select value={noteKind} onValueChange={setNoteKind}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="note">{t("notes.kinds.note")}</SelectItem>
-                <SelectItem value="handout">{t("notes.kinds.handout")}</SelectItem>
-                <SelectItem value="session">{t("notes.kinds.session")}</SelectItem>
-                <SelectItem value="npc">{t("notes.kinds.npc")}</SelectItem>
-                <SelectItem value="party-inventory">{t("notes.kinds.partyInventory")}</SelectItem>
-              </SelectContent>
-            </Select>
-            {isGm ? (
-              <div className="flex items-center justify-between">
-                <Label htmlFor="gm-only">{t("notes.addEntry.gmOnlyLabel")}</Label>
-                <Switch id="gm-only" checked={gmOnly} onCheckedChange={setGmOnly} />
-              </div>
-            ) : null}
-            <Button
-              className="w-full"
-              onClick={() => createNote.mutate()}
-              disabled={!noteTitle || createNote.isPending}
-            >
-              {t("notes.addEntry.submit")}
-            </Button>
+            <StoryNoteForm campaignId={id} isGm={isGm} />
           </div>
         </TabsContent>
 

@@ -105,7 +105,17 @@
       "bodyPlaceholder": "Body",
       "gmOnlyLabel": "GM only",
       "submit": "Add entry",
-      "added": "Entry added."
+      "added": "Entry added.",
+      "privateLabel": "Private note",
+      "privateHint": "Only you and the GM can see this note.",
+      "publicHint": "Everyone in the campaign can see this note."
+    },
+    "privateBadge": "Private",
+    "fromSheet": {
+      "button": "Story note",
+      "buttonAria": "Add a note to the campaign Story",
+      "title": "New Story note",
+      "description": "The note is added to the Story of this character's campaign."
     }
   },
   "members": {

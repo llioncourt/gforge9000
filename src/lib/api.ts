@@ -283,6 +283,35 @@ export async function listEntriesForCharacters(ids: string[]) {
   return unwrap(await supabase.from("character_entries").select("*").in("character_id", ids));
 }
 
+/**
+ * Every entry of every character in a campaign that the caller may read.
+ *
+ * Filtered by the campaign itself, so it does not have to wait for the roster
+ * to load first (the roster screen used to fetch the characters, and only
+ * then ask for their entries by id). Read in pages so a large campaign is
+ * never cut short by the per-request row limit.
+ */
+export async function listCampaignEntries(campaignId: string): Promise<EntryRow[]> {
+  const pageSize = 1000;
+  const rows: EntryRow[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase
+      .from("character_entries")
+      .select("*, characters!inner(campaign_id)")
+      .eq("characters.campaign_id", campaignId)
+      .order("id", { ascending: true })
+      .range(from, from + pageSize - 1);
+    if (error || !data) {
+      // The joined filter is unavailable: fall back to the two-step read.
+      const roster = await listCampaignCharacters(campaignId);
+      return listEntriesForCharacters(roster.map((character) => character.id));
+    }
+    for (const { characters: _campaign, ...row } of data) rows.push(row as EntryRow);
+    if (data.length < pageSize) break;
+  }
+  return rows;
+}
+
 export async function setCharacterCampaign(characterId: string, campaignId: string | null) {
   if (campaignId === null) {
     // Unlinking goes through a security-definer RPC: the GM must be allowed to
@@ -405,6 +434,23 @@ export async function countLibrary(): Promise<number> {
 
 /** Distinct pack names present in the catalogue, without fetching every field. */
 export async function listLibraryPackNames(): Promise<string[]> {
+  // One small request when the database offers the direct list; the catalogue
+  // walk below remains as the fallback.
+  try {
+    const direct = await (
+      supabase as unknown as {
+        rpc: (fn: string) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
+      }
+    ).rpc("list_library_pack_names");
+    if (!direct.error && Array.isArray(direct.data)) {
+      return direct.data.filter(
+        (name): name is string => typeof name === "string" && name.length > 0,
+      );
+    }
+  } catch {
+    /* fall through to the catalogue walk */
+  }
+
   const pageSize = 1000;
   const names = new Set<string>();
   for (let from = 0; ; from += pageSize) {

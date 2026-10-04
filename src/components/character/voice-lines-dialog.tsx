@@ -2,7 +2,15 @@ import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { GripVertical, Loader2, MessageSquareText, Pause, Play, RefreshCw, Trash2 } from "lucide-react";
+import {
+  GripVertical,
+  Loader2,
+  MessageSquareText,
+  Pause,
+  Play,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -10,7 +18,13 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,7 +77,15 @@ export function VoiceLinesDialog({
   );
 }
 
-function LinesBody({ characterId, hasVoice, hasKey }: { characterId: string; hasVoice: boolean; hasKey: boolean }) {
+function LinesBody({
+  characterId,
+  hasVoice,
+  hasKey,
+}: {
+  characterId: string;
+  hasVoice: boolean;
+  hasKey: boolean;
+}) {
   const { t } = useT("characters");
   const qc = useQueryClient();
   const key = ["voice-lines", characterId];
@@ -77,7 +99,8 @@ function LinesBody({ characterId, hasVoice, hasKey }: { characterId: string; has
   const [text, setText] = useState("");
   const [label, setLabel] = useState("");
   const create = useMutation({
-    mutationFn: (generate: boolean) => createFn({ data: { characterId, text, label: label || null, generate } }),
+    mutationFn: (generate: boolean) =>
+      createFn({ data: { characterId, text, label: label || null, generate } }),
     onSuccess: () => {
       setText("");
       setLabel("");
@@ -114,18 +137,37 @@ function LinesBody({ characterId, hasVoice, hasKey }: { characterId: string; has
       {canEdit && (
         <div className="space-y-2 rounded-lg border border-border p-3">
           <Label>{t("voice.lines.new")}</Label>
-          <Input value={label} maxLength={120} placeholder={t("voice.lines.label")} onChange={(e) => setLabel(e.target.value)} />
-          <Textarea value={text} rows={3} placeholder={t("voice.linePlaceholder")} onChange={(e) => setText(e.target.value)} />
+          <Input
+            value={label}
+            maxLength={120}
+            placeholder={t("voice.lines.label")}
+            onChange={(e) => setLabel(e.target.value)}
+          />
+          <Textarea
+            value={text}
+            rows={3}
+            placeholder={t("voice.linePlaceholder")}
+            onChange={(e) => setText(e.target.value)}
+          />
           <p className="text-xs text-muted-foreground">{t("voice.lines.tagsHint")}</p>
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <span className={tooLong ? "text-destructive" : ""}>
               {text.length}/{MAX}
             </span>
             <div className="flex gap-2">
-              <Button size="sm" variant="ghost" disabled={!text.trim() || tooLong || create.isPending} onClick={() => create.mutate(false)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={!text.trim() || tooLong || create.isPending}
+                onClick={() => create.mutate(false)}
+              >
                 {t("voice.lines.saveOnly")}
               </Button>
-              <Button size="sm" disabled={!text.trim() || tooLong || !canGenerate || create.isPending} onClick={() => create.mutate(true)}>
+              <Button
+                size="sm"
+                disabled={!text.trim() || tooLong || !canGenerate || create.isPending}
+                onClick={() => create.mutate(true)}
+              >
                 {create.isPending && <Loader2 className="mr-1 size-4 animate-spin" />}
                 {t("voice.lines.saveGenerate")}
               </Button>
@@ -133,7 +175,9 @@ function LinesBody({ characterId, hasVoice, hasKey }: { characterId: string; has
           </div>
           {tooLong && <p className="text-xs text-destructive">{t("voice.lines.tooLong")}</p>}
           {!hasKey && <p className="text-xs text-muted-foreground">{t("voice.needKey")}</p>}
-          {hasKey && !hasVoice && <p className="text-xs text-muted-foreground">{t("voice.lines.noVoice")}</p>}
+          {hasKey && !hasVoice && (
+            <p className="text-xs text-muted-foreground">{t("voice.lines.noVoice")}</p>
+          )}
         </div>
       )}
 
@@ -158,7 +202,12 @@ function LinesBody({ characterId, hasVoice, hasKey }: { characterId: string; has
               onDrop={() => drop(line.id)}
               className={`rounded-lg border border-border p-3 ${dragId === line.id ? "opacity-50" : ""}`}
             >
-              <LineRow line={line} canEdit={canEdit} canGenerate={canGenerate} onChanged={refresh} />
+              <LineRow
+                line={line}
+                canEdit={canEdit}
+                canGenerate={canGenerate}
+                onChanged={refresh}
+              />
             </li>
           ))}
         </ul>
@@ -195,7 +244,11 @@ function LineRow({
     onSuccess: onChanged,
     onError,
   });
-  const remove = useMutation({ mutationFn: () => deleteFn({ data: { lineId: line.id } }), onSuccess: onChanged, onError });
+  const remove = useMutation({
+    mutationFn: () => deleteFn({ data: { lineId: line.id } }),
+    onSuccess: onChanged,
+    onError,
+  });
   const generate = useMutation({
     mutationFn: () => speakFn({ data: { lineId: line.id, regenerate: true } }),
     onSuccess: onChanged,
@@ -223,7 +276,12 @@ function LineRow({
 
   return (
     <div className="flex gap-2">
-      {canEdit && <GripVertical className="mt-2 size-4 shrink-0 cursor-grab text-muted-foreground" aria-label={t("voice.lines.dragHint")} />}
+      {canEdit && (
+        <GripVertical
+          className="mt-2 size-4 shrink-0 cursor-grab text-muted-foreground"
+          aria-label={t("voice.lines.dragHint")}
+        />
+      )}
       <div className="min-w-0 flex-1 space-y-2">
         {canEdit ? (
           <>
@@ -239,7 +297,8 @@ function LineRow({
               rows={2}
               onChange={(e) => setText(e.target.value)}
               onBlur={() => {
-                if (text.trim() && text.length <= MAX && text !== line.text) update.mutate({ text });
+                if (text.trim() && text.length <= MAX && text !== line.text)
+                  update.mutate({ text });
               }}
             />
           </>
@@ -264,12 +323,23 @@ function LineRow({
           ) : (
             <span>{t("voice.lines.noAudio")}</span>
           )}
-          {line.duration_seconds != null && line.audio_path && <span>{line.duration_seconds.toFixed(1)}s</span>}
+          {line.duration_seconds != null && line.audio_path && (
+            <span>{line.duration_seconds.toFixed(1)}s</span>
+          )}
           {line.stale && <Badge variant="outline">{t("voice.lines.stale")}</Badge>}
           {canEdit && (
             <>
-              <Button size="sm" variant="outline" disabled={!canGenerate || generate.isPending} onClick={() => generate.mutate()}>
-                {generate.isPending ? <Loader2 className="mr-1 size-4 animate-spin" /> : <RefreshCw className="mr-1 size-4" />}
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!canGenerate || generate.isPending}
+                onClick={() => generate.mutate()}
+              >
+                {generate.isPending ? (
+                  <Loader2 className="mr-1 size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="mr-1 size-4" />
+                )}
                 {line.audio_path ? t("voice.lines.regenerate") : t("voice.lines.generate")}
               </Button>
               <label className="flex items-center gap-1">
@@ -291,7 +361,9 @@ function LineRow({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>{t("voice.lines.cancel")}</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => remove.mutate()}>{t("voice.lines.delete")}</AlertDialogAction>
+                    <AlertDialogAction onClick={() => remove.mutate()}>
+                      {t("voice.lines.delete")}
+                    </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>

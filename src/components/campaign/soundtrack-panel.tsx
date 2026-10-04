@@ -198,42 +198,41 @@ function AlbumCover({ album }: { album: SoundtrackAlbum }) {
   );
 }
 export async function importSoundtrackArchive(campaignId: string, file: File, t: Translate) {
-      const archive = unzipSync(new Uint8Array(await file.arrayBuffer())),
-        pick = (p: string) => archive[p] ?? archive[p.replace(/^\.\//, "")],
-        raw = archive["album.json"];
-      if (!raw) throw new Error(t("soundtrack.errors.missingAlbumJson"));
-      const manifest = campaignSoundtrackManifestSchema.parse(
-          JSON.parse(new TextDecoder().decode(raw)),
-        ),
-        positions = manifest.tracks.map((tr) => tr.position).sort((a, b) => a - b);
-      if (positions.some((p, i) => p !== i + 1))
-        throw new Error(t("soundtrack.errors.trackPositions"));
-      const coverEntry = pick(manifest.album.cover);
-      if (!coverEntry)
-        throw new Error(t("soundtrack.errors.missingCover", { path: manifest.album.cover }));
-      if (coverEntry.length > MAX_SOUNDTRACK_COVER_BYTES)
-        throw new Error(t("soundtrack.errors.coverTooLarge"));
-      const cover = await coverToAvifBytes(manifest.album.cover, coverEntry, t as Translate);
-      const tracks = manifest.tracks.map((meta) => {
-        const bytes = pick(meta.file);
-        if (!bytes) throw new Error(t("soundtrack.errors.missingTrack", { file: meta.file }));
-        const mime = soundtrackAudioMime(meta.file);
-        if (!mime) throw new Error(t("soundtrack.errors.unsupportedFormat", { file: meta.file }));
-        if (bytes.length > MAX_SOUNDTRACK_TRACK_BYTES)
-          throw new Error(t("soundtrack.errors.trackTooLarge", { file: meta.file }));
-        return {
-          position: meta.position,
-          name: meta.file.split("/").pop() ?? `track-${meta.position}`,
-          bytes,
-          mime,
-        };
-      });
-      await importCampaignSoundtrack(
-        campaignId,
-        manifest,
-        { name: manifest.album.cover, bytes: cover },
-        tracks,
-      );
+  const archive = unzipSync(new Uint8Array(await file.arrayBuffer())),
+    pick = (p: string) => archive[p] ?? archive[p.replace(/^\.\//, "")],
+    raw = archive["album.json"];
+  if (!raw) throw new Error(t("soundtrack.errors.missingAlbumJson"));
+  const manifest = campaignSoundtrackManifestSchema.parse(
+      JSON.parse(new TextDecoder().decode(raw)),
+    ),
+    positions = manifest.tracks.map((tr) => tr.position).sort((a, b) => a - b);
+  if (positions.some((p, i) => p !== i + 1)) throw new Error(t("soundtrack.errors.trackPositions"));
+  const coverEntry = pick(manifest.album.cover);
+  if (!coverEntry)
+    throw new Error(t("soundtrack.errors.missingCover", { path: manifest.album.cover }));
+  if (coverEntry.length > MAX_SOUNDTRACK_COVER_BYTES)
+    throw new Error(t("soundtrack.errors.coverTooLarge"));
+  const cover = await coverToAvifBytes(manifest.album.cover, coverEntry, t as Translate);
+  const tracks = manifest.tracks.map((meta) => {
+    const bytes = pick(meta.file);
+    if (!bytes) throw new Error(t("soundtrack.errors.missingTrack", { file: meta.file }));
+    const mime = soundtrackAudioMime(meta.file);
+    if (!mime) throw new Error(t("soundtrack.errors.unsupportedFormat", { file: meta.file }));
+    if (bytes.length > MAX_SOUNDTRACK_TRACK_BYTES)
+      throw new Error(t("soundtrack.errors.trackTooLarge", { file: meta.file }));
+    return {
+      position: meta.position,
+      name: meta.file.split("/").pop() ?? `track-${meta.position}`,
+      bytes,
+      mime,
+    };
+  });
+  await importCampaignSoundtrack(
+    campaignId,
+    manifest,
+    { name: manifest.album.cover, bytes: cover },
+    tracks,
+  );
 }
 
 export function SoundtrackPanel({ campaignId, isGm }: { campaignId: string; isGm: boolean }) {

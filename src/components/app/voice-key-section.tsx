@@ -36,14 +36,28 @@ export function VoiceKeySection() {
       {status.data?.hasKey ? (
         <div className="flex items-center justify-between">
           <span className="text-xs text-primary">{t("voice.connected")}</span>
-          <Button size="sm" variant="outline" onClick={() => remove.mutate()} disabled={remove.isPending}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => remove.mutate()}
+            disabled={remove.isPending}
+          >
             {t("voice.remove")}
           </Button>
         </div>
       ) : (
         <div className="flex gap-2">
-          <Input type="password" value={key} placeholder={t("voice.placeholder")} onChange={(e) => setKey(e.target.value)} />
-          <Button size="sm" onClick={() => save.mutate()} disabled={key.trim().length < 10 || save.isPending}>
+          <Input
+            type="password"
+            value={key}
+            placeholder={t("voice.placeholder")}
+            onChange={(e) => setKey(e.target.value)}
+          />
+          <Button
+            size="sm"
+            onClick={() => save.mutate()}
+            disabled={key.trim().length < 10 || save.isPending}
+          >
             {t("voice.save")}
           </Button>
         </div>

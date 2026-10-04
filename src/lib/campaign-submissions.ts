@@ -1,6 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { uploadCampaignVideo, validateCampaignVideoFile, type CampaignVideoType } from "@/lib/campaign-intro";
+import {
+  uploadCampaignVideo,
+  validateCampaignVideoFile,
+  type CampaignVideoType,
+} from "@/lib/campaign-intro";
 import { uploadCampaignSoundFx, validateSoundFxFile } from "@/lib/campaign-sound-fx";
 import { createAsset, uploadAssetFile } from "@/lib/assets";
 
@@ -128,7 +132,11 @@ export async function approveSubmission(
   await deleteSubmission(row);
 }
 
-export async function setMemberRole(campaignId: string, userId: string, role: "player" | "producer") {
+export async function setMemberRole(
+  campaignId: string,
+  userId: string,
+  role: "player" | "producer",
+) {
   const { error } = await supabase.rpc("set_campaign_member_role", {
     _campaign: campaignId,
     _user: userId,

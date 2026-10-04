@@ -40,7 +40,11 @@ function decorate(rows: Record<string, unknown>[], voiceId: string | null): Voic
     const stale = Boolean(
       line.audio_path && (!voiceId || line.audio_hash !== audioHash(voiceId, line.text)),
     );
-    return { ...line, duration_seconds: line.duration_seconds == null ? null : Number(line.duration_seconds), stale };
+    return {
+      ...line,
+      duration_seconds: line.duration_seconds == null ? null : Number(line.duration_seconds),
+      stale,
+    };
   });
 }
 
@@ -84,7 +88,12 @@ async function attachAudio(db: Db, userId: string, line: VoiceLine) {
 export async function createLine(
   db: Db,
   userId: string,
-  input: { character_id: string; text: string; label?: string | null | undefined; generate_audio?: boolean | undefined },
+  input: {
+    character_id: string;
+    text: string;
+    label?: string | null | undefined;
+    generate_audio?: boolean | undefined;
+  },
 ): Promise<VoiceLine> {
   const text = validateText(input.text);
   const ch = await loadCharacterVoice(db, input.character_id);
@@ -130,7 +139,8 @@ export async function updateLine(
   if (input.text !== undefined) patch["text"] = validateText(input.text);
   if (input.label !== undefined) patch["label"] = input.label?.trim() || null;
   if (input.position !== undefined) patch["position"] = input.position;
-  if (input.visible_to_players !== undefined) patch["visible_to_players"] = input.visible_to_players;
+  if (input.visible_to_players !== undefined)
+    patch["visible_to_players"] = input.visible_to_players;
   if (Object.keys(patch).length === 0) throw new Error("Nothing to update.");
   // Editing text leaves the old audio in place; the line shows as out of date
   // until someone asks to regenerate, so no credits are spent per edit.
@@ -146,9 +156,17 @@ export async function deleteLine(db: Db, lineId: string): Promise<void> {
   if (!data?.length) throw new Error("Line not found or not editable.");
 }
 
-export async function reorderLines(db: Db, characterId: string, orderedIds: string[]): Promise<VoiceLine[]> {
+export async function reorderLines(
+  db: Db,
+  characterId: string,
+  orderedIds: string[],
+): Promise<VoiceLine[]> {
   for (const [i, id] of orderedIds.entries()) {
-    const { error } = await db.from(TABLE).update({ position: i }).eq("id", id).eq("character_id", characterId);
+    const { error } = await db
+      .from(TABLE)
+      .update({ position: i })
+      .eq("id", id)
+      .eq("character_id", characterId);
     check(error, "Reordering lines");
   }
   return listLines(db, characterId);
@@ -177,5 +195,10 @@ export async function speakLine(db: Db, userId: string, lineId: string, regenera
 export async function lineAudioUrl(db: Db, lineId: string) {
   const line = await getLine(db, lineId);
   if (!line.audio_path) throw new Error("This line has no audio yet.");
-  return { line_id: line.id, audio_url: await signedAudioUrl(db, line.audio_path), stale: line.stale, duration_seconds: line.duration_seconds };
+  return {
+    line_id: line.id,
+    audio_url: await signedAudioUrl(db, line.audio_path),
+    stale: line.stale,
+    duration_seconds: line.duration_seconds,
+  };
 }

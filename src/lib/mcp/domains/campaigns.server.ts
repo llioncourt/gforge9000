@@ -226,7 +226,12 @@ export function registerCampaigns(tool: ToolRegistrar, ctx: McpToolContext): voi
         if (newCover) await removeStoredObject(ctx.supabase, COVER_BUCKET, newCover);
         fail("Updating the campaign", error);
       }
-      if (newCover && previousCover && previousCover !== newCover && !/^https?:/i.test(previousCover))
+      if (
+        newCover &&
+        previousCover &&
+        previousCover !== newCover &&
+        !/^https?:/i.test(previousCover)
+      )
         await removeStoredObject(ctx.supabase, COVER_BUCKET, previousCover);
       const row = data as Database["public"]["Tables"]["campaigns"]["Row"];
       return detailReply(`Updated campaign "${row.name}" (${row.id}).`, row);

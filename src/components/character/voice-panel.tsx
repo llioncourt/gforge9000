@@ -6,7 +6,13 @@ import { Loader2, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useT } from "@/i18n/hooks";
 import { VoiceLinesDialog } from "./voice-lines-dialog";
 import { getVoiceKeyStatus, getVoices, speakCharacter } from "@/lib/tts.functions";
@@ -45,7 +51,11 @@ export function VoicePanel({
             <Volume2 className="size-4" /> {t("voice.title")}
           </Label>
         </div>
-        <VoiceLinesDialog characterId={characterId} hasVoice={!!voiceId} hasKey={status.data?.hasKey === true} />
+        <VoiceLinesDialog
+          characterId={characterId}
+          hasVoice={!!voiceId}
+          hasKey={status.data?.hasKey === true}
+        />
       </div>
       {status.data && !status.data.hasKey ? (
         <p className="text-xs text-muted-foreground">{t("voice.needKey")}</p>
@@ -55,7 +65,10 @@ export function VoicePanel({
             <Select
               value={voiceId ?? ""}
               onValueChange={(id) =>
-                onChange({ voice_id: id, voice_name: voices.data?.find((v) => v.voice_id === id)?.name ?? null })
+                onChange({
+                  voice_id: id,
+                  voice_name: voices.data?.find((v) => v.voice_id === id)?.name ?? null,
+                })
               }
             >
               <SelectTrigger className="w-[220px]">
@@ -90,5 +103,4 @@ export function VoicePanel({
       )}
     </div>
   );
-
 }

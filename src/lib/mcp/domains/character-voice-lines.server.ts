@@ -31,7 +31,9 @@ const text = z.string().min(1).max(TTS_MAX_CHARS);
 const label = z.string().max(120).nullable().optional();
 
 const input = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("list"), character_id: uuid }).describe("List a character's saved lines in order."),
+  z
+    .object({ action: z.literal("list"), character_id: uuid })
+    .describe("List a character's saved lines in order."),
   z.object({ action: z.literal("get"), line_id: uuid }).describe("Read one saved line."),
   z
     .object({
@@ -41,7 +43,9 @@ const input = z.discriminatedUnion("action", [
       label,
       generate_audio: z.boolean().optional(),
     })
-    .describe("Add a line. With generate_audio, also voice it (caller's ElevenLabs credits). Owner or GM only."),
+    .describe(
+      "Add a line. With generate_audio, also voice it (caller's ElevenLabs credits). Owner or GM only.",
+    ),
   z
     .object({
       action: z.literal("update"),
@@ -51,10 +55,18 @@ const input = z.discriminatedUnion("action", [
       position: z.number().int().min(0).max(100000).optional(),
       visible_to_players: z.boolean().optional(),
     })
-    .describe("Edit a line. Changing text marks existing audio as stale until regenerated. Owner or GM only."),
-  z.object({ action: z.literal("delete"), line_id: uuid }).describe("Delete a line. Owner or GM only."),
+    .describe(
+      "Edit a line. Changing text marks existing audio as stale until regenerated. Owner or GM only.",
+    ),
   z
-    .object({ action: z.literal("reorder"), character_id: uuid, ordered_ids: z.array(uuid).max(500) })
+    .object({ action: z.literal("delete"), line_id: uuid })
+    .describe("Delete a line. Owner or GM only."),
+  z
+    .object({
+      action: z.literal("reorder"),
+      character_id: uuid,
+      ordered_ids: z.array(uuid).max(500),
+    })
     .describe("Set the order of a character's lines. Owner or GM only."),
   z
     .object({ action: z.literal("speak_line"), line_id: uuid, regenerate: z.boolean().optional() })
@@ -62,7 +74,9 @@ const input = z.discriminatedUnion("action", [
       "Return a 15-minute signed audio_url for the line, generating audio if missing (or when regenerate). " +
         "Uses the caller's ElevenLabs account; cached audio costs nothing.",
     ),
-  z.object({ action: z.literal("get_audio_url"), line_id: uuid }).describe("Signed audio_url for existing audio; never generates."),
+  z
+    .object({ action: z.literal("get_audio_url"), line_id: uuid })
+    .describe("Signed audio_url for existing audio; never generates."),
 ]);
 
 export function registerCharacterVoiceLines(tool: ToolRegistrar, ctx: McpToolContext): void {

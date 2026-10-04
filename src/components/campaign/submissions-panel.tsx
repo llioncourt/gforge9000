@@ -26,7 +26,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { FileDropzone } from "@/components/ui/FileDropzone";
-import { CAMPAIGN_VIDEO_TYPES, campaignVideoTypeLabel, type CampaignVideoType } from "@/lib/campaign-intro";
+import {
+  CAMPAIGN_VIDEO_TYPES,
+  campaignVideoTypeLabel,
+  type CampaignVideoType,
+} from "@/lib/campaign-intro";
 import {
   SUBMISSION_ACCEPT,
   SUBMISSION_KINDS,
@@ -153,7 +157,10 @@ export function SubmissionsPanel({
             {kind === "video" ? (
               <div className="space-y-2">
                 <Label>{t("submissions.videoType")}</Label>
-                <Select value={videoType} onValueChange={(v) => setVideoType(v as CampaignVideoType)}>
+                <Select
+                  value={videoType}
+                  onValueChange={(v) => setVideoType(v as CampaignVideoType)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -211,7 +218,8 @@ export function SubmissionsPanel({
                 <div className="min-w-0">
                   <p className="truncate font-medium">{row.title}</p>
                   <p className="text-xs text-muted-foreground">
-                    {t(`submissions.kinds.${row.kind as SubmissionKind}`)} · {formatBytes(row.byte_size)} ·{" "}
+                    {t(`submissions.kinds.${row.kind as SubmissionKind}`)} ·{" "}
+                    {formatBytes(row.byte_size)} ·{" "}
                     {t("submissions.by", { name: nameOf(row.submitted_by) })}
                   </p>
                 </div>
@@ -233,7 +241,11 @@ export function SubmissionsPanel({
                     </Button>
                   ) : null}
                   {isGm ? (
-                    <Button size="sm" onClick={() => approve.mutate(row)} disabled={approve.isPending}>
+                    <Button
+                      size="sm"
+                      onClick={() => approve.mutate(row)}
+                      disabled={approve.isPending}
+                    >
                       <Check className="mr-1 h-4 w-4" />
                       {t("submissions.approve")}
                     </Button>
@@ -253,7 +265,9 @@ export function SubmissionsPanel({
                       <AlertDialogContent>
                         <AlertDialogHeader>
                           <AlertDialogTitle>{t("submissions.deleteTitle")}</AlertDialogTitle>
-                          <AlertDialogDescription>{t("submissions.deleteBody")}</AlertDialogDescription>
+                          <AlertDialogDescription>
+                            {t("submissions.deleteBody")}
+                          </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>

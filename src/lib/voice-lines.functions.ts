@@ -22,10 +22,18 @@ export const listVoiceLines = createServerFn({ method: "GET" })
   .inputValidator((d) => z.object({ characterId: id }).parse(d))
   .handler(async ({ data, context }) => {
     const d = db(context);
-    const { data: ch } = await d.from("characters").select("owner_id, campaign_id").eq("id", data.characterId).maybeSingle();
+    const { data: ch } = await d
+      .from("characters")
+      .select("owner_id, campaign_id")
+      .eq("id", data.characterId)
+      .maybeSingle();
     let canEdit = ch?.owner_id === context.userId;
     if (!canEdit && ch?.campaign_id) {
-      const { data: c } = await d.from("campaigns").select("gm_id").eq("id", ch.campaign_id).maybeSingle();
+      const { data: c } = await d
+        .from("campaigns")
+        .select("gm_id")
+        .eq("id", ch.campaign_id)
+        .maybeSingle();
       canEdit = c?.gm_id === context.userId;
     }
     return { canEdit, lines: await listLines(d, data.characterId) };
@@ -46,7 +54,9 @@ export const createVoiceLine = createServerFn({ method: "POST" })
 export const updateVoiceLine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
-    z.object({ lineId: id, text: text.optional(), label, visible: z.boolean().optional() }).parse(d),
+    z
+      .object({ lineId: id, text: text.optional(), label, visible: z.boolean().optional() })
+      .parse(d),
   )
   .handler(async ({ data, context }) =>
     updateLine(db(context), {
@@ -68,7 +78,9 @@ export const deleteVoiceLine = createServerFn({ method: "POST" })
 export const reorderVoiceLines = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ characterId: id, orderedIds: z.array(id).max(500) }).parse(d))
-  .handler(async ({ data, context }) => reorderLines(db(context), data.characterId, data.orderedIds));
+  .handler(async ({ data, context }) =>
+    reorderLines(db(context), data.characterId, data.orderedIds),
+  );
 
 export const speakVoiceLine = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

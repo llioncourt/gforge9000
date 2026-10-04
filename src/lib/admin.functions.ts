@@ -40,12 +40,17 @@ export const getAdminOverview = createServerFn({ method: "GET" })
     const [profiles, roles, campaigns, members, characters] = await Promise.all([
       db.from("profiles").select("id, display_name"),
       db.from("user_roles").select("user_id, role"),
-      db.from("campaigns").select("id, name, gm_id, created_at").order("created_at", { ascending: false }),
+      db
+        .from("campaigns")
+        .select("id, name, gm_id, created_at")
+        .order("created_at", { ascending: false }),
       db.from("campaign_members").select("campaign_id, user_id"),
       db.from("characters").select("id, owner_id, campaign_id"),
     ]);
 
-    const nameOf = new Map<string, string>((profiles.data ?? []).map((p: any) => [p.id, p.display_name]));
+    const nameOf = new Map<string, string>(
+      (profiles.data ?? []).map((p: any) => [p.id, p.display_name]),
+    );
     const count = (rows: any[] | null, key: string, id: string) =>
       (rows ?? []).filter((r) => r[key] === id).length;
 
@@ -61,14 +66,25 @@ export const getAdminOverview = createServerFn({ method: "GET" })
         characters: count(characters.data, "owner_id", u.id),
         campaigns: count(members.data, "user_id", u.id),
       })),
-      campaigns: ((campaigns.data ?? []) as any[]).map((c: any): { id: string; name: string; gm: string; createdAt: string; members: number; characters: number } => ({
-        id: c.id as string,
-        name: c.name as string,
-        gm: nameOf.get(c.gm_id) ?? "",
-        createdAt: c.created_at as string,
-        members: count(members.data, "campaign_id", c.id),
-        characters: count(characters.data, "campaign_id", c.id),
-      })),
+      campaigns: ((campaigns.data ?? []) as any[]).map(
+        (
+          c: any,
+        ): {
+          id: string;
+          name: string;
+          gm: string;
+          createdAt: string;
+          members: number;
+          characters: number;
+        } => ({
+          id: c.id as string,
+          name: c.name as string,
+          gm: nameOf.get(c.gm_id) ?? "",
+          createdAt: c.created_at as string,
+          members: count(members.data, "campaign_id", c.id),
+          characters: count(characters.data, "campaign_id", c.id),
+        }),
+      ),
     };
   });
 
@@ -107,11 +123,14 @@ export const setUserAdmin = createServerFn({ method: "POST" })
   .inputValidator((d) => z.object({ userId: z.string().uuid(), admin: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context as Ctx);
-    if (data.userId === context.userId && !data.admin) throw new Error("You cannot remove your own admin access.");
+    if (data.userId === context.userId && !data.admin)
+      throw new Error("You cannot remove your own admin access.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as any;
     const { error } = data.admin
-      ? await db.from("user_roles").upsert({ user_id: data.userId, role: "admin" }, { onConflict: "user_id,role" })
+      ? await db
+          .from("user_roles")
+          .upsert({ user_id: data.userId, role: "admin" }, { onConflict: "user_id,role" })
       : await db.from("user_roles").delete().eq("user_id", data.userId).eq("role", "admin");
     if (error) throw error;
     return { ok: true };

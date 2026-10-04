@@ -713,7 +713,6 @@ function CharacterPage() {
                 onChange={(v) => patch(v)}
               />
 
-
               <div className="flex items-center justify-between rounded-md border border-border p-3">
                 <div>
                   <Label>{t("sheet.identity.npcLabel")}</Label>

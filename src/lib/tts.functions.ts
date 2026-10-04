@@ -17,9 +17,11 @@ export const saveVoiceKey = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ apiKey: z.string().trim().min(10).max(200) }).parse(d))
   .handler(async ({ data, context }) => {
-    const { error } = await (context.supabase as AnyDb)
-      .from("user_voice_keys")
-      .upsert({ user_id: context.userId, api_key: data.apiKey, updated_at: new Date().toISOString() });
+    const { error } = await (context.supabase as AnyDb).from("user_voice_keys").upsert({
+      user_id: context.userId,
+      api_key: data.apiKey,
+      updated_at: new Date().toISOString(),
+    });
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -27,7 +29,10 @@ export const saveVoiceKey = createServerFn({ method: "POST" })
 export const removeVoiceKey = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await (context.supabase as AnyDb).from("user_voice_keys").delete().eq("user_id", context.userId);
+    await (context.supabase as AnyDb)
+      .from("user_voice_keys")
+      .delete()
+      .eq("user_id", context.userId);
     return { ok: true };
   });
 

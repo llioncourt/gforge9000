@@ -133,7 +133,6 @@ function Dashboard() {
                     </span>
                   </Link>
                 ))}
-
           </div>
         </section>
 
@@ -176,7 +175,6 @@ function CharacterThumb({ path, name }: { path: string | null | undefined; name:
   const url = usePortraitUrl(path);
   return <PortraitFrame url={url} name={name} className="h-14 w-11 shrink-0" />;
 }
-
 
 function StatCard({
   icon: Icon,

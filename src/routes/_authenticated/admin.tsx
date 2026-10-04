@@ -109,9 +109,15 @@ function AdminPage() {
         {d ? (
           <>
             <Stat label={t("admin.stats.users")} value={d.users.length} />
-            <Stat label={t("admin.stats.blocked")} value={d.users.filter((u) => u.blocked).length} />
+            <Stat
+              label={t("admin.stats.blocked")}
+              value={d.users.filter((u) => u.blocked).length}
+            />
             <Stat label={t("admin.stats.campaigns")} value={d.campaigns.length} />
-            <Stat label={t("admin.stats.characters")} value={d.users.reduce((n, u) => n + u.characters, 0)} />
+            <Stat
+              label={t("admin.stats.characters")}
+              value={d.users.reduce((n, u) => n + u.characters, 0)}
+            />
           </>
         ) : (
           [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-[82px] rounded-md" />)
@@ -150,7 +156,9 @@ function AdminPage() {
                 {!d
                   ? [0, 1, 2, 3, 4].map((i) => (
                       <tr key={i} className="border-t border-border">
-                        <td colSpan={8} className="p-3"><Skeleton className="h-8" /></td>
+                        <td colSpan={8} className="p-3">
+                          <Skeleton className="h-8" />
+                        </td>
                       </tr>
                     ))
                   : users.map((u) => (
@@ -175,7 +183,9 @@ function AdminPage() {
                               checked={u.blocked}
                               onCheckedChange={(v) => block.mutate({ userId: u.id, blocked: v })}
                             />
-                            {u.blocked ? <Badge variant="destructive">{t("admin.blockedBadge")}</Badge> : null}
+                            {u.blocked ? (
+                              <Badge variant="destructive">{t("admin.blockedBadge")}</Badge>
+                            ) : null}
                           </div>
                         </td>
                         <td className="p-3">
@@ -250,7 +260,9 @@ function AdminPage() {
             </Button>
             <Button
               disabled={pw.trim().length < 8 || setPassword.isPending}
-              onClick={() => pwUser && setPassword.mutate({ userId: pwUser.id, password: pw.trim() })}
+              onClick={() =>
+                pwUser && setPassword.mutate({ userId: pwUser.id, password: pw.trim() })
+              }
             >
               {t("admin.password.save")}
             </Button>

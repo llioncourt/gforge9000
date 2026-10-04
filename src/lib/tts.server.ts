@@ -103,7 +103,9 @@ export async function synthesize(
   const file = `${hash}.mp3`;
   const path = `${characterId}/${file}`;
 
-  const { data: existing } = await db.storage.from(VOICE_BUCKET).list(characterId, { search: file });
+  const { data: existing } = await db.storage
+    .from(VOICE_BUCKET)
+    .list(characterId, { search: file });
   const hit = (existing ?? []).find((o) => o.name === file);
   if (hit) {
     const size = Number((hit.metadata as { size?: number } | null)?.size ?? 0);
@@ -124,7 +126,11 @@ export async function synthesize(
     {
       method: "POST",
       headers: { "xi-api-key": key, "Content-Type": "application/json" },
-      body: JSON.stringify({ text: clean, model_id: TTS_MODEL_ID, voice_settings: TTS_VOICE_SETTINGS }),
+      body: JSON.stringify({
+        text: clean,
+        model_id: TTS_MODEL_ID,
+        voice_settings: TTS_VOICE_SETTINGS,
+      }),
     },
   );
   if (!res.ok) await elevenFail(res);
@@ -132,7 +138,8 @@ export async function synthesize(
   const { error: upErr } = await db.storage
     .from(VOICE_BUCKET)
     .upload(path, new Uint8Array(buf), { contentType: "audio/mpeg", upsert: true });
-  if (upErr) throw new Error("Could not save the audio. Only the sheet owner or the GM can create lines.");
+  if (upErr)
+    throw new Error("Could not save the audio. Only the sheet owner or the GM can create lines.");
   return {
     path,
     hash,
@@ -145,7 +152,9 @@ export async function synthesize(
 }
 
 export async function signedAudioUrl(db: Db, path: string): Promise<string> {
-  const { data, error } = await db.storage.from(VOICE_BUCKET).createSignedUrl(path, SIGNED_URL_SECONDS);
+  const { data, error } = await db.storage
+    .from(VOICE_BUCKET)
+    .createSignedUrl(path, SIGNED_URL_SECONDS);
   if (error || !data) throw new Error("Audio not available.");
   return data.signedUrl;
 }

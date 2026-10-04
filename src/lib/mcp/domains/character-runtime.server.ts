@@ -185,8 +185,14 @@ export function registerCharacterRuntime(tool: ToolRegistrar, ctx: McpToolContex
     actionRouter<z.infer<typeof input>>({
       speak: async (i) => {
         const access = await loadCharacter(ctx, i.character_id);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table newer than generated types
-        const audio = await speakAsCharacter(ctx.supabase as any, ctx.userId, i.character_id, i.text, i.inline ?? false);
+        const audio = await speakAsCharacter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table newer than generated types
+          ctx.supabase as any,
+          ctx.userId,
+          i.character_id,
+          i.text,
+          i.inline ?? false,
+        );
         return detailReply(`Spoke a line as "${access.row.name}".`, {
           character_id: i.character_id,
           ...audio,

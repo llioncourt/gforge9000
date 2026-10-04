@@ -154,14 +154,23 @@ function assertAllowedRemoteUrl(raw: string): URL {
 }
 
 /** Identifies jpeg/png/webp from the file's own bytes and reads its size. */
-export function sniffImage(
-  bytes: Uint8Array,
-): { mime: (typeof REMOTE_IMAGE_TYPES)[number]; ext: RemoteImage["ext"]; width: number | null; height: number | null } | null {
+export function sniffImage(bytes: Uint8Array): {
+  mime: (typeof REMOTE_IMAGE_TYPES)[number];
+  ext: RemoteImage["ext"];
+  width: number | null;
+  height: number | null;
+} | null {
   const b = bytes;
   if (
     b.length >= 24 &&
-    b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 &&
-    b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a
+    b[0] === 0x89 &&
+    b[1] === 0x50 &&
+    b[2] === 0x4e &&
+    b[3] === 0x47 &&
+    b[4] === 0x0d &&
+    b[5] === 0x0a &&
+    b[6] === 0x1a &&
+    b[7] === 0x0a
   ) {
     const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
     return { mime: "image/png", ext: "png", width: dv.getUint32(16), height: dv.getUint32(20) };
@@ -171,12 +180,22 @@ export function sniffImage(
     let height: number | null = null;
     let i = 2;
     while (i + 9 < b.length) {
-      if (b[i] !== 0xff) { i += 1; continue; }
+      if (b[i] !== 0xff) {
+        i += 1;
+        continue;
+      }
       const marker = b[i + 1]!;
-      if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) { i += 2; continue; }
+      if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
+        i += 2;
+        continue;
+      }
       const len = (b[i + 2]! << 8) | b[i + 3]!;
       if (
-        (marker >= 0xc0 && marker <= 0xcf) && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc
+        marker >= 0xc0 &&
+        marker <= 0xcf &&
+        marker !== 0xc4 &&
+        marker !== 0xc8 &&
+        marker !== 0xcc
       ) {
         height = (b[i + 5]! << 8) | b[i + 6]!;
         width = (b[i + 7]! << 8) | b[i + 8]!;
@@ -188,8 +207,14 @@ export function sniffImage(
   }
   if (
     b.length >= 30 &&
-    b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
-    b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50
+    b[0] === 0x52 &&
+    b[1] === 0x49 &&
+    b[2] === 0x46 &&
+    b[3] === 0x46 &&
+    b[8] === 0x57 &&
+    b[9] === 0x45 &&
+    b[10] === 0x42 &&
+    b[11] === 0x50
   ) {
     const chunk = String.fromCharCode(b[12]!, b[13]!, b[14]!, b[15]!);
     let width: number | null = null;
@@ -258,10 +283,20 @@ export async function fetchRemoteImage(
     if (total === 0) throw new Error("The download was empty.");
     const bytes = new Uint8Array(total);
     let offset = 0;
-    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
     const kind = sniffImage(bytes);
     if (!kind) throw new Error("Only JPEG, PNG or WebP images are accepted.");
-    return { bytes, size: total, mime: kind.mime, ext: kind.ext, width: kind.width, height: kind.height };
+    return {
+      bytes,
+      size: total,
+      mime: kind.mime,
+      ext: kind.ext,
+      width: kind.width,
+      height: kind.height,
+    };
   } catch (error) {
     if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
       throw new Error("The download took too long (limit 20 seconds).");

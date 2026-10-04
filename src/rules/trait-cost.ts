@@ -106,11 +106,7 @@ export function storedPointsForPerLevel(
   if (!usesLeveledPoints(entry.kind)) return round2(per);
   if (traitPointsSemantics(entry) !== "total") return round2(per);
   const lv =
-    levels === undefined
-      ? levelsOf(entry)
-      : Number.isFinite(levels) && levels > 1
-        ? levels
-        : 1;
+    levels === undefined ? levelsOf(entry) : Number.isFinite(levels) && levels > 1 ? levels : 1;
   return round2(per * lv);
 }
 

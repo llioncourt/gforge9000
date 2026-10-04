@@ -863,5 +863,21 @@
     "toasts": {
       "revealedPromoted": "Revelado para o jogador (visibilidade definida como “Jogadores selecionados”)"
     }
+  },
+  "revealsDialog": {
+    "button": "Revelações",
+    "buttonAria": "Ver tudo o que o mestre revelou",
+    "title": "Revelações do mestre",
+    "description": "O que o mestre revelou para o jogador desta ficha e o que deixou visível para todos os jogadores.",
+    "searchPlaceholder": "Buscar nas revelações",
+    "sections": {
+      "player": "Só para este jogador ({{count}})",
+      "everyone": "Para todos os jogadores ({{count}})"
+    },
+    "empty": "Nada revelado ainda — quando o mestre revelar um registro, ele aparece aqui.",
+    "noMatches": "Nenhuma revelação corresponde à busca.",
+    "noText": "Este registro ainda não tem texto para jogadores.",
+    "gmNote": "Nota do mestre:",
+    "loadFailed": "Não foi possível carregar as revelações."
   }
 }

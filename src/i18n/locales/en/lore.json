@@ -863,5 +863,21 @@
     "toasts": {
       "revealedPromoted": "Revealed to the player (visibility set to “Selected players”)"
     }
+  },
+  "revealsDialog": {
+    "button": "Reveals",
+    "buttonAria": "See everything the GM has revealed",
+    "title": "GM reveals",
+    "description": "What the GM revealed to this sheet's player and what was made visible to every player.",
+    "searchPlaceholder": "Search the reveals",
+    "sections": {
+      "player": "Only for this player ({{count}})",
+      "everyone": "For every player ({{count}})"
+    },
+    "empty": "Nothing revealed yet — when the GM reveals a record, it shows up here.",
+    "noMatches": "No reveal matches the search.",
+    "noText": "This record has no player-facing text yet.",
+    "gmNote": "GM note:",
+    "loadFailed": "The reveals could not be loaded."
   }
 }

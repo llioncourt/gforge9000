@@ -112,6 +112,7 @@ import { buildLink, loadPackItem } from "@/lib/pack-link-service";
 import { invalidatePackLinkQueries } from "@/components/character/pack-link-logic";
 import { PortraitPanel } from "@/components/character/portrait";
 import { StoryNoteButton } from "@/components/campaign/story-note-form";
+import { RevealsButton } from "@/components/lore/reveals-dialog";
 import { usePortraitUrl } from "@/components/character/use-portrait-url";
 import { ModelPanel } from "@/components/character/model-panel";
 import { VoicePanel } from "@/components/character/voice-panel";
@@ -656,23 +657,33 @@ function CharacterPage() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Field label={t("sheet.identity.name")}>
-                      <Input value={form.name} onChange={(e) => patch({ name: e.target.value })} />
-                    </Field>
+                  {/* Name, player and the campaign shortcuts share one cell so the
+                      buttons sit right under the name whatever the row height. */}
+                  <div className="space-y-2 sm:col-span-2">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field label={t("sheet.identity.name")}>
+                        <Input
+                          value={form.name}
+                          onChange={(e) => patch({ name: e.target.value })}
+                        />
+                      </Field>
+                      <Field label={t("sheet.identity.player")}>
+                        <Input
+                          value={form.player_name ?? ""}
+                          onChange={(e) => patch({ player_name: e.target.value })}
+                        />
+                      </Field>
+                    </div>
                     {form.campaign_id ? (
-                      <StoryNoteButton
-                        campaignId={form.campaign_id}
-                        gmId={campaignQuery.data?.gm_id}
-                      />
+                      <div className="flex flex-wrap gap-2">
+                        <StoryNoteButton
+                          campaignId={form.campaign_id}
+                          gmId={campaignQuery.data?.gm_id}
+                        />
+                        <RevealsButton campaignId={form.campaign_id} playerId={form.owner_id} />
+                      </div>
                     ) : null}
                   </div>
-                  <Field label={t("sheet.identity.player")}>
-                    <Input
-                      value={form.player_name ?? ""}
-                      onChange={(e) => patch({ player_name: e.target.value })}
-                    />
-                  </Field>
                   <Field label={t("sheet.identity.concept")} className="sm:col-span-2">
                     <Input
                       value={form.concept ?? ""}

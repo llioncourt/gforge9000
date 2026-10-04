@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useT } from "@/i18n/hooks";
 import { logAuthEvent } from "@/lib/auth-diagnostics";
+import { clearAuthBounce, shouldLeaveSignIn, wasJustBounced } from "@/lib/auth-landing";
 import { runAuthRequest } from "@/lib/auth-submit";
 import { metaLocale, metaText } from "@/i18n/meta";
 import { Trans } from "react-i18next";
@@ -44,14 +45,48 @@ function AuthPage() {
   // Arriving via the email reset link puts the session in recovery mode;
   // show the "choose a new password" form instead of the sign-in form.
   // (PASSWORD_RECOVERY fires once on landing with the recovery token.)
+  //
+  // Someone who is already signed in is sent on to the app instead of being
+  // asked to sign in again. This is a single one-shot read of the stored
+  // session, decided by `shouldLeaveSignIn`: it never runs for a recovery
+  // link, an error return, or a visit the protected area has just refused, so
+  // it cannot loop. It does not block the form; if the read is slow or never
+  // answers, the page simply stays as it is.
   useEffect(() => {
+    let active = true;
+    let recovering = false;
+    // Read before the auth client is first touched: it consumes the address.
+    const arrival = { hash: window.location.hash, search: window.location.search };
+    const bounced = wasJustBounced();
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") setRecoveryMode(true);
+      if (event !== "PASSWORD_RECOVERY") return;
+      recovering = true;
+      setRecoveryMode(true);
     });
-    return () => subscription.unsubscribe();
-  }, []);
+
+    void supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!active) return;
+        const leave = shouldLeaveSignIn({
+          location: arrival,
+          hasSession: Boolean(data.session),
+          recovering,
+          bounced,
+        });
+        logAuthEvent("auth:existing-session", { hasSession: Boolean(data.session), leave });
+        if (leave) void navigate({ to: "/dashboard", replace: true });
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   // Guards against double submits and against late completions updating the
   // form (or navigating) after the page is gone.
@@ -95,6 +130,7 @@ function AuthPage() {
         return;
       }
       logAuthEvent("auth:submit", { ok: true });
+      clearAuthBounce();
       onSuccess(result.data);
     },
     [t],
@@ -244,12 +280,8 @@ function AuthPage() {
                 </div>
               ) : (
                 <>
-                  <h1 className="font-display text-xl font-semibold">
-                    {t("resetPassword.title")}
-                  </h1>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {t("resetPassword.body")}
-                  </p>
+                  <h1 className="font-display text-xl font-semibold">{t("resetPassword.title")}</h1>
+                  <p className="mt-2 text-sm text-muted-foreground">{t("resetPassword.body")}</p>
                   <form onSubmit={resetPassword} className="mt-6 space-y-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="email-reset">{t("form.fields.email")}</Label>

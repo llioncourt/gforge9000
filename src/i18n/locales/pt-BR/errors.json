@@ -24,5 +24,13 @@
   },
   "network": {
     "failed": "A requisição de rede falhou"
+  },
+  "session": {
+    "loading": "Carregando…",
+    "slow": "Está demorando mais que o normal.",
+    "unavailableTitle": "Não foi possível confirmar sua sessão",
+    "unavailableNetwork": "A conexão falhou antes da resposta. Sua sessão continua guardada neste dispositivo; tente novamente.",
+    "unavailableTimeout": "O serviço de autenticação não respondeu a tempo. Sua sessão continua guardada neste dispositivo; tente novamente.",
+    "signInAgain": "Entrar novamente"
   }
 }

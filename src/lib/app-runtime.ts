@@ -34,6 +34,14 @@ export interface AuthInvalidationDeps {
 export interface AuthInvalidationHandler {
   /** Synchronous — safe to pass straight to `onAuthStateChange`. */
   handle: (event: AuthRuntimeEvent, sessionKey: string | null) => void;
+  /**
+   * Declares the session the page loaded with. The auth client replays a
+   * SIGNED_IN for a session it merely restored from storage; everything on
+   * screen was already loaded with that session, so that replay is not a
+   * change and must not refetch the whole app. Safe to call before or after
+   * the replayed event arrives.
+   */
+  prime: (sessionKey: string | null) => void;
   /** Cancels any scheduled work (call on unmount). */
   dispose: () => void;
 }
@@ -44,9 +52,13 @@ export function createAuthInvalidationHandler(deps: AuthInvalidationDeps): AuthI
   let pending: unknown = null;
   let disposed = false;
   let lastSignedInKey: string | null = null;
+  // Set while the scheduled work is nothing but the first SIGNED_IN seen by
+  // this handler; `prime` may still recognise it as a restored-session replay.
+  let pendingInitialKey: string | null = null;
 
   function run(event: AuthRuntimeEvent) {
     pending = null;
+    pendingInitialKey = null;
     if (disposed) return;
     deps.trace?.("invalidate start");
     try {
@@ -66,6 +78,9 @@ export function createAuthInvalidationHandler(deps: AuthInvalidationDeps): AuthI
       deps.trace?.(`auth event: ${event}`);
       if (!HANDLED_EVENTS.has(event)) return;
 
+      const wasIdle = pending === null;
+      const isFirstSignIn = event === "SIGNED_IN" && lastSignedInKey === null;
+
       if (event === "SIGNED_IN") {
         // Repeated SIGNED_IN for the same session (tab focus, token refresh
         // notifications) must not re-invalidate the whole app.
@@ -78,7 +93,18 @@ export function createAuthInvalidationHandler(deps: AuthInvalidationDeps): AuthI
       }
 
       if (pending !== null) deps.cancel(pending);
+      pendingInitialKey = wasIdle && isFirstSignIn ? sessionKey : null;
       pending = deps.schedule(() => run(event));
+    },
+    prime(sessionKey) {
+      if (disposed || sessionKey === null) return;
+      if (pending !== null && pendingInitialKey === sessionKey) {
+        deps.trace?.("restored-session replay ignored");
+        deps.cancel(pending);
+        pending = null;
+        pendingInitialKey = null;
+      }
+      if (lastSignedInKey === null) lastSignedInKey = sessionKey;
     },
     dispose() {
       disposed = true;

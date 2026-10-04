@@ -22,6 +22,7 @@ import { localeDirection } from "@/i18n/config";
 import { useT } from "@/i18n/hooks";
 import { isAuthShellPath } from "@/lib/app-runtime";
 import { resolveDiagFlags, diagTrace } from "@/lib/diag-modes";
+import { installStaleBuildRecovery } from "@/lib/stale-build-recovery";
 
 function NotFoundComponent() {
   const { t } = useT("errors");
@@ -175,6 +176,10 @@ function RootComponent() {
   useEffect(() => {
     diagTrace(diag.trace, "root mounted");
   }, [diag.trace]);
+
+  // A tab left open across a publish reloads once instead of failing to open
+  // the next screen. Applies to every route, including sign-in.
+  useEffect(() => installStaleBuildRecovery(), []);
 
   const content = (
     <>

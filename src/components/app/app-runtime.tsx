@@ -45,12 +45,22 @@ export function AppRuntime({
 
     // The callback runs inside the auth client's notification lock, so it must
     // stay synchronous and only schedule work.
+    // The key is the signed-in identity, not the token: a renewed token for
+    // the same person is not a reason to refetch the whole app.
+    const keyOf = (session: { user?: { id?: string } | null } | null) =>
+      session?.user?.id ? session.user.id : null;
+
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       logAuthEvent("auth:event", { event, hasSession: Boolean(session) });
-      const key = session ? `${session.user?.id ?? ""}:${session.expires_at ?? ""}` : null;
-      handler.handle(event, key);
+      handler.handle(event, keyOf(session));
     });
     diagTrace(trace, "auth listener subscribed");
+
+    // The session this page loaded with is already reflected on screen.
+    void supabase.auth
+      .getSession()
+      .then(({ data }) => handler.prime(keyOf(data.session)))
+      .catch(() => undefined);
 
     return () => {
       handler.dispose();

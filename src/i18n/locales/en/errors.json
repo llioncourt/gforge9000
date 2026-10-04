@@ -24,5 +24,13 @@
   },
   "network": {
     "failed": "Network request failed"
+  },
+  "session": {
+    "loading": "Loading…",
+    "slow": "This is taking longer than usual.",
+    "unavailableTitle": "We couldn't confirm your session",
+    "unavailableNetwork": "The connection dropped before a response arrived. Your session is still stored on this device; try again.",
+    "unavailableTimeout": "The sign-in service did not answer in time. Your session is still stored on this device; try again.",
+    "signInAgain": "Sign in again"
   }
 }

@@ -34,7 +34,9 @@
     "shared": "Shared",
     "userContent": "User content",
     "enabledIn": "Enabled in {{campaigns}}",
-    "notEnabled": "Not enabled in any campaign you run"
+    "notEnabled": "Not enabled in any campaign you run",
+    "dropCover": "Drop to use as cover",
+    "uploadingCover": "Uploading cover…"
   },
   "detail": {
     "provenance": "Provenance",
@@ -95,5 +97,22 @@
     "confirmDescriptionDetail": "Every entry inside this pack is deleted with it. Anything already added to a character stays on the sheet and becomes a custom entry.",
     "deletePackAria": "Delete pack"
   },
-  "allPacksLink": "All packs"
+  "allPacksLink": "All packs",
+  "cover": {
+    "label": "Pack cover",
+    "hint": "This image appears behind the pack's card.",
+    "dropNew": "Drop a cover here, or click to browse",
+    "dropReplace": "Drop a new cover here, or click to browse",
+    "sizeHint": "Any common image format, up to 25 MB.",
+    "uploading": "Uploading cover…",
+    "removeAria": "Remove pack cover",
+    "updated": "Pack cover updated.",
+    "removed": "Pack cover removed.",
+    "errors": {
+      "type": "Choose an image file.",
+      "empty": "That file is empty.",
+      "size": "Image is too large (max 25 MB).",
+      "signedOut": "You need to be signed in."
+    }
+  }
 }

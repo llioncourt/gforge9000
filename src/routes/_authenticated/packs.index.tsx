@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Boxes, Download, Plus, Trash2, Upload } from "lucide-react";
+import { Boxes, Download, ImageUp, Loader2, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/page-header";
 import { Button } from "@/components/ui/button";
@@ -38,11 +38,16 @@ import {
   listContentPacks,
   listLibrary,
   deleteContentPack,
+  type PackRow,
 } from "@/lib/api";
 import { parsePortablePack } from "@/lib/portable";
 import { campaignsEnablingPack, groupEntriesByPack, makeGroup, type PackGroup } from "@/lib/packs";
 import { useSession } from "@/hooks/use-session";
 import { packSlug } from "@/lib/pack-slug";
+import { canEditPackCover, removePackCoverFile, savePackCover } from "@/lib/pack-cover";
+import { CardPortraitBg } from "@/components/character/card-portrait-bg";
+import { packCoverMessage } from "@/components/packs/pack-cover-messages";
+import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/hooks";
 import { metaText } from "@/i18n/meta";
 
@@ -80,6 +85,8 @@ function PacksPage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  /** The pack card an image is currently being dragged over. */
+  const [coverTarget, setCoverTarget] = useState<string | null>(null);
 
   const gmCampaigns = useMemo(
     () => (campaigns.data ?? []).filter((c) => c.gm_id === user?.id),
@@ -130,8 +137,33 @@ function PacksPage() {
     return t("import.done", { count: rows.length, name: parsed.pack.name });
   };
 
+  /** An image dropped straight onto a pack's card becomes that pack's cover. */
+  const dropCover = useMutation({
+    mutationFn: (input: { pack: PackRow | undefined; packName: string; file: File }) =>
+      savePackCover(input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["content-packs"] }),
+        queryClient.invalidateQueries({ queryKey: ["packs"] }),
+      ]);
+      toast.success(t("cover.updated"));
+    },
+    onError: (error: unknown) => toast.error(packCoverMessage(error, t)),
+  });
+
   const removePack = useMutation({
-    mutationFn: ({ id, name }: { id: string; name: string }) => deleteContentPack(id, name),
+    mutationFn: async ({
+      id,
+      name,
+      coverPath,
+    }: {
+      id: string;
+      name: string;
+      coverPath?: string | null | undefined;
+    }) => {
+      await deleteContentPack(id, name);
+      await removePackCoverFile(coverPath);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["library"] });
       queryClient.invalidateQueries({ queryKey: ["content-packs"] });
@@ -182,51 +214,97 @@ function PacksPage() {
           {filtered.map((g) => {
             const meta = (packsQuery.data ?? []).find((p) => p.name === g.pack);
             const enabledIn = campaignsEnablingPack(g.pack, gmCampaigns);
+            const canDropCover = canEditPackCover({
+              pack: meta,
+              userId: user?.id,
+              entries: g.entries,
+            });
+            const dropping = coverTarget === g.pack;
+            const uploadingCover = dropCover.isPending && dropCover.variables?.packName === g.pack;
             return (
               <Link
                 key={g.label}
                 to="/packs/$pack"
                 params={{ pack: packSlug(g.pack) }}
-                className="panel flex flex-col p-4 transition-colors hover:border-ring"
+                className={cn(
+                  "panel relative flex flex-col overflow-hidden p-4 transition-colors hover:border-ring",
+                  dropping && "border-ring ring-2 ring-ring",
+                )}
+                data-pack-card={g.pack}
+                onDragOver={(e) => {
+                  if (!canDropCover || !e.dataTransfer.types.includes("Files")) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "copy";
+                  if (!dropping) setCoverTarget(g.pack);
+                }}
+                onDragLeave={(e) => {
+                  if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+                  setCoverTarget((current) => (current === g.pack ? null : current));
+                }}
+                onDrop={(e) => {
+                  if (!canDropCover || !e.dataTransfer.types.includes("Files")) return;
+                  e.preventDefault();
+                  setCoverTarget(null);
+                  const file = e.dataTransfer.files[0];
+                  if (file && !dropCover.isPending) {
+                    dropCover.mutate({ pack: meta, packName: g.pack, file });
+                  }
+                }}
               >
-                <div className="flex items-start gap-2">
-                  <Boxes className="mt-0.5 h-4 w-4 text-primary" />
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{g.label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t("card.entries", { count: g.total })}
-                    </p>
+                <CardPortraitBg path={meta?.cover_path} />
+                <div className="relative flex flex-1 flex-col">
+                  <div className="flex items-start gap-2">
+                    <Boxes className="mt-0.5 h-4 w-4 text-primary" />
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{g.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t("card.entries", { count: g.total })}
+                      </p>
+                    </div>
+                    {meta && user?.id && meta.owner_id !== user.id ? (
+                      <Badge variant="secondary" className="ml-auto text-[10px]">
+                        {t("card.shared")}
+                      </Badge>
+                    ) : null}
                   </div>
-                  {meta && user?.id && meta.owner_id !== user.id ? (
-                    <Badge variant="secondary" className="ml-auto text-[10px]">
-                      {t("card.shared")}
-                    </Badge>
-                  ) : null}
-                </div>
 
-                {meta?.description ? (
-                  <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
-                    {meta.description}
+                  {meta?.description ? (
+                    <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                      {meta.description}
+                    </p>
+                  ) : null}
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {g.kinds.slice(0, 6).map((k) => (
+                      <Badge key={k.kind} variant="outline" className="text-[10px]">
+                        {k.kind} {k.count}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[11px] text-muted-foreground">
+                    {g.sources.length
+                      ? g.sources.join(" · ")
+                      : (meta?.source_label ?? t("card.userContent"))}
+                    {g.visibilities.length ? ` · ${g.visibilities.join(", ")}` : ""}
                   </p>
-                ) : null}
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {g.kinds.slice(0, 6).map((k) => (
-                    <Badge key={k.kind} variant="outline" className="text-[10px]">
-                      {k.kind} {k.count}
-                    </Badge>
-                  ))}
+                  <p className="mt-auto pt-3 text-[11px] text-muted-foreground">
+                    {enabledIn.length
+                      ? t("card.enabledIn", { campaigns: enabledIn.map((c) => c.name).join(", ") })
+                      : t("card.notEnabled")}
+                  </p>
                 </div>
-                <p className="mt-3 text-[11px] text-muted-foreground">
-                  {g.sources.length
-                    ? g.sources.join(" · ")
-                    : (meta?.source_label ?? t("card.userContent"))}
-                  {g.visibilities.length ? ` · ${g.visibilities.join(", ")}` : ""}
-                </p>
-                <p className="mt-auto pt-3 text-[11px] text-muted-foreground">
-                  {enabledIn.length
-                    ? t("card.enabledIn", { campaigns: enabledIn.map((c) => c.name).join(", ") })
-                    : t("card.notEnabled")}
-                </p>
+                {dropping || uploadingCover ? (
+                  <div
+                    className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center gap-2 bg-background/80 text-sm font-medium"
+                    role="status"
+                  >
+                    {uploadingCover ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ImageUp className="h-4 w-4" />
+                    )}
+                    {uploadingCover ? t("card.uploadingCover") : t("card.dropCover")}
+                  </div>
+                ) : null}
                 {meta && user?.id && meta.owner_id === user.id ? (
                   <div
                     className="absolute bottom-3 right-3 z-10"
@@ -255,7 +333,13 @@ function PacksPage() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>{tc("actions.cancel")}</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => removePack.mutate({ id: meta.id, name: g.pack })}
+                            onClick={() =>
+                              removePack.mutate({
+                                id: meta.id,
+                                name: g.pack,
+                                coverPath: meta.cover_path,
+                              })
+                            }
                             disabled={removePack.isPending}
                           >
                             {t("actions.deletePack")}

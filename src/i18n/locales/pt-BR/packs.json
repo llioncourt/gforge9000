@@ -34,7 +34,9 @@
     "shared": "Compartilhado",
     "userContent": "Conteúdo do usuário",
     "enabledIn": "Ativado em {{campaigns}}",
-    "notEnabled": "Não ativado em nenhuma campanha que você conduz"
+    "notEnabled": "Não ativado em nenhuma campanha que você conduz",
+    "dropCover": "Solte para usar como capa",
+    "uploadingCover": "Enviando capa…"
   },
   "detail": {
     "provenance": "Proveniência",
@@ -95,5 +97,22 @@
     "confirmDescriptionDetail": "Todos os itens dentro deste pacote são excluídos junto com ele. Tudo que já foi adicionado a um personagem permanece na ficha e se torna um item personalizado.",
     "deletePackAria": "Excluir pacote"
   },
-  "allPacksLink": "Todos os pacotes"
+  "allPacksLink": "Todos os pacotes",
+  "cover": {
+    "label": "Capa do pacote",
+    "hint": "Esta imagem aparece atrás do card do pacote.",
+    "dropNew": "Solte uma capa aqui, ou clique para procurar",
+    "dropReplace": "Solte uma nova capa aqui, ou clique para procurar",
+    "sizeHint": "Qualquer formato de imagem comum, até 25 MB.",
+    "uploading": "Enviando capa…",
+    "removeAria": "Remover capa do pacote",
+    "updated": "Capa do pacote atualizada.",
+    "removed": "Capa do pacote removida.",
+    "errors": {
+      "type": "Escolha um arquivo de imagem.",
+      "empty": "Esse arquivo está vazio.",
+      "size": "A imagem é grande demais (máx. 25 MB).",
+      "signedOut": "Você precisa estar conectado."
+    }
+  }
 }

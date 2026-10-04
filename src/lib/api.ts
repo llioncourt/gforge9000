@@ -682,9 +682,13 @@ async function ensureContentPack(name: string) {
     .insert({ name, owner_id: auth.user.id } as TablesInsert<"content_packs">);
 }
 
-export type PackRow = Tables<"content_packs">;
+/**
+ * `cover_path` is the pack's cover image in the portraits bucket. Declared
+ * here because the generated database types predate the column.
+ */
+export type PackRow = Tables<"content_packs"> & { cover_path?: string | null };
 
-export async function listContentPacks() {
+export async function listContentPacks(): Promise<PackRow[]> {
   return unwrap(await supabase.from("content_packs").select("*").order("name"));
 }
 
@@ -703,6 +707,11 @@ export async function createContentPack(
 
 export async function updateContentPack(id: string, patch: TablesUpdate<"content_packs">) {
   return unwrap(await supabase.from("content_packs").update(patch).eq("id", id).select().single());
+}
+
+/** Sets (or, with `null`, clears) the pack's cover image path. */
+export async function setContentPackCover(id: string, coverPath: string | null): Promise<PackRow> {
+  return updateContentPack(id, { cover_path: coverPath } as TablesUpdate<"content_packs">);
 }
 
 /** Renames a pack and re-tags every library entry that referenced the old name. */

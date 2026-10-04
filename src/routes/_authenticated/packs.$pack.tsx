@@ -58,6 +58,8 @@ import {
   DEFAULT_PACK_NAME,
 } from "@/lib/packs";
 import { packFromSlug, packSlug } from "@/lib/pack-slug";
+import { canEditPackCover, removePackCoverFile } from "@/lib/pack-cover";
+import { PackCoverPanel } from "@/components/packs/pack-cover-panel";
 import { slugify } from "@/lib/portable";
 import { useSession } from "@/hooks/use-session";
 import { useT } from "@/i18n/hooks";
@@ -107,6 +109,7 @@ function PackDetailPage() {
   const group = makeGroup(packName, rows);
   const meta = (packsQuery.data ?? []).find((p) => p.name === packName);
   const mine = !meta || meta.owner_id === user?.id;
+  const canEditCover = canEditPackCover({ pack: meta, userId: user?.id, entries: rows });
   const gmCampaigns = (campaigns.data ?? []).filter((c) => c.gm_id === user?.id);
 
   const unpacked = useMemo(
@@ -137,8 +140,10 @@ function PackDetailPage() {
 
   const remove = useMutation({
     mutationFn: async () => {
-      if (meta) await deleteContentPack(meta.id, packName);
-      else await deletePackContents(packName);
+      if (meta) {
+        await deleteContentPack(meta.id, packName);
+        await removePackCoverFile(meta.cover_path);
+      } else await deletePackContents(packName);
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
@@ -313,6 +318,10 @@ function PackDetailPage() {
           )}
         </div>
       </div>
+
+      {canEditCover ? (
+        <PackCoverPanel pack={meta} packName={packName} className="panel mb-6 p-4" />
+      ) : null}
 
       {mine ? (
         <div className="panel mb-6 flex flex-wrap items-end gap-3 p-4">

@@ -48,6 +48,32 @@ export function shouldBlockForCampaignIntro(
   );
 }
 
+export type CampaignIntroGateInput = {
+  /** The campaign's intro once known; `undefined` while it is still loading. */
+  intro: CampaignIntro | null | undefined;
+  /** True only once the viewer's own "already seen" record has been read. */
+  viewKnown: boolean;
+  view: CampaignIntroView | null | undefined;
+  /** Version the viewer dismissed during this visit. */
+  continuedVersion: string | null;
+};
+
+/**
+ * Whether the full-screen intro must be shown right now.
+ *
+ * The screen opens only when there is an intro AND it is known that this
+ * viewer still has to watch it. While either answer is pending — or if the
+ * "already seen" lookup failed — nothing is shown: opening the screen just to
+ * close it again is worse than not opening it.
+ */
+export function shouldShowCampaignIntroGate(input: CampaignIntroGateInput): boolean {
+  const { intro, viewKnown, view, continuedVersion } = input;
+  if (!intro) return false;
+  if (!viewKnown) return false;
+  if (continuedVersion === intro.version) return false;
+  return shouldBlockForCampaignIntro(intro, view);
+}
+
 export async function listCampaignVideos(campaignId: string): Promise<CampaignVideo[]> {
   const { data, error } = await supabase
     .from("campaign_videos")
@@ -72,13 +98,17 @@ export async function getCampaignIntro(campaignId: string): Promise<CampaignIntr
 export async function getMyCampaignIntroView(
   campaignId: string,
 ): Promise<CampaignIntroView | null> {
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) throw new Error("You need to be signed in.");
+  // The signed-in id comes from the session already held on this device.
+  // Asking the auth service for it cost a network round-trip on every
+  // campaign entry; row access is enforced by the database either way.
+  const { data: auth } = await supabase.auth.getSession();
+  const userId = auth.session?.user.id;
+  if (!userId) throw new Error("You need to be signed in.");
   const { data, error } = await supabase
     .from("campaign_intro_views")
     .select("*")
     .eq("campaign_id", campaignId)
-    .eq("user_id", auth.user.id)
+    .eq("user_id", userId)
     .maybeSingle();
   fail(error);
   return data;

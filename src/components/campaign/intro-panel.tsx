@@ -52,7 +52,7 @@ import {
   removeCampaignVideo,
   saveCampaignIntroView,
   setCampaignVideoVisibility,
-  shouldBlockForCampaignIntro,
+  shouldShowCampaignIntroGate,
   uploadCampaignVideo,
   type CampaignVideo,
   type CampaignVideoType,
@@ -485,6 +485,18 @@ export function CampaignIntroExperience({
     queryFn: () => getMyCampaignIntroView(campaignId),
   });
   const intro = introQuery.data;
+  // Decided before anything is drawn: the screen exists only while there is an
+  // intro this viewer still has to watch.
+  const blocked = shouldShowCampaignIntroGate({
+    intro,
+    // `null` means "no record"; `undefined` means "not read yet".
+    viewKnown: viewQuery.data !== undefined,
+    view: viewQuery.data,
+    continuedVersion,
+  });
+  const storagePath = blocked ? intro?.storage_path : undefined;
+  const thumbPath = blocked ? intro?.thumb_path : undefined;
+  const version = blocked ? intro?.version : undefined;
   useEffect(() => {
     let live = true;
     setVideoUrl(null);
@@ -492,20 +504,36 @@ export function CampaignIntroExperience({
     setVideoReady(false);
     setEnded(false);
     setDoNotShowAgain(true);
-    if (intro?.storage_path) {
-      void campaignIntroUrl(intro.storage_path).then((url) => {
-        if (live) setVideoUrl(url);
-      });
+    // The video address is only requested when the intro is actually going to
+    // play. If it cannot be obtained, the viewer is let through instead of
+    // being held on a screen that can never finish — and the intro is not
+    // marked as seen, so it is offered again next time.
+    const unavailable = () => {
+      if (!live) return;
+      setDoNotShowAgain(false);
+      setVideoReady(true);
+      setEnded(true);
+    };
+    if (storagePath) {
+      campaignIntroUrl(storagePath)
+        .then((url) => {
+          if (!live) return;
+          if (url) setVideoUrl(url);
+          else unavailable();
+        })
+        .catch(unavailable);
     }
-    if (intro?.thumb_path) {
-      void campaignVideoThumbUrl(intro.thumb_path).then((url) => {
-        if (live) setPosterUrl(url || null);
-      });
+    if (thumbPath) {
+      campaignVideoThumbUrl(thumbPath)
+        .then((url) => {
+          if (live) setPosterUrl(url || null);
+        })
+        .catch(() => undefined);
     }
     return () => {
       live = false;
     };
-  }, [intro?.storage_path, intro?.thumb_path, intro?.version]);
+  }, [storagePath, thumbPath, version]);
   const remember = useMutation({
     mutationFn: () =>
       intro ? saveCampaignIntroView(campaignId, intro.version) : Promise.resolve(),
@@ -513,13 +541,7 @@ export function CampaignIntroExperience({
       queryClient.invalidateQueries({ queryKey: ["campaign-intro-view", campaignId] }),
     onError: (error: Error) => toast.error(error.message),
   });
-  const loading = introQuery.isLoading || viewQuery.isLoading;
-  const blocked =
-    !loading &&
-    intro &&
-    continuedVersion !== intro.version &&
-    shouldBlockForCampaignIntro(intro, viewQuery.data);
-  if (!loading && !blocked) return null;
+  if (!blocked || !intro) return null;
   if (!hydrated) return null;
   return createPortal(
     <div
@@ -545,7 +567,7 @@ export function CampaignIntroExperience({
               <span className="text-sm font-medium">{t("introExperience.preparing")}</span>
             </div>
           ) : null}
-          {blocked && videoUrl ? (
+          {videoUrl ? (
             <video
               ref={gateVideoRef}
               key={intro.version}
@@ -556,6 +578,12 @@ export function CampaignIntroExperience({
               playsInline
               preload="auto"
               onCanPlay={() => setVideoReady(true)}
+              onError={() => {
+                // A video that cannot play must not hold the viewer here.
+                setDoNotShowAgain(false);
+                setVideoReady(true);
+                setEnded(true);
+              }}
               onPlay={() => {
                 const video = gateVideoRef.current;
                 if (video && document.fullscreenElement == null)
@@ -571,37 +599,35 @@ export function CampaignIntroExperience({
           ) : null}
         </div>
       </div>
-      {blocked ? (
-        <div className="shrink-0 border-t border-border bg-card p-4 sm:p-6">
-          <div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <Checkbox
-                id="skip-campaign-intro"
-                checked={doNotShowAgain}
-                onCheckedChange={(value) => setDoNotShowAgain(value === true)}
-                disabled={!ended}
-              />
-              <Label
-                htmlFor="skip-campaign-intro"
-                className={!ended ? "text-muted-foreground" : undefined}
-              >
-                {t("introExperience.dontShowAgain")}
-              </Label>
-            </div>
-            <Button
-              type="button"
-              disabled={!ended || remember.isPending}
-              onClick={async () => {
-                if (!intro || !ended) return;
-                if (doNotShowAgain) await remember.mutateAsync();
-                setContinuedVersion(intro.version);
-              }}
+      <div className="shrink-0 border-t border-border bg-card p-4 sm:p-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              id="skip-campaign-intro"
+              checked={doNotShowAgain}
+              onCheckedChange={(value) => setDoNotShowAgain(value === true)}
+              disabled={!ended}
+            />
+            <Label
+              htmlFor="skip-campaign-intro"
+              className={!ended ? "text-muted-foreground" : undefined}
             >
-              {ended ? t("introExperience.continueButton") : t("introExperience.watchFullButton")}
-            </Button>
+              {t("introExperience.dontShowAgain")}
+            </Label>
           </div>
+          <Button
+            type="button"
+            disabled={!ended || remember.isPending}
+            onClick={async () => {
+              if (!intro || !ended) return;
+              if (doNotShowAgain) await remember.mutateAsync();
+              setContinuedVersion(intro.version);
+            }}
+          >
+            {ended ? t("introExperience.continueButton") : t("introExperience.watchFullButton")}
+          </Button>
         </div>
-      ) : null}
+      </div>
     </div>,
     document.body,
   );

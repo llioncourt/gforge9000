@@ -51,6 +51,7 @@ import {
   listCampaignCharacters,
   listCharacters,
   listCampaignEntries,
+  type EntryRow,
   listMembers,
   removeMember,
   transferCampaignGm,
@@ -303,7 +304,7 @@ function CampaignPage() {
   const campaignRuleset = useMemo(() => rulesetFromSettings(settings), [settings]);
 
   const sheets = useMemo(() => {
-    const entriesByChar = new Map<string, NonNullable<typeof entries.data>>();
+    const entriesByChar = new Map<string, EntryRow[]>();
     for (const e of entries.data ?? []) {
       const list = entriesByChar.get(e.character_id);
       if (list) list.push(e);

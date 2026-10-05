@@ -1524,6 +1524,7 @@ export type Database = {
       }
       content_packs: {
         Row: {
+          cover_path: string | null
           created_at: string
           description: string | null
           id: string
@@ -1536,6 +1537,7 @@ export type Database = {
           visibility: string
         }
         Insert: {
+          cover_path?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1548,6 +1550,7 @@ export type Database = {
           visibility?: string
         }
         Update: {
+          cover_path?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -2655,6 +2658,7 @@ export type Database = {
           visibility: string
         }[]
       }
+      list_library_pack_names: { Args: never; Returns: string[] }
       list_relationships_safe: {
         Args: { _campaign?: string }
         Returns: {

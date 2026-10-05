@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { currentUser } from "@/lib/current-user";
 import { cachedSignedUrl } from "@/lib/signed-url-cache";
+import { batchedSignedUrl } from "@/lib/signed-url-batch";
 import { toAvifIfImage } from "@/lib/image-avif";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
@@ -107,11 +108,7 @@ export async function deleteAsset(row: AssetRow): Promise<void> {
 export async function assetUrl(path: string | null | undefined): Promise<string | null> {
   if (!path) return null;
   if (/^https?:\/\//i.test(path)) return path;
-  return cachedSignedUrl(ASSET_BUCKET, path, async () => {
-    const { data, error } = await supabase.storage
-      .from(ASSET_BUCKET)
-      .createSignedUrl(path, 60 * 60 * 8);
-    if (error) return null;
-    return data?.signedUrl ?? null;
-  });
+  return cachedSignedUrl(ASSET_BUCKET, path, () =>
+    batchedSignedUrl(ASSET_BUCKET, path, 60 * 60 * 8),
+  );
 }

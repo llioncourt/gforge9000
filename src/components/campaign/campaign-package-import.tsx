@@ -11,7 +11,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { importCampaignPackage } from "@/lib/campaign-package-import";
 import { buildCampaignPackageReadme, CAMPAIGN_PACKAGE_EXAMPLE } from "@/lib/campaign-package-docs";
 import { useT } from "@/i18n/hooks";
 
@@ -38,6 +37,7 @@ export function CampaignPackageImport({
 
   const runImport = async (file: File, report: (label: string, percent?: number) => void) => {
     report(t("packageImport.readingZip"), 5);
+    const { importCampaignPackage } = await import("@/lib/campaign-package-import");
     const summary = await importCampaignPackage(file, (step) => report(step));
     report(t("packageImport.refreshing"), 95);
     await queryClient.invalidateQueries({ queryKey: ["campaigns"] });

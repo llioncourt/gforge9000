@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 
-type Ctx = { supabase: any; userId: string };
+type Ctx = { supabase: SupabaseClient<Database>; userId: string };
 
 async function assertAdmin(ctx: Ctx) {
   const { data, error } = await ctx.supabase.rpc("has_role", {
@@ -15,7 +17,7 @@ async function assertAdmin(ctx: Ctx) {
 export const getIsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await (context.supabase as any).rpc("has_role", {
+    const { data } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
       _role: "admin",
     });
@@ -27,9 +29,9 @@ export const getAdminOverview = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context as Ctx);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const db = supabaseAdmin as any;
+    const db = supabaseAdmin;
 
-    const users: any[] = [];
+    const users: User[] = [];
     for (let page = 1; page < 50; page++) {
       const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 1000 });
       if (error) throw error;
@@ -49,10 +51,13 @@ export const getAdminOverview = createServerFn({ method: "GET" })
     ]);
 
     const nameOf = new Map<string, string>(
-      (profiles.data ?? []).map((p: any) => [p.id, p.display_name]),
+      (profiles.data ?? []).map((p) => [p.id, p.display_name ?? ""]),
     );
-    const count = (rows: any[] | null, key: string, id: string) =>
-      (rows ?? []).filter((r) => r[key] === id).length;
+    const count = <K extends string>(
+      rows: Array<Record<K, string | null>> | null,
+      key: K,
+      id: string,
+    ) => (rows ?? []).filter((r) => r[key] === id).length;
 
     return {
       users: users.map((u) => ({
@@ -62,13 +67,13 @@ export const getAdminOverview = createServerFn({ method: "GET" })
         createdAt: u.created_at as string,
         lastSignIn: (u.last_sign_in_at ?? null) as string | null,
         blocked: Boolean(u.banned_until && new Date(u.banned_until) > new Date()),
-        isAdmin: (roles.data ?? []).some((r: any) => r.user_id === u.id && r.role === "admin"),
+        isAdmin: (roles.data ?? []).some((r) => r.user_id === u.id && r.role === "admin"),
         characters: count(characters.data, "owner_id", u.id),
         campaigns: count(members.data, "user_id", u.id),
       })),
-      campaigns: ((campaigns.data ?? []) as any[]).map(
+      campaigns: (campaigns.data ?? []).map(
         (
-          c: any,
+          c,
         ): {
           id: string;
           name: string;
@@ -97,7 +102,7 @@ export const setUserBlocked = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
       ban_duration: data.blocked ? "876000h" : "none",
-    } as any);
+    });
     if (error) throw error;
     return { ok: true };
   });
@@ -113,7 +118,7 @@ export const setUserPassword = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
       password: data.password,
       email_confirm: true,
-    } as any);
+    });
     if (error) throw error;
     return { ok: true };
   });
@@ -126,7 +131,7 @@ export const setUserAdmin = createServerFn({ method: "POST" })
     if (data.userId === context.userId && !data.admin)
       throw new Error("You cannot remove your own admin access.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const db = supabaseAdmin as any;
+    const db = supabaseAdmin;
     const { error } = data.admin
       ? await db
           .from("user_roles")

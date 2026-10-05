@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "i18n:check": "node scripts/i18n-check.mjs",
-    "i18n:scan": "node scripts/i18n-scan.mjs"
+    "i18n:scan": "node scripts/i18n-scan.mjs",
+    "bundle:report": "node scripts/bundle-report.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

@@ -3,7 +3,7 @@ import {
   NOTE_KINDS,
   GRID_TYPES,
   VISIBILITIES,
-} from "@/lib/campaign-package";
+} from "@/lib/campaign-package-constants";
 
 const MAX_MB = Math.round(MAX_CAMPAIGN_PACKAGE_BYTES / (1024 * 1024));
 

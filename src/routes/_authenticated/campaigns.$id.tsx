@@ -51,6 +51,7 @@ import {
   listCampaignCharacters,
   listCharacters,
   listCampaignEntries,
+  type EntryRow,
   listMembers,
   removeMember,
   transferCampaignGm,
@@ -303,9 +304,15 @@ function CampaignPage() {
   const campaignRuleset = useMemo(() => rulesetFromSettings(settings), [settings]);
 
   const sheets = useMemo(() => {
+    const entriesByChar = new Map<string, EntryRow[]>();
+    for (const e of entries.data ?? []) {
+      const list = entriesByChar.get(e.character_id);
+      if (list) list.push(e);
+      else entriesByChar.set(e.character_id, [e]);
+    }
     const byChar = new Map<string, ReturnType<typeof buildSheet>>();
     for (const c of roster.data ?? []) {
-      const rows = (entries.data ?? []).filter((e) => e.character_id === c.id).map(toEntry);
+      const rows = (entriesByChar.get(c.id) ?? []).map(toEntry);
       byChar.set(c.id, buildSheet(toCharacterRecord(c), rows, campaignRuleset));
     }
     return byChar;

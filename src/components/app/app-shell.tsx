@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 import {
   BookOpen,
   Boxes,
@@ -19,7 +19,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { CommandPalette } from "@/components/app/command-palette";
 import { DiceTray } from "@/components/app/dice-tray";
 import { DiceOverlay } from "@/components/app/dice-overlay";
 import { CampaignSoundtrackProvider } from "@/components/campaign/campaign-soundtrack-player";
@@ -35,6 +34,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { getIsAdmin } from "@/lib/admin.functions";
 import { clearSignedUrlCache } from "@/lib/signed-url-cache";
 
+// The command palette (and its search library) is only fetched the first time
+// it is opened, or when the search button is hovered, not on every screen.
+const loadCommandPalette = () => import("@/components/app/command-palette");
+const CommandPalette = lazy(() =>
+  loadCommandPalette().then((m) => ({ default: m.CommandPalette })),
+);
+
 /** Navigation items keep a translation key, never a literal label. */
 const NAV = [
   { to: "/dashboard", labelKey: "links.dashboard", icon: LayoutDashboard },
@@ -49,6 +55,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteUsed, setPaletteUsed] = useState(false);
+  if (paletteOpen && !paletteUsed) setPaletteUsed(true);
   const [trayOpen, setTrayOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -96,7 +104,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     <CampaignSoundtrackProvider pathname={pathname}>
       <div className="relative min-h-screen">
         <AmbientBackground />
-        <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+        {paletteUsed ? (
+          <Suspense fallback={null}>
+            <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+          </Suspense>
+        ) : null}
         <DiceTray open={trayOpen} onOpenChange={setTrayOpen} />
         <DiceOverlay />
 
@@ -216,6 +228,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
               <button
                 onClick={() => setPaletteOpen(true)}
+                onPointerEnter={() => void loadCommandPalette()}
+                onFocus={() => void loadCommandPalette()}
                 className="glass-soft flex h-10 min-w-0 flex-1 max-w-md items-center gap-2 rounded-md px-3 text-sm text-muted-foreground transition-colors hover:border-ring"
               >
                 <Search className="h-4 w-4 shrink-0" />

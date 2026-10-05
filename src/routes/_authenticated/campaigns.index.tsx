@@ -36,7 +36,7 @@ import { CampaignCoverBg } from "@/components/campaign/campaign-cover-bg";
 import { CAMPAIGN_COVER_SETTING, coverPositionFromSettings } from "@/lib/campaign-cover";
 import { CampaignPackageImport } from "@/components/campaign/campaign-package-import";
 import { Progress } from "@/components/ui/progress";
-import { buildCampaignPackageZip, type CampaignExportStep } from "@/lib/campaign-package-export";
+import type { CampaignExportStep } from "@/lib/campaign-package-export";
 import { metaText } from "@/i18n/meta";
 
 export const Route = createFileRoute("/_authenticated/campaigns/")({
@@ -82,6 +82,7 @@ function CampaignsPage() {
     setExportDone(false);
     setExportStep({ label: t("list.export.reading"), done: 0, total: 1, percent: 0 });
     try {
+      const { buildCampaignPackageZip } = await import("@/lib/campaign-package-export");
       const { blob, fileName } = await buildCampaignPackageZip(campaignId, (progress) =>
         setExportStep(progress),
       );

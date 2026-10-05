@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { CAMPAIGN_SETTING_RANGES, HOUSE_RULES_MAX_LENGTH } from "@/lib/campaign-settings";
+import {
+  GRID_TYPES,
+  MAX_CAMPAIGN_PACKAGE_BYTES,
+  NOTE_KINDS,
+  VISIBILITIES,
+} from "@/lib/campaign-package-constants";
 
 /**
  * Campaign package (UCF-CAMPAIGN v1) — pure schema + helpers.
@@ -13,11 +19,7 @@ const text = (max: number) => z.string().trim().max(max);
 const nullableText = (max: number) => text(max).nullish();
 const filePath = z.string().trim().min(1).max(300);
 
-export const MAX_CAMPAIGN_PACKAGE_BYTES = 500 * 1024 * 1024;
-
-export const NOTE_KINDS = ["note", "handout", "session", "session-prep", "rule"] as const;
-export const VISIBILITIES = ["gm", "players", "public"] as const;
-export const GRID_TYPES = ["square", "hex", "none"] as const;
+export { GRID_TYPES, MAX_CAMPAIGN_PACKAGE_BYTES, NOTE_KINDS, VISIBILITIES };
 
 /**
  * Visibility is a closed set. Older files (and files written by hand) use other

@@ -445,7 +445,7 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
         <section className="panel p-5">
           <h2 className="font-display text-lg font-semibold">{t("videos.upload.title")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t("videos.upload.description")}</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px_150px]">
+          <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_150px]">
             <div className="space-y-1.5">
               <Label htmlFor="campaign-video-title">{t("videos.upload.titleLabel")}</Label>
               <Input

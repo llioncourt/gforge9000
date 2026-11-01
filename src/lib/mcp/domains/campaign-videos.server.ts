@@ -68,9 +68,10 @@ const input = z.discriminatedUnion("action", [
       title: boundedText(200).optional(),
       video_type: videoType.optional(),
       visible_to_players: z.boolean().optional(),
+      visible_to_user_ids: z.array(uuid).max(200).optional(),
     })
     .describe(
-      "Update a video's title, type, or player visibility. Omitted fields are unchanged. A campaign can only have one intro video, so switching a video to the intro type is refused while another intro exists. GM only. Changes data.",
+      "Update a video's title, type, or player visibility. visible_to_user_ids lists players who can see the video while visible_to_players is false. Omitted fields are unchanged. A campaign can only have one intro video, so switching a video to the intro type is refused while another intro exists. GM only. Changes data.",
     ),
   z
     .object({ action: z.literal("delete"), video_id: uuid })
@@ -80,8 +81,11 @@ const input = z.discriminatedUnion("action", [
       action: z.literal("set_visibility"),
       video_id: uuid,
       visible_to_players: z.boolean(),
+      visible_to_user_ids: z.array(uuid).max(200).optional(),
     })
-    .describe("Set whether players can see a video. GM only. Changes data."),
+    .describe(
+      "Set whether all players can see a video. When visible_to_players is false, visible_to_user_ids lists the specific players who can still see it (empty = GM only). GM only. Changes data.",
+    ),
   z
     .object({ action: z.literal("get_url"), video_id: uuid })
     .describe("Get a short-lived signed URL to play the video file."),
@@ -268,6 +272,7 @@ interface VideoRow {
   mime_type: string;
   version: string;
   visible_to_players: boolean;
+  visible_to_user_ids: string[];
   created_by: string;
   created_at: string;
 }
@@ -394,8 +399,9 @@ export function registerCampaignVideos(tool: ToolRegistrar, ctx: McpToolContext)
           .select("id", { count: "exact", head: true })
           .eq("campaign_id", i.campaign_id);
         if (!campaign.isGm) {
-          query = query.eq("visible_to_players", true);
-          countQuery = countQuery.eq("visible_to_players", true);
+          const audience = `visible_to_players.eq.true,visible_to_user_ids.cs.{${ctx.userId}}`;
+          query = query.or(audience);
+          countQuery = countQuery.or(audience);
         }
         const { data, error } = await query;
         if (error) fail("Listing videos", error);
@@ -426,6 +432,9 @@ export function registerCampaignVideos(tool: ToolRegistrar, ctx: McpToolContext)
           title: i.title,
           video_type: i.video_type,
           visible_to_players: i.visible_to_players,
+          visible_to_user_ids: i.visible_to_user_ids
+            ? [...new Set(i.visible_to_user_ids)]
+            : undefined,
         });
         requirePatch(patch);
         const { data, error } = await ctx.supabase
@@ -457,7 +466,14 @@ export function registerCampaignVideos(tool: ToolRegistrar, ctx: McpToolContext)
         await requireGmForVideo(ctx, row, "change video visibility");
         const { data, error } = await ctx.supabase
           .from("campaign_videos")
-          .update({ visible_to_players: i.visible_to_players })
+          .update(
+            i.visible_to_user_ids
+              ? {
+                  visible_to_players: i.visible_to_players,
+                  visible_to_user_ids: [...new Set(i.visible_to_user_ids)],
+                }
+              : { visible_to_players: i.visible_to_players },
+          )
           .eq("id", i.video_id)
           .select("*")
           .single();
@@ -472,7 +488,7 @@ export function registerCampaignVideos(tool: ToolRegistrar, ctx: McpToolContext)
         const row = await loadVideo(ctx, i.video_id);
         await requireMember(ctx, row.campaign_id);
         const campaign = await loadCampaign(ctx, row.campaign_id);
-        if (!campaign.isGm && !row.visible_to_players) {
+        if (!campaign.isGm && !canPlayerSeeCampaignVideo(row, ctx.userId)) {
           throw new Error("This video is not visible to players.");
         }
         const url = await signedReadUrl(ctx.supabase, CAMPAIGN_INTRO_BUCKET, row.storage_path);
@@ -483,7 +499,7 @@ export function registerCampaignVideos(tool: ToolRegistrar, ctx: McpToolContext)
         const row = await loadVideo(ctx, i.video_id);
         await requireMember(ctx, row.campaign_id);
         const campaign = await loadCampaign(ctx, row.campaign_id);
-        if (!campaign.isGm && !row.visible_to_players) {
+        if (!campaign.isGm && !canPlayerSeeCampaignVideo(row, ctx.userId)) {
           throw new Error("This video is not visible to players.");
         }
         if (!row.thumb_path) throw new Error("This video has no thumbnail.");

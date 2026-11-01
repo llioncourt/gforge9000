@@ -72,13 +72,107 @@ function useFormatDuration() {
   };
 }
 
+type AudiencePlayer = { user_id: string; display_name: string };
+
+/**
+ * "Visible to players" switch plus, when it is off, a picker to reveal the
+ * video to specific players only. Off with nobody picked = only the GM.
+ */
+function VideoAudienceControl({
+  id,
+  players,
+  value,
+  onChange,
+  disabled,
+  showLabel,
+}: {
+  id?: string;
+  players: AudiencePlayer[];
+  value: CampaignVideoAudience;
+  onChange: (next: CampaignVideoAudience) => void;
+  disabled?: boolean;
+  showLabel?: boolean;
+}) {
+  const { t } = useT("media");
+  const toggle = (userId: string, checked: boolean) =>
+    onChange({
+      visibleToPlayers: false,
+      userIds: checked
+        ? [...new Set([...value.userIds, userId])]
+        : value.userIds.filter((item) => item !== userId),
+    });
+  const picked = value.userIds.filter((userId) =>
+    players.some((player) => player.user_id === userId),
+  );
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <Switch
+          id={id}
+          checked={value.visibleToPlayers}
+          disabled={disabled}
+          onCheckedChange={(checked) =>
+            onChange({ visibleToPlayers: checked, userIds: value.userIds })
+          }
+          aria-label={t("videos.visibility.label")}
+        />
+        {showLabel ? t("videos.visibility.label") : null}
+      </label>
+      {!value.visibleToPlayers ? (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5 px-2 text-xs"
+              disabled={disabled}
+            >
+              <Users className="h-3.5 w-3.5" />
+              {picked.length
+                ? t("videos.visibility.selectedPlayers", { count: picked.length })
+                : t("videos.visibility.choosePlayers")}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-64">
+            <p className="text-sm font-medium">{t("videos.visibility.pickerTitle")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t("videos.visibility.pickerHint")}
+            </p>
+            <div className="mt-3 space-y-2">
+              {players.length ? (
+                players.map((player) => (
+                  <label key={player.user_id} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={value.userIds.includes(player.user_id)}
+                      disabled={disabled}
+                      onCheckedChange={(checked) => toggle(player.user_id, checked === true)}
+                    />
+                    <span className="truncate">{player.display_name}</span>
+                  </label>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {t("videos.visibility.noPlayers")}
+                </p>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+      ) : null}
+    </div>
+  );
+}
+
 function VideoRow({
   video,
   isGm,
+  players,
   onRemove,
 }: {
   video: CampaignVideo;
   isGm: boolean;
+  players: AudiencePlayer[];
   onRemove: (video: CampaignVideo) => void;
 }) {
   const { t } = useT("media");
@@ -118,13 +212,26 @@ function VideoRow({
     },
     onError: (error: Error) => toast.error(error.message),
   });
+  const [audience, setAudience] = useState<CampaignVideoAudience>({
+    visibleToPlayers: video.visible_to_players,
+    userIds: video.visible_to_user_ids ?? [],
+  });
+  useEffect(() => {
+    setAudience({
+      visibleToPlayers: video.visible_to_players,
+      userIds: video.visible_to_user_ids ?? [],
+    });
+  }, [video.visible_to_players, video.visible_to_user_ids]);
   const saveVisibility = useMutation({
-    mutationFn: (visible: boolean) => setCampaignVideoVisibility(video, visible),
+    mutationFn: (next: CampaignVideoAudience) => setCampaignVideoAudience(video, next),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["campaign-videos", video.campaign_id] });
       toast.success(t("videos.visibility.updated"));
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: async (error: Error) => {
+      toast.error(error.message);
+      await queryClient.invalidateQueries({ queryKey: ["campaign-videos", video.campaign_id] });
+    },
   });
 
   return (
@@ -161,15 +268,16 @@ function VideoRow({
             {t("videos.sizeMb", { size: Math.ceil(video.byte_size / 1024 / 1024) })}
           </span>
           {isGm ? (
-            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Switch
-                checked={video.visible_to_players}
-                disabled={saveVisibility.isPending}
-                onCheckedChange={(checked) => saveVisibility.mutate(checked)}
-                aria-label={t("videos.visibility.label")}
-              />
-              {t("videos.visibility.label")}
-            </label>
+            <VideoAudienceControl
+              players={players}
+              value={audience}
+              disabled={saveVisibility.isPending}
+              showLabel
+              onChange={(next) => {
+                setAudience(next);
+                saveVisibility.mutate(next);
+              }}
+            />
           ) : null}
         </div>
       </div>

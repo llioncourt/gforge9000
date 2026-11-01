@@ -155,9 +155,7 @@ function VideoAudienceControl({
                   </label>
                 ))
               ) : (
-                <p className="text-xs text-muted-foreground">
-                  {t("videos.visibility.noPlayers")}
-                </p>
+                <p className="text-xs text-muted-foreground">{t("videos.visibility.noPlayers")}</p>
               )}
             </div>
           </PopoverContent>

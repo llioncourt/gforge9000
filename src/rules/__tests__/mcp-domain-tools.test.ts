@@ -39,6 +39,7 @@ function query(data: unknown, extra: Record<string, unknown> = {}, spy?: Spy) {
     "single",
     "maybeSingle",
     "in",
+    "or",
   ]) {
     self[method] = () => self;
   }

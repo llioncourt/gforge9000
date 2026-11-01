@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useHydrated } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Film, Image as ImageIcon, LoaderCircle, Play, Trash2 } from "lucide-react";
+import { Film, Image as ImageIcon, LoaderCircle, Play, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -29,6 +29,7 @@ import {
 import { FileDropzone } from "@/components/ui/FileDropzone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -51,12 +52,14 @@ import {
   listCampaignVideos,
   removeCampaignVideo,
   saveCampaignIntroView,
-  setCampaignVideoVisibility,
+  setCampaignVideoAudience,
   shouldShowCampaignIntroGate,
   uploadCampaignVideo,
   type CampaignVideo,
+  type CampaignVideoAudience,
   type CampaignVideoType,
 } from "@/lib/campaign-intro";
+import { listMembers } from "@/lib/api";
 
 function useFormatDuration() {
   const { t } = useT("media");
@@ -388,10 +391,25 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
   });
   const [pending, setPending] = useState<{ file: File; url: string } | null>(null);
   const [thumb, setThumb] = useState<Blob | null>(null);
-  const [visibleToPlayers, setVisibleToPlayers] = useState(true);
+  const [uploadAudience, setUploadAudience] = useState<CampaignVideoAudience>({
+    visibleToPlayers: true,
+    userIds: [],
+  });
+  const members = useQuery({
+    queryKey: ["campaign-members", campaignId],
+    queryFn: () => listMembers(campaignId),
+    enabled: isGm,
+  });
+  const players: AudiencePlayer[] = (members.data ?? []).filter((member) => member.role !== "gm");
   const upload = useMutation({
     mutationFn: (file: File) =>
-      uploadCampaignVideo(campaignId, file, { title, videoType, thumb, visibleToPlayers }),
+      uploadCampaignVideo(campaignId, file, {
+        title,
+        videoType,
+        thumb,
+        visibleToPlayers: uploadAudience.visibleToPlayers,
+        visibleToUserIds: uploadAudience.visibleToPlayers ? [] : uploadAudience.userIds,
+      }),
     onSuccess: async () => {
       setTitle("");
       setPending((current) => {
@@ -399,7 +417,7 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
         return null;
       });
       setThumb(null);
-      setVisibleToPlayers(true);
+      setUploadAudience({ visibleToPlayers: true, userIds: [] });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["campaign-videos", campaignId] }),
         queryClient.invalidateQueries({ queryKey: ["campaign-intro", campaignId] }),
@@ -440,11 +458,11 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
             <div className="space-y-1.5">
               <Label htmlFor="campaign-video-visibility">{t("videos.visibility.label")}</Label>
               <div className="flex h-9 items-center">
-                <Switch
+                <VideoAudienceControl
                   id="campaign-video-visibility"
-                  checked={visibleToPlayers}
-                  onCheckedChange={setVisibleToPlayers}
-                  aria-label={t("videos.visibility.label")}
+                  players={players}
+                  value={uploadAudience}
+                  onChange={setUploadAudience}
                 />
               </div>
             </div>
@@ -551,6 +569,7 @@ export function CampaignVideosPanel({ campaignId, isGm }: { campaignId: string; 
               key={video.id}
               video={video}
               isGm={isGm}
+              players={players}
               onRemove={(item) => remove.mutate(item)}
             />
           ))}

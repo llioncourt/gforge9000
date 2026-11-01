@@ -25,6 +25,7 @@ import {
 import type { McpToolContext, Structured, ToolRegistrar } from "@/lib/mcp/kit.server";
 import { anyDb } from "@/lib/mcp/kit.server";
 import { derivePlaybackPosition } from "@/lib/playback-anchor";
+import { canPlayerSeeCampaignVideo } from "@/lib/campaign-video-audience";
 import type { Database } from "@/integrations/supabase/types";
 import {
   CAMPAIGN_INTRO_BUCKET,

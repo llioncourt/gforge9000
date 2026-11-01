@@ -1102,6 +1102,7 @@ export type Database = {
           version: string
           video_type: string
           visible_to_players: boolean
+          visible_to_user_ids: string[]
         }
         Insert: {
           byte_size: number
@@ -1119,6 +1120,7 @@ export type Database = {
           version?: string
           video_type?: string
           visible_to_players?: boolean
+          visible_to_user_ids?: string[]
         }
         Update: {
           byte_size?: number
@@ -1136,6 +1138,7 @@ export type Database = {
           version?: string
           video_type?: string
           visible_to_players?: boolean
+          visible_to_user_ids?: string[]
         }
         Relationships: [
           {

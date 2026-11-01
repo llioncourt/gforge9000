@@ -131,6 +131,7 @@ export async function uploadCampaignVideo(
     videoType: CampaignVideoType;
     thumb?: Blob | null;
     visibleToPlayers?: boolean;
+    visibleToUserIds?: string[];
   },
 ) {
   const validation = validateCampaignVideoFile(file);
@@ -171,6 +172,7 @@ export async function uploadCampaignVideo(
     title,
     video_type: input.videoType,
     visible_to_players: input.visibleToPlayers ?? true,
+    visible_to_user_ids: [...new Set(input.visibleToUserIds ?? [])],
     byte_size: file.size,
     mime_type: "video/mp4",
     version: crypto.randomUUID(),
@@ -209,6 +211,35 @@ export async function setCampaignVideoVisibility(video: CampaignVideo, visibleTo
   const { error } = await supabase
     .from("campaign_videos")
     .update({ visible_to_players: visibleToPlayers })
+    .eq("id", video.id);
+  fail(error);
+}
+
+export type CampaignVideoAudience = { visibleToPlayers: boolean; userIds: string[] };
+
+/**
+ * Who among the players can see a video: everyone when `visible_to_players`
+ * is on, otherwise only the listed players. The GM always sees every video.
+ * Mirrors the database read rule so the UI can describe the audience.
+ */
+export function canPlayerSeeCampaignVideo(
+  video: Pick<CampaignVideo, "visible_to_players" | "visible_to_user_ids">,
+  userId: string,
+) {
+  return video.visible_to_players || (video.visible_to_user_ids ?? []).includes(userId);
+}
+
+/** Set a video's audience: everyone, or only specific players (GM only). */
+export async function setCampaignVideoAudience(
+  video: CampaignVideo,
+  audience: CampaignVideoAudience,
+) {
+  const { error } = await supabase
+    .from("campaign_videos")
+    .update({
+      visible_to_players: audience.visibleToPlayers,
+      visible_to_user_ids: [...new Set(audience.userIds)],
+    })
     .eq("id", video.id);
   fail(error);
 }

@@ -40,7 +40,13 @@
     "empty": "No campaign videos yet.",
     "visibility": {
       "label": "Visible to players",
-      "updated": "Video visibility updated."
+      "updated": "Video visibility updated.",
+      "choosePlayers": "Choose players",
+      "selectedPlayers_one": "{{count}} player",
+      "selectedPlayers_other": "{{count}} players",
+      "pickerTitle": "Who can see this video",
+      "pickerHint": "Only the players you check will see it.",
+      "noPlayers": "No players in this campaign yet."
     }
   },
   "introExperience": {

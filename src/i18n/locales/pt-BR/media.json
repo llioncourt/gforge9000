@@ -40,7 +40,13 @@
     "empty": "Nenhum vídeo de campanha ainda.",
     "visibility": {
       "label": "Visível para os jogadores",
-      "updated": "Visibilidade do vídeo atualizada."
+      "updated": "Visibilidade do vídeo atualizada.",
+      "choosePlayers": "Escolher jogadores",
+      "selectedPlayers_one": "{{count}} jogador",
+      "selectedPlayers_other": "{{count}} jogadores",
+      "pickerTitle": "Quem pode ver este vídeo",
+      "pickerHint": "Só os jogadores marcados vão ver.",
+      "noPlayers": "Ainda não há jogadores nesta campanha."
     }
   },
   "introExperience": {
